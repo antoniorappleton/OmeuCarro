@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registar - Fuel Manager</title>
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+</head>
+<body>
+  <div class="auth-container">
+    <h1>Criar Conta</h1>
+
+    <input type="text" id="reg-nome" placeholder="Nome">
+    <input type="email" id="reg-email" placeholder="Email">
+    <input type="password" id="reg-password" placeholder="Password">
+
+    <button onclick="registerUser()">Registar</button>
+
+    <p>Já tens conta? <a href="login.html">Entrar</a></p>
+  </div>
+</body>
+</html>

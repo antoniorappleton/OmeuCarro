@@ -1,0 +1,12 @@
+.card {
+  background: white;
+  border-left: 4px solid var(--primary);
+  padding: 15px;
+  border-radius: 10px;
+  margin: 10px 0;
+  transition: 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px #bbb;
+}

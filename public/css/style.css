@@ -1,0 +1,135 @@
+/* =============================
+   L100 GLOBAL THEME – Fuel Logbook Style
+   ============================= */
+
+/* ----------- ROOT VARIABLES (cores globais) ----------- */
+:root {
+    --color-primary-start: #096279;
+    --color-primary-end: #1B9B82;
+    --color-primary-solid: #0C8C78;
+
+    --color-green: #27AE60;
+    --color-green-light: #2ECC71;
+
+    --color-white: #FFFFFF;
+    --color-text-dark: #1A1A1A;
+
+    --radius: 12px;
+    --transition: 0.25s ease-in-out;
+}
+
+/* ----------- GLOBAL RESET ----------- */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    color: var(--color-white);
+    min-height: 100vh;
+}
+
+/* ----------- HEADERS ----------- */
+header {
+    padding: 20px;
+    text-align: center;
+    color: var(--color-white);
+}
+
+header h1 {
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+header p {
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+/* ----------- CONTAINERS ----------- */
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+/* ----------- BUTTONS ----------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 22px;
+    background: var(--color-green);
+    color: var(--color-white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.btn:hover {
+    background: var(--color-green-light);
+    transform: translateY(-2px);
+}
+
+/* Botão transparente (ex: estatísticas) */
+.btn-outline {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ----------- CARDS ----------- */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    margin-bottom: 20px;
+    color: var(--color-white);
+}
+
+/* ----------- INPUTS ----------- */
+input, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius);
+    border: none;
+    margin: 8px 0 15px;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--color-white);
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ----------- FOOTER (para PWA) ----------- */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(6px);
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+footer a {
+    color: var(--color-white);
+    font-size: 14px;
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+footer a:hover {
+    opacity: 1;
+}

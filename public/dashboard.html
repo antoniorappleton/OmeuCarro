@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Fuel Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/firestore.js"></script>
+  <script defer src="js/dashboard.js"></script>
+</head>
+<body>
+
+  <header>
+    <h2>Dashboard</h2>
+    <button onclick="logoutUser()">Logout</button>
+  </header>
+
+  <main>
+    <div id="kpi-container">
+      <div class="kpi-card">
+        <h3>Consumo Médio</h3>
+        <p id="kpi-consumo">--</p>
+      </div>
+
+      <div class="kpi-card">
+        <h3>Custo/km</h3>
+        <p id="kpi-custo-km">--</p>
+      </div>
+
+      <div class="kpi-card">
+        <h3>Litros</h3>
+        <p id="kpi-litros">--</p>
+      </div>
+
+      <div class="kpi-card">
+        <h3>Gastos Totais</h3>
+        <p id="kpi-gastos">--</p>
+      </div>
+    </div>
+
+    <canvas id="chart-consumo"></canvas>
+  </main>
+</body>
+</html>

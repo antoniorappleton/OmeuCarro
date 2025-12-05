@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L100 - L aos 100 num depósito</title>
+  <link rel="manifest" href="manifest.json">
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+</head>
+<body>
+  <h1>Carregando...</h1>
+
+  <script>
+    // Redireciona automaticamente com base na autenticação
+    window.addEventListener("load", () => {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          window.location.href = "dashboard.html";
+        } else {
+          window.location.href = "login.html";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
