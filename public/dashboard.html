@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Fuel Manager</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estatísticas - Fuel Manager</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- JS -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
@@ -13,55 +20,125 @@
 </head>
 <body>
 
-  <header>
-    <h2>Dashboard</h2>
-    <button onclick="logoutUser()">Logout</button>
-  </header>
+<header class="top-header">
+  <button class="back-btn" onclick="history.back()">←</button>
+  <div>
+    <h1>Estatísticas</h1>
+    <p>Análise detalhada dos seus abastecimentos</p>
+  </div>
+</header>
 
-  <main>
-    <div class="dashboard-filtros">
-      <label for="filtro-veiculo">Veículo:</label>
+<main class="dashboard-container">
+
+  <!-- =====================
+       FILTROS 
+  ====================== -->
+  <section class="filters-card">
+    <div class="filter-group">
+      <label>Veículo</label>
       <select id="filtro-veiculo">
         <option value="">Todos os veículos</option>
       </select>
+    </div>
 
-      <label for="filtro-periodo">Período:</label>
+    <div class="filter-group">
+      <label>Período</label>
       <select id="filtro-periodo">
         <option value="semana">Última semana</option>
         <option value="mes">Último mês</option>
         <option value="ano">Último ano</option>
         <option value="custom">Personalizado</option>
       </select>
-
-      <div id="filtro-custom-datas" style="display:none">
-        <input type="date" id="filtro-data-inicio">
-        <input type="date" id="filtro-data-fim">
-      </div>
     </div>
 
-    <div id="kpi-container">
-      <div class="kpi-card">
-        <h3>Consumo Médio</h3>
-        <p id="kpi-consumo">--</p>
-      </div>
+    <div id="filtro-custom-datas" class="custom-dates hidden">
+      <input type="date" id="filtro-data-inicio"/>
+      <input type="date" id="filtro-data-fim"/>
+    </div>
+  </section>
 
-      <div class="kpi-card">
-        <h3>Custo/km</h3>
-        <p id="kpi-custo-km">--</p>
-      </div>
+  <!-- =====================
+       KPI CARDS
+  ====================== -->
+  <section class="kpi-grid">
 
-      <div class="kpi-card">
-        <h3>Litros</h3>
-        <p id="kpi-litros">--</p>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span>Total Gasto</span>
+        <i class="icon">$</i>
       </div>
-
-      <div class="kpi-card">
-        <h3>Gastos Totais</h3>
-        <p id="kpi-gastos">--</p>
-      </div>
+      <h2 id="kpi-gastos">--</h2>
+      <p class="kpi-sub">Últimos 6 meses</p>
     </div>
 
-    <canvas id="chart-consumo"></canvas>
-  </main>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span>Litros Consumidos</span>
+        <i class="icon">⛽</i>
+      </div>
+      <h2 id="kpi-litros">--</h2>
+      <p class="kpi-sub">Últimos 6 meses</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span>Preço Médio</span>
+        <i class="icon">📈</i>
+      </div>
+      <h2 id="kpi-preco-medio">--</h2>
+      <p class="kpi-sub">Por litro</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span>Eficiência Média</span>
+        <i class="icon">📊</i>
+      </div>
+      <h2 id="kpi-consumo">--</h2>
+      <p class="kpi-sub">Consumo médio</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span>Abastecimentos</span>
+        <i class="icon">📅</i>
+      </div>
+      <h2 id="kpi-abastecimentos">--</h2>
+      <p class="kpi-sub">Últimos 6 meses</p>
+    </div>
+
+  </section>
+
+  <!-- =====================
+       GRÁFICOS
+  ====================== -->
+
+  <section class="chart-card">
+    <h3>Gastos Mensais</h3>
+    <canvas id="chart-gastos-mes"></canvas>
+  </section>
+
+  <section class="chart-card">
+    <h3>Evolução do Preço</h3>
+    <canvas id="chart-preco"></canvas>
+  </section>
+
+  <section class="chart-card">
+    <h3>Distribuição por Tipo</h3>
+    <canvas id="chart-tipo"></canvas>
+  </section>
+
+  <section class="chart-card">
+    <h3>Postos Mais Visitados</h3>
+    <canvas id="chart-postos"></canvas>
+  </section>
+
+  <section class="chart-card">
+    <h3>Consumo Mensal (Litros)</h3>
+    <canvas id="chart-consumo-litros"></canvas>
+  </section>
+
+</main>
+
 </body>
 </html>
