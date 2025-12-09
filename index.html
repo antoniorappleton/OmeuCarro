@@ -4,9 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L100</title>
-    <link rel="stylesheet" href="./public/css/style.css">
-    <script defer src="js/service-worker-register.js"></script>
+
+    <!-- CSS global (index.html está DENTRO de /public) -->
+    <link rel="stylesheet" href="/public/css/style.css">
+
+    <!-- Service worker -->
+    <script defer src="/public/js/service-worker-register.js"></script>
+
+    <!-- Firebase + auth + firestore -->
+    <script defer src="/public/js/firebase-config.js"></script>
+    <script defer src="/public/js/auth.js"></script>
+    <script defer src="/public/js/firestore.js"></script>
+
+    <!-- Lógica do modal -->
+    <script defer src="/public/js/modal-abastecimento.js"></script>
 </head>
+
 
 <body>
 
@@ -18,8 +31,20 @@
 
     <!-- MAIN CONTENT -->
     <div class="container">
-        <a href="abastecimentos.html" class="btn">+ Novo Abastecimento</a>
-        <a href="dashboard.html" class="btn btn-outline" style="margin-left:10px;">📊 Ver Estatísticas</a>
+        <!-- 1 ÚNICO botão que abre o modal -->
+        <button class="btn btn-primary" id="btn-open-fuel-modal">
+            <svg class="icon icon-left" aria-hidden="true">
+                <use href="assets/icons.svg#icon-plus"></use>
+            </svg>
+            <span>+ Novo Abastecimento</span>
+        </button>
+
+        <a href="/public/dashboard.html" class="btn btn-outline" style="margin-left:10px;">
+            <svg class="icon icon-left" aria-hidden="true">
+                <use href="assets/icons.svg#icon-dashboard"></use>
+            </svg>
+            <span>Ver Estatísticas</span>
+        </a>
 
         <div style="margin-top:40px;">
             <div class="card">
@@ -43,88 +68,189 @@
         </div>
     </div>
 
+    <!-- OVERLAY + MODAL -->
+    <div id="fuel-modal-overlay" class="fuel-modal-overlay" aria-hidden="true">
+        <div class="fuel-modal" role="dialog" aria-modal="true" aria-labelledby="fuel-modal-title">
+            
+            <!-- Cabeçalho do modal -->
+            <div class="fuel-modal-header">
+                <div class="fuel-modal-title-wrap">
+                    <svg class="icon icon-title" aria-hidden="true">
+                        <use href="assets/icons.svg#icon-fuel"></use>
+                    </svg>
+                    <div>
+                        <h2 id="fuel-modal-title">Novo Abastecimento</h2>
+                        <p class="fuel-modal-description">
+                            Adicione um novo registo de abastecimento ao seu logbook
+                        </p>
+                    </div>
+                </div>
+
+                <button type="button" class="icon-button" id="btn-close-fuel-modal" aria-label="Fechar">
+                    <svg class="icon" aria-hidden="true">
+                        <use href="assets/icons.svg#icon-close"></use>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Conteúdo do modal -->
+            <form id="fuel-modal-form" class="fuel-modal-form">
+                <div class="form-grid">
+                    <!-- Data -->
+                    <div class="form-field">
+                        <label for="fuel-date">Data do Abastecimento *</label>
+                        <div class="input-with-icon">
+                            <input type="date" id="fuel-date" required>
+                            <svg class="icon icon-input" aria-hidden="true">
+                                <use href="assets/icons.svg#icon-calendar"></use>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de combustível -->
+                    <div class="form-field">
+                        <label for="fuel-type">Tipo de Combustível *</label>
+                        <select id="fuel-type" required>
+                            <option value="">Selecionar combustível</option>
+                            <option value="gasolina">Gasolina</option>
+                            <option value="diesel">Diesel</option>
+                            <option value="etanol">Etanol</option>
+                            <option value="gnv">GNV</option>
+                            <option value="eletrico">Elétrico</option>
+                        </select>
+                    </div>
+
+                    <!-- Litros -->
+                    <div class="form-field">
+                        <label for="fuel-liters">Litros *</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="fuel-liters"
+                            placeholder="ex: 45.50"
+                            required
+                        >
+                    </div>
+
+                    <!-- Preço por litro -->
+                    <div class="form-field">
+                        <label for="fuel-price">Preço por Litro (€) *</label>
+                        <input
+                            type="number"
+                            step="0.001"
+                            id="fuel-price"
+                            placeholder="ex: 1.459"
+                            required
+                        >
+                    </div>
+
+                    <!-- Quilometragem -->
+                    <div class="form-field">
+                        <label for="fuel-odometer">Quilometragem *</label>
+                        <input
+                            type="number"
+                            id="fuel-odometer"
+                            placeholder="ex: 125000"
+                            required
+                        >
+                    </div>
+
+                    <!-- Posto -->
+                    <div class="form-field">
+                        <label for="fuel-station">Posto de Combustível</label>
+                        <input
+                            type="text"
+                            id="fuel-station"
+                            placeholder="ex: Repsol, Galp, BP..."
+                        >
+                    </div>
+                </div>
+
+                <!-- Observações (linha inteira) -->
+                <div class="form-field form-field-full">
+                    <label for="fuel-notes">Observações</label>
+                    <textarea
+                        id="fuel-notes"
+                        rows="3"
+                        placeholder="Adicione observações sobre este abastecimento..."
+                    ></textarea>
+                </div>
+
+                <!-- Mensagem tipo toast -->
+                <p id="fuel-message" class="form-message"></p>
+
+                <!-- Barra inferior com botões -->
+                <div class="fuel-modal-footer">
+                    <button type="button" class="btn btn-ghost" id="btn-cancel-fuel-modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-primary btn-gradient">
+                        <svg class="icon icon-left" aria-hidden="true">
+                            <use href="assets/icons.svg#icon-plus"></use>
+                        </svg>
+                        <span>Adicionar Registro</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER / NAVIGATION BAR -->
-<footer>
-  <a href="index.html">
-    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <!-- HOME -->
-      <path d="M4 11L12 4l8 7v8a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1z"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round" />
-    </svg>
-    <span>Home</span>
-  </a>
+    <footer>
+      <a href="/index.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 11L12 4l8 7v8a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+        <span>Home</span>
+      </a>
 
-  <a href="dashboard.html">
-    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <!-- DASHBOARD / GRÁFICO -->
-      <rect x="4" y="11" width="3" height="8" rx="1"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8" />
-      <rect x="10.5" y="7" width="3" height="12" rx="1"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8" />
-      <rect x="17" y="4" width="3" height="15" rx="1"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8" />
-    </svg>
-    <span>Dashboard</span>
-  </a>
+      <a href="/public/dashboard.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="11" width="3" height="8" rx="1"
+                fill="none" stroke="currentColor" stroke-width="1.8" />
+          <rect x="10.5" y="7" width="3" height="12" rx="1"
+                fill="none" stroke="currentColor" stroke-width="1.8" />
+          <rect x="17" y="4" width="3" height="15" rx="1"
+                fill="none" stroke="currentColor" stroke-width="1.8" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
 
-  <a href="veiculos.html">
-    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <!-- VEÍCULO -->
-      <path d="M4 13.5l1.5-4.5A2 2 0 0 1 7.4 8h9.2a2 2 0 0 1 1.9 1l1.5 4.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round" />
-      <circle cx="7.5" cy="16.5" r="1.6"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8" />
-      <circle cx="16.5" cy="16.5" r="1.6"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8" />
-      <path d="M5.9 16.5H4.5a1 1 0 0 1-1-1v-2"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round" />
-      <path d="M18.1 16.5h1.4a1 1 0 0 0 1-1v-2"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round" />
-    </svg>
-    <span>Veículos</span>
-  </a>
+      <a href="/public/veiculos.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 13.5l1.5-4.5A2 2 0 0 1 7.4 8h9.2a2 2 0 0 1 1.9 1l1.5 4.5"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="7.5" cy="16.5" r="1.6"
+                  fill="none" stroke="currentColor" stroke-width="1.8" />
+          <circle cx="16.5" cy="16.5" r="1.6"
+                  fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="M5.9 16.5H4.5a1 1 0 0 1-1-1v-2"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" />
+          <path d="M18.1 16.5h1.4a1 1 0 0 0 1-1v-2"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" />
+        </svg>
+        <span>Veículos</span>
+      </a>
 
-  <a href="perfil.html">
-    <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <!-- PERFIL / UTILIZADOR -->
-      <circle cx="12" cy="8" r="3.2"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8" />
-      <path d="M6 18.5c0-2.5 2.4-4.5 6-4.5s6 2 6 4.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round" />
-    </svg>
-    <span>Perfil</span>
-  </a>
-</footer>
-
-
+      <a href="/public/perfil.html">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.2"
+                  fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="M6 18.5c0-2.5 2.4-4.5 6-4.5s6 2 6 4.5"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" />
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
 </body>
 </html>

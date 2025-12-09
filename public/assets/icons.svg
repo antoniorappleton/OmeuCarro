@@ -1,0 +1,57 @@
+<!-- assets/icons.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+
+    <!-- HOME -->
+    <symbol id="icon-home" viewBox="0 0 24 24">
+        <path d="M4 11L12 4l8 7v8a1 1 0 0 1-1 1h-5v-5h-4v5H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </symbol>
+
+    <!-- DASHBOARD (barras) -->
+    <symbol id="icon-dashboard" viewBox="0 0 24 24">
+        <rect x="4" y="11" width="3" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <rect x="10.5" y="7" width="3" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <rect x="17" y="4" width="3" height="15" rx="1" fill="none" stroke="currentColor" stroke-width="1.8" />
+    </symbol>
+
+    <!-- CARRO / VEÍCULOS -->
+    <symbol id="icon-car" viewBox="0 0 24 24">
+        <path d="M4 13.5l1.5-4.5A2 2 0 0 1 7.4 8h9.2a2 2 0 0 1 1.9 1l1.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="7.5" cy="16.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <circle cx="16.5" cy="16.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M5.9 16.5H4.5a1 1 0 0 1-1-1v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        <path d="M18.1 16.5h1.4a1 1 0 0 0 1-1v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </symbol>
+
+    <!-- PERFIL / UTILIZADOR -->
+    <symbol id="icon-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M6 18.5c0-2.5 2.4-4.5 6-4.5s6 2 6 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </symbol>
+
+    <!-- PLUS (+) para botões tipo “Novo Abastecimento” -->
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </symbol>
+
+    <!-- CALENDÁRIO (para campo de data) -->
+    <symbol id="icon-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M3 10h18" stroke="currentColor" stroke-width="1.8" />
+        <path d="M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </symbol>
+
+    <!-- Bomba de combustível (opcional, para futuros detalhes de abastecimentos) -->
+    <symbol id="icon-fuel" viewBox="0 0 24 24">
+        <rect x="6" y="5" width="8" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M14 8h2a2 2 0 0 1 2 2v5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        <path d="M18 11l1.5-1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </symbol>
+
+    <!-- Logout (para botão sair) -->
+    <symbol id="icon-logout" viewBox="0 0 24 24">
+        <path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M15 16l4-4-4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M9 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+    </symbol>
+
+</svg>
