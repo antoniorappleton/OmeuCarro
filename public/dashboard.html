@@ -19,6 +19,26 @@
   </header>
 
   <main>
+    <div class="dashboard-filtros">
+      <label for="filtro-veiculo">Veículo:</label>
+      <select id="filtro-veiculo">
+        <option value="">Todos os veículos</option>
+      </select>
+
+      <label for="filtro-periodo">Período:</label>
+      <select id="filtro-periodo">
+        <option value="semana">Última semana</option>
+        <option value="mes">Último mês</option>
+        <option value="ano">Último ano</option>
+        <option value="custom">Personalizado</option>
+      </select>
+
+      <div id="filtro-custom-datas" style="display:none">
+        <input type="date" id="filtro-data-inicio">
+        <input type="date" id="filtro-data-fim">
+      </div>
+    </div>
+
     <div id="kpi-container">
       <div class="kpi-card">
         <h3>Consumo Médio</h3>
