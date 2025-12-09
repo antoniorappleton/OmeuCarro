@@ -71,11 +71,28 @@ async function createAbastecimento(data) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
 
-  // TODO: garantir que veiculoId vem do select do veículo
+  if (!data.veiculoId) throw new Error("veiculoId é obrigatório");
+
+  // 🔥 VALIDAÇÃO DO ÚLTIMO ODOMETRO
+  const ultimoSnap = await db.collection("abastecimentos")
+    .where("userId", "==", user.uid)
+    .where("veiculoId", "==", data.veiculoId)
+    .orderBy("odometro", "desc")
+    .limit(1)
+    .get();
+
+  if (!ultimoSnap.empty) {
+    const ultimo = ultimoSnap.docs[0].data();
+    if (data.odometro < ultimo.odometro) {
+      throw new Error(`O odómetro (${data.odometro}) não pode ser inferior ao último registo (${ultimo.odometro}).`);
+    }
+  }
+
+  // Criar documento
   const abastecimento = {
     userId: user.uid,
-    veiculoId: data.veiculoId, // obrigatório escolher veículo na UI
-    data: data.data, // "YYYY-MM-DD"
+    veiculoId: data.veiculoId,
+    data: data.data,
     tipoCombustivel: data.tipoCombustivel,
     litros: Number(data.litros),
     precoPorLitro: Number(data.precoPorLitro),
@@ -86,8 +103,7 @@ async function createAbastecimento(data) {
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-  const ref = await db.collection("abastecimentos").add(abastecimento);
-  return ref;
+  return await db.collection("abastecimentos").add(abastecimento);
 }
 
 async function getAbastecimentosDoUtilizador({

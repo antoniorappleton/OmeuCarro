@@ -1,6 +1,6 @@
 // public/js/modal-abastecimento.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const openBtn = document.getElementById("btn-open-fuel-modal");
   const overlay = document.getElementById("fuel-modal-overlay");
   const closeBtn = document.getElementById("btn-close-fuel-modal");
@@ -8,12 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("fuel-modal-form");
 
   if (!openBtn || !overlay || !form) {
-    console.warn(
-      "[modal-abastecimento] Elementos do modal não encontrados no DOM."
-    );
+    console.warn("[modal-abastecimento] Elementos não encontrados no DOM.");
     return;
   }
 
+  // Campos
   const dateInput = document.getElementById("fuel-date");
   const typeSelect = document.getElementById("fuel-type");
   const litersInput = document.getElementById("fuel-liters");
@@ -23,6 +22,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const notesInput = document.getElementById("fuel-notes");
   const messageEl = document.getElementById("fuel-message");
 
+  // NOVOS CAMPOS
+  const veiculoSelect = document.getElementById("fuel-vehicle");
+  const completoCheckbox = document.getElementById("fuel-full");
+
+  function showMessage(text, type) {
+    if (!messageEl) return;
+    messageEl.textContent = text || "";
+    messageEl.className = "form-message";
+    if (type === "error") messageEl.classList.add("form-message--error");
+    if (type === "success") messageEl.classList.add("form-message--success");
+  }
+
   function openModal() {
     overlay.classList.add("is-open");
     overlay.setAttribute("aria-hidden", "false");
@@ -31,110 +42,112 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeModal() {
     overlay.classList.remove("is-open");
     overlay.setAttribute("aria-hidden", "true");
-    if (messageEl) {
-      messageEl.textContent = "";
-      messageEl.className = "form-message";
-    }
+    showMessage("", null);
     form.reset();
   }
 
-  function showMessage(text, type) {
-    if (!messageEl) return;
-    messageEl.textContent = text || "";
-    messageEl.className = "form-message";
+  // 🔥 Carregar veículos ao abrir modal
+  async function loadVeiculos() {
+    veiculoSelect.innerHTML = "<option value=''>A carregar...</option>";
 
-    if (type === "error") {
-      messageEl.classList.add("form-message--error");
-    } else if (type === "success") {
-      messageEl.classList.add("form-message--success");
+    const veiculos = await getVeiculosDoUtilizador();
+
+    if (veiculos.length === 0) {
+      veiculoSelect.innerHTML = "<option value=''>Nenhum veículo disponível</option>";
+      return;
     }
+
+    veiculoSelect.innerHTML = "<option value=''>Selecione o veículo</option>";
+    veiculos.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.id;
+      opt.textContent = `${v.nome} (${v.marca} ${v.modelo})`;
+      veiculoSelect.appendChild(opt);
+    });
   }
 
-  function normalizeNumber(value) {
-    if (!value) return NaN;
-    return parseFloat(String(value).replace(",", "."));
-  }
+  openBtn.addEventListener("click", async () => {
+    await loadVeiculos();
+    openModal();
+  });
 
-  // Abrir / fechar modal
-  openBtn.addEventListener("click", openModal);
   if (closeBtn) closeBtn.addEventListener("click", closeModal);
   if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
 
-  // Fechar ao clicar fora
-  overlay.addEventListener("click", (e) => {
+  overlay.addEventListener("click", e => {
     if (e.target === overlay) closeModal();
   });
 
-  // Fechar com ESC
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", e => {
     if (e.key === "Escape" && overlay.classList.contains("is-open")) {
       closeModal();
     }
   });
 
-  // Submissão do formulário
+  // 🔥 SUBMISSÃO DO FORMULÁRIO COM VALIDAÇÕES
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     showMessage("", null);
 
-    if (
-      !dateInput.value ||
-      !typeSelect.value ||
-      !litersInput.value ||
-      !priceInput.value ||
-      !odometerInput.value
-    ) {
-      showMessage(
-        "Por favor, preencha todos os campos obrigatórios (*).",
-        "error"
-      );
-      return;
-    }
-
-    const liters = normalizeNumber(litersInput.value);
-    const price = normalizeNumber(priceInput.value);
-    const odometer = parseInt(odometerInput.value, 10);
-
-    if (isNaN(liters) || isNaN(price) || isNaN(odometer)) {
-      showMessage(
-        "Verifique os valores de litros, preço e quilometragem.",
-        "error"
-      );
-      return;
-    }
-
-    const totalCost = parseFloat((liters * price).toFixed(2));
-
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      showMessage(
-        "Precisa de estar autenticado para registar abastecimentos.",
-        "error"
-      );
-      return;
-    }
-
-    // ... dentro do submit do form
-
-    const record = {
-      veiculoId: veiculoSelect.value, // precisa de haver um <select> de veículo
-      data: dateInput.value, // "YYYY-MM-DD"
-      tipoCombustivel: typeSelect.value,
-      litros: liters,
-      precoPorLitro: price,
-      odometro: odometer,
-      posto: stationInput.value || "",
-      observacoes: notesInput.value || "",
-      completo: completoCheckbox.checked, // se tiveres esse campo
-    };
-
     try {
+      // Validações base
+      if (!veiculoSelect.value)
+        throw "Selecione um veículo.";
+
+      if (!dateInput.value ||
+          !typeSelect.value ||
+          !litersInput.value ||
+          !priceInput.value ||
+          !odometerInput.value)
+        throw "Preencha todos os campos obrigatórios (*).";
+
+      const litros = parseFloat(litersInput.value.replace(",", "."));
+      const preco = parseFloat(priceInput.value.replace(",", "."));
+      const odometro = parseInt(odometerInput.value, 10);
+
+      if (isNaN(litros) || litros <= 0)
+        throw "Litros inválidos.";
+
+      if (isNaN(preco) || preco <= 0)
+        throw "Preço por litro inválido.";
+
+      if (isNaN(odometro))
+        throw "Odómetro inválido.";
+
+      // 🔥 Validação avançada: verificar odómetro ≥ último abastecimento
+      const abastecimentos = await getAbastecimentosDoUtilizador({
+        veiculoId: veiculoSelect.value,
+        limite: 1
+      });
+
+      if (abastecimentos.length > 0) {
+        const ultimo = abastecimentos[0];
+        if (odometro < ultimo.odometro)
+          throw `O odómetro (${odometro}) não pode ser inferior ao último registo (${ultimo.odometro}).`;
+      }
+
+      // Criar registo
+      const record = {
+        veiculoId: veiculoSelect.value,
+        data: dateInput.value,
+        tipoCombustivel: typeSelect.value,
+        litros,
+        precoPorLitro: preco,
+        odometro,
+        posto: stationInput.value || "",
+        observacoes: notesInput.value || "",
+        completo: completoCheckbox.checked
+      };
+
       await createAbastecimento(record);
+
       showMessage("Abastecimento registado com sucesso! ✅", "success");
-      setTimeout(closeModal, 700);
-    } catch (error) {
-      console.error(error);
-      showMessage("Erro ao guardar o abastecimento.", "error");
+
+      setTimeout(closeModal, 600);
+
+    } catch (err) {
+      console.error(err);
+      showMessage(err.toString(), "error");
     }
   });
 });
