@@ -24,14 +24,11 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Inter", "Poppins", sans-serif;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-start),
-    var(--color-primary-end)
-  );
-  color: var(--color-white);
+  background: #ffffff;              /* fundo branco */
+  color: var(--color-text-dark);    /* texto escuro por omissão */
   min-height: 100vh;
 }
+
 
 /* ----------- HEADERS ----------- */
 header {
