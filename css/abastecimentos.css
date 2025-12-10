@@ -1,0 +1,61 @@
+/* PÁGINA: Novo Abastecimento */
+
+body {
+  background: var(--color-bg);
+}
+
+/* header desta página usa o header genérico do style.css mas ajustamos layout */
+
+.page-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.4rem;
+}
+
+.page-title .icon-title {
+  width: 28px;
+  height: 28px;
+}
+
+/* main / card */
+
+main {
+  padding-bottom: 80px;
+}
+
+.fuel-form-card {
+  margin-top: 24px;
+}
+
+.fuel-form-card .card-subtitle {
+  margin-bottom: 18px;
+}
+
+/* inputs mais “web” nesta página (sobrepõem o global se necessário) */
+
+.fuel-form-card .form-field input,
+.fuel-form-card .form-field select,
+.fuel-form-card .form-field textarea {
+  background: #f9fafb;
+  border: 1px solid var(--color-border-soft);
+  color: var(--color-text-dark);
+}
+
+.fuel-form-card .form-field input:focus,
+.fuel-form-card .form-field select:focus,
+.fuel-form-card .form-field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary-solid);
+  box-shadow: 0 0 0 1px rgba(12, 140, 120, 0.25);
+}
+
+/* helper abaixo do select de veículo */
+
+.form-helper {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: -6px;
+}
+
+/* botão full width já vem do style.css */

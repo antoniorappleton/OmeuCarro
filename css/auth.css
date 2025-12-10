@@ -1,17 +1,87 @@
-.auth-container {
-  max-width: 380px;
-  margin: 60px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #ddd;
+/* PÁGINA DE LOGIN SIMPLES */
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #096279, #1b9b82);
+  color: #ffffff;
 }
 
-input {
+.auth-container {
   width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  font-size: 16px;
+  max-width: 420px;
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 18px;
+  padding: 24px 22px 20px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.auth-container h1 {
+  margin: 0 0 12px;
+  font-size: 1.7rem;
+}
+
+.auth-container p {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* inputs aqui sobrepõem o global */
+
+.auth-container input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.auth-container input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* botão */
+
+.auth-container button {
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 4px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: #ffffff;
+}
+
+.auth-container button:hover {
+  opacity: 0.95;
+}
+
+.auth-container a {
+  color: #a5b4fc;
+  text-decoration: none;
+}
+
+.auth-container a:hover {
+  text-decoration: underline;
+}
+
+.auth-container > p:last-child {
+  margin-top: 10px;
+  font-size: 0.9rem;
 }

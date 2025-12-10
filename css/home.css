@@ -1,19 +1,23 @@
-/* HOME / PAINEL INICIAL */
+/* ==============================
+   HOME / PAINEL INICIAL
+   ============================== */
 
-/* o body já tem o gradiente em style.css; aqui criamos cartões por cima */
-/* HOME / PAINEL INICIAL */
-
-.app-page {
+/* FUNDO: imagem em toda a página */
+body.app-page {
   margin: 0;
   min-height: 100vh;
-  background: #f5f7fb;      /* ligeiro cinza para destacar cards */
-  color: #0f172a;           /* texto escuro */
-  padding-bottom: 80px;     /* espaço para o footer fixo */
+
+  /* ajusta o nome do ficheiro se for outro */
+  background-image: url("/images/offroad.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  color: #0f172a;
 }
 
-
-/* HEADER */
-
+/* HEADER com gradiente */
 .app-header {
   position: sticky;
   top: 0;
@@ -21,15 +25,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 12px 20px;
 
-  background: linear-gradient(135deg, #096279, #1B9B82);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-start),
+    var(--color-primary-end)
+  );
   color: #ffffff;
+
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
 }
-
-
 
 .app-header-left {
   display: flex;
@@ -41,14 +48,11 @@
   width: 40px;
   height: 40px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #096279, #1B9B82);
+  background: rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.app-logo-icon {
-  font-size: 20px;
+  color: #ffffff;
 }
 
 .app-logo-text {
@@ -59,17 +63,19 @@
 .app-logo-title {
   font-weight: 700;
   letter-spacing: 0.04em;
+  font-size: 1rem;
+  color: #ffffff;
 }
 
 .app-logo-subtitle {
   font-size: 0.8rem;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .app-header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .icon-btn {
@@ -83,77 +89,74 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: 0.25s ease-in-out;
 }
 
-/* HERO */
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
 
+/* HERO – sem película, só texto por cima da imagem */
 .hero {
-  position: relative;
-  padding: 20px 16px 60px;
-  overflow: hidden;
-
-  /* imagem de fundo (ajusta o path e nome do ficheiro) */
-  background-image: url("/images/offroad.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  padding: 20px 16px 16px;
+  background: transparent;
 }
 
-/* camada de cor por cima da imagem, para garantir legibilidade */
 .hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(9, 98, 121, 0.9),
-    rgba(27, 155, 130, 0.75)
-  );
+  display: none !important; /* mata a "película" verde */
 }
+
 .hero-content {
-  position: relative;
   max-width: 640px;
+  position: relative;
   z-index: 1;
+  color: #ffffff;
 }
 
 .hero-eyebrow {
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.95;
   margin-bottom: 4px;
 }
 
 .hero-title {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   margin: 0 0 4px;
 }
 
 .hero-subtitle {
   margin: 0;
   font-size: 0.95rem;
+  opacity: 0.9;
   max-width: 420px;
 }
 
 /* MAIN CONTENT */
-
 .home-main {
-  position: relative;
-  z-index: 5;
   padding: 0 16px 24px;
 }
 
-/* STATS GRID */
-
+/* STATS GRID (sem margin-top negativa) */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-top: -40px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* CARDS – brancos translúcidos */
+.stats-card,
+.vehicle-card,
+.quick-actions {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
 .stats-card {
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 16px;
-  padding: 14px 14px 12px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  padding: 14px 16px 12px;
 }
 
 .stats-card-header {
@@ -167,11 +170,12 @@
   width: 26px;
   height: 26px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(15, 118, 110, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  color: var(--color-primary-solid);
 }
 
 .stats-card h2 {
@@ -188,13 +192,12 @@
 .stats-card-desc {
   margin: 2px 0 0;
   font-size: 0.8rem;
-  opacity: 0.85;
+  color: #6b7280;
 }
 
 /* VEÍCULOS */
-
 .vehicles-section {
-  margin-top: 24px;
+  margin-top: 26px;
 }
 
 .vehicles-header {
@@ -202,31 +205,38 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
 }
 
 .vehicles-header h2 {
   margin: 0;
   font-size: 1.2rem;
+  color: #ffffff;
 }
 
 .vehicles-header p {
   margin: 2px 0 0;
   font-size: 0.9rem;
-  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .vehicles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
 }
 
 .vehicle-card {
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 14px;
-  padding: 12px 12px 10px;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  padding: 14px 16px 12px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.vehicle-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.35);
 }
 
 .vehicle-card-header {
@@ -238,62 +248,61 @@
 
 .vehicle-card-title {
   font-weight: 600;
+  font-size: 1rem;
 }
 
 .vehicle-card-subtitle {
   font-size: 0.85rem;
-  opacity: 0.85;
-}
-
-.vehicle-card-meta {
-  font-size: 0.8rem;
-  opacity: 0.9;
+  color: #6b7280;
 }
 
 .vehicle-card-footer {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 0.8rem;
   display: flex;
   justify-content: space-between;
-  opacity: 0.9;
+  color: #6b7280;
 }
 
 /* Estado vazio */
-
 .vehicles-empty {
   text-align: center;
   padding: 24px 12px;
-  border-radius: 16px;
-  border: 1px dashed rgba(255,255,255,0.4);
-  background: rgba(0,0,0,0.3);
-  margin-top: 8px;
+  border-radius: 18px;
+  border: 1px dashed #d1d5db;
+  background: rgba(255, 255, 255, 0.9);
+  margin-top: 10px;
 }
 
 .vehicles-empty-icon {
   font-size: 32px;
   margin-bottom: 6px;
+  color: var(--color-primary-solid);
+}
+
+.vehicles-empty h3 {
+  margin: 0 0 4px;
+}
+
+.vehicles-empty p {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .hidden {
   display: none !important;
 }
 
-/* QUICK ACTIONS */
-
+/* AÇÕES RÁPIDAS */
 .quick-actions {
-  margin-top: 24px;
-  padding: 16px 14px;
-  border-radius: 16px;
-  background: linear-gradient(
-    120deg,
-    rgba(9, 98, 121, 0.25),
-    rgba(27, 155, 130, 0.25)
-  );
-  border: 1px solid rgba(255,255,255,0.2);
+  margin-top: 26px;
+  padding: 16px 16px;
 }
 
 .quick-actions h3 {
   margin: 0 0 8px;
+  font-size: 1rem;
 }
 
 .quick-actions-row {
@@ -301,9 +310,10 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-/* Espaço extra no fundo das páginas normais para não ficar atrás do footer */
-body:not(.auth-page) .container,
-body:not(.auth-page) main,
-body:not(.auth-page) .app-main {
-  padding-bottom: 80px;
+
+/* responsivo */
+@media (min-width: 1024px) {
+  .hero {
+    padding: 24px 20px 18px;
+  }
 }

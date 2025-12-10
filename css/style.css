@@ -1,8 +1,8 @@
 /* =============================
-   L100 GLOBAL THEME – Fuel Logbook Style
+   GLOBAL THEME – Fuel / L100
    ============================= */
 
-/* ----------- ROOT VARIABLES (cores globais) ----------- */
+/* ----------- ROOT VARIABLES ----------- */
 :root {
   --color-primary-start: #096279;
   --color-primary-end: #1b9b82;
@@ -11,8 +11,12 @@
   --color-green: #27ae60;
   --color-green-light: #2ecc71;
 
-  --color-white: #ffffff;
-  --color-text-dark: #1a1a1a;
+  --color-bg: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-border-soft: #e5e7eb;
+
+  --color-text-dark: #0f172a;
+  --color-text-muted: #6b7280;
 
   --radius: 12px;
   --transition: 0.25s ease-in-out;
@@ -23,18 +27,23 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: "Inter", "Poppins", sans-serif;
-  background: #ffffff;              /* fundo branco */
-  color: var(--color-text-dark);    /* texto escuro por omissão */
+  font-family: "Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-dark);
   min-height: 100vh;
 }
 
-
-/* ----------- HEADERS ----------- */
+/* ----------- GENERIC HEADER (páginas simples) ----------- */
 header {
   padding: 20px;
   text-align: center;
-  color: var(--color-white);
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-start),
+    var(--color-primary-end)
+  );
 }
 
 header h1 {
@@ -44,7 +53,7 @@ header h1 {
 
 header p {
   font-size: 16px;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* ----------- CONTAINERS ----------- */
@@ -52,7 +61,7 @@ header p {
   width: 90%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px 0;
+  padding: 20px 0 80px; /* espaço para o footer fixo */
 }
 
 /* ----------- BUTTONS (base) ----------- */
@@ -63,7 +72,7 @@ header p {
   gap: 8px;
   padding: 10px 18px;
   background: var(--color-green);
-  color: var(--color-white);
+  color: #ffffff;
   border-radius: 999px;
   font-size: 0.95rem;
   text-decoration: none;
@@ -78,20 +87,19 @@ header p {
   transform: translateY(-2px);
 }
 
-/* Botão transparente (ex: estatísticas) */
 .btn-outline {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: var(--color-text-dark);
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.08);
 }
 
-/* Botão em modo “fantasma” (texto escuro, usado no modal) */
 .btn-ghost {
   background: transparent;
-  color: #0f172a;
+  color: var(--color-text-dark);
 }
 
 .btn-ghost:hover {
@@ -99,20 +107,21 @@ header p {
 }
 
 .btn-primary {
-  background: var(--color-primary-solid, #0f766e);
+  background: var(--color-primary-solid);
   color: #ffffff;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .btn-gradient {
   background: linear-gradient(
     90deg,
-    var(--color-primary-solid, #0f766e),
+    var(--color-primary-solid),
     var(--color-green-light)
   );
+  color: #ffffff;
 }
 
 .btn.full-width {
@@ -134,38 +143,53 @@ header p {
   height: 18px;
 }
 
-/* ----------- CARDS ----------- */
+/* ----------- CARDS GENÉRICOS ----------- */
 .card {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-surface);
   padding: 20px;
   border-radius: var(--radius);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
   margin-bottom: 20px;
-  color: var(--color-white);
+  color: var(--color-text-dark);
 }
 
-/* ----------- INPUTS GLOBAIS (páginas normais) ----------- */
+/* ----------- INPUTS GLOBAIS ----------- */
 input,
 select,
 textarea {
   width: 100%;
   padding: 12px;
   border-radius: var(--radius);
-  border: none;
+  border: 1px solid var(--color-border-soft);
   margin: 8px 0 15px;
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--color-white);
+  background: #f9fafb;
+  color: var(--color-text-dark);
   box-sizing: border-box;
+  font-size: 0.95rem;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(148, 163, 184, 0.9);
 }
 
-/* textarea */
 textarea {
   resize: vertical;
+}
+
+/* Mensagens de formulário (genéricas) */
+.form-message {
+  min-height: 18px;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.form-message--error {
+  color: #e11d48;
+}
+
+.form-message--success {
+  color: var(--color-green);
 }
 
 /* ----------- FOOTER NAVBAR (PWA) ----------- */
@@ -174,26 +198,37 @@ footer {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(6px);
-  padding: 12px 0;
+
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-start),
+    var(--color-primary-end)
+  );
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+  padding: 10px 0 8px;
   display: flex;
   justify-content: space-around;
   z-index: 500;
 }
 
-/* links do footer como “botões” verticais com ícone + label */
 footer a {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  color: var(--color-white);
+  color: #ffffff;
   font-size: 11px;
   text-decoration: none;
   opacity: 0.9;
   transition: var(--transition);
 }
+
+footer a:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
 
 footer a .nav-icon,
 footer a .icon {
@@ -205,14 +240,17 @@ footer a span {
   font-size: 11px;
 }
 
-footer a:hover {
-  opacity: 1;
-  transform: translateY(-1px);
+/* espaço extra nas páginas normais para não ficar atrás do footer */
+body:not(.auth-page) .container,
+body:not(.auth-page) main,
+body:not(.auth-page) .app-main,
+body:not(.auth-page) .home-main {
+  padding-bottom: 80px;
 }
 
-/* ============================
-   FORMULÁRIOS GERAIS (Páginas tipo abastecimentos)
-   ============================ */
+/* ===========================
+   FORMULÁRIOS GERAIS (ex: abastecimentos)
+   =========================== */
 
 .fuel-form-card {
   margin-top: 20px;
@@ -225,11 +263,10 @@ footer a:hover {
 
 .card-subtitle {
   font-size: 0.9rem;
-  opacity: 0.9;
+  color: var(--color-text-muted);
   margin-bottom: 20px;
 }
 
-/* grid responsivo */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -243,7 +280,8 @@ footer a:hover {
 
 .form-field label {
   font-size: 0.85rem;
-  opacity: 0.9;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
 }
 
 /* tablets / desktop: 2 colunas */
@@ -257,12 +295,12 @@ footer a:hover {
   grid-column: 1 / -1;
 }
 
-/* caixa do total */
+/* caixa do total (se precisares noutras páginas) */
 .total-box {
   margin: 10px 0 20px;
   padding: 12px 16px;
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.12);
+  background: #f3f4f6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -270,49 +308,30 @@ footer a:hover {
 
 .total-label {
   font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 
 .total-value {
   font-size: 1.3rem;
-  font-weight: bold;
+  font-weight: 600;
   color: var(--color-primary-solid);
 }
 
-/* mensagem de feedback tipo toast (global) */
-.form-message {
-  min-height: 18px;
-  font-size: 0.85rem;
-  margin-bottom: 10px;
-}
-
-.form-message--error {
-  color: #ffb3b3;
-}
-
-.form-message--success {
-  color: var(--color-green-light);
-}
-
-/* botão full width já tratado em .btn.full-width */
-
 /* ===========================
-   MODAL – Novo Abastecimento / Novo Veículo
+   MODAL – Novo Abastecimento / Veículo
    =========================== */
 
-/* OVERLAY – cobre 100% do ecrã sempre */
 .fuel-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-
-  background: rgba(15, 23, 42, 0.75); /* escurecido */
-  backdrop-filter: blur(8px); /* blur real */
-
-  display: none; /* só aparece quando abrir */
-  align-items: center; /* centra vertical */
-  justify-content: center; /* centra horizontal */
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
   z-index: 9999;
 }
 
@@ -320,35 +339,27 @@ footer a:hover {
   display: flex;
 }
 
-/* impedir scroll do fundo quando o modal está aberto */
 body.modal-open {
   overflow: hidden !important;
 }
 
-/* MODAL EM SI */
 .fuel-modal {
   background: #ffffff;
   color: #0f172a;
-
   border-radius: 18px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
-
   width: 92vw;
   max-width: 480px;
-
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-
   max-height: calc(100vh - 120px);
   overflow-y: auto;
-
   position: relative;
   z-index: 10000;
 }
 
-/* Cabeçalho */
 .fuel-modal-header {
   display: flex;
   justify-content: space-between;
@@ -372,14 +383,12 @@ body.modal-open {
   color: #64748b;
 }
 
-/* Ícone do título */
 .icon-title {
   width: 28px;
   height: 28px;
-  color: var(--color-primary-solid, #0f766e);
+  color: var(--color-primary-solid);
 }
 
-/* Botão X */
 .icon-button {
   border: none;
   background: transparent;
@@ -397,7 +406,6 @@ body.modal-open {
   color: #0f172a;
 }
 
-/* Formulário dentro do modal */
 .fuel-modal-form {
   display: flex;
   flex-direction: column;
@@ -405,13 +413,9 @@ body.modal-open {
   margin-top: 8px;
 }
 
-/* Grid do modal (reutiliza .form-grid) */
-
-/* Inputs específicos do modal – brancos, limpos */
 .fuel-modal .form-field label {
   font-size: 0.85rem;
   color: #0f172a;
-  display: block;
   margin-bottom: 4px;
 }
 
@@ -432,7 +436,6 @@ body.modal-open {
   color: #9ca3af;
 }
 
-/* Input com ícone (ex: data) */
 .input-with-icon {
   position: relative;
   display: flex;
@@ -451,9 +454,6 @@ body.modal-open {
   color: #64748b;
 }
 
-/* Mensagem do modal reutiliza .form-message */
-
-/* Footer do modal (botões alinhados) */
 .fuel-modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -472,7 +472,7 @@ body.modal-open {
 
 /* =========================
    LAYOUT DA PÁGINA DE AUTH
-   (index.html)
+   (se usares body.auth-page noutro HTML)
    ========================= */
 
 body.auth-page {
@@ -482,10 +482,6 @@ body.auth-page {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-
-  /* fundo em degradê */
   background: linear-gradient(135deg, #096279, #1b9b82);
   color: #ffffff;
 }
@@ -504,123 +500,16 @@ body.auth-page .auth-card {
   width: 100%;
   box-sizing: border-box;
 }
-
-/* HEADER AUTH */
-body.auth-page .auth-header h1 {
-  margin: 0 0 4px;
-  font-size: 1.8rem;
-  letter-spacing: 0.04em;
-}
-
-body.auth-page .auth-header p {
+body.app-page {
   margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
+  min-height: 100vh;
 
-/* TABS AUTH */
-body.auth-page .auth-tabs {
-  display: flex;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 4px;
-  margin: 20px 0 16px;
-}
+  /* ajusta o nome do ficheiro se for outro */
+  background-image: url("/images/offroad.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 
-body.auth-page .auth-tab {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: #e0e0e0;
-  font-size: 0.9rem;
-  padding: 8px 0;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-body.auth-page .auth-tab--active {
-  background: #ffffff;
-  color: #096279;
-}
-
-/* FORMULÁRIOS AUTH */
-body.auth-page .auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-body.auth-page .auth-form--hidden {
-  display: none;
-}
-
-/* form-field só na auth */
-body.auth-page .form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-body.auth-page .form-field label {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-body.auth-page .form-field input {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.25);
-  color: #ffffff;
-  font-size: 0.95rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-body.auth-page .form-field input::placeholder {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* Mensagens AUTH */
-body.auth-page .form-message {
-  min-height: 18px;
-  margin: 4px 0 0;
-  font-size: 0.8rem;
-}
-
-body.auth-page .form-message--error {
-  color: #ffb8b8;
-}
-
-body.auth-page .form-message--success {
-  color: #b8ffcf;
-}
-
-/* Botões AUTH */
-body.auth-page .btn.full-width {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-body.auth-page .btn-primary {
-  border: none;
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: #ffffff;
-}
-
-body.auth-page .btn-ghost {
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  background: transparent;
-  color: #ffffff;
-  cursor: pointer;
+  color: #0f172a;
 }
