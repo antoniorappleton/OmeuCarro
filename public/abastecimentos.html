@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Novo Abastecimento - L100</title>
-
-  <!-- Tema global -->
+  <title>Abastecimentos - O Meu Carro</title>
+  ...
+  <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
-  <!-- CSS específico desta página -->
   <link rel="stylesheet" href="css/abastecimentos.css">
 
-  <!-- Firebase + auth + firestore -->
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- JS do projeto -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
-  <!-- Lógica específica desta página -->
-  <script defer src="js/abastecimentos.js"></script>
+  <script defer src="js/modal-abastecimentos.js"></script> <!-- ou modal-abastecimento.js -->
 </head>
+
+
 <body>
 
   <!-- HEADER -->
@@ -146,7 +149,7 @@
 
   <!-- FOOTER com SVGs -->
   <footer>
-    <a href="index.html">
+    <a href="dashboard.html">
       <svg class="icon" aria-hidden="true">
         <use href="assets/icons.svg#icon-home"></use>
       </svg>

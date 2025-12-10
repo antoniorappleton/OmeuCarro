@@ -1,144 +1,148 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Estatísticas - Fuel Manager</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L100 – Painel</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/style.css"/>
-  <link rel="stylesheet" href="css/dashboard.css"/>
+  <!-- Tema global -->
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- CSS específico desta página -->
+  <link rel="stylesheet" href="css/home.css" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- JS -->
+  <!-- Firebase + auth + firestore -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
-  <script defer src="js/dashboard.js"></script>
+  <!-- Lógica desta página -->
+  <script defer src="js/home.js"></script>
 </head>
-<body>
 
-<header class="top-header">
-  <button class="back-btn" onclick="history.back()">←</button>
-  <div>
-    <h1>Estatísticas</h1>
-    <p>Análise detalhada dos seus abastecimentos</p>
-  </div>
-</header>
-
-<main class="dashboard-container">
-
-  <!-- =====================
-       FILTROS 
-  ====================== -->
-  <section class="filters-card">
-    <div class="filter-group">
-      <label>Veículo</label>
-      <select id="filtro-veiculo">
-        <option value="">Todos os veículos</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <label>Período</label>
-      <select id="filtro-periodo">
-        <option value="semana">Última semana</option>
-        <option value="mes">Último mês</option>
-        <option value="ano">Último ano</option>
-        <option value="custom">Personalizado</option>
-      </select>
-    </div>
-
-    <div id="filtro-custom-datas" class="custom-dates hidden">
-      <input type="date" id="filtro-data-inicio"/>
-      <input type="date" id="filtro-data-fim"/>
-    </div>
-  </section>
-
-  <!-- =====================
-       KPI CARDS
-  ====================== -->
-  <section class="kpi-grid">
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Total Gasto</span>
-        <i class="icon">$</i>
+<body class="app-page" data-page="home">
+  <!-- HEADER / NAVBAR -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="app-logo">
+        <span class="app-logo-icon">⛽</span>
       </div>
-      <h2 id="kpi-gastos">--</h2>
-      <p class="kpi-sub">Últimos 6 meses</p>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Litros Consumidos</span>
-        <i class="icon">⛽</i>
+      <div class="app-logo-text">
+        <span class="app-logo-title">L100</span>
+        <span class="app-logo-subtitle">Painel de controlo</span>
       </div>
-      <h2 id="kpi-litros">--</h2>
-      <p class="kpi-sub">Últimos 6 meses</p>
     </div>
 
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Preço Médio</span>
-        <i class="icon">📈</i>
+    <div class="app-header-actions">
+      <a href="dashboard.html" class="icon-btn" title="Estatísticas">
+        📊
+      </a>
+      <button type="button" class="icon-btn" title="Definições">
+        ⚙️
+      </button>
+      <button type="button" id="btn-logout" class="icon-btn" title="Sair">
+        ⏏
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Bem-vindo de volta</p>
+      <h1 class="hero-title">Painel de Controlo</h1>
+      <p class="hero-subtitle">
+        Gere os seus veículos e acompanhe os gastos com combustível num único lugar.
+      </p>
+    </div>
+  </section>
+
+  <main class="home-main">
+    <!-- QUICK STATS -->
+    <section class="stats-grid">
+      <article class="stats-card" id="stat-veiculos">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">🚗</span>
+          <h2>Veículos</h2>
+        </div>
+        <p class="stats-card-value" id="stat-veiculos-value">0</p>
+        <p class="stats-card-desc">Registados</p>
+      </article>
+
+      <article class="stats-card" id="stat-gasto">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">💶</span>
+          <h2>Total gasto</h2>
+        </div>
+        <p class="stats-card-value" id="stat-gasto-value">€0</p>
+        <p class="stats-card-desc">Últimos abastecimentos</p>
+      </article>
+
+      <article class="stats-card" id="stat-litros">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">⛽</span>
+          <h2>Litros</h2>
+        </div>
+        <p class="stats-card-value" id="stat-litros-value">0 L</p>
+        <p class="stats-card-desc">Abastecidos</p>
+      </article>
+
+      <article class="stats-card" id="stat-abastecimentos">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">📈</span>
+          <h2>Abastecimentos</h2>
+        </div>
+        <p class="stats-card-value" id="stat-abastecimentos-value">0</p>
+        <p class="stats-card-desc">Registos</p>
+      </article>
+    </section>
+
+    <!-- VEÍCULOS -->
+    <section class="vehicles-section">
+      <div class="vehicles-header">
+        <div>
+          <h2>Meus veículos</h2>
+          <p>Selecione um veículo para ver os abastecimentos.</p>
+        </div>
+        <button type="button" id="btn-add-vehicle" class="btn btn-primary">
+          + Adicionar veículo
+        </button>
       </div>
-      <h2 id="kpi-preco-medio">--</h2>
-      <p class="kpi-sub">Por litro</p>
-    </div>
 
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Eficiência Média</span>
-        <i class="icon">📊</i>
+      <div id="vehicles-list" class="vehicles-grid">
+        <!-- cards de veículos criados via JS -->
       </div>
-      <h2 id="kpi-consumo">--</h2>
-      <p class="kpi-sub">Consumo médio</p>
-    </div>
 
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span>Abastecimentos</span>
-        <i class="icon">📅</i>
+      <!-- Estado vazio -->
+      <div id="vehicles-empty" class="vehicles-empty hidden">
+        <div class="vehicles-empty-icon">🚘</div>
+        <h3>Nenhum veículo registado</h3>
+        <p>Comece por adicionar o seu primeiro veículo.</p>
+        <button type="button" id="btn-add-first-vehicle" class="btn btn-primary">
+          + Adicionar primeiro veículo
+        </button>
       </div>
-      <h2 id="kpi-abastecimentos">--</h2>
-      <p class="kpi-sub">Últimos 6 meses</p>
-    </div>
+    </section>
 
-  </section>
-
-  <!-- =====================
-       GRÁFICOS
-  ====================== -->
-
-  <section class="chart-card">
-    <h3>Gastos Mensais</h3>
-    <canvas id="chart-gastos-mes"></canvas>
-  </section>
-
-  <section class="chart-card">
-    <h3>Evolução do Preço</h3>
-    <canvas id="chart-preco"></canvas>
-  </section>
-
-  <section class="chart-card">
-    <h3>Distribuição por Tipo</h3>
-    <canvas id="chart-tipo"></canvas>
-  </section>
-
-  <section class="chart-card">
-    <h3>Postos Mais Visitados</h3>
-    <canvas id="chart-postos"></canvas>
-  </section>
-
-  <section class="chart-card">
-    <h3>Consumo Mensal (Litros)</h3>
-    <canvas id="chart-consumo-litros"></canvas>
-  </section>
-
-</main>
-
+    <!-- AÇÕES RÁPIDAS -->
+    <section class="quick-actions">
+      <h3>Ações rápidas</h3>
+      <div class="quick-actions-row">
+        <a href="abastecimentos.html" class="btn btn-outline">
+          + Novo abastecimento
+        </a>
+        <a href="dashboard.html" class="btn btn-outline">
+          Ver estatísticas
+        </a>
+        <a href="veiculos.html" class="btn btn-outline">
+          Gerir veículos
+        </a>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

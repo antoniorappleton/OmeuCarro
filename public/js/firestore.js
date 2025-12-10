@@ -2,6 +2,10 @@
 
 // ========== USERS ==========
 
+// public/js/firestore.js
+
+// ========== USERS ==========
+
 // cria / atualiza o perfil do utilizador em users/{uid}
 async function saveUserProfile(user, extraData = {}) {
   if (!user) return;
@@ -16,12 +20,22 @@ async function saveUserProfile(user, extraData = {}) {
     moeda: extraData.moeda || "EUR",
     unidadeConsumo: extraData.unidadeConsumo || "L/100km",
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-    ...extraData,
+    ...extraData, // junta qualquer outro campo extra
   };
 
   await userRef.set(data, { merge: true });
   return userRef;
 }
+
+// lê o perfil do utilizador autenticado
+async function getCurrentUserProfile() {
+  const user = auth.currentUser;
+  if (!user) return null;
+
+  const snap = await db.collection("users").doc(user.uid).get();
+  return snap.exists ? { id: snap.id, ...snap.data() } : null;
+}
+
 
 // lê o perfil do utilizador autenticado
 async function getCurrentUserProfile() {
