@@ -127,19 +127,27 @@ async function getAbastecimentosDoUtilizador({
   const user = auth.currentUser;
   if (!user) return [];
 
-  let query = db
-    .collection("abastecimentos")
-    .where("userId", "==", user.uid)
-    .orderBy("data", "desc")
-    .limit(limite);
+  let query = db.collection("abastecimentos").where("userId", "==", user.uid);
 
   if (veiculoId) {
     query = query.where("veiculoId", "==", veiculoId);
   }
 
+  query = query.limit(limite);
+
   const snap = await query.get();
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+  // ordenamos por data DESC do lado do cliente
+  docs.sort((a, b) => {
+    const da = a.data || "";
+    const db_ = b.data || "";
+    return db_.localeCompare(da); // desc
+  });
+
+  return docs;
 }
+
 // ========== VEÍCULOS: UPDATE & DELETE ==========
 
 async function updateVeiculo(id, data) {

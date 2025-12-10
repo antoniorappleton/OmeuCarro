@@ -98,9 +98,17 @@ body.app-page {
 
 /* HERO – sem película, só texto por cima da imagem */
 .hero {
-  padding: 20px 16px 16px;
-  background: transparent;
+  position: relative;
+  padding: 20px 16px 60px;
+  overflow: hidden;
+
+  /* imagem de fundo (sem / inicial, relativo à pasta css/) */
+  background-image: url("../images/offroad.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
+
 
 .hero-overlay {
   display: none !important; /* mata a "película" verde */
