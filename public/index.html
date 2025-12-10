@@ -6,20 +6,24 @@
     <title>L100</title>
 
     <!-- CSS global (index.html está DENTRO de /public) -->
-    <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
 
-    <!-- Service worker -->
-    <script defer src="/public/js/service-worker-register.js"></script>
+    <!-- Firebase SDK v8 (global firebase.*) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Firebase + auth + firestore -->
-    <script defer src="/public/js/firebase-config.js"></script>
-    <script defer src="/public/js/auth.js"></script>
-    <script defer src="/public/js/firestore.js"></script>
+    <!-- Service worker register (ficheiro em public/js/) -->
+    <script defer src="./js/service-worker-register.js"></script>
+
+    <!-- Firebase + auth + firestore (ficheiros em public/js/) -->
+    <script defer src="./js/firebase-config.js"></script>
+    <script defer src="./js/auth.js"></script>
+    <script defer src="./js/firestore.js"></script>
 
     <!-- Lógica do modal -->
-    <script defer src="/public/js/modal-abastecimento.js"></script>
+    <script defer src="./js/modal-abastecimento.js"></script>
 </head>
-
 
 <body>
 
@@ -34,14 +38,14 @@
         <!-- 1 ÚNICO botão que abre o modal -->
         <button class="btn btn-primary" id="btn-open-fuel-modal">
             <svg class="icon icon-left" aria-hidden="true">
-                <use href="assets/icons.svg#icon-plus"></use>
+                <use href="./assets/icons.svg#icon-plus"></use>
             </svg>
-            <span>+ Novo Abastecimento</span>
+            <span>Novo Abastecimento</span>
         </button>
 
-        <a href="/public/dashboard.html" class="btn btn-outline" style="margin-left:10px;">
+        <a href="./dashboard.html" class="btn btn-outline" style="margin-left:10px;">
             <svg class="icon icon-left" aria-hidden="true">
-                <use href="assets/icons.svg#icon-dashboard"></use>
+                <use href="./assets/icons.svg#icon-dashboard"></use>
             </svg>
             <span>Ver Estatísticas</span>
         </a>
@@ -76,7 +80,7 @@
             <div class="fuel-modal-header">
                 <div class="fuel-modal-title-wrap">
                     <svg class="icon icon-title" aria-hidden="true">
-                        <use href="assets/icons.svg#icon-fuel"></use>
+                        <use href="./assets/icons.svg#icon-fuel"></use>
                     </svg>
                     <div>
                         <h2 id="fuel-modal-title">Novo Abastecimento</h2>
@@ -88,7 +92,7 @@
 
                 <button type="button" class="icon-button" id="btn-close-fuel-modal" aria-label="Fechar">
                     <svg class="icon" aria-hidden="true">
-                        <use href="assets/icons.svg#icon-close"></use>
+                        <use href="./assets/icons.svg#icon-close"></use>
                     </svg>
                 </button>
             </div>
@@ -102,7 +106,7 @@
                         <div class="input-with-icon">
                             <input type="date" id="fuel-date" required>
                             <svg class="icon icon-input" aria-hidden="true">
-                                <use href="assets/icons.svg#icon-calendar"></use>
+                                <use href="./assets/icons.svg#icon-calendar"></use>
                             </svg>
                         </div>
                     </div>
@@ -187,7 +191,7 @@
 
                     <button type="submit" class="btn btn-primary btn-gradient">
                         <svg class="icon icon-left" aria-hidden="true">
-                            <use href="assets/icons.svg#icon-plus"></use>
+                            <use href="./assets/icons.svg#icon-plus"></use>
                         </svg>
                         <span>Adicionar Registro</span>
                     </button>
@@ -198,7 +202,7 @@
 
     <!-- FOOTER / NAVIGATION BAR -->
     <footer>
-      <a href="/index.html">
+      <a href="./index.html">
         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 11L12 4l8 7v8a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1z"
                 fill="none"
@@ -210,7 +214,7 @@
         <span>Home</span>
       </a>
 
-      <a href="/public/dashboard.html">
+      <a href="./dashboard.html">
         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <rect x="4" y="11" width="3" height="8" rx="1"
                 fill="none" stroke="currentColor" stroke-width="1.8" />
@@ -222,7 +226,7 @@
         <span>Dashboard</span>
       </a>
 
-      <a href="/public/veiculos.html">
+      <a href="./veiculos.html">
         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 13.5l1.5-4.5A2 2 0 0 1 7.4 8h9.2a2 2 0 0 1 1.9 1l1.5 4.5"
                 fill="none" stroke="currentColor" stroke-width="1.8"
@@ -241,7 +245,7 @@
         <span>Veículos</span>
       </a>
 
-      <a href="/public/perfil.html">
+      <a href="./perfil.html">
         <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="8" r="3.2"
                   fill="none" stroke="currentColor" stroke-width="1.8" />
