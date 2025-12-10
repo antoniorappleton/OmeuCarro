@@ -16,6 +16,22 @@ body.app-page {
 
   color: #0f172a;
 }
+.app-page {
+  margin: 0;
+  min-height: 100vh;
+
+  /* IMAGEM DE FUNDO GLOBAL */
+  background-image: url("/images/offroad.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* se no iOS notar flicker, podes tirar a próxima linha */
+  background-attachment: fixed;
+
+  color: #ffffff;          /* texto mais claro por cima da imagem */
+  padding-bottom: 80px;    /* espaço para o footer fixo */
+}
+
 
 /* HEADER com gradiente */
 .app-header {
@@ -103,10 +119,11 @@ body.app-page {
   overflow: hidden;
 
   /* imagem de fundo (sem / inicial, relativo à pasta css/) */
-  background-image: url("../images/offroad.jpg");
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background: transparent;
 }
 
 
