@@ -220,5 +220,88 @@
       <span>Perfil</span>
     </a>
   </footer>
+      <!-- MODAL: Adicionar veículo -->
+      <div id="vehicle-modal-overlay" class="fuel-modal-overlay" aria-hidden="true">
+        <div class="fuel-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
+          
+          <!-- Cabeçalho do modal -->
+          <div class="fuel-modal-header">
+            <div class="fuel-modal-title-wrap">
+              <svg class="icon icon-title" aria-hidden="true">
+                <use href="assets/icons.svg#icon-car"></use>
+              </svg>
+              <div>
+                <h2 id="vehicle-modal-title">Adicionar veículo</h2>
+                <p class="fuel-modal-description">
+                  Preencha os dados do veículo que pretende registar.
+                </p>
+              </div>
+            </div>
+
+            <button type="button" class="icon-button" id="btn-close-vehicle-modal" aria-label="Fechar">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons.svg#icon-close"></use>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Formulário do modal -->
+          <form id="vehicle-modal-form" class="fuel-modal-form">
+            <div class="form-grid">
+              <div class="form-field">
+                <label for="modal-vehicle-name">Nome *</label>
+                <input id="modal-vehicle-name" type="text" required placeholder="Carro Principal" />
+              </div>
+
+              <div class="form-field">
+                <label for="modal-vehicle-brand">Marca *</label>
+                <input id="modal-vehicle-brand" type="text" required placeholder="ex: Toyota" />
+              </div>
+
+              <div class="form-field">
+                <label for="modal-vehicle-model">Modelo *</label>
+                <input id="modal-vehicle-model" type="text" required placeholder="ex: Corolla" />
+              </div>
+
+              <div class="form-field">
+                <label for="modal-vehicle-plate">Matrícula (opcional)</label>
+                <input id="modal-vehicle-plate" type="text" placeholder="AA-00-BB" />
+              </div>
+
+              <div class="form-field">
+                <label for="modal-vehicle-fuel">Combustível padrão</label>
+                <select id="modal-vehicle-fuel">
+                  <option value="">Selecionar</option>
+                  <option value="gasolina">Gasolina</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="etanol">Etanol</option>
+                  <option value="gnv">GNV</option>
+                  <option value="eletrico">Elétrico</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="modal-vehicle-odometer">Odómetro inicial</label>
+                <input id="modal-vehicle-odometer" type="number" placeholder="ex: 120000" />
+              </div>
+            </div>
+
+            <p id="vehicle-modal-message" class="form-message"></p>
+
+            <div class="fuel-modal-footer">
+              <button type="button" class="btn btn-ghost" id="btn-cancel-vehicle-modal">
+                Cancelar
+              </button>
+
+              <button type="submit" class="btn btn-primary btn-gradient">
+                <svg class="icon icon-left" aria-hidden="true">
+                  <use href="assets/icons.svg#icon-plus"></use>
+                </svg>
+                <span>Guardar veículo</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 </body>
 </html>

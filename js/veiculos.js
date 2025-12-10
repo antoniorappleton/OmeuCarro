@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyEl.classList.add("hidden");
 
     try {
+      // devolve só veículos do utilizador autenticado
       const veiculos = await getVeiculosDoUtilizador();
 
       if (!veiculos.length) {
@@ -31,6 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
       veiculos.forEach((v) => {
         const card = document.createElement("article");
         card.className = "vehicle-card";
+        card.dataset.veiculoId = v.id;
+
         card.innerHTML = `
           <div class="vehicle-card-header">
             <div>
@@ -48,11 +51,23 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="vehicle-card-footer">
             <span>Odómetro inicial: ${v.odometroInicial || 0} km</span>
-            <a href="abastecimentos.html" class="link-secondary">
-              Ver abastecimentos
+            <a href="abastecimentos.html?veiculoId=${encodeURIComponent(
+              v.id
+            )}" class="link-secondary">
+              Ver / registar abastecimentos
             </a>
           </div>
         `;
+
+        // clicar em qualquer sítio do cartão (excepto no link) abre abastecimentos
+        card.addEventListener("click", (e) => {
+          if (e.target.closest("a")) return; // deixa o link funcionar normalmente
+          const id = card.dataset.veiculoId;
+          if (!id) return;
+          window.location.href =
+            "abastecimentos.html?veiculoId=" + encodeURIComponent(id);
+        });
+
         listEl.appendChild(card);
       });
     } catch (err) {
@@ -80,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error("Preencha pelo menos nome, marca e modelo.");
         }
 
+        // grava veículo associado ao utilizador autenticado (feito em firestore.js)
         await createVeiculo({
           nome,
           marca,

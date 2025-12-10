@@ -81,18 +81,122 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---- Botões "Adicionar veículo" (por enquanto só alerta) ----
+  // ---- MODAL "Adicionar veículo" na Home ----
   const btnAdd = document.getElementById("btn-add-vehicle");
   const btnAddFirst = document.getElementById("btn-add-first-vehicle");
 
-  function handleAddVehicleClick() {
-    alert("Aqui vai abrir o fluxo de 'Adicionar veículo' (form ou modal).");
-    // Exemplo futuro:
-    // window.location.href = "veiculos.html";
+  const vehicleModalOverlay = document.getElementById("vehicle-modal-overlay");
+  const vehicleModalForm = document.getElementById("vehicle-modal-form");
+  const vehicleModalMessage = document.getElementById("vehicle-modal-message");
+  const btnCloseVehicleModal = document.getElementById(
+    "btn-close-vehicle-modal"
+  );
+  const btnCancelVehicleModal = document.getElementById(
+    "btn-cancel-vehicle-modal"
+  );
+
+  function openVehicleModal() {
+    if (!vehicleModalOverlay) return;
+    vehicleModalOverlay.classList.add("is-open"); // classe já usada no CSS do fuel-modal
+    document.body.classList.add("modal-open");
+
+    if (vehicleModalMessage) {
+      vehicleModalMessage.textContent = "";
+      vehicleModalMessage.className = "form-message";
+    }
+  }
+
+  function closeVehicleModal() {
+    if (!vehicleModalOverlay) return;
+    vehicleModalOverlay.classList.remove("is-open");
+    document.body.classList.remove("modal-open");
+  }
+
+  // abrir modal pelos botões da home
+  function handleAddVehicleClick(event) {
+    event.preventDefault();
+    openVehicleModal();
   }
 
   if (btnAdd) btnAdd.addEventListener("click", handleAddVehicleClick);
   if (btnAddFirst) btnAddFirst.addEventListener("click", handleAddVehicleClick);
+
+  // fechar pelo X
+  if (btnCloseVehicleModal) {
+    btnCloseVehicleModal.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeVehicleModal();
+    });
+  }
+
+  // fechar pelo botão "Cancelar"
+  if (btnCancelVehicleModal) {
+    btnCancelVehicleModal.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeVehicleModal();
+    });
+  }
+
+  // fechar ao clicar fora do modal
+  if (vehicleModalOverlay) {
+    vehicleModalOverlay.addEventListener("click", (e) => {
+      if (e.target === vehicleModalOverlay) {
+        closeVehicleModal();
+      }
+    });
+  }
+
+  // submissão do formulário -> cria veículo no Firestore
+  if (vehicleModalForm) {
+    vehicleModalForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!vehicleModalMessage) return;
+
+      vehicleModalMessage.textContent = "";
+      vehicleModalMessage.className = "form-message";
+
+      const nome = document.getElementById("modal-vehicle-name").value.trim();
+      const marca = document.getElementById("modal-vehicle-brand").value.trim();
+      const modelo = document
+        .getElementById("modal-vehicle-model")
+        .value.trim();
+      const matricula = document
+        .getElementById("modal-vehicle-plate")
+        .value.trim();
+      const combustivelPadrao =
+        document.getElementById("modal-vehicle-fuel").value;
+      const odometroInicial = document
+        .getElementById("modal-vehicle-odometer")
+        .value.trim();
+
+      try {
+        if (!nome || !marca || !modelo) {
+          throw new Error("Preencha pelo menos Nome, Marca e Modelo.");
+        }
+
+        await createVeiculo({
+          nome,
+          marca,
+          modelo,
+          matricula,
+          combustivelPadrao,
+          odometroInicial,
+        });
+
+        vehicleModalMessage.textContent = "Veículo criado com sucesso! ✅";
+        vehicleModalMessage.classList.add("form-message--success");
+        vehicleModalForm.reset();
+
+        // se quiseres, depois de criar podes ir directo para a página de veículos:
+        // window.location.href = "veiculos.html";
+      } catch (err) {
+        console.error(err);
+        vehicleModalMessage.textContent =
+          err.message || "Erro ao criar veículo.";
+        vehicleModalMessage.classList.add("form-message--error");
+      }
+    });
+  }
 
   // ---- Logout ----
   const logoutBtn = document.getElementById("btn-logout");

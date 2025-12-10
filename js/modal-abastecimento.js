@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const selectVeiculo = document.getElementById("fuel-vehicle");
   const helperVeiculo = document.getElementById("fuel-vehicle-helper");
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const veiculoIdFromUrl = urlParams.get("veiculoId");
+
   function showMessage(text, type) {
     if (!msgEl) return;
     msgEl.textContent = text || "";
@@ -26,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
       '<option value="">A carregar veículos...</option>';
 
     try {
+      // só veículos do utilizador autenticado
       const veiculos = await getVeiculosDoUtilizador();
 
       if (!veiculos.length) {
@@ -49,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
         opt.textContent = v.nome || `${v.marca || ""} ${v.modelo || ""}`;
         selectVeiculo.appendChild(opt);
       });
+
+      // pré-selecionar veículo passado por query string (?veiculoId=...)
+      if (veiculoIdFromUrl) {
+        const exists = veiculos.some((v) => v.id === veiculoIdFromUrl);
+        if (exists) {
+          selectVeiculo.value = veiculoIdFromUrl;
+        }
+      }
     } catch (err) {
       console.error(err);
       selectVeiculo.innerHTML =
@@ -84,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!odometro || Number(odometro) <= 0)
           throw new Error("Indique o odómetro.");
 
+        // grava abastecimento associado ao utilizador (via firestore.js) e ao veículo
         await createAbastecimento({
           veiculoId,
           data: dataAbastecimento,
