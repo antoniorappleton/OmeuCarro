@@ -2,7 +2,7 @@
   "name": "AbastecePro",
   "short_name": "AbastecePro",
   "description": "Gestor pessoal de abastecimentos e consumo — KPIs, gráficos e histórico por veículo.",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
