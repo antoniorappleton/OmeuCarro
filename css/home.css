@@ -3,35 +3,24 @@
    ============================== */
 
 /* FUNDO: imagem em toda a página */
+/* FUNDO GLOBAL DA DASHBOARD / PWA */
 body.app-page {
   margin: 0;
   min-height: 100vh;
 
-  /* ajusta o nome do ficheiro se for outro */
+  /* 👇 imagem para TODO o fundo da app */
   background-image: url("/images/offroad.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
 
-  color: #0f172a;
+  /* evita bugs em mobile, especialmente iOS */
+  /* podes testar depois com background-attachment: fixed se quiseres efeito parallax */
+  /* background-attachment: fixed; */
+
+  color: #ffffff;
+  padding-bottom: 80px; /* espaço para o footer fixo */
 }
-.app-page {
-  margin: 0;
-  min-height: 100vh;
-
-  /* IMAGEM DE FUNDO GLOBAL */
-  background-image: url("/images/offroad.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  /* se no iOS notar flicker, podes tirar a próxima linha */
-  background-attachment: fixed;
-
-  color: #ffffff;          /* texto mais claro por cima da imagem */
-  padding-bottom: 80px;    /* espaço para o footer fixo */
-}
-
 
 /* HEADER com gradiente */
 .app-header {
@@ -117,15 +106,8 @@ body.app-page {
   position: relative;
   padding: 20px 16px 60px;
   overflow: hidden;
-
-  /* imagem de fundo (sem / inicial, relativo à pasta css/) */
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background: transparent;
+  background: transparent; /* 👈 importante */
 }
-
 
 .hero-overlay {
   display: none !important; /* mata a "película" verde */
@@ -156,9 +138,9 @@ body.app-page {
   max-width: 420px;
 }
 
-/* MAIN CONTENT */
-.home-main {
-  padding: 0 16px 24px;
+.home-main,
+.dashboard-container {
+  background: transparent;
 }
 
 /* STATS GRID (sem margin-top negativa) */
