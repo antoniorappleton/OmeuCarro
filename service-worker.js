@@ -1,154 +1,166 @@
-// service-worker.js
+// ===============================
+// SERVICE WORKER – L100
+// ===============================
 
-const STATIC_CACHE = "l100-static-v1";
-const RUNTIME_CACHE = "l100-runtime-v1";
+// Aumenta a versão sempre que fizeres deploy
+const STATIC_CACHE = "l100-static-v3";
+const RUNTIME_CACHE = "l100-runtime-v3";
 
-// "App shell" – adapta esta lista se mudares ficheiros/páginas
+// Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
-  "/",                 // root
+  "/", // GitHub Pages redireciona para /index.html
   "/index.html",
+  "/offline.html",
+
+  // Screens
   "/dashboard.html",
   "/abastecimentos.html",
   "/estatisticas.html",
+  "/perfil.html",
+  "/veiculos.html",
+  "/login.html",
+  "/register.html",
 
   // CSS
   "/css/style.css",
-  "/css/home.css",
-  "/css/abastecimentos.css",
   "/css/dashboard.css",
+  "/css/abastecimentos.css",
 
-  // JS principais
+  // JS
   "/js/firebase-config.js",
   "/js/auth.js",
   "/js/firestore.js",
-  "/js/home.js",
+  "/js/dashboard.js",
   "/js/abastecimentos.js",
   "/js/estatisticas.js",
+  "/js/perfil.js",
+  "/js/veiculos.js",
+  "/js/modal-abastecimento.js",
+  "/js/utils.js",
+  "/js/service-worker-register.js",
 
-  // assets
-  "/assets/icons.svg",
+  // Assets
   "/images/logo-icon192.png",
   "/images/logo-icon512.png",
-  "/images/offroad.jpg",
-
-  // página offline (cria uma simples se ainda não tiveres)
-  "/offline.html"
+  "/images/offline.png",
 ];
 
-// INSTALL – pré-cache do app shell
+// ===============================
+// INSTALL – Pré-cache do App Shell
+// ===============================
 self.addEventListener("install", (event) => {
+  console.log("[SW] Install");
+
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(STATIC_CACHE).then((cache) => {
+      console.log("[SW] A cachear APP_SHELL…");
+      return cache.addAll(APP_SHELL);
+    })
   );
-  // força a ativação deste SW assim que acabar de instalar
-  self.skipWaiting();
+
+  self.skipWaiting(); // força imediatamente o novo SW
 });
 
-// ACTIVATE – limpar caches antigos
+// ===============================
+// ACTIVATE – Limpa caches antigas
+// ===============================
 self.addEventListener("activate", (event) => {
+  console.log("[SW] Activate");
+
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
-        names.map((name) => {
-          if (name !== STATIC_CACHE && name !== RUNTIME_CACHE) {
-            return caches.delete(name);
+        names.map((key) => {
+          if (key !== STATIC_CACHE && key !== RUNTIME_CACHE) {
+            console.log("[SW] A eliminar cache antiga:", key);
+            return caches.delete(key);
           }
         })
       )
     )
   );
+
   self.clients.claim();
 });
 
-// FETCH – estratégias por tipo de pedido
+// ================================================================
+// FETCH HANDLER – Estrategias por tipo de conteúdo
+// ================================================================
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-
+  const request = event.request;
   const url = new URL(request.url);
 
-  // Só mexemos em pedidos do mesmo domínio
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  // Apenas tratar pedidos deste domínio
+  if (url.origin !== location.origin) return;
 
-  // 1) Navegação (HTML) – network first com fallback
+  // -------------------------------------
+  // HTML → NETWORK FIRST (para garantir que recebes atualizações)
+  // -------------------------------------
   if (request.mode === "navigate") {
     event.respondWith(
-      (async () => {
-        try {
-          const networkResponse = await fetch(request);
-          // guarda uma cópia no cache de runtime
-          const cache = await caches.open(RUNTIME_CACHE);
-          cache.put(request, networkResponse.clone());
-          return networkResponse;
-        } catch (err) {
-          // se falhar rede, tenta cache
+      fetch(request)
+        .then((response) => {
+          // Guardar a versão mais recente no runtime cache
+          return caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(request, response.clone());
+            return response;
+          });
+        })
+        .catch(async () => {
+          // Offline → tenta cache
           const cached = await caches.match(request);
           if (cached) return cached;
 
-          // fallback final: offline.html
-          const offline = await caches.match("/offline.html");
-          return offline || new Response("Offline", { status: 503 });
-        }
-      })()
+          // Página offline
+          return caches.match("/offline.html");
+        })
     );
     return;
   }
 
-  // 2) CSS / JS – stale-while-revalidate
-  if (
-    request.destination === "style" ||
-    request.destination === "script" ||
-    request.destination === "font"
-  ) {
+  // -------------------------------------
+  // CSS / JS → STALE WHILE REVALIDATE
+  // -------------------------------------
+  if (request.destination === "style" || request.destination === "script") {
     event.respondWith(
-      (async () => {
-        const cache = await caches.open(STATIC_CACHE);
+      caches.open(STATIC_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
-        const networkPromise = fetch(request)
+        const network = fetch(request)
           .then((response) => {
             cache.put(request, response.clone());
             return response;
           })
           .catch(() => null);
 
-        // se já temos em cache, devolvemos logo e atualizamos em background
-        return cached || networkPromise;
-      })()
+        return cached || network;
+      })
     );
     return;
   }
 
-  // 3) Imagens – cache-first
+  // -------------------------------------
+  // IMAGENS → CACHE FIRST
+  // -------------------------------------
   if (request.destination === "image") {
     event.respondWith(
-      (async () => {
-        const cache = await caches.open(RUNTIME_CACHE);
+      caches.open(RUNTIME_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
         if (cached) return cached;
+
         try {
           const response = await fetch(request);
           cache.put(request, response.clone());
           return response;
-        } catch (err) {
-          // se não houver rede nem cache, falha silenciosamente
-          return new Response("", { status: 404 });
+        } catch {
+          return caches.match("/images/offline.png");
         }
-      })()
+      })
     );
     return;
   }
 
-  // 4) Restante – tenta rede, fallback cache se existir
-  event.respondWith(
-    (async () => {
-      try {
-        return await fetch(request);
-      } catch (err) {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        throw err;
-      }
-    })()
-  );
+  // -------------------------------------
+  // RESTANTE → NETWORK FIRST com fallback cache
+  // -------------------------------------
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
 });
