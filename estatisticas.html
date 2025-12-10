@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L100 – Estatísticas</title>
+
+  <!-- Tema global -->
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- CSS específico de estatísticas -->
+  <link rel="stylesheet" href="css/dashboard.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- JS do projeto -->
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/firestore.js"></script>
+  <script defer src="js/estatisticas.js"></script>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="top-header">
+    <button type="button" class="back-btn" onclick="window.location.href='dashboard.html'">
+      ←
+    </button>
+    <div>
+      <h1>Estatísticas</h1>
+      <p>Análise detalhada dos seus abastecimentos</p>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    <!-- KPIs -->
+    <section class="kpi-grid">
+      <!-- Total gasto -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>Total Gasto</span>
+          <span>€</span>
+        </div>
+        <h2 id="kpi-total-gasto">€0.00</h2>
+        <p class="kpi-sub">Últimos 6 meses</p>
+        <p class="kpi-trend kpi-trend-down" id="kpi-total-gasto-trend">
+          0% vs mês anterior
+        </p>
+      </article>
+
+      <!-- Litros consumidos -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>Litros Consumidos</span>
+          <span>
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-fuel"></use>
+            </svg>
+          </span>
+        </div>
+        <h2 id="kpi-total-litros">0L</h2>
+        <p class="kpi-sub">Últimos 6 meses</p>
+        <p class="kpi-trend kpi-trend-down" id="kpi-total-litros-trend">
+          0% vs mês anterior
+        </p>
+      </article>
+
+      <!-- Preço médio -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>Preço Médio</span>
+          <span>
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-trend-up"></use>
+            </svg>
+          </span>
+        </div>
+        <h2 id="kpi-preco-medio">€0.000</h2>
+        <p class="kpi-sub">Por litro</p>
+        <p class="kpi-trend kpi-trend-up" id="kpi-preco-medio-trend">
+          0% vs mês anterior
+        </p>
+      </article>
+
+      <!-- Eficiência média -->
+      <article class="kpi-card">
+        <div class="kpi-header">
+          <span>Eficiência Média</span>
+          <span>
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-dashboard"></use>
+            </svg>
+          </span>
+        </div>
+        <h2 id="kpi-eficiencia">0 km/L</h2>
+        <p class="kpi-sub">Consumo médio</p>
+        <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">
+          0% vs mês anterior
+        </p>
+      </article>
+    </section>
+
+    <!-- GRID DE GRÁFICOS -->
+    <section class="charts-grid">
+      <!-- Gastos mensais -->
+      <article class="chart-card">
+        <h3>Gastos Mensais</h3>
+        <canvas id="chart-gastos-mensais"></canvas>
+      </article>
+
+      <!-- Evolução do preço -->
+      <article class="chart-card">
+        <h3>Evolução do Preço</h3>
+        <canvas id="chart-preco"></canvas>
+      </article>
+
+      <!-- Distribuição por tipo -->
+      <article class="chart-card">
+        <h3>Distribuição por Tipo</h3>
+        <canvas id="chart-tipos"></canvas>
+      </article>
+
+      <!-- Postos mais visitados -->
+      <article class="chart-card">
+        <h3>Postos Mais Visitados</h3>
+        <canvas id="chart-postos"></canvas>
+      </article>
+
+      <!-- Consumo mensal (litros) -->
+      <article class="chart-card chart-card-wide">
+        <h3>Consumo Mensal (Litros)</h3>
+        <canvas id="chart-litros-mensais"></canvas>
+      </article>
+    </section>
+  </main>
+
+</body>
+</html>

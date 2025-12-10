@@ -117,3 +117,33 @@ canvas {
   width: 100% !important;
   height: 300px !important;
 }
+/* ======== KPI TRENDS ======== */
+.kpi-trend {
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.kpi-trend-up {
+  color: #27ae60;
+}
+
+.kpi-trend-down {
+  color: #e74c3c;
+}
+
+/* ======== GRID DE GRÁFICOS ======== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.chart-card-wide {
+  grid-column: 1 / -1;
+}
+
+/* ícone pequenino dentro de headers */
+.kpi-header .icon {
+  width: 18px;
+  height: 18px;
+}

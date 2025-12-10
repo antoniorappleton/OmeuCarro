@@ -317,3 +317,25 @@ body.app-page {
     padding: 24px 20px 18px;
   }
 }
+.vehicle-card-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.vehicle-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: 0.2s;
+}
+
+.vehicle-btn:hover {
+  background: rgba(148, 163, 184, 0.16);
+  color: #111827;
+}

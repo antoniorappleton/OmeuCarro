@@ -140,3 +140,74 @@ async function getAbastecimentosDoUtilizador({
   const snap = await query.get();
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
+// ========== VEÍCULOS: UPDATE & DELETE ==========
+
+async function updateVeiculo(id, data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  const ref = db.collection("veiculos").doc(id);
+
+  // garantimos que não alteramos userId/criadoEm por engano
+  const payload = {
+    nome: data.nome,
+    marca: data.marca,
+    modelo: data.modelo,
+    matricula: data.matricula || "",
+    combustivelPadrao: data.combustivelPadrao || "",
+    odometroInicial: Number(data.odometroInicial) || 0,
+    ativo: data.ativo !== false,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await ref.update(payload);
+  return ref;
+}
+
+async function deleteVeiculo(id) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  await db.collection("veiculos").doc(id).delete();
+}
+
+// ========== ABASTECIMENTOS: READ ONE / UPDATE / DELETE ==========
+
+async function getAbastecimentoById(id) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  const snap = await db.collection("abastecimentos").doc(id).get();
+  if (!snap.exists) return null;
+  const data = snap.data();
+  if (data.userId !== user.uid) return null; // segurança básica
+  return { id: snap.id, ...data };
+}
+
+async function updateAbastecimento(id, data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  const ref = db.collection("abastecimentos").doc(id);
+
+  const payload = {
+    veiculoId: data.veiculoId,
+    data: data.data,
+    tipoCombustivel: data.tipoCombustivel,
+    litros: Number(data.litros),
+    precoPorLitro: Number(data.precoPorLitro),
+    odometro: Number(data.odometro),
+    posto: data.posto || "",
+    observacoes: data.observacoes || "",
+    completo: !!data.completo,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await ref.update(payload);
+  return ref;
+}
+
+async function deleteAbastecimento(id) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  await db.collection("abastecimentos").doc(id).delete();
+}
