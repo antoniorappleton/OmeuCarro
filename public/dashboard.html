@@ -19,7 +19,7 @@
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
-  <!-- Lógica desta página -->
+  <!-- Lógica desta página (home / painel) -->
   <script defer src="js/home.js"></script>
 </head>
 
@@ -28,7 +28,9 @@
   <header class="app-header">
     <div class="app-header-left">
       <div class="app-logo">
-        <span class="app-logo-icon">⛽</span>
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-fuel"></use>
+        </svg>
       </div>
       <div class="app-logo-text">
         <span class="app-logo-title">L100</span>
@@ -37,14 +39,25 @@
     </div>
 
     <div class="app-header-actions">
+      <!-- Estatísticas (pode mais tarde ir para outra página de gráficos) -->
       <a href="dashboard.html" class="icon-btn" title="Estatísticas">
-        📊
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-dashboard"></use>
+        </svg>
       </a>
-      <button type="button" class="icon-btn" title="Definições">
-        ⚙️
-      </button>
+
+      <!-- Definições (placeholder – podes ligar para perfil / settings) -->
+      <a href="perfil.html" class="icon-btn" title="Perfil / Definições">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-user"></use>
+        </svg>
+      </a>
+
+      <!-- Logout -->
       <button type="button" id="btn-logout" class="icon-btn" title="Sair">
-        ⏏
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-logout"></use>
+        </svg>
       </button>
     </div>
   </header>
@@ -66,7 +79,11 @@
     <section class="stats-grid">
       <article class="stats-card" id="stat-veiculos">
         <div class="stats-card-header">
-          <span class="stats-card-icon">🚗</span>
+          <span class="stats-card-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-car"></use>
+            </svg>
+          </span>
           <h2>Veículos</h2>
         </div>
         <p class="stats-card-value" id="stat-veiculos-value">0</p>
@@ -75,7 +92,11 @@
 
       <article class="stats-card" id="stat-gasto">
         <div class="stats-card-header">
-          <span class="stats-card-icon">💶</span>
+          <span class="stats-card-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-wallet"></use>
+            </svg>
+          </span>
           <h2>Total gasto</h2>
         </div>
         <p class="stats-card-value" id="stat-gasto-value">€0</p>
@@ -84,7 +105,11 @@
 
       <article class="stats-card" id="stat-litros">
         <div class="stats-card-header">
-          <span class="stats-card-icon">⛽</span>
+          <span class="stats-card-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-fuel"></use>
+            </svg>
+          </span>
           <h2>Litros</h2>
         </div>
         <p class="stats-card-value" id="stat-litros-value">0 L</p>
@@ -93,7 +118,11 @@
 
       <article class="stats-card" id="stat-abastecimentos">
         <div class="stats-card-header">
-          <span class="stats-card-icon">📈</span>
+          <span class="stats-card-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-trend-up"></use>
+            </svg>
+          </span>
           <h2>Abastecimentos</h2>
         </div>
         <p class="stats-card-value" id="stat-abastecimentos-value">0</p>
@@ -109,7 +138,10 @@
           <p>Selecione um veículo para ver os abastecimentos.</p>
         </div>
         <button type="button" id="btn-add-vehicle" class="btn btn-primary">
-          + Adicionar veículo
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons.svg#icon-plus"></use>
+          </svg>
+          <span>Adicionar veículo</span>
         </button>
       </div>
 
@@ -119,11 +151,18 @@
 
       <!-- Estado vazio -->
       <div id="vehicles-empty" class="vehicles-empty hidden">
-        <div class="vehicles-empty-icon">🚘</div>
+        <div class="vehicles-empty-icon">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/icons.svg#icon-car"></use>
+          </svg>
+        </div>
         <h3>Nenhum veículo registado</h3>
         <p>Comece por adicionar o seu primeiro veículo.</p>
         <button type="button" id="btn-add-first-vehicle" class="btn btn-primary">
-          + Adicionar primeiro veículo
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons.svg#icon-plus"></use>
+          </svg>
+          <span>Adicionar primeiro veículo</span>
         </button>
       </div>
     </section>
@@ -133,16 +172,53 @@
       <h3>Ações rápidas</h3>
       <div class="quick-actions-row">
         <a href="abastecimentos.html" class="btn btn-outline">
-          + Novo abastecimento
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons.svg#icon-fuel"></use>
+          </svg>
+          <span>Novo abastecimento</span>
         </a>
         <a href="dashboard.html" class="btn btn-outline">
-          Ver estatísticas
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons.svg#icon-dashboard"></use>
+          </svg>
+          <span>Ver estatísticas</span>
         </a>
         <a href="veiculos.html" class="btn btn-outline">
-          Gerir veículos
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons.svg#icon-car"></use>
+          </svg>
+          <span>Gerir veículos</span>
         </a>
       </div>
     </section>
   </main>
+
+  <!-- FOOTER NAVBAR COM SVGs -->
+  <footer>
+    <a href="dashboard.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons.svg#icon-home"></use>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="abastecimentos.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons.svg#icon-fuel"></use>
+      </svg>
+      <span>Abastecer</span>
+    </a>
+    <a href="veiculos.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons.svg#icon-car"></use>
+      </svg>
+      <span>Veículos</span>
+    </a>
+    <a href="perfil.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons.svg#icon-user"></use>
+      </svg>
+      <span>Perfil</span>
+    </a>
+  </footer>
 </body>
 </html>

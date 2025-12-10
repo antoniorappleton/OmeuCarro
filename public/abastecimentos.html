@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <title>Abastecimentos - O Meu Carro</title>
-  ...
-  <!-- CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Abastecimento - L100</title>
+
+  <!-- Tema global -->
   <link rel="stylesheet" href="css/style.css">
+  <!-- CSS específico desta página -->
   <link rel="stylesheet" href="css/abastecimentos.css">
 
   <!-- Firebase SDK v8 -->
@@ -16,10 +19,8 @@
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
-  <script defer src="js/modal-abastecimentos.js"></script> <!-- ou modal-abastecimento.js -->
+  <script defer src="js/abastecimentos.js"></script>
 </head>
-
-
 <body>
 
   <!-- HEADER -->
@@ -71,64 +72,76 @@
             <!-- Litros -->
             <div class="form-field">
               <label for="fuel-liters">Litros *</label>
-              <input
-                type="number"
-                step="0.01"
-                id="fuel-liters"
-                placeholder="ex: 45.50"
-                required
-              >
+              <div class="input-with-icon">
+                <input
+                  type="number"
+                  step="0.01"
+                  id="fuel-liters"
+                  placeholder="ex: 45.50"
+                  required
+                >
+                <svg class="icon icon-input" aria-hidden="true">
+                  <use href="assets/icons.svg#icon-gauge"></use>
+                </svg>
+              </div>
             </div>
 
             <!-- Preço por litro -->
             <div class="form-field">
               <label for="fuel-price">Preço por litro (€) *</label>
-              <input
-                type="number"
-                step="0.001"
-                id="fuel-price"
-                placeholder="ex: 1.459"
-                required
-              >
+              <div class="input-with-icon">
+                <input
+                  type="number"
+                  step="0.001"
+                  id="fuel-price"
+                  placeholder="ex: 1.459"
+                  required
+                >
+                <svg class="icon icon-input" aria-hidden="true">
+                  <use href="assets/icons.svg#icon-wallet"></use>
+                </svg>
+              </div>
             </div>
 
             <!-- Quilometragem -->
             <div class="form-field">
               <label for="fuel-odometer">Quilometragem *</label>
-              <input
-                type="number"
-                id="fuel-odometer"
-                placeholder="ex: 125000"
-                required
-              >
+              <div class="input-with-icon">
+                <input
+                  type="number"
+                  id="fuel-odometer"
+                  placeholder="ex: 125000"
+                  required
+                >
+                <svg class="icon icon-input" aria-hidden="true">
+                  <use href="assets/icons.svg#icon-odometer"></use>
+                </svg>
+              </div>
             </div>
 
             <!-- Posto -->
             <div class="form-field">
               <label for="fuel-station">Posto de combustível</label>
-              <input
-                type="text"
-                id="fuel-station"
-                placeholder="ex: Repsol, Galp, BP..."
-              >
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  id="fuel-station"
+                  placeholder="ex: Repsol, Galp, BP."
+                >
+                <svg class="icon icon-input" aria-hidden="true">
+                  <use href="assets/icons.svg#icon-station"></use>
+                </svg>
+              </div>
             </div>
           </div>
 
-          <!-- Total calculado -->
-          <div id="total-box" class="total-box">
-            <span class="total-label">Total a pagar:</span>
-            <span class="total-value">
-              €<span id="total-amount">0.00</span>
-            </span>
-          </div>
-
           <!-- Observações -->
-          <div class="form-field">
+          <div class="form-field form-field-full">
             <label for="fuel-notes">Observações</label>
             <textarea
               id="fuel-notes"
               rows="3"
-              placeholder="Adicione observações sobre este abastecimento..."
+              placeholder="Adicione observações sobre este abastecimento."
             ></textarea>
           </div>
 
@@ -155,11 +168,11 @@
       </svg>
       <span>Home</span>
     </a>
-    <a href="dashboard.html">
+    <a href="abastecimentos.html">
       <svg class="icon" aria-hidden="true">
-        <use href="assets/icons.svg#icon-dashboard"></use>
+        <use href="assets/icons.svg#icon-fuel"></use>
       </svg>
-      <span>Dashboard</span>
+      <span>Abastecer</span>
     </a>
     <a href="veiculos.html">
       <svg class="icon" aria-hidden="true">
