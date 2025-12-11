@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="vehicle-card-footer-modern">
-            <a href="veiculos.html?id=${encodeURIComponent(v.id)}" class="link-secondary">
+            <a href="veiculo.html?id=${encodeURIComponent(v.id)}" class="link-secondary">
               Ver detalhes do veículo
             </a>
           </div>
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (e.target.closest("a")) return;
           const id = card.dataset.veiculoId;
           if (!id) return;
-          window.location.href = "veiculos.html?id=" + encodeURIComponent(id);
+          window.location.href = "veiculo.html?id=" + encodeURIComponent(id);
         });
         listEl.appendChild(card);
       });

@@ -77,55 +77,25 @@ async function carregarVeiculos() {
   emptyEl.classList.add("hidden");
 
 veiculos.forEach((v) => {
-  const card = document.createElement("article");
-  card.className = "vehicle-card";
+  const card = document.createElement("div");
+  card.classList.add("vehicle-card");
 
   card.innerHTML = `
-    <div class="vehicle-card-header">
-      <div>
-        <h3 class="vehicle-card-title">${v.nome}</h3>
-        <p class="vehicle-card-subtitle">${v.marca} ${v.modelo}</p>
-      </div>
-
-      <div class="vehicle-card-actions">
-        <button class="vehicle-btn btn-edit" title="Editar">
-          <svg class="icon"><use href="assets/icons.svg#icon-edit"></use></svg>
-        </button>
-        <button class="vehicle-btn btn-delete" title="Apagar">
-          <svg class="icon"><use href="assets/icons.svg#icon-trash"></use></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="vehicle-card-footer">
-      <span>${v.combustivelPadrao || "—"}</span>
-      <span>Od: ${v.odometroInicial || 0} km</span>
+    <div class="vehicle-card-content">
+      <h3>${v.nome}</h3>
+      <p>${v.marca || ""} ${v.modelo || ""}</p>
+      <span class="plate">${v.matricula || ""}</span>
     </div>
   `;
 
-  // clicar no "cabeçalho" abre o detalhe
-  const header = card.querySelector(".vehicle-card-header");
-  header.style.cursor = "pointer";
-  header.addEventListener("click", () => {
-    window.location.href = `veiculo.html?id=${encodeURIComponent(v.id)}`;
+  // 👉 Clicar abre o detalhe
+  card.addEventListener("click", () => {
+    window.location.href = "veiculo.html?id=" + v.id;
   });
-
-  // editar
-  card.querySelector(".btn-edit").onclick = (ev) => {
-    ev.stopPropagation();
-    openModal(true, v);
-  };
-
-  // apagar
-  card.querySelector(".btn-delete").onclick = async (ev) => {
-    ev.stopPropagation();
-    if (!confirm("Tem a certeza que pretende eliminar este veículo?")) return;
-    await deleteVeiculo(v.id);
-    carregarVeiculos();
-  };
 
   listEl.appendChild(card);
 });
+
 
 }
 

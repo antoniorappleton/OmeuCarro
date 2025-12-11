@@ -1,4 +1,6 @@
-// js/abastecimentos.js
+// js/modal-abastecimento.js
+// TOTALMENTE LIMPO E CORRIGIDO
+// ---------------------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("fuel-form");
@@ -8,8 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const deleteBtn = document.getElementById("fuel-delete");
 
   const params = new URLSearchParams(window.location.search);
-  const veiculoIdFromUrl = params.get("veiculoId"); // pré-seleção
-  const abastecimentoId = params.get("id"); // modo edição
+  const veiculoIdFromUrl = params.get("veiculoId");
+  const abastecimentoId = params.get("id");
   let isEditMode = !!abastecimentoId;
   let currentAbastecimento = null;
 
@@ -24,56 +26,41 @@ document.addEventListener("DOMContentLoaded", () => {
     if (helperVeiculo) helperVeiculo.textContent = text;
   }
 
-  /* -------------------------------------------------------------------
-      1. CARREGAR VEÍCULOS PARA O SELECT
-  ------------------------------------------------------------------- */
-  async function loadVeiculos() {
-    selectVeiculo.innerHTML = `<option value="">A carregar veículos...</option>`;
+  // -------------------------------------------------------------------
+  // 1. CARREGAR VEÍCULOS PARA O SELECT (APÓS AUTH)
+  // -------------------------------------------------------------------
+  async function carregarVeiculosNoDropdown() {
+    selectVeiculo.innerHTML = `<option value="">A carregar...</option>`;
 
-    try {
-      const veiculos = await getVeiculosDoUtilizador();
+    const veiculos = await getVeiculosDoUtilizador();
 
-      if (!veiculos.length) {
-        selectVeiculo.innerHTML = `<option value="">Nenhum veículo registado</option>`;
-        selectVeiculo.disabled = true;
-        setVehicleHelper("Crie primeiro um veículo em 'Veículos'.");
-        return;
-      }
+    if (!veiculos.length) {
+      selectVeiculo.innerHTML = `<option value="">Nenhum veículo registado</option>`;
+      setVehicleHelper("Crie um veículo antes de abastecer.");
+      return;
+    }
 
-      selectVeiculo.disabled = false;
-      setVehicleHelper("");
-      selectVeiculo.innerHTML = `<option value="">Selecionar veículo</option>`;
+    selectVeiculo.innerHTML = `<option value="">Selecionar...</option>`;
+    veiculos.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v.id;
+      opt.textContent = `${v.nome} (${v.marca})`;
+      selectVeiculo.appendChild(opt);
+    });
 
-      veiculos.forEach((v) => {
-        const opt = document.createElement("option");
-        opt.value = v.id;
-        opt.textContent = v.nome || `${v.marca} ${v.modelo}`;
-        selectVeiculo.appendChild(opt);
-      });
-
-      // Pré-selecionar veículo se veio do URL
-      if (!isEditMode && veiculoIdFromUrl) {
-        if (veiculos.some((v) => v.id === veiculoIdFromUrl)) {
-          selectVeiculo.value = veiculoIdFromUrl;
-        }
-      }
-
-      // Se estamos a editar, selecionar o veículo correspondente
-      if (isEditMode && currentAbastecimento) {
-        selectVeiculo.value = currentAbastecimento.veiculoId;
-      }
-    } catch (err) {
-      console.error(err);
-      selectVeiculo.innerHTML = `<option value="">Erro ao carregar veículos</option>`;
-      selectVeiculo.disabled = true;
-      setVehicleHelper("Erro ao comunicar com a Firebase.");
+    // pré-selecionar se vier da URL
+    if (
+      veiculoIdFromUrl &&
+      selectVeiculo.querySelector(`option[value="${veiculoIdFromUrl}"]`)
+    ) {
+      selectVeiculo.value = veiculoIdFromUrl;
     }
   }
 
-  /* -------------------------------------------------------------------
-      2. CARREGAR ABASTECIMENTO PARA EDIÇÃO
-  ------------------------------------------------------------------- */
-  async function loadAbastecimentoIfEdit() {
+  // -------------------------------------------------------------------
+  // 2. CARREGAR ABASTECIMENTO EM MODO EDIÇÃO
+  // -------------------------------------------------------------------
+  async function carregarAbastecimentoParaEdicao() {
     if (!isEditMode) return;
 
     try {
@@ -96,10 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fuel-station").value = abs.posto || "";
       document.getElementById("fuel-notes").value = abs.observacoes || "";
 
-      // botão eliminar visível
-      deleteBtn.classList.remove("hidden");
+      // veículo selecionado automaticamente
+      selectVeiculo.value = abs.veiculoId;
 
-      // alterar texto do botão
+      deleteBtn.classList.remove("hidden");
       form.querySelector("button[type='submit'] span").textContent =
         "Guardar alterações";
     } catch (err) {
@@ -109,9 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /* -------------------------------------------------------------------
-      3. SUBMETER FORMULÁRIO (CRIAR OU EDITAR)
-  ------------------------------------------------------------------- */
+  // -------------------------------------------------------------------
+  // 3. SUBMETER FORMULÁRIO
+  // -------------------------------------------------------------------
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -130,6 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
           completo: true,
         };
 
+        // validações
         if (!data.veiculoId) throw new Error("Selecione um veículo.");
         if (!data.data) throw new Error("Indique a data.");
         if (!data.tipoCombustivel)
@@ -153,14 +141,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* -------------------------------------------------------------------
-      4. APAGAR ABASTECIMENTO
-  ------------------------------------------------------------------- */
+  // -------------------------------------------------------------------
+  // 4. APAGAR ABASTECIMENTO
+  // -------------------------------------------------------------------
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
       if (!isEditMode) return;
-      const c = confirm("Deseja eliminar este abastecimento?");
-      if (!c) return;
+      if (!confirm("Deseja eliminar este abastecimento?")) return;
 
       try {
         await deleteAbastecimento(abastecimentoId);
@@ -173,8 +160,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* -------------------------------------------------------------------
-      5. ORDEM CORRETA DE CARREGAMENTO
-  ------------------------------------------------------------------- */
-  loadAbastecimentoIfEdit().then(loadVeiculos).catch(console.error);
+  // -------------------------------------------------------------------
+  // 5. ORDEM CORRETA: AUTENTICAÇÃO → VEÍCULOS → (EDITAR)
+  // -------------------------------------------------------------------
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return;
+
+    await carregarVeiculosNoDropdown();
+
+    // só depois dos veículos estarem carregados é que faz sentido editar
+    await carregarAbastecimentoParaEdicao();
+  });
 });
