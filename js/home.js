@@ -1,4 +1,4 @@
-// js/veiculos.js
+// js/home.js / js/veiculos.js
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("vehicle-form");
@@ -6,8 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const listEl = document.getElementById("vehicles-list");
   const emptyEl = document.getElementById("vehicles-empty");
 
+  // Botões do dashboard (header + estado vazio)
+  const btnAddVehicle = document.getElementById("btn-add-vehicle");
+  const btnAddFirstVehicle = document.getElementById("btn-add-first-vehicle");
+
   function showMessage(text, type) {
-    if (!msgEl) return;
+    if (!msgEl) return; // no dashboard não existe msgEl, só em veiculos.html
     msgEl.textContent = text || "";
     msgEl.className = "form-message";
     if (type === "error") msgEl.classList.add("form-message--error");
@@ -27,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
 
       if (!veiculos.length) {
+        // não há veículos → mostra estado vazio
         emptyEl.classList.remove("hidden");
         return;
       }
@@ -50,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
 
         const card = document.createElement("article");
-        card.className = "vehicle-card vehicle-card-modern"; // classe extra para estilizar à parte
+        card.className = "vehicle-card vehicle-card-modern";
         card.dataset.veiculoId = v.id;
 
         const matricula = v.matricula || "Sem matrícula";
@@ -97,19 +102,22 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="vehicle-card-footer-modern">
-            <a href="veiculo.html?id=${encodeURIComponent(v.id)}" class="link-secondary">
+            <a href="veiculo.html?id=${encodeURIComponent(
+              v.id
+            )}" class="link-secondary">
               Ver detalhes do veículo
             </a>
           </div>
         `;
 
-        // clique no cartão → vai para lista de abastecimentos desse veículo
+        // clique no cartão → vai para o detalhe do veículo
         card.addEventListener("click", (e) => {
-          if (e.target.closest("a")) return;
+          if (e.target.closest("a")) return; // não intercepta o clique no link
           const id = card.dataset.veiculoId;
           if (!id) return;
           window.location.href = "veiculo.html?id=" + encodeURIComponent(id);
         });
+
         listEl.appendChild(card);
       });
     } catch (err) {
@@ -118,6 +126,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // -------------------------------------------------------------------
+  // SUBMISSÃO DO FORMULÁRIO (apenas em veiculos.html)
+  // -------------------------------------------------------------------
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -156,5 +167,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  loadVeiculos();
+  // -------------------------------------------------------------------
+  // BOTÕES "ADICIONAR VEÍCULO" NO DASHBOARD
+  // -------------------------------------------------------------------
+
+  // botão no header
+  if (btnAddVehicle) {
+    btnAddVehicle.addEventListener("click", () => {
+      // leva para o ecrã de gestão/adicionar veículos
+      window.location.href = "veiculos.html";
+    });
+  }
+
+  // botão no estado vazio "Adicionar primeiro veículo"
+  if (btnAddFirstVehicle) {
+    btnAddFirstVehicle.addEventListener("click", () => {
+      window.location.href = "veiculos.html";
+    });
+  }
+
+  // -------------------------------------------------------------------
+  // AUTENTICAÇÃO → SÓ CARREGA VEÍCULOS QUANDO auth.currentUser EXISTE
+  // -------------------------------------------------------------------
+  if (
+    typeof auth !== "undefined" &&
+    auth &&
+    typeof auth.onAuthStateChanged === "function"
+  ) {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        // não autenticado → mostra estado vazio
+        if (listEl) listEl.innerHTML = "";
+        if (emptyEl) emptyEl.classList.remove("hidden");
+        return;
+      }
+      // utilizador autenticado → carregar veículos
+      loadVeiculos();
+    });
+  } else {
+    // fallback (por segurança)
+    loadVeiculos();
+  }
 });
