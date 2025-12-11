@@ -6,131 +6,190 @@
   <title>Veículos – L100</title>
 
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/home.css" />
 
-  <!-- Firebase SDK v8 -->
+  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- JS da app -->
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
+
+  <!-- Página específica -->
   <script defer src="js/veiculos.js"></script>
 </head>
-<body>
 
-  <header>
-    <h1 class="page-title">
-      <svg class="icon icon-title" aria-hidden="true">
-        <use href="assets/icons.svg#icon-car"></use>
-      </svg>
-      <span>Meus Veículos</span>
-    </h1>
-    <p>Adicione e gere os veículos para associar os abastecimentos.</p>
+<body class="app-page" data-page="veiculos">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="app-logo">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-car"></use>
+        </svg>
+      </div>
+      <div class="app-logo-text">
+        <span class="app-logo-title">L100</span>
+        <span class="app-logo-subtitle">Os meus veículos</span>
+      </div>
+    </div>
+
+    <div class="app-header-actions">
+      <a href="estatisticas.html" class="icon-btn">
+        <svg class="icon">
+          <use href="assets/icons.svg#icon-dashboard"></use>
+        </svg>
+      </a>
+      <a href="perfil.html" class="icon-btn">
+        <svg class="icon">
+          <use href="assets/icons.svg#icon-user"></use>
+        </svg>
+      </a>
+      <button id="btn-logout" class="icon-btn">
+        <svg class="icon">
+          <use href="assets/icons.svg#icon-logout"></use>
+        </svg>
+      </button>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="card" style="margin-bottom: 16px;">
-      <h2 class="card-title">Adicionar veículo</h2>
-      <p class="card-subtitle">Preencha os campos para registar um novo veículo.</p>
+  <!-- LISTA DE VEÍCULOS -->
+  <main class="home-main">
 
-      <form id="vehicle-form" class="form-grid">
-        <div class="form-field">
-          <label for="vehicle-name">Nome *</label>
-          <input id="vehicle-name" type="text" required placeholder="Carro Principal" />
+    <section class="vehicles-section">
+      <div class="vehicles-header">
+        <div>
+          <h2>Os meus veículos</h2>
+          <p>Gestão completa de todos os veículos registados.</p>
         </div>
 
-        <div class="form-field">
-          <label for="vehicle-brand">Marca *</label>
-          <input id="vehicle-brand" type="text" required placeholder="ex: Toyota" />
-        </div>
-
-        <div class="form-field">
-          <label for="vehicle-model">Modelo *</label>
-          <input id="vehicle-model" type="text" required placeholder="ex: Corolla" />
-        </div>
-
-        <div class="form-field">
-          <label for="vehicle-plate">Matrícula (opcional)</label>
-          <input id="vehicle-plate" type="text" placeholder="AA-00-BB" />
-        </div>
-
-        <div class="form-field">
-          <label for="vehicle-fuel">Combustível padrão</label>
-          <select id="vehicle-fuel">
-            <option value="">Selecionar</option>
-            <option value="gasolina">Gasolina</option>
-            <option value="diesel">Diesel</option>
-            <option value="etanol">Etanol</option>
-            <option value="gnv">GNV</option>
-            <option value="eletrico">Elétrico</option>
-          </select>
-        </div>
-
-        <div class="form-field">
-          <label for="vehicle-odometer">Odómetro inicial</label>
-          <input id="vehicle-odometer" type="number" placeholder="ex: 120000" />
-        </div>
-
-        <div class="form-field form-field-full">
-          <button type="submit" class="btn btn-primary full-width">
-            <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons.svg#icon-plus"></use>
-            </svg>
-            <span>Guardar veículo</span>
-          </button>
-        </div>
-
-        <p id="vehicle-message" class="form-message form-field-full"></p>
-      </form>
-    </section>
-
-    <section class="card">
-      <h2 class="card-title">Veículos registados</h2>
-      <p class="card-subtitle">Selecione um veículo para ver ou registar abastecimentos.</p>
+        <button type="button" id="btn-add-vehicle" class="btn btn-primary">
+          <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
+          <span>Adicionar</span>
+        </button>
+      </div>
 
       <div id="vehicles-list" class="vehicles-grid">
-        <!-- preenchido via JS -->
+        <!-- Preenchido automaticamente -->
       </div>
 
       <div id="vehicles-empty" class="vehicles-empty hidden">
         <div class="vehicles-empty-icon">
-          <svg class="icon" aria-hidden="true">
+          <svg class="icon">
             <use href="assets/icons.svg#icon-car"></use>
           </svg>
         </div>
         <h3>Nenhum veículo registado</h3>
-        <p>Adicione o seu primeiro veículo usando o formulário acima.</p>
+        <p>Adicione um novo veículo para começar.</p>
+
+        <button type="button" id="btn-add-first-vehicle" class="btn btn-primary">
+          <svg class="icon icon-left">
+            <use href="assets/icons.svg#icon-plus"></use>
+          </svg>
+          <span>Novo veículo</span>
+        </button>
       </div>
     </section>
+
   </main>
 
+  <!-- FOOTER -->
   <footer>
     <a href="dashboard.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons.svg#icon-home"></use>
-      </svg>
-      <span>Home</span>
+      <svg class="icon"><use href="assets/icons.svg#icon-home"></use></svg>
+      <span>Dashboard</span>
     </a>
     <a href="abastecimentos.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons.svg#icon-fuel"></use>
-      </svg>
+      <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
       <span>Abastecer</span>
     </a>
-    <a href="veiculos.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons.svg#icon-car"></use>
-      </svg>
+    <a href="veiculos.html" class="active">
+      <svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg>
       <span>Veículos</span>
     </a>
     <a href="perfil.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons.svg#icon-user"></use>
-      </svg>
+      <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
       <span>Perfil</span>
     </a>
   </footer>
+
+
+  <!-- MODAL ADICIONAR / EDITAR VEÍCULO -->
+  <div id="vehicle-modal-overlay" class="fuel-modal-overlay">
+    <div class="fuel-modal">
+      <div class="fuel-modal-header">
+        <div class="fuel-modal-title-wrap">
+          <svg class="icon icon-title"><use href="assets/icons.svg#icon-car"></use></svg>
+          <div>
+            <h2 id="vehicle-modal-title">Adicionar veículo</h2>
+            <p class="fuel-modal-description">Preencha os detalhes do veículo.</p>
+          </div>
+        </div>
+
+        <button class="icon-button" id="btn-close-vehicle-modal">
+          <svg class="icon"><use href="assets/icons.svg#icon-close"></use></svg>
+        </button>
+      </div>
+
+      <form id="vehicle-modal-form" class="fuel-modal-form">
+
+        <div class="form-grid">
+
+          <div class="form-field">
+            <label for="vehicle-name">Nome *</label>
+            <input id="vehicle-name" type="text" required />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-brand">Marca *</label>
+            <input id="vehicle-brand" type="text" required />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-model">Modelo *</label>
+            <input id="vehicle-model" type="text" required />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-plate">Matrícula</label>
+            <input id="vehicle-plate" type="text" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-fuel">Combustível</label>
+            <select id="vehicle-fuel">
+              <option value="">Seleccionar</option>
+              <option value="gasolina">Gasolina</option>
+              <option value="diesel">Diesel</option>
+              <option value="etanol">Etanol</option>
+              <option value="gnv">GNV</option>
+              <option value="eletrico">Elétrico</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-odometer">Odómetro inicial</label>
+            <input id="vehicle-odometer" type="number" placeholder="ex: 120000" />
+          </div>
+
+        </div>
+
+        <p id="vehicle-modal-message" class="form-message"></p>
+
+        <div class="fuel-modal-footer">
+          <button type="button" id="btn-cancel-vehicle-modal" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-gradient">
+            <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
+            <span>Guardar</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>

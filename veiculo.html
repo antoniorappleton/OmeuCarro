@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veículo – L100</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/home.css" />
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/firestore.js"></script>
+  <script defer src="js/veiculo.js"></script>
+</head>
+
+<body class="app-page" data-page="vehicle-detail">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <a href="dashboard.html" class="app-logo">
+        <svg class="icon">
+          <use href="assets/icons.svg#icon-car"></use>
+        </svg>
+        <div class="app-logo-text">
+          <span class="app-logo-title">L100</span>
+          <span class="app-logo-subtitle">Detalhe do veículo</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="app-header-actions">
+      <a href="estatisticas.html" class="icon-btn">
+        <svg class="icon"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+      </a>
+
+      <a href="perfil.html" class="icon-btn">
+        <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
+      </a>
+
+      <button id="btn-logout" class="icon-btn">
+        <svg class="icon"><use href="assets/icons.svg#icon-logout"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="home-main">
+
+    <!-- CARD DO VEÍCULO -->
+    <section class="card">
+      <h1 class="page-title">
+        <svg class="icon icon-title">
+          <use href="assets/icons.svg#icon-car"></use>
+        </svg>
+        <span id="vehicle-name">Veículo</span>
+      </h1>
+
+      <p id="vehicle-subtitle" class="card-subtitle"></p>
+
+      <div class="vehicle-detail-badges">
+        <span id="vehicle-plate" class="badge badge-outline">-</span>
+        <span id="vehicle-fuel" class="badge badge-secondary">-</span>
+        <span id="vehicle-odometer" class="badge badge-outline">-</span>
+      </div>
+
+      <p id="vehicle-message" class="form-message"></p>
+    </section>
+
+    <!-- KPIs DO VEÍCULO -->
+    <section class="stats-grid">
+      <article class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">
+            <svg class="icon"><use href="assets/icons.svg#icon-wallet"></use></svg>
+          </span>
+          <h2>Total gasto</h2>
+        </div>
+        <p class="stats-card-value" id="kpi-gasto">€0,00</p>
+        <p class="stats-card-desc">Neste veículo</p>
+      </article>
+
+      <article class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">
+            <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+          </span>
+          <h2>Litros</h2>
+        </div>
+        <p class="stats-card-value" id="kpi-litros">0 L</p>
+        <p class="stats-card-desc">Acumulado</p>
+      </article>
+
+      <article class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">
+            <svg class="icon"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+          </span>
+          <h2>Consumo médio</h2>
+        </div>
+        <p class="stats-card-value" id="kpi-consumo">-- L/100km</p>
+        <p class="stats-card-desc">Estimado</p>
+      </article>
+
+      <article class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">
+            <svg class="icon"><use href="assets/icons.svg#icon-trend-up"></use></svg>
+          </span>
+          <h2>Custo por km</h2>
+        </div>
+        <p class="stats-card-value" id="kpi-custo-km">-- €/km</p>
+        <p class="stats-card-desc">Com base nos registos</p>
+      </article>
+    </section>
+
+    <!-- LISTA DE ABASTECIMENTOS -->
+    <section class="card" style="margin-bottom: 80px;">
+      <div class="card-header-row">
+        <div>
+          <h2 class="card-title">Abastecimentos</h2>
+          <p id="kpi-total-registos" class="card-subtitle">0 registos</p>
+        </div>
+
+        <button id="btn-add-fuel" class="btn btn-primary btn-gradient">
+          <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
+          <span>Novo abastecimento</span>
+        </button>
+      </div>
+
+      <div id="fuel-empty" class="vehicles-empty hidden">
+        <div class="vehicles-empty-icon">
+          <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+        </div>
+        <h3>Nenhum abastecimento</h3>
+        <p>Registe o primeiro abastecimento deste veículo.</p>
+      </div>
+
+      <div id="fuel-list" class="fuel-list"></div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="dashboard.html"><svg class="icon"><use href="assets/icons.svg#icon-home"></use></svg><span>Home</span></a>
+    <a href="abastecimentos.html"><svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg><span>Abastecer</span></a>
+    <a href="veiculos.html" class="active"><svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg><span>Veículos</span></a>
+    <a href="perfil.html"><svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg><span>Perfil</span></a>
+  </footer>
+
+</body>
+</html>

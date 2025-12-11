@@ -7,99 +7,87 @@ document.addEventListener("DOMContentLoaded", () => {
   const helperVeiculo = document.getElementById("fuel-vehicle-helper");
   const deleteBtn = document.getElementById("fuel-delete");
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const veiculoIdFromUrl = urlParams.get("veiculoId");
-  const abastecimentoIdFromUrl = urlParams.get("id"); // se existir, estamos a editar
-
-  let isEditMode = !!abastecimentoIdFromUrl;
+  const params = new URLSearchParams(window.location.search);
+  const veiculoIdFromUrl = params.get("veiculoId"); // pré-seleção
+  const abastecimentoId = params.get("id"); // modo edição
+  let isEditMode = !!abastecimentoId;
   let currentAbastecimento = null;
 
-  function showMessage(text, type) {
-    if (!msgEl) return;
-    msgEl.textContent = text || "";
+  function showMessage(text, type = null) {
+    msgEl.textContent = text;
     msgEl.className = "form-message";
     if (type === "error") msgEl.classList.add("form-message--error");
     if (type === "success") msgEl.classList.add("form-message--success");
   }
 
   function setVehicleHelper(text) {
-    if (!helperVeiculo) return;
-    helperVeiculo.textContent = text || "";
+    if (helperVeiculo) helperVeiculo.textContent = text;
   }
 
+  /* -------------------------------------------------------------------
+      1. CARREGAR VEÍCULOS PARA O SELECT
+  ------------------------------------------------------------------- */
   async function loadVeiculos() {
-    if (!selectVeiculo) return;
-
-    selectVeiculo.innerHTML =
-      '<option value="">A carregar veículos...</option>';
+    selectVeiculo.innerHTML = `<option value="">A carregar veículos...</option>`;
 
     try {
       const veiculos = await getVeiculosDoUtilizador();
 
       if (!veiculos.length) {
-        selectVeiculo.innerHTML =
-          '<option value="">Nenhum veículo registado</option>';
+        selectVeiculo.innerHTML = `<option value="">Nenhum veículo registado</option>`;
         selectVeiculo.disabled = true;
-        setVehicleHelper(
-          "Crie primeiro um veículo em 'Veículos' para poder registar abastecimentos."
-        );
+        setVehicleHelper("Crie primeiro um veículo em 'Veículos'.");
         return;
       }
 
       selectVeiculo.disabled = false;
       setVehicleHelper("");
-
-      selectVeiculo.innerHTML = '<option value="">Selecionar veículo</option>';
+      selectVeiculo.innerHTML = `<option value="">Selecionar veículo</option>`;
 
       veiculos.forEach((v) => {
         const opt = document.createElement("option");
         opt.value = v.id;
-        opt.textContent = v.nome || `${v.marca || ""} ${v.modelo || ""}`;
+        opt.textContent = v.nome || `${v.marca} ${v.modelo}`;
         selectVeiculo.appendChild(opt);
       });
 
-      // pré-selecionar veículo vindo da query string, se existir
-      if (veiculoIdFromUrl && !isEditMode) {
-        const exists = veiculos.some((v) => v.id === veiculoIdFromUrl);
-        if (exists) {
+      // Pré-selecionar veículo se veio do URL
+      if (!isEditMode && veiculoIdFromUrl) {
+        if (veiculos.some((v) => v.id === veiculoIdFromUrl)) {
           selectVeiculo.value = veiculoIdFromUrl;
         }
       }
 
-      // se estamos a editar, depois de carregar veículos, setar o valor do doc
+      // Se estamos a editar, selecionar o veículo correspondente
       if (isEditMode && currentAbastecimento) {
-        const exists = veiculos.some(
-          (v) => v.id === currentAbastecimento.veiculoId
-        );
-        if (exists) {
-          selectVeiculo.value = currentAbastecimento.veiculoId;
-        }
+        selectVeiculo.value = currentAbastecimento.veiculoId;
       }
     } catch (err) {
       console.error(err);
-      selectVeiculo.innerHTML =
-        '<option value="">Erro ao carregar veículos</option>';
+      selectVeiculo.innerHTML = `<option value="">Erro ao carregar veículos</option>`;
       selectVeiculo.disabled = true;
-      setVehicleHelper(err.message || "Erro ao carregar veículos.");
+      setVehicleHelper("Erro ao comunicar com a Firebase.");
     }
   }
 
+  /* -------------------------------------------------------------------
+      2. CARREGAR ABASTECIMENTO PARA EDIÇÃO
+  ------------------------------------------------------------------- */
   async function loadAbastecimentoIfEdit() {
-    if (!isEditMode || !abastecimentoIdFromUrl) return;
+    if (!isEditMode) return;
 
     try {
-      const abs = await getAbastecimentoById(abastecimentoIdFromUrl);
+      const abs = await getAbastecimentoById(abastecimentoId);
       if (!abs) {
         isEditMode = false;
         return;
       }
+
       currentAbastecimento = abs;
 
-      // atualizar header
-      const headerTitle = document.querySelector("header .page-title span");
-      if (headerTitle) headerTitle.textContent = "Editar Abastecimento";
+      document.querySelector("header .page-title span").textContent =
+        "Editar Abastecimento";
 
-      // preencher formulário (excepto select, que é preenchido após loadVeiculos)
       document.getElementById("fuel-date").value = abs.data || "";
       document.getElementById("fuel-type").value = abs.tipoCombustivel || "";
       document.getElementById("fuel-liters").value = abs.litros || "";
@@ -108,95 +96,85 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fuel-station").value = abs.posto || "";
       document.getElementById("fuel-notes").value = abs.observacoes || "";
 
-      // mostrar botão remover
-      if (deleteBtn) {
-        deleteBtn.classList.remove("hidden");
-      }
+      // botão eliminar visível
+      deleteBtn.classList.remove("hidden");
 
-      // trocar texto do botão principal
-      const submitSpan = form.querySelector("button[type='submit'] span");
-      if (submitSpan) submitSpan.textContent = "Guardar alterações";
+      // alterar texto do botão
+      form.querySelector("button[type='submit'] span").textContent =
+        "Guardar alterações";
     } catch (err) {
       console.error(err);
-      showMessage("Erro ao carregar abastecimento para edição.", "error");
+      showMessage("Erro ao carregar abastecimento.", "error");
       isEditMode = false;
     }
   }
 
+  /* -------------------------------------------------------------------
+      3. SUBMETER FORMULÁRIO (CRIAR OU EDITAR)
+  ------------------------------------------------------------------- */
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      showMessage("", null);
-
-      const veiculoId = selectVeiculo ? selectVeiculo.value : "";
-      const dataAbastecimento =
-        document.getElementById("fuel-date").value || "";
-      const tipoCombustivel = document.getElementById("fuel-type").value || "";
-      const litros = document.getElementById("fuel-liters").value || "";
-      const preco = document.getElementById("fuel-price").value || "";
-      const odometro = document.getElementById("fuel-odometer").value || "";
-      const posto = document.getElementById("fuel-station").value || "";
-      const observacoes = document.getElementById("fuel-notes").value || "";
+      showMessage("");
 
       try {
-        if (!veiculoId) throw new Error("Selecione um veículo.");
-        if (!dataAbastecimento) throw new Error("Indique a data.");
-        if (!tipoCombustivel) throw new Error("Indique o tipo de combustível.");
-        if (!litros || Number(litros) <= 0)
-          throw new Error("Litros deve ser maior que zero.");
-        if (!preco || Number(preco) <= 0)
-          throw new Error("Preço por litro deve ser maior que zero.");
-        if (!odometro || Number(odometro) <= 0)
-          throw new Error("Indique o odómetro.");
-
-        const payload = {
-          veiculoId,
-          data: dataAbastecimento,
-          tipoCombustivel,
-          litros,
-          precoPorLitro: preco,
-          odometro,
-          posto,
-          observacoes,
+        const data = {
+          veiculoId: selectVeiculo.value,
+          data: document.getElementById("fuel-date").value,
+          tipoCombustivel: document.getElementById("fuel-type").value,
+          litros: Number(document.getElementById("fuel-liters").value),
+          precoPorLitro: Number(document.getElementById("fuel-price").value),
+          odometro: Number(document.getElementById("fuel-odometer").value),
+          posto: document.getElementById("fuel-station").value || "",
+          observacoes: document.getElementById("fuel-notes").value || "",
           completo: true,
         };
 
-        if (isEditMode && abastecimentoIdFromUrl) {
-          await updateAbastecimento(abastecimentoIdFromUrl, payload);
-          showMessage("Abastecimento atualizado com sucesso! ✅", "success");
+        if (!data.veiculoId) throw new Error("Selecione um veículo.");
+        if (!data.data) throw new Error("Indique a data.");
+        if (!data.tipoCombustivel)
+          throw new Error("Indique o tipo de combustível.");
+        if (data.litros <= 0) throw new Error("Litros inválidos.");
+        if (data.precoPorLitro <= 0) throw new Error("Preço inválido.");
+        if (data.odometro <= 0) throw new Error("Odómetro inválido.");
+
+        if (isEditMode) {
+          await updateAbastecimento(abastecimentoId, data);
+          showMessage("Abastecimento atualizado com sucesso!", "success");
         } else {
-          await createAbastecimento(payload);
-          showMessage("Abastecimento registado com sucesso! ✅", "success");
+          await createAbastecimento(data);
+          showMessage("Abastecimento registado com sucesso!", "success");
           form.reset();
         }
       } catch (err) {
         console.error(err);
-        showMessage(err.message || "Erro ao guardar abastecimento.", "error");
+        showMessage(err.message, "error");
       }
     });
   }
 
+  /* -------------------------------------------------------------------
+      4. APAGAR ABASTECIMENTO
+  ------------------------------------------------------------------- */
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
-      if (!isEditMode || !abastecimentoIdFromUrl) return;
-      const confirma = confirm(
-        "Tem a certeza que pretende eliminar este abastecimento?"
-      );
-      if (!confirma) return;
+      if (!isEditMode) return;
+      const c = confirm("Deseja eliminar este abastecimento?");
+      if (!c) return;
+
       try {
-        await deleteAbastecimento(abastecimentoIdFromUrl);
-        showMessage("Abastecimento eliminado com sucesso. ✅", "success");
-        // opcional: redireccionar de volta à home
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 800);
+        await deleteAbastecimento(abastecimentoId);
+        showMessage("Abastecimento eliminado.", "success");
+        setTimeout(() => (window.location.href = "dashboard.html"), 800);
       } catch (err) {
         console.error(err);
-        showMessage("Erro ao eliminar abastecimento.", "error");
+        showMessage("Erro ao eliminar.", "error");
       }
     });
   }
 
-  // ordem: se for edição, primeiro carrega o doc, depois os veículos
+  /* -------------------------------------------------------------------
+      5. ORDEM CORRETA DE CARREGAMENTO
+  ------------------------------------------------------------------- */
   loadAbastecimentoIfEdit().then(loadVeiculos).catch(console.error);
 });

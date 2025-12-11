@@ -10,17 +10,17 @@
   <!-- CSS específico desta página -->
   <link rel="stylesheet" href="css/home.css" />
 
-  <!-- Firebase SDK v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- Firebase + auth + firestore -->
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/auth.js"></script>
-  <script defer src="js/firestore.js"></script>
-  <!-- Lógica desta página (home / painel) -->
-  <script defer src="js/home.js"></script>
+<script defer src="js/firebase-config.js"></script>
+<script defer src="js/auth.js"></script>
+<script defer src="js/firestore.js"></script>
+<!-- depois os ficheiros específicos da página -->
+<script defer src="./js/dashboard.js"></script>
+
+
 </head>
 
 <body class="app-page" data-page="home">
@@ -75,58 +75,62 @@
   </section>
 
   <main class="home-main">
-    <!-- QUICK STATS -->
+    <!-- QUICK STATS - estilo React -->
     <section class="stats-grid">
-      <article class="stats-card" id="stat-veiculos">
-        <div class="stats-card-header">
-          <span class="stats-card-icon">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#icon-car"></use>
-            </svg>
-          </span>
-          <h2>Veículos</h2>
-        </div>
-        <p class="stats-card-value" id="stat-veiculos-value">0</p>
-        <p class="stats-card-desc">Registados</p>
-      </article>
-
-      <article class="stats-card" id="stat-gasto">
+      <!-- Total Gasto -->
+      <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
             <svg class="icon" aria-hidden="true">
               <use href="assets/icons.svg#icon-wallet"></use>
             </svg>
           </span>
-          <h2>Total gasto</h2>
+          <h2>Total Gasto</h2>
         </div>
-        <p class="stats-card-value" id="stat-gasto-value">€0</p>
-        <p class="stats-card-desc">Últimos abastecimentos</p>
+        <p class="stats-card-value" id="stat-gasto-value">€0,00</p>
+        <p class="stats-card-desc">Todos os abastecimentos</p>
       </article>
 
-      <article class="stats-card" id="stat-litros">
+      <!-- Litros Consumidos -->
+      <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
             <svg class="icon" aria-hidden="true">
               <use href="assets/icons.svg#icon-fuel"></use>
             </svg>
           </span>
-          <h2>Litros</h2>
+          <h2>Litros Consumidos</h2>
         </div>
-        <p class="stats-card-value" id="stat-litros-value">0 L</p>
-        <p class="stats-card-desc">Abastecidos</p>
+        <p class="stats-card-value" id="stat-litros-value">0,0 L</p>
+        <p class="stats-card-desc">Total acumulado</p>
       </article>
 
-      <article class="stats-card" id="stat-abastecimentos">
+      <!-- Preço Médio -->
+      <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
             <svg class="icon" aria-hidden="true">
               <use href="assets/icons.svg#icon-trend-up"></use>
             </svg>
           </span>
-          <h2>Abastecimentos</h2>
+          <h2>Preço Médio</h2>
         </div>
-        <p class="stats-card-value" id="stat-abastecimentos-value">0</p>
-        <p class="stats-card-desc">Registos</p>
+        <p class="stats-card-value" id="stat-preco-medio-value">€0,000</p>
+        <p class="stats-card-desc">Por litro</p>
+      </article>
+
+      <!-- Eficiência -->
+      <article class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-dashboard"></use>
+            </svg>
+          </span>
+          <h2>Eficiência</h2>
+        </div>
+        <p class="stats-card-value" id="stat-eficiencia-value">-- km/L</p>
+        <p class="stats-card-desc">Baseado nos últimos registos</p>
       </article>
     </section>
 
@@ -191,6 +195,7 @@
         </a>
       </div>
     </section>
+
   </main>
 
   <!-- FOOTER NAVBAR COM SVGs -->
@@ -220,8 +225,8 @@
       <span>Perfil</span>
     </a>
   </footer>
-      <!-- MODAL: Adicionar veículo -->
-      <div id="vehicle-modal-overlay" class="fuel-modal-overlay" aria-hidden="true">
+    <!-- MODAL: Adicionar veículo -->
+    <div id="vehicle-modal-overlay" class="fuel-modal-overlay" aria-hidden="true">
         <div class="fuel-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
           
           <!-- Cabeçalho do modal -->
@@ -302,6 +307,6 @@
             </div>
           </form>
         </div>
-      </div>
+    </div>
 </body>
 </html>

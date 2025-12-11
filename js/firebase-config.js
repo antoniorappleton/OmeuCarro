@@ -1,3 +1,5 @@
+// firebase-config.js
+
 const firebaseConfig = {
 apiKey: "AIzaSyAiKOykeoazkqCXMhy-mpX2Ho8liuUas-E",
   authDomain: "omeucarro-d3889.firebaseapp.com",
@@ -7,6 +9,12 @@ apiKey: "AIzaSyAiKOykeoazkqCXMhy-mpX2Ho8liuUas-E",
   appId: "1:387296122464:web:1c3c3c390dc26050f99505"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+window.auth = auth;
+window.db = db;
