@@ -676,3 +676,6 @@ body.app-page {
 .icon-btn-sm .icon{ width:18px; height:18px; color:#334155; }
 
 .icon-btn-sm.danger .icon{ color:#ef4444; }
+.abastecimentos-section {
+  margin-top: 32px;
+}
