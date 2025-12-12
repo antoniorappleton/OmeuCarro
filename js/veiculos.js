@@ -105,15 +105,15 @@ async function carregarVeiculos() {
     const ano = v.ano || "";
 
     card.innerHTML = `
-      <div class="vehicle-card-header-modern">
-        <div class="vehicle-card-main">
+      <div class="vehicle-card-top">
+        <div class="vehicle-left">
           <div class="vehicle-avatar">
             <svg class="icon" aria-hidden="true">
               <use href="assets/icons.svg#icon-car"></use>
             </svg>
           </div>
 
-          <div class="vehicle-card-text">
+          <div class="vehicle-text">
             <h3 class="vehicle-title">${v.nome || "Veículo"}</h3>
             <p class="vehicle-subtitle">${v.marca || ""} ${v.modelo || ""}</p>
 
@@ -121,40 +121,62 @@ async function carregarVeiculos() {
               <span class="badge badge-outline">${matricula}</span>
               ${
                 ano
-                  ? `<span class="badge badge-year">
-                       <svg class="icon icon-badge" aria-hidden="true">
-                         <use href="assets/icons.svg#icon-calendar"></use>
-                       </svg>
-                       ${ano}
-                     </span>`
+                  ? `
+                <span class="badge badge-year">
+                  <svg class="icon icon-badge" aria-hidden="true">
+                    <use href="assets/icons.svg#icon-calendar"></use>
+                  </svg>
+                  ${ano}
+                </span>`
                   : ""
               }
             </div>
           </div>
         </div>
-        <div class="vehicle-arrow" aria-hidden="true">
-          <svg class="icon icon-chevron">
-            <use href="assets/icons.svg#icon-chevron-right"></use>
-          </svg>
+
+        <div class="vehicle-actions">
+          <button class="icon-btn-sm" type="button" data-edit="${
+            v.id
+          }" aria-label="Editar veículo">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons-extra.svg#icon-edit"></use>
+            </svg>
+          </button>
+          <button class="icon-btn-sm danger" type="button" data-del="${
+            v.id
+          }" aria-label="Eliminar veículo">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons-extra.svg#icon-trash"></use>
+            </svg>
+          </button>
+
+          <span class="vehicle-arrow" aria-hidden="true">
+            <svg class="icon icon-chevron">
+              <use href="assets/icons.svg#icon-chevron-right"></use>
+            </svg>
+          </span>
         </div>
       </div>
 
-      <div class="vehicle-card-bottom-modern">
-        <div class="vehicle-metric">
-          <div class="vehicle-metric-value">${stats.count}</div>
-          <div class="vehicle-metric-label">Abastecimentos</div>
+      <div class="vehicle-divider"></div>
+
+      <div class="vehicle-bottom">
+        <div class="metric">
+          <div class="metric-value">${stats.count}</div>
+          <div class="metric-label">Abastecimentos</div>
         </div>
 
-        <div class="vehicle-metric vehicle-metric-center">
-          <div class="vehicle-metric-value">€${stats.total.toFixed(0)}</div>
-          <div class="vehicle-metric-label">Total Gasto</div>
+        <div class="metric metric-center">
+          <div class="metric-value metric-value-primary">€${stats.total.toFixed(
+            0
+          )}</div>
+          <div class="metric-label">Total Gasto</div>
         </div>
 
-        <span class="fuel-pill ${String(combustivel).toLowerCase()}">
-          ${combustivel}
-        </span>
+        <span class="fuel-pill">${combustivel}</span>
       </div>
     `;
+
 
     card.addEventListener("click", (e) => {
       if (e.target.closest("a") || e.target.closest("button")) return;
@@ -164,6 +186,31 @@ async function carregarVeiculos() {
     listEl.appendChild(card);
   });
 }
+
+// ================ EDITAR / ELIMINAR VEÍCULO ================
+listEl.addEventListener("click", async (e) => {
+  const editBtn = e.target.closest("[data-edit]");
+  const delBtn = e.target.closest("[data-del]");
+
+  if (editBtn) {
+    e.stopPropagation();
+    const id = editBtn.getAttribute("data-edit");
+    const veiculos = await getVeiculosDoUtilizador();
+    const v = veiculos.find((x) => x.id === id);
+    if (v) openModal(true, v);
+    return;
+  }
+
+  if (delBtn) {
+    e.stopPropagation();
+    const id = delBtn.getAttribute("data-del");
+    if (!confirm("Eliminar este veículo? (isto não apaga abastecimentos)"))
+      return;
+    await deleteVeiculo(id);
+    await carregarVeiculos();
+  }
+});
+
 
 // ================ SUBMETER MODAL ================
 modalForm.addEventListener("submit", async (e) => {

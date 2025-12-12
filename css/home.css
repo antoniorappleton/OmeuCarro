@@ -655,3 +655,24 @@ body.app-page {
   font-weight: 800;
   font-size: .9rem;
 }
+.vehicle-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.icon-btn-sm{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,.35);
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.icon-btn-sm .icon{ width:18px; height:18px; color:#334155; }
+
+.icon-btn-sm.danger .icon{ color:#ef4444; }

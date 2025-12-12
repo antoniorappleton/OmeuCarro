@@ -135,13 +135,23 @@ document.addEventListener("DOMContentLoaded", () => {
         a.posto || ""
       }</div>
           </div>
+
           <div class="fuel-item-actions">
-            <button class="btn btn-outline btn-sm" data-edit="${
+            <button class="icon-btn-sm" type="button" data-edit="${
               a.id
-            }">Editar</button>
-            <button class="btn btn-outline btn-sm" data-del="${
+            }" aria-label="Editar abastecimento">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons.svg#icon-edit"></use>
+              </svg>
+            </button>
+
+            <button class="icon-btn-sm danger" type="button" data-del="${
               a.id
-            }">Eliminar</button>
+            }" aria-label="Eliminar abastecimento">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons.svg#icon-trash"></use>
+              </svg>
+            </button>
           </div>
         </div>
       `;
