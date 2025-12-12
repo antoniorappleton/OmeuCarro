@@ -9,7 +9,7 @@ body.app-page {
   min-height: 100vh;
 
   /* 👇 imagem para TODO o fundo da app */
-  background-image: url("/images/offroad.jpg");
+  background-image: url("../images/offroad.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
