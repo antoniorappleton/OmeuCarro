@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v3";
-const RUNTIME_CACHE = "l100-runtime-v3";
+const STATIC_CACHE = "l100-static-v4";
+const RUNTIME_CACHE = "l100-runtime-v4";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -17,12 +17,12 @@ const APP_SHELL = [
   "./login.html",
   "./css/style.css",
   "./css/dashboard.css",
-  "./css/abastecimentos.css",
+
   "./js/firebase-config.js",
   "./js/auth.js",
   "./js/firestore.js",
   "./js/dashboard.js",
-  "./js/modal-abastecimentos.js",
+  "./js/modal-abastecimento.js",
   "./js/estatisticas.js",
   "./js/veiculos.js",
   "./js/utils.js",
@@ -108,7 +108,7 @@ self.addEventListener("fetch", (event) => {
           if (cached) return cached;
 
           // Página offline
-          return caches.match("./offline.html");
+          return caches.match("./index.html");
         })
     );
     return;
@@ -148,7 +148,7 @@ self.addEventListener("fetch", (event) => {
           cache.put(request, response.clone());
           return response;
         } catch {
-          return caches.match("./images/offline.png");
+          return caches.match("./images/logo-icon192.png");
         }
       })
     );
