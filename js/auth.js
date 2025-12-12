@@ -11,14 +11,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ======== GUARD GLOBAL DE AUTENTICAÇÃO ========
   auth.onAuthStateChanged((user) => {
-if (isAuthPage) {
-  // não redireciona automaticamente
-} else {
-  // Qualquer outra página requer utilizador autenticado
-  if (!user) {
-    window.location.href = "./index.html";
-  }
-}
+    if (isAuthPage) {
+      // Se já estiver autenticado e está na página de login, vai para o dashboard
+      if (user) {
+        window.location.href = "./dashboard.html";;
+      }
+    } else {
+      // Qualquer outra página requer utilizador autenticado
+      if (!user) {
+        window.location.href = "./index.html";
+      }
+    }
   });
 
   if (!isAuthPage) return; // o resto só se aplica à página de login/signup
