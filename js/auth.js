@@ -90,6 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
         await auth.signInWithEmailAndPassword(email, password);
         showLoginMessage("Login efetuado com sucesso! ✅", "success");
         // onAuthStateChanged vai redirecionar para dashboard.html
+        window.location.href = "./dashboard.html";
+
       } catch (err) {
         console.error(err);
         showLoginMessage(err.message || "Erro ao entrar.", "error");
@@ -131,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showSignupMessage("Conta criada com sucesso! ✅", "success");
         // onAuthStateChanged vai redirecionar para dashboard.html
+        window.location.href = "./dashboard.html";
       } catch (err) {
         console.error(err);
         showSignupMessage(err.message || "Erro ao criar conta.", "error");
