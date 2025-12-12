@@ -10,53 +10,52 @@ const RUNTIME_CACHE = "l100-runtime-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./offline.html",
-
   "./dashboard.html",
   "./abastecimentos.html",
   "./estatisticas.html",
-  "./perfil.html",
   "./veiculos.html",
   "./login.html",
-  "./register.html",
-
   "./css/style.css",
   "./css/dashboard.css",
   "./css/abastecimentos.css",
-
   "./js/firebase-config.js",
   "./js/auth.js",
   "./js/firestore.js",
   "./js/dashboard.js",
-  "./js/abastecimentos.js",
+  "./js/modal-abastecimentos.js",
   "./js/estatisticas.js",
-  "./js/perfil.js",
   "./js/veiculos.js",
-  "./js/modal-abastecimento.js",
   "./js/utils.js",
   "./js/service-worker-register.js",
-
   "./images/logo-icon192.png",
   "./images/logo-icon512.png",
-  "./images/offline.png",
 ];
-
 
 // ===============================
 // INSTALL – Pré-cache do App Shell
 // ===============================
 self.addEventListener("install", (event) => {
-  console.log("[SW] Install");
-
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      console.log("[SW] A cachear APP_SHELL…");
-      return cache.addAll(APP_SHELL);
-    })
+    (async () => {
+      const cache = await caches.open(STATIC_CACHE);
+
+      const results = await Promise.allSettled(
+        APP_SHELL.map((url) => cache.add(url))
+      );
+
+      const failed = results
+        .map((r, i) => (r.status === "rejected" ? APP_SHELL[i] : null))
+        .filter(Boolean);
+
+      if (failed.length) {
+        console.warn("[SW] Falharam no cache:", failed);
+      }
+    })()
   );
 
-  self.skipWaiting(); // força imediatamente o novo SW
+  self.skipWaiting();
 });
+
 
 // ===============================
 // ACTIVATE – Limpa caches antigas
