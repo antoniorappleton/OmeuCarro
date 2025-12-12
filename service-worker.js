@@ -8,42 +8,39 @@ const RUNTIME_CACHE = "l100-runtime-v3";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
-  "/", // GitHub Pages redireciona para /index.html
-  "/index.html",
-  "/offline.html",
+  "./",
+  "./index.html",
+  "./offline.html",
 
-  // Screens
-  "/dashboard.html",
-  "/abastecimentos.html",
-  "/estatisticas.html",
-  "/perfil.html",
-  "/veiculos.html",
-  "/login.html",
-  "/register.html",
+  "./dashboard.html",
+  "./abastecimentos.html",
+  "./estatisticas.html",
+  "./perfil.html",
+  "./veiculos.html",
+  "./login.html",
+  "./register.html",
 
-  // CSS
-  "/css/style.css",
-  "/css/dashboard.css",
-  "/css/abastecimentos.css",
+  "./css/style.css",
+  "./css/dashboard.css",
+  "./css/abastecimentos.css",
 
-  // JS
-  "/js/firebase-config.js",
-  "/js/auth.js",
-  "/js/firestore.js",
-  "/js/dashboard.js",
-  "/js/abastecimentos.js",
-  "/js/estatisticas.js",
-  "/js/perfil.js",
-  "/js/veiculos.js",
-  "/js/modal-abastecimento.js",
-  "/js/utils.js",
-  "/js/service-worker-register.js",
+  "./js/firebase-config.js",
+  "./js/auth.js",
+  "./js/firestore.js",
+  "./js/dashboard.js",
+  "./js/abastecimentos.js",
+  "./js/estatisticas.js",
+  "./js/perfil.js",
+  "./js/veiculos.js",
+  "./js/modal-abastecimento.js",
+  "./js/utils.js",
+  "./js/service-worker-register.js",
 
-  // Assets
-  "/images/logo-icon192.png",
-  "/images/logo-icon512.png",
-  "/images/offline.png",
+  "./images/logo-icon192.png",
+  "./images/logo-icon512.png",
+  "./images/offline.png",
 ];
+
 
 // ===============================
 // INSTALL – Pré-cache do App Shell
@@ -112,7 +109,7 @@ self.addEventListener("fetch", (event) => {
           if (cached) return cached;
 
           // Página offline
-          return caches.match("/offline.html");
+          return caches.match("./offline.html");
         })
     );
     return;
@@ -152,7 +149,7 @@ self.addEventListener("fetch", (event) => {
           cache.put(request, response.clone());
           return response;
         } catch {
-          return caches.match("/images/offline.png");
+          return caches.match("./images/offline.png");
         }
       })
     );
