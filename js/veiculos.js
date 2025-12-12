@@ -76,27 +76,93 @@ async function carregarVeiculos() {
   listEl.classList.remove("hidden");
   emptyEl.classList.add("hidden");
 
-veiculos.forEach((v) => {
-  const card = document.createElement("div");
-  card.classList.add("vehicle-card");
+  // buscar abastecimentos para calcular stats por veículo
+  const abastecimentos = await getAbastecimentosDoUtilizador({ limite: 500 });
 
-  card.innerHTML = `
-    <div class="vehicle-card-content">
-      <h3>${v.nome}</h3>
-      <p>${v.marca || ""} ${v.modelo || ""}</p>
-      <span class="plate">${v.matricula || ""}</span>
-    </div>
-  `;
+  const statsPorVeiculo = {};
+  abastecimentos.forEach((abs) => {
+    const vid = abs.veiculoId;
+    const litros = Number(abs.litros) || 0;
+    const preco = Number(abs.precoPorLitro) || 0;
+    const custoTotal = litros * preco;
 
-  // 👉 Clicar abre o detalhe
-  card.addEventListener("click", () => {
-    window.location.href = "veiculo.html?id=" + v.id;
+    if (!statsPorVeiculo[vid]) statsPorVeiculo[vid] = { count: 0, total: 0 };
+    statsPorVeiculo[vid].count += 1;
+    statsPorVeiculo[vid].total += custoTotal;
   });
 
-  listEl.appendChild(card);
-});
+  veiculos.forEach((v) => {
+    const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
 
+    const card = document.createElement("article");
+    card.className = "vehicle-card vehicle-card-modern";
+    card.dataset.veiculoId = v.id;
 
+    const matricula = v.matricula || "Sem matrícula";
+    const combustivel = v.combustivelPadrao || "—";
+
+    // Se tiveres ano no documento (ex: v.ano), mostramos. Se não, não aparece.
+    const ano = v.ano || "";
+
+    card.innerHTML = `
+      <div class="vehicle-card-header-modern">
+        <div class="vehicle-card-main">
+          <div class="vehicle-avatar">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-car"></use>
+            </svg>
+          </div>
+
+          <div class="vehicle-card-text">
+            <h3 class="vehicle-title">${v.nome || "Veículo"}</h3>
+            <p class="vehicle-subtitle">${v.marca || ""} ${v.modelo || ""}</p>
+
+            <div class="vehicle-badges">
+              <span class="badge badge-outline">${matricula}</span>
+              ${
+                ano
+                  ? `<span class="badge badge-year">
+                       <svg class="icon icon-badge" aria-hidden="true">
+                         <use href="assets/icons.svg#icon-calendar"></use>
+                       </svg>
+                       ${ano}
+                     </span>`
+                  : ""
+              }
+            </div>
+          </div>
+        </div>
+        <div class="vehicle-arrow" aria-hidden="true">
+          <svg class="icon icon-chevron">
+            <use href="assets/icons.svg#icon-chevron-right"></use>
+          </svg>
+        </div>
+      </div>
+
+      <div class="vehicle-card-bottom-modern">
+        <div class="vehicle-metric">
+          <div class="vehicle-metric-value">${stats.count}</div>
+          <div class="vehicle-metric-label">Abastecimentos</div>
+        </div>
+
+        <div class="vehicle-metric vehicle-metric-center">
+          <div class="vehicle-metric-value">€${stats.total.toFixed(0)}</div>
+          <div class="vehicle-metric-label">Total Gasto</div>
+        </div>
+
+        <span class="fuel-pill ${String(combustivel).toLowerCase()}">
+          ${combustivel}
+        </span>
+      </div>
+    `;
+
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("a") || e.target.closest("button")) return;
+      window.location.href = "veiculo.html?id=" + encodeURIComponent(v.id);
+    });
+
+    listEl.appendChild(card);
+  });
 }
 
 // ================ SUBMETER MODAL ================

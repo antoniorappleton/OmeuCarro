@@ -62,53 +62,72 @@ document.addEventListener("DOMContentLoaded", () => {
         const combustivel = v.combustivelPadrao || "Combustível não definido";
         const odometroInicial = v.odometroInicial || 0;
 
-        card.innerHTML = `
-          <div class="vehicle-card-header-modern">
-            <div class="vehicle-card-main">
-              <div class="vehicle-avatar">
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/icons.svg#icon-car"></use>
-                </svg>
-              </div>
-              <div>
-                <h3 class="vehicle-title">${v.nome || "Veículo"}</h3>
-                <p class="vehicle-subtitle">
-                  ${v.marca || ""} ${v.modelo || ""}
-                </p>
-                <div class="vehicle-badges">
-                  <span class="badge badge-outline">${matricula}</span>
-                  <span class="badge badge-secondary">${combustivel}</span>
-                </div>
-              </div>
-            </div>
-            <div class="vehicle-arrow">
-              ›
-            </div>
-          </div>
+// tenta obter ano de algum campo comum
+const ano = v.ano || v.anoModelo || v.anoMatricula || "";
 
-          <div class="vehicle-card-stats-grid">
-            <div class="vehicle-stat">
-              <div class="vehicle-stat-label">Abastecimentos</div>
-              <div class="vehicle-stat-value">${stats.count}</div>
-            </div>
-            <div class="vehicle-stat">
-              <div class="vehicle-stat-label">Total Gasto</div>
-              <div class="vehicle-stat-value">€${stats.total.toFixed(0)}</div>
-            </div>
-            <div class="vehicle-stat">
-              <div class="vehicle-stat-label">Odómetro inicial</div>
-              <div class="vehicle-stat-value">${odometroInicial} km</div>
-            </div>
-          </div>
+card.innerHTML = `
+  <div class="vehicle-card-top">
+    <div class="vehicle-left">
+      <div class="vehicle-avatar">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons.svg#icon-car"></use>
+        </svg>
+      </div>
 
-          <div class="vehicle-card-footer-modern">
-            <a href="veiculo.html?id=${encodeURIComponent(
-              v.id
-            )}" class="link-secondary">
-              Ver detalhes do veículo
-            </a>
-          </div>
-        `;
+      <div class="vehicle-text">
+        <div class="vehicle-title-row">
+          <h3 class="vehicle-title">${v.nome || "Carro Principal"}</h3>
+        </div>
+        <p class="vehicle-subtitle">${(v.marca || "").trim()} ${(
+  v.modelo || ""
+).trim()}</p>
+
+        <div class="vehicle-badges">
+          <span class="badge badge-outline">${matricula}</span>
+
+          ${
+            ano
+              ? `<span class="badge badge-year">
+                   <svg class="icon icon-badge" aria-hidden="true">
+                     <use href="assets/icons.svg#icon-calendar"></use>
+                   </svg>
+                   ${ano}
+                 </span>`
+              : ""
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="vehicle-arrow" aria-hidden="true">
+      <svg class="icon icon-chevron">
+        <use href="assets/icons.svg#icon-chevron-right"></use>
+      </svg>
+    </div>
+  </div>
+
+  <div class="vehicle-divider"></div>
+
+  <div class="vehicle-bottom">
+    <div class="metric">
+      <svg class="icon icon-metric" aria-hidden="true">
+        <use href="assets/icons.svg#icon-fuel"></use>
+      </svg>
+      <div class="metric-value">${stats.count}</div>
+      <div class="metric-label">Abastecimentos</div>
+    </div>
+
+    <div class="metric metric-center">
+      <div class="metric-value metric-value-primary">€${stats.total.toFixed(
+        0
+      )}</div>
+      <div class="metric-label">Total Gasto</div>
+    </div>
+
+    <span class="fuel-pill">${combustivel}</span>
+  </div>
+`;
+
 
         // clique no cartão → vai para o detalhe do veículo
         card.addEventListener("click", (e) => {

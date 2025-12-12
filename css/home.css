@@ -346,3 +346,312 @@ body.app-page {
   background: rgba(148, 163, 184, 0.16);
   color: #111827;
 }
+/* ==============================
+   VEHICLE CARD – estilo referência
+   ============================== */
+
+.vehicle-card-modern {
+  padding: 0;
+  overflow: hidden;
+}
+
+.vehicle-card-header-modern {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.vehicle-card-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vehicle-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(12, 140, 120, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-solid);
+  flex: 0 0 auto;
+}
+
+.vehicle-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vehicle-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+
+.vehicle-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.vehicle-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-outline {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  color: #0f172a;
+}
+
+.badge-year {
+  background: rgba(27, 155, 130, 0.12);
+  color: #0f766e;
+  border: 1px solid rgba(27, 155, 130, 0.18);
+  font-weight: 650;
+}
+
+.icon-badge {
+  width: 16px;
+  height: 16px;
+}
+
+.vehicle-arrow {
+  font-size: 26px;
+  line-height: 1;
+  color: #94a3b8;
+  padding-left: 10px;
+}
+
+/* bottom row */
+.vehicle-card-bottom-modern {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.vehicle-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vehicle-metric-center {
+  text-align: center;
+}
+
+.vehicle-metric-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.vehicle-metric-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* fuel pill */
+.fuel-pill {
+  justify-self: end;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+}
+
+/* variações simples (opcional) */
+.fuel-pill.gasolina { background: rgba(34, 197, 94, 0.14); color: #166534; border-color: rgba(34, 197, 94, 0.22); }
+.fuel-pill.diesel   { background: rgba(59, 130, 246, 0.14); color: #1e3a8a; border-color: rgba(59, 130, 246, 0.22); }
+.fuel-pill.eletrico { background: rgba(168, 85, 247, 0.14); color: #5b21b6; border-color: rgba(168, 85, 247, 0.22); }
+.icon {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
+
+.icon-chevron {
+  width: 22px;
+  height: 22px;
+  color: #94a3b8;
+}
+
+.icon-badge {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-fuel {
+  width: 16px;
+  height: 16px;
+}
+/* ===== Card igual à referência ===== */
+
+.vehicle-card-modern{
+  background: var(--color-surface);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+  overflow: hidden;
+  padding: 0;
+}
+
+.vehicle-card-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding: 18px 18px 14px;
+}
+
+.vehicle-left{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+
+.vehicle-avatar{
+  width:56px;
+  height:56px;
+  border-radius: 16px;
+  background: rgba(12,140,120,0.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: var(--color-primary-solid);
+  flex:0 0 auto;
+}
+
+.vehicle-text{ min-width:0; }
+
+.vehicle-title{
+  margin:0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color:#0f172a;
+}
+
+.vehicle-subtitle{
+  margin:4px 0 10px;
+  color:#64748b;
+  font-size: 1.05rem;
+}
+
+.vehicle-badges{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: .9rem;
+  line-height:1;
+  white-space:nowrap;
+}
+
+.badge-outline{
+  border: 1px solid rgba(148,163,184,0.55);
+  background:#fff;
+  color:#0f172a;
+}
+
+.badge-year{
+  background: rgba(27,155,130,0.15);
+  border: 1px solid rgba(27,155,130,0.22);
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.icon-badge{ width:16px; height:16px; }
+
+.vehicle-arrow{
+  color:#94a3b8;
+  padding-left:12px;
+}
+
+.icon-chevron{ width:22px; height:22px; }
+
+.vehicle-divider{
+  height:1px;
+  background: rgba(148,163,184,0.25);
+  margin: 0 18px;
+}
+
+.vehicle-bottom{
+  display:grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items:center;
+  gap: 14px;
+  padding: 14px 18px 18px;
+}
+
+.metric{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.icon-metric{
+  width:22px;
+  height:22px;
+  color:#94a3b8;
+}
+
+.metric-value{
+  font-size: 1.2rem;
+  font-weight: 800;
+  color:#0f172a;
+}
+
+.metric-value-primary{
+  color: var(--color-primary-start);
+}
+
+.metric-label{
+  font-size:.9rem;
+  color:#64748b;
+}
+
+.metric-center{
+  text-align:center;
+}
+
+.fuel-pill{
+  justify-self:end;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(34,197,94,0.15);
+  border: 1px solid rgba(34,197,94,0.22);
+  color:#16a34a;
+  font-weight: 800;
+  font-size: .9rem;
+}
