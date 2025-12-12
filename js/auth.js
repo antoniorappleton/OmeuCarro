@@ -1,29 +1,62 @@
 // public/js/auth.js
 
 // Garante que firebase, auth e db já existem (criadas em firebase-config.js)
-if (!window.firebase) {
-  console.error("Firebase SDK não foi carregado.");
+if (!window.firebase || !window.auth) {
+  console.error("Firebase não foi corretamente inicializado.");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const body = document.body;
   const isAuthPage = body.dataset.page === "auth";
 
-  // ======== GUARD GLOBAL DE AUTENTICAÇÃO ========
+  // =================================================
+  // GUARD GLOBAL DE AUTENTICAÇÃO
+  // =================================================
   auth.onAuthStateChanged((user) => {
     if (isAuthPage) {
-      // Se já estiver autenticado e está na página de login, vai para o dashboard
-    } else {
-      // Qualquer outra página requer utilizador autenticado
-      if (!user) {
-        window.location.href = "./index.html";
-      }
+      // Não redirecionar automaticamente aqui
+      // (importante para PWA + UX)
+      return;
+    }
+
+    // Qualquer página privada requer utilizador autenticado
+    if (!user) {
+      window.location.href = "./index.html";
     }
   });
 
-  if (!isAuthPage) return; // o resto só se aplica à página de login/signup
+  // =================================================
+  // LOGOUT (GLOBAL – HEADER)
+  // =================================================
+const logoutBtn = document.getElementById("btn-logout");
 
-  // ======== ELEMENTOS DA PÁGINA AUTH ========
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log("[auth] logout click");
+
+    try {
+      await auth.signOut();
+      console.log("[auth] signed out");
+
+      // força reload “limpo”
+      window.location.replace("./index.html");
+    } catch (err) {
+      console.error("[auth] erro no logout:", err);
+      alert(err?.message || "Erro ao sair da aplicação.");
+    }
+  });
+}
+
+
+  // =================================================
+  // A PARTIR DAQUI → SÓ PÁGINA AUTH (LOGIN / SIGNUP)
+  // =================================================
+  if (!isAuthPage) return;
+
+  // ======== ELEMENTOS ========
   const tabLogin = document.getElementById("tab-login");
   const tabSignup = document.getElementById("tab-signup");
 
@@ -54,44 +87,50 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function switchToLogin() {
-    tabLogin.classList.add("auth-tab--active");
-    tabSignup.classList.remove("auth-tab--active");
-    loginForm.classList.remove("auth-form--hidden");
-    signupForm.classList.add("auth-form--hidden");
+    tabLogin?.classList.add("auth-tab--active");
+    tabSignup?.classList.remove("auth-tab--active");
+    loginForm?.classList.remove("auth-form--hidden");
+    signupForm?.classList.add("auth-form--hidden");
     showLoginMessage("", null);
     showSignupMessage("", null);
   }
 
   function switchToSignup() {
-    tabSignup.classList.add("auth-tab--active");
-    tabLogin.classList.remove("auth-tab--active");
-    signupForm.classList.remove("auth-form--hidden");
-    loginForm.classList.add("auth-form--hidden");
+    tabSignup?.classList.add("auth-tab--active");
+    tabLogin?.classList.remove("auth-tab--active");
+    signupForm?.classList.remove("auth-form--hidden");
+    loginForm?.classList.add("auth-form--hidden");
     showLoginMessage("", null);
     showSignupMessage("", null);
   }
 
   // Tabs
-  if (tabLogin) tabLogin.addEventListener("click", switchToLogin);
-  if (tabSignup) tabSignup.addEventListener("click", switchToSignup);
+  tabLogin?.addEventListener("click", switchToLogin);
+  tabSignup?.addEventListener("click", switchToSignup);
 
-  // ======== LOGIN ========
+  // =================================================
+  // LOGIN
+  // =================================================
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       showLoginMessage("", null);
 
-      const email = document.getElementById("login-email").value.trim();
-      const password = document.getElementById("login-password").value;
+      const email = document.getElementById("login-email")?.value.trim();
+      const password = document.getElementById("login-password")?.value;
 
       try {
-        if (!email || !password) throw new Error("Preencha email e password.");
+        if (!email || !password) {
+          throw new Error("Preencha email e password.");
+        }
+
+        // Persistência LOCAL (PWA / browser)
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         await auth.signInWithEmailAndPassword(email, password);
-        showLoginMessage("Login efetuado com sucesso! ✅", "success");
-        // onAuthStateChanged vai redirecionar para dashboard.html
-        window.location.href = "./dashboard.html";
 
+        showLoginMessage("Login efetuado com sucesso! ✅", "success");
+        window.location.href = "./dashboard.html";
       } catch (err) {
         console.error(err);
         showLoginMessage(err.message || "Erro ao entrar.", "error");
@@ -99,29 +138,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ======== SIGNUP ========
+  // =================================================
+  // SIGNUP
+  // =================================================
   if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       showSignupMessage("", null);
 
-      const nome = document.getElementById("signup-nome").value.trim();
-      const email = document.getElementById("signup-email").value.trim();
-      const password = document.getElementById("signup-password").value;
+      const nome = document.getElementById("signup-nome")?.value.trim();
+      const email = document.getElementById("signup-email")?.value.trim();
+      const password = document.getElementById("signup-password")?.value;
 
       try {
-        if (!nome || !email || !password)
+        if (!nome || !email || !password) {
           throw new Error("Preencha todos os campos.");
+        }
 
-        if (password.length < 6)
+        if (password.length < 6) {
           throw new Error("A password deve ter pelo menos 6 caracteres.");
+        }
+
+        // Persistência LOCAL
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         const cred = await auth.createUserWithEmailAndPassword(email, password);
 
-        // Atualiza displayName no Firebase Auth
         await cred.user.updateProfile({ displayName: nome });
 
-        // Cria documento em users/{uid} no Firestore
         if (typeof saveUserProfile === "function") {
           await saveUserProfile(cred.user, {
             nome,
@@ -132,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         showSignupMessage("Conta criada com sucesso! ✅", "success");
-        // onAuthStateChanged vai redirecionar para dashboard.html
         window.location.href = "./dashboard.html";
       } catch (err) {
         console.error(err);
@@ -141,11 +184,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ======== RESET PASSWORD ========
+  // =================================================
+  // RESET PASSWORD
+  // =================================================
   if (resetBtn) {
     resetBtn.addEventListener("click", async () => {
-      const emailInput = document.getElementById("login-email");
-      const email = emailInput ? emailInput.value.trim() : "";
+      const email = document.getElementById("login-email")?.value.trim();
 
       if (!email) {
         showLoginMessage(

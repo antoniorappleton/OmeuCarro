@@ -536,3 +536,56 @@ body.app-page {
 .abastecimentos-section {
   margin-top: 32px;
 }
+/* ===== Auth clean (tabs + card) ===== */
+
+.auth-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background: var(--color-bg);
+}
+
+.auth-container{ width:100%; max-width:420px; }
+
+.auth-card{
+  background: rgba(255,255,255,.92);
+  border:1px solid rgba(148,163,184,.25);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(15,23,42,.12);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+}
+
+.auth-header h1{ margin:0; font-size:1.4rem; }
+.auth-header p{ margin:6px 0 0; color:#64748b; }
+
+.auth-tabs{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:6px;
+  border-radius: 999px;
+  background: rgba(148,163,184,.18);
+}
+
+.auth-tab{
+  border:0;
+  background: transparent;
+  padding:10px 12px;
+  border-radius: 999px;
+  font-weight:700;
+  color:#334155;
+  cursor:pointer;
+}
+
+.auth-tab--active{
+  background:#fff;
+  box-shadow: 0 8px 18px rgba(15,23,42,.10);
+  color:#0f172a;
+}
+
+.auth-form{ margin-top:14px; }
+.auth-form--hidden{ display:none; }
