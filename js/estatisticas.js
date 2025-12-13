@@ -13,9 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function carregarEstatisticas() {
   try {
-    const abastecimentos = await getAbastecimentosDoUtilizador({
-      limite: 500,
-    });
+    const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
+
 
     // --- agregações base ---
     let totalGasto = 0;

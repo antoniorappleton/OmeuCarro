@@ -117,15 +117,37 @@ async function carregarVeiculos() {
     return;
   }
 
-  listEl.classList.remove("hidden");
-  emptyEl.classList.add("hidden");
+listEl.classList.remove("hidden");
+emptyEl.classList.add("hidden");
 
-  veiculos.forEach((v) => {
-    const stats = { count: 0, total: 0 };
+// 🔹 carregar TODOS os abastecimentos (subcoleções)
+const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
+
+// 🔹 mapear estatísticas por veículo
+const statsPorVeiculo = {};
+
+abastecimentos.forEach((abs) => {
+  const vid = abs.veiculoId;
+  if (!vid) return;
+
+  const litros = Number(abs.litros) || 0;
+  const preco = Number(abs.precoPorLitro) || 0;
+  const custo = litros * preco;
+
+  if (!statsPorVeiculo[vid]) {
+    statsPorVeiculo[vid] = { count: 0, total: 0 };
+  }
+
+  statsPorVeiculo[vid].count += 1;
+  statsPorVeiculo[vid].total += custo;
+});
+
+// 🔹 agora sim: criar cartões
+veiculos.forEach((v) => {
+  const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
     const card = document.createElement("article");
     card.className = "vehicle-card vehicle-card-modern";
     card.dataset.veiculoId = v.id;
-
     const matricula = v.matricula || "Sem matrícula";
     const combustivel = v.combustivelPadrao || "—";
 

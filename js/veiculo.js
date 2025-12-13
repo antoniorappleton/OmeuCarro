@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.msg.className = "form-message " + (type ? `form-message--${type}` : "");
   }
 
+
   async function init() {
     const veiculoId = getParam("id");
     if (!veiculoId) {
@@ -117,15 +118,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    if (km > 0) {
+    if (el.kpiConsumo) {
       el.kpiConsumo.textContent =
-        (litrosSeg / (km / 100)).toFixed(1) + " L/100km";
-      el.kpiCustoKm.textContent = (custoSeg / km).toFixed(3) + " €/km";
-    } else {
-      el.kpiConsumo.textContent = "—";
-      el.kpiCustoKm.textContent = "—";
+        km > 0
+          ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km"
+          : "—";
     }
 
+    if (el.kpiCustoKm) {
+      el.kpiCustoKm.textContent =
+        km > 0
+          ? (custoSeg / km).toFixed(3) + " €/km"
+          : "—";
+    }
     // =================================================
     // LISTA DE ABASTECIMENTOS
     // =================================================
