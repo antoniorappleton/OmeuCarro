@@ -109,16 +109,16 @@ async function deleteVeiculo(id) {
 //  ABASTECIMENTOS
 // ======================================================================
 
-async function createAbastecimento(data) {
+async function createAbastecimento(veiculoId, data) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
-  if (!data.veiculoId) throw new Error("veiculoId é obrigatório");
+  if (!veiculoId) throw new Error("veiculoId é obrigatório");
 
   // validar odómetro (não pode voltar atrás)
   const ultimoSnap = await db
+    .collection("veiculos")
+    .doc(veiculoId)
     .collection("abastecimentos")
-    .where("userId", "==", user.uid)
-    .where("veiculoId", "==", data.veiculoId)
     .orderBy("odometro", "desc")
     .limit(1)
     .get();
@@ -133,8 +133,6 @@ async function createAbastecimento(data) {
   }
 
   const abastecimento = {
-    userId: user.uid,
-    veiculoId: data.veiculoId,
     data: data.data,
     tipoCombustivel: data.tipoCombustivel,
     litros: Number(data.litros),
@@ -146,36 +144,32 @@ async function createAbastecimento(data) {
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-  const ref = await db.collection("abastecimentos").add(abastecimento);
+  const ref = await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("abastecimentos")
+    .add(abastecimento);
+
   return ref;
 }
 
-async function getAbastecimentosDoUtilizador({
-  veiculoId = null,
-  limite = 50,
-} = {}) {
+async function getAbastecimentosDoVeiculo(veiculoId, limite = 50) {
   const user = auth.currentUser;
   if (!user) return [];
+  if (!veiculoId) return [];
 
-  let query = db.collection("abastecimentos").where("userId", "==", user.uid);
+  const snap = await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("abastecimentos")
+    .orderBy("data", "desc")
+    .limit(limite)
+    .get();
 
-  if (veiculoId) {
-    query = query.where("veiculoId", "==", veiculoId);
-  }
-
-  query = query.limit(limite);
-
-  const snap = await query.get();
-  const docs = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-  // ordenamos por data DESC do lado do cliente
-  docs.sort((a, b) => {
-    const da = a.data || "";
-    const db_ = b.data || "";
-    return db_.localeCompare(da);
-  });
-
-  return docs;
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 }
 
 // ler um abastecimento
@@ -193,14 +187,17 @@ async function getAbastecimentoById(id) {
 }
 
 // atualizar abastecimento
-async function updateAbastecimento(id, data) {
+async function updateAbastecimento(veiculoId, id, data) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
 
-  const ref = db.collection("abastecimentos").doc(id);
+  const ref = db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("abastecimentos")
+    .doc(id);
 
   const payload = {
-    veiculoId: data.veiculoId,
     data: data.data,
     tipoCombustivel: data.tipoCombustivel,
     litros: Number(data.litros),
@@ -217,8 +214,15 @@ async function updateAbastecimento(id, data) {
 }
 
 // apagar abastecimento
-async function deleteAbastecimento(id) {
+async function deleteAbastecimento(veiculoId, id) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
-  await db.collection("abastecimentos").doc(id).delete();
+
+  await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("abastecimentos")
+    .doc(id)
+    .delete();
 }
+

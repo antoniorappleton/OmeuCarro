@@ -39,13 +39,57 @@ function openModal(editing = false, data = null) {
   modalTitle.textContent = "Editar veículo";
   editingVehicleId = data.id;
 
-  inputName.value = data.nome;
-  inputBrand.value = data.marca;
-  inputModel.value = data.modelo;
+  // ===== CAMPOS EXISTENTES =====
+  inputName.value = data.nome || "";
+  inputBrand.value = data.marca || "";
+  inputModel.value = data.modelo || "";
   inputPlate.value = data.matricula || "";
   inputFuel.value = data.combustivelPadrao || "";
   inputOdometer.value = data.odometroInicial || "";
+
+  // ===== NOVOS CAMPOS TÉCNICOS =====
+  document.getElementById("vehicle-year").value =
+    data.ano ?? "";
+
+  document.getElementById("vehicle-vin").value =
+    data.vin ?? "";
+
+  document.getElementById("vehicle-engine").value =
+    data.cilindradaCc ?? "";
+
+  document.getElementById("vehicle-power").value =
+    data.potenciaCv ?? "";
+
+  document.getElementById("vehicle-tank").value =
+    data.capacidadeDepositoLitros ?? "";
+
+  document.getElementById("vehicle-acquisition").value =
+    data.dataAquisicao
+      ? data.dataAquisicao.toDate().toISOString().split("T")[0]
+      : "";
+
+  // ===== SEGURO =====
+  document.getElementById("vehicle-insurer").value =
+    data.seguro?.seguradora ?? "";
+
+  document.getElementById("vehicle-policy").value =
+    data.seguro?.apolice ?? "";
+
+  document.getElementById("vehicle-insurance-validity").value =
+    data.seguro?.validade
+      ? data.seguro.validade.toDate().toISOString().split("T")[0]
+      : "";
+
+  // ===== INSPEÇÃO =====
+  document.getElementById("vehicle-inspection-date").value =
+    data.inspecao?.proximaData
+      ? data.inspecao.proximaData.toDate().toISOString().split("T")[0]
+      : "";
+
+  document.getElementById("vehicle-inspection-center").value =
+    data.inspecao?.centro ?? "";
 }
+
 
 function closeModal() {
   modalOverlay.classList.remove("is-open");
@@ -211,18 +255,57 @@ listEl.addEventListener("click", async (e) => {
   }
 });
 
-
 // ================ SUBMETER MODAL ================
 modalForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const data = {
+    // EXISTENTES
     nome: inputName.value.trim(),
     marca: inputBrand.value.trim(),
     modelo: inputModel.value.trim(),
     matricula: inputPlate.value.trim(),
     combustivelPadrao: inputFuel.value,
     odometroInicial: Number(inputOdometer.value) || 0,
+
+    // 🔹 NOVOS DADOS TÉCNICOS
+    ano: Number(document.getElementById("vehicle-year")?.value) || null,
+    vin: document.getElementById("vehicle-vin")?.value.trim() || "",
+    tipoCombustivel: inputFuel.value || "",
+
+    cilindradaCc:
+      Number(document.getElementById("vehicle-engine")?.value) || null,
+
+    potenciaCv:
+      Number(document.getElementById("vehicle-power")?.value) || null,
+
+    capacidadeDepositoLitros:
+      Number(document.getElementById("vehicle-tank")?.value) || null,
+
+    dataAquisicao: document.getElementById("vehicle-acquisition")?.value
+      ? new Date(document.getElementById("vehicle-acquisition").value)
+      : null,
+
+    // 🔹 SEGURO
+    seguro: {
+      seguradora:
+        document.getElementById("vehicle-insurer")?.value.trim() || "",
+      apolice:
+        document.getElementById("vehicle-policy")?.value.trim() || "",
+      validade: document.getElementById("vehicle-insurance-validity")?.value
+        ? new Date(document.getElementById("vehicle-insurance-validity").value)
+        : null,
+    },
+
+    // 🔹 INSPEÇÃO
+    inspecao: {
+      proximaData: document.getElementById("vehicle-inspection-date")?.value
+        ? new Date(
+            document.getElementById("vehicle-inspection-date").value
+          )
+        : null,
+      centro:
+        document.getElementById("vehicle-inspection-center")?.value.trim() || "",
+    },
   };
 
   try {

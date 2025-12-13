@@ -138,6 +138,7 @@
 
         <div class="form-grid">
 
+          <!-- EXISTENTES -->
           <div class="form-field">
             <label for="vehicle-name">Nome *</label>
             <input id="vehicle-name" type="text" required />
@@ -161,12 +162,12 @@
           <div class="form-field">
             <label for="vehicle-fuel">Combustível</label>
             <select id="vehicle-fuel">
-              <option value="">Seleccionar</option>
+              <option value="">Selecionar</option>
               <option value="gasolina">Gasolina</option>
               <option value="diesel">Diesel</option>
-              <option value="etanol">Etanol</option>
-              <option value="gnv">GNV</option>
+              <option value="gpl">GPL</option>
               <option value="eletrico">Elétrico</option>
+              <option value="hibrido">Híbrido</option>
             </select>
           </div>
 
@@ -175,19 +176,82 @@
             <input id="vehicle-odometer" type="number" placeholder="ex: 120000" />
           </div>
 
+          <!-- 🔹 NOVOS DADOS TÉCNICOS -->
+          <div class="form-field">
+            <label for="vehicle-year">Ano</label>
+            <input id="vehicle-year" type="number" placeholder="ex: 2020" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-vin">VIN</label>
+            <input id="vehicle-vin" type="text" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-engine">Cilindrada (cc)</label>
+            <input id="vehicle-engine" type="number" placeholder="ex: 1600" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-power">Potência (CV)</label>
+            <input id="vehicle-power" type="number" placeholder="ex: 110" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-tank">Depósito (litros)</label>
+            <input id="vehicle-tank" type="number" placeholder="ex: 50" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-acquisition">Data de aquisição</label>
+            <input id="vehicle-acquisition" type="date" />
+          </div>
+
+          <!-- 🔹 SEGURO -->
+          <div class="form-field">
+            <label for="vehicle-insurer">Seguradora</label>
+            <input id="vehicle-insurer" type="text" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-policy">Apólice</label>
+            <input id="vehicle-policy" type="text" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-insurance-validity">Validade do seguro</label>
+            <input id="vehicle-insurance-validity" type="date" />
+          </div>
+
+          <!-- 🔹 INSPEÇÃO -->
+          <div class="form-field">
+            <label for="vehicle-inspection-date">Próxima inspeção</label>
+            <input id="vehicle-inspection-date" type="date" />
+          </div>
+
+          <div class="form-field">
+            <label for="vehicle-inspection-center">Centro de inspeção</label>
+            <input id="vehicle-inspection-center" type="text" />
+          </div>
+
         </div>
 
         <p id="vehicle-modal-message" class="form-message"></p>
 
         <div class="fuel-modal-footer">
-          <button type="button" id="btn-cancel-vehicle-modal" class="btn btn-ghost">Cancelar</button>
+          <button type="button" id="btn-cancel-vehicle-modal" class="btn btn-ghost">
+            Cancelar
+          </button>
           <button type="submit" class="btn btn-primary btn-gradient">
-            <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
+            <svg class="icon icon-left">
+              <use href="assets/icons.svg#icon-plus"></use>
+            </svg>
             <span>Guardar</span>
           </button>
         </div>
 
       </form>
+
     </div>
   </div>
 
