@@ -127,8 +127,24 @@ async function updateVeiculo(id, data) {
 async function deleteVeiculo(id) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
-  await db.collection("veiculos").doc(id).delete();
+
+  const absSnap = await db
+    .collection("veiculos")
+    .doc(id)
+    .collection("abastecimentos")
+    .get();
+
+  const batch = db.batch();
+
+  absSnap.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+
+  batch.delete(db.collection("veiculos").doc(id));
+
+  await batch.commit();
 }
+
 
 // ======================================================================
 //  ABASTECIMENTOS
