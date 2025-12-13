@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v5";
-const RUNTIME_CACHE = "l100-runtime-v5";
+const STATIC_CACHE = "l100-static-v6";
+const RUNTIME_CACHE = "l100-runtime-v6";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
