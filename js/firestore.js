@@ -49,6 +49,8 @@ async function createVeiculo(data) {
 
   const veiculo = {
     userId: user.uid,
+
+    // básicos
     nome: data.nome,
     marca: data.marca,
     modelo: data.modelo,
@@ -56,11 +58,23 @@ async function createVeiculo(data) {
     combustivelPadrao: data.combustivelPadrao || "",
     odometroInicial: Number(data.odometroInicial) || 0,
     ativo: data.ativo !== false,
+
+    // técnicos
+    ano: data.ano ?? null,
+    vin: data.vin || "",
+    cilindradaCc: data.cilindradaCc ?? null,
+    potenciaCv: data.potenciaCv ?? null,
+    capacidadeDepositoLitros: data.capacidadeDepositoLitros ?? null,
+    dataAquisicao: data.dataAquisicao || null,
+
+    // seguro / inspeção
+    seguro: data.seguro || {},
+    inspecao: data.inspecao || {},
+
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-  const ref = await db.collection("veiculos").add(veiculo);
-  return ref;
+  return db.collection("veiculos").add(veiculo);
 }
 
 async function getVeiculosDoUtilizador() {
@@ -81,9 +95,8 @@ async function updateVeiculo(id, data) {
   const user = auth.currentUser;
   if (!user) throw new Error("Utilizador não autenticado");
 
-  const ref = db.collection("veiculos").doc(id);
-
   const payload = {
+    // básicos
     nome: data.nome,
     marca: data.marca,
     modelo: data.modelo,
@@ -91,11 +104,23 @@ async function updateVeiculo(id, data) {
     combustivelPadrao: data.combustivelPadrao || "",
     odometroInicial: Number(data.odometroInicial) || 0,
     ativo: data.ativo !== false,
+
+    // técnicos
+    ano: data.ano ?? null,
+    vin: data.vin || "",
+    cilindradaCc: data.cilindradaCc ?? null,
+    potenciaCv: data.potenciaCv ?? null,
+    capacidadeDepositoLitros: data.capacidadeDepositoLitros ?? null,
+    dataAquisicao: data.dataAquisicao || null,
+
+    // seguro / inspeção
+    seguro: data.seguro || {},
+    inspecao: data.inspecao || {},
+
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-  await ref.update(payload);
-  return ref;
+  return db.collection("veiculos").doc(id).update(payload);
 }
 
 // apagar veículo
