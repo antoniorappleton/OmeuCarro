@@ -142,7 +142,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Buscar abastecimento (agora precisa do veiculoId)
-      const abs = await getAbastecimentoById(currentVeiculoId, abastecimentoId);
+      const abs = await getAbastecimentoDoVeiculoById(
+        currentVeiculoId,
+        abastecimentoId
+      );
+
       if (!abs) {
         isEditMode = false;
         showMessage("Abastecimento não encontrado.", "error");

@@ -174,6 +174,7 @@ async function createAbastecimento(veiculoId, data) {
   }
 
   const abastecimento = {
+    userId: user.uid,
     data: data.data,
     tipoCombustivel: data.tipoCombustivel,
     litros: Number(data.litros),
@@ -211,20 +212,6 @@ async function getAbastecimentosDoVeiculo(veiculoId, limite = 50) {
     id: doc.id,
     ...doc.data(),
   }));
-}
-
-// ler um abastecimento
-async function getAbastecimentoById(id) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Utilizador não autenticado");
-
-  const snap = await db.collection("abastecimentos").doc(id).get();
-  if (!snap.exists) return null;
-
-  const data = snap.data();
-  if (data.userId !== user.uid) return null;
-
-  return { id: snap.id, ...data };
 }
 
 // atualizar abastecimento
@@ -294,4 +281,21 @@ async function getTodosAbastecimentosDoUtilizador(limite = 500) {
   }
 
   return resultados;
+}
+
+async function getAbastecimentoDoVeiculoById(veiculoId, abastecimentoId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  if (!veiculoId || !abastecimentoId) return null;
+
+  const snap = await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("abastecimentos")
+    .doc(abastecimentoId)
+    .get();
+
+  if (!snap.exists) return null;
+
+  return { id: snap.id, ...snap.data() };
 }

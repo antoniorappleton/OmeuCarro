@@ -79,7 +79,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!abs.length) {
       el.fuelEmpty.classList.remove("hidden");
       el.fuelList.innerHTML = "";
-      el.kpiTotalReg.textContent = "0 registos";
+      if (el.kpiTotalReg) {
+        if (el.kpiTotalReg) {
+          el.kpiTotalReg.textContent = `${abs.length} registos`;
+        }
+
+      }
+
       return;
     }
 
@@ -100,7 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
     el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
-    el.kpiTotalReg.textContent = `${abs.length} registos`;
+    if (el.kpiTotalReg) {
+      el.kpiTotalReg.textContent = `${abs.length} registos`;
+    }
+
 
     // consumo médio e custo/km
     abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
@@ -138,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     abs.forEach((a) => {
       const card = document.createElement("article");
-      card.className = "card";
+      card.className = "fuel-card";
 
       const custo = (a.litros * a.precoPorLitro).toFixed(2);
 
@@ -146,20 +155,33 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="fuel-item">
           <div class="fuel-item-main">
             <div class="fuel-item-title">${a.data} • ${a.litros} L</div>
+
             <div class="fuel-item-sub">
               €${custo} — ${a.precoPorLitro.toFixed(3)} €/L — ${a.odometro} km
             </div>
+
             <div class="fuel-item-sub2">
-              ${a.tipoCombustivel || ""} ${a.posto || ""}
+              ${a.tipoCombustivel || ""} ${a.posto ? "— " + a.posto : ""}
             </div>
           </div>
 
           <div class="fuel-item-actions">
-            <button class="icon-btn-sm" type="button" data-edit="${a.id}">
-              <svg class="icon"><use href="assets/icons.svg#icon-edit"></use></svg>
+            <!-- EDITAR -->
+            <button class="icon-btn-sm" type="button" data-edit="${a.id}" aria-label="Editar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0-4-4L4 16v4z"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </button>
-            <button class="icon-btn-sm danger" type="button" data-del="${a.id}">
-              <svg class="icon"><use href="assets/icons.svg#icon-trash"></use></svg>
+
+            <!-- ELIMINAR -->
+            <button class="icon-btn-sm danger" type="button" data-del="${a.id}" aria-label="Eliminar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 6h18M8 6v12M16 6v12M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </button>
           </div>
         </div>

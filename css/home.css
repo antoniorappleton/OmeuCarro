@@ -679,3 +679,42 @@ body.app-page {
 .abastecimentos-section {
   margin-top: 32px;
 }
+.fuel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fuel-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.fuel-card-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fuel-card-date {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.fuel-card-title {
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.fuel-card-sub,
+.fuel-card-sub2 {
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.fuel-card-actions {
+  display: flex;
+  gap: 8px;
+}
