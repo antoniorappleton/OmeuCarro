@@ -55,19 +55,22 @@ async function obterAbastecimentosFiltrados() {
 
   let intervalo = calcularIntervalo(periodo);
 
-  // Período personalizado
   if (periodo === "custom") {
     const inicio = document.getElementById("filtro-data-inicio")?.value;
     const fim = document.getElementById("filtro-data-fim")?.value;
     intervalo = inicio && fim ? { inicio, fim } : null;
   }
 
-  let abastecimentos = await getAbastecimentosDoUtilizador({
-    veiculoId: veiculoId || null,
-    limite: 500,
-  });
+  let abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
 
-  // Filtro por data
+  // filtrar por veículo
+  if (veiculoId) {
+    abastecimentos = abastecimentos.filter(
+      (a) => a.veiculoId === veiculoId
+    );
+  }
+
+  // filtrar por data
   if (intervalo) {
     const { inicio, fim } = intervalo;
     abastecimentos = abastecimentos.filter(

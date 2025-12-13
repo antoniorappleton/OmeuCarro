@@ -120,24 +120,8 @@ async function carregarVeiculos() {
   listEl.classList.remove("hidden");
   emptyEl.classList.add("hidden");
 
-  // buscar abastecimentos para calcular stats por veículo
-  const abastecimentos = await getAbastecimentosDoUtilizador({ limite: 500 });
-
-  const statsPorVeiculo = {};
-  abastecimentos.forEach((abs) => {
-    const vid = abs.veiculoId;
-    const litros = Number(abs.litros) || 0;
-    const preco = Number(abs.precoPorLitro) || 0;
-    const custoTotal = litros * preco;
-
-    if (!statsPorVeiculo[vid]) statsPorVeiculo[vid] = { count: 0, total: 0 };
-    statsPorVeiculo[vid].count += 1;
-    statsPorVeiculo[vid].total += custoTotal;
-  });
-
   veiculos.forEach((v) => {
-    const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
-
+    const stats = { count: 0, total: 0 };
     const card = document.createElement("article");
     card.className = "vehicle-card vehicle-card-modern";
     card.dataset.veiculoId = v.id;

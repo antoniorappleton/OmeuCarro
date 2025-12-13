@@ -27,28 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const [veiculos, abastecimentos] = await Promise.all([
         getVeiculosDoUtilizador(),
-        getAbastecimentosDoUtilizador({ limite: 500 }),
+        getTodosAbastecimentosDoUtilizador(500),
       ]);
 
       if (!veiculos.length) {
-        // não há veículos → mostra estado vazio
         emptyEl.classList.remove("hidden");
         return;
       }
 
-      // construir mapa de stats por veículo (count + total gasto)
+      // stats por veículo
       const statsPorVeiculo = {};
+
       abastecimentos.forEach((abs) => {
         const vid = abs.veiculoId;
         const litros = Number(abs.litros) || 0;
         const preco = Number(abs.precoPorLitro) || 0;
-        const custoTotal = litros * preco;
+        const total = litros * preco;
 
         if (!statsPorVeiculo[vid]) {
           statsPorVeiculo[vid] = { count: 0, total: 0 };
         }
-        statsPorVeiculo[vid].count += 1;
-        statsPorVeiculo[vid].total += custoTotal;
+
+        statsPorVeiculo[vid].count++;
+        statsPorVeiculo[vid].total += total;
       });
 
       veiculos.forEach((v) => {
@@ -59,91 +60,63 @@ document.addEventListener("DOMContentLoaded", () => {
         card.dataset.veiculoId = v.id;
 
         const matricula = v.matricula || "Sem matrícula";
-        const combustivel = v.combustivelPadrao || "Combustível não definido";
-        const odometroInicial = v.odometroInicial || 0;
+        const combustivel = v.combustivelPadrao || "N/D";
+        const ano = v.ano || "";
 
-// tenta obter ano de algum campo comum
-const ano = v.ano || v.anoModelo || v.anoMatricula || "";
+        card.innerHTML = `
+          <div class="vehicle-card-top">
+            <div class="vehicle-left">
+              <div class="vehicle-avatar">
+                <svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg>
+              </div>
 
-card.innerHTML = `
-  <div class="vehicle-card-top">
-    <div class="vehicle-left">
-      <div class="vehicle-avatar">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons.svg#icon-car"></use>
-        </svg>
-      </div>
+              <div class="vehicle-text">
+                <h3 class="vehicle-title">${v.nome}</h3>
+                <p class="vehicle-subtitle">${v.marca} ${v.modelo}</p>
 
-      <div class="vehicle-text">
-        <div class="vehicle-title-row">
-          <h3 class="vehicle-title">${v.nome || "Carro Principal"}</h3>
-        </div>
-        <p class="vehicle-subtitle">${(v.marca || "").trim()} ${(
-  v.modelo || ""
-).trim()}</p>
+                <div class="vehicle-badges">
+                  <span class="badge badge-outline">${matricula}</span>
+                  ${ano ? `<span class="badge badge-year">${ano}</span>` : ""}
+                </div>
+              </div>
+            </div>
 
-        <div class="vehicle-badges">
-          <span class="badge badge-outline">${matricula}</span>
+            <div class="vehicle-arrow">
+              <svg class="icon"><use href="assets/icons.svg#icon-chevron-right"></use></svg>
+            </div>
+          </div>
 
-          ${
-            ano
-              ? `<span class="badge badge-year">
-                   <svg class="icon icon-badge" aria-hidden="true">
-                     <use href="assets/icons.svg#icon-calendar"></use>
-                   </svg>
-                   ${ano}
-                 </span>`
-              : ""
-          }
-        </div>
-      </div>
-    </div>
+          <div class="vehicle-divider"></div>
 
-    <div class="vehicle-arrow" aria-hidden="true">
-      <svg class="icon icon-chevron">
-        <use href="assets/icons.svg#icon-chevron-right"></use>
-      </svg>
-    </div>
-  </div>
+          <div class="vehicle-bottom">
+            <div class="metric">
+              <div class="metric-value">${stats.count}</div>
+              <div class="metric-label">Abastecimentos</div>
+            </div>
 
-  <div class="vehicle-divider"></div>
+            <div class="metric metric-center">
+              <div class="metric-value metric-value-primary">€${stats.total.toFixed(
+                0
+              )}</div>
+              <div class="metric-label">Total gasto</div>
+            </div>
 
-  <div class="vehicle-bottom">
-    <div class="metric">
-      <svg class="icon icon-metric" aria-hidden="true">
-        <use href="assets/icons.svg#icon-fuel"></use>
-      </svg>
-      <div class="metric-value">${stats.count}</div>
-      <div class="metric-label">Abastecimentos</div>
-    </div>
+            <span class="fuel-pill">${combustivel}</span>
+          </div>
+        `;
 
-    <div class="metric metric-center">
-      <div class="metric-value metric-value-primary">€${stats.total.toFixed(
-        0
-      )}</div>
-      <div class="metric-label">Total Gasto</div>
-    </div>
-
-    <span class="fuel-pill">${combustivel}</span>
-  </div>
-`;
-
-
-        // clique no cartão → vai para o detalhe do veículo
-        card.addEventListener("click", (e) => {
-          if (e.target.closest("a")) return; // não intercepta o clique no link
-          const id = card.dataset.veiculoId;
-          if (!id) return;
-          window.location.href = "veiculo.html?id=" + encodeURIComponent(id);
+        card.addEventListener("click", () => {
+          window.location.href = `veiculo.html?id=${v.id}`;
         });
 
         listEl.appendChild(card);
       });
     } catch (err) {
       console.error(err);
-      showMessage(err.message || "Erro ao carregar veículos.", "error");
+      showMessage("Erro ao carregar veículos.", "error");
     }
   }
+
 
   // -------------------------------------------------------------------
   // SUBMISSÃO DO FORMULÁRIO (apenas em veiculos.html)

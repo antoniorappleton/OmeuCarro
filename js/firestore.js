@@ -225,4 +225,32 @@ async function deleteAbastecimento(veiculoId, id) {
     .doc(id)
     .delete();
 }
+// devolve TODOS os abastecimentos do utilizador (todos os veículos)
+async function getTodosAbastecimentosDoUtilizador(limite = 500) {
+  const user = auth.currentUser;
+  if (!user) return [];
 
+  const veiculosSnap = await db
+    .collection("veiculos")
+    .where("userId", "==", user.uid)
+    .get();
+
+  const resultados = [];
+
+  for (const v of veiculosSnap.docs) {
+    const absSnap = await v.ref
+      .collection("abastecimentos")
+      .limit(limite)
+      .get();
+
+    absSnap.forEach((doc) => {
+      resultados.push({
+        id: doc.id,
+        veiculoId: v.id,
+        ...doc.data(),
+      });
+    });
+  }
+
+  return resultados;
+}
