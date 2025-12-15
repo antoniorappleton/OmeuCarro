@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!user) {
       showMessage("Sessão expirada.", "error");
       return;
+      
     }
 
     // =================================================
@@ -70,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         veiculoId
       )}`;
     };
+      initDocumentos(veiculoId);
 
     // =================================================
     // ABASTECIMENTOS (SUBCOLEÇÃO)
@@ -221,4 +223,130 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     init();
   });
+
+
+  function escapeHtml(s) {
+    return (s || "").replace(
+      /[&<>"']/g,
+      (m) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        }[m])
+    );
+  }
+
+  async function renderDocumentos(veiculoId) {
+    const list = document.getElementById("docs-list");
+    const msg = document.getElementById("doc-msg");
+    if (!list) return;
+
+    list.innerHTML = "A carregar...";
+    if (msg) msg.textContent = "";
+
+    const docs = await getDocumentosDoVeiculo(veiculoId, 100);
+
+    if (!docs.length) {
+      list.innerHTML = `<div class="muted">Sem documentos.</div>`;
+      return;
+    }
+
+    list.innerHTML = docs
+      .map(
+        (d) => `
+    <article class="doc-item" style="border:1px solid rgba(0,0,0,.08); border-radius:12px; padding:12px;">
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <img src="${d.downloadURL}" alt="${escapeHtml(d.tipo)}"
+             style="width:96px; height:96px; object-fit:cover; border-radius:10px; border:1px solid rgba(0,0,0,.08);" />
+        <div style="flex:1;">
+          <div style="font-weight:600;">${escapeHtml(
+            d.tipo || "Documento"
+          )}</div>
+          <div class="muted" style="font-size:12px;">${escapeHtml(
+            d.nomeOriginal || ""
+          )}</div>
+          ${
+            d.descricao
+              ? `<div style="margin-top:6px;">${escapeHtml(d.descricao)}</div>`
+              : ""
+          }
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="${d.downloadURL}" target="_blank" rel="noopener">Abrir</a>
+            <button type="button" data-doc-del="${
+              d.id
+            }" class="danger">Apagar</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  `
+      )
+      .join("");
+
+    // bind deletes
+    list.querySelectorAll("[data-doc-del]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const docId = btn.getAttribute("data-doc-del");
+        if (!confirm("Apagar este documento?")) return;
+        await deleteDocumentoDoVeiculo(veiculoId, docId);
+        await renderDocumentos(veiculoId);
+      });
+    });
+  }
+
+  function initDocumentos(veiculoId) {
+    const fileEl = document.getElementById("doc-file");
+    const tipoEl = document.getElementById("doc-tipo");
+    const btn = document.getElementById("btn-doc-upload");
+    const msg = document.getElementById("doc-msg");
+
+    if (!fileEl || !btn) return;
+
+    btn.addEventListener("click", async () => {
+      try {
+        msg.textContent = "";
+        const file = fileEl.files?.[0];
+        const tipo = tipoEl?.value || "Documento";
+        if (!file) {
+          msg.textContent = "Seleciona/tira uma fotografia primeiro.";
+          return;
+        }
+
+        btn.disabled = true;
+        msg.textContent = "A guardar...";
+
+        console.log("Bucket:", firebase.app().options.storageBucket);
+        console.log("UID:", auth.currentUser && auth.currentUser.uid);
+
+        await uploadDocumentoVeiculo(veiculoId, file, { tipo });
+
+        fileEl.value = "";
+        msg.textContent = "Guardado ✅";
+
+        await renderDocumentos(veiculoId);
+      } catch (e) {
+        console.error(e);
+        msg.textContent = e.message || "Erro ao guardar.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // carregar lista inicial
+    renderDocumentos(veiculoId);
+
+    // se vier do atalho #docs
+    if (window.location.hash === "#docs") {
+      setTimeout(() => {
+        document.getElementById("docs")?.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+    }
+  }
+
+
+
 });

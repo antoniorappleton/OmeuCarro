@@ -192,11 +192,37 @@ veiculos.forEach((v) => {
               <use href="assets/icons-extra.svg#icon-edit"></use>
             </svg>
           </button>
+
           <button class="icon-btn-sm danger" type="button" data-del="${
             v.id
           }" aria-label="Eliminar veículo">
             <svg class="icon" aria-hidden="true">
               <use href="assets/icons-extra.svg#icon-trash"></use>
+            </svg>
+          </button>
+
+          <!-- NOVOS atalhos -->
+          <button class="icon-btn-sm" type="button" data-fuel="${
+            v.id
+          }" aria-label="Abastecimentos">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-droplet"></use>
+            </svg>
+          </button>
+
+          <button class="icon-btn-sm" type="button" data-maint="${
+            v.id
+          }" aria-label="Reparações e Manutenções">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-wrench"></use>
+            </svg>
+          </button>
+
+          <button class="icon-btn-sm" type="button" data-docs="${
+            v.id
+          }" aria-label="Documentos do veículo">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons.svg#icon-file-text"></use>
             </svg>
           </button>
 
@@ -206,6 +232,7 @@ veiculos.forEach((v) => {
             </svg>
           </span>
         </div>
+
       </div>
 
       <div class="vehicle-divider"></div>
@@ -259,6 +286,36 @@ listEl.addEventListener("click", async (e) => {
     await deleteVeiculo(id);
     await carregarVeiculos();
   }
+
+    const fuelBtn = e.target.closest("[data-fuel]");
+    const maintBtn = e.target.closest("[data-maint]");
+    const docsBtn = e.target.closest("[data-docs]");
+
+    if (fuelBtn) {
+      e.stopPropagation();
+      const id = fuelBtn.getAttribute("data-fuel");
+      window.location.href =
+        "veiculo.html?id=" + encodeURIComponent(id) + "#abastecimentos";
+      return;
+    }
+
+    if (maintBtn) {
+      e.stopPropagation();
+      const id = maintBtn.getAttribute("data-maint");
+      window.location.href =
+        "veiculo.html?id=" + encodeURIComponent(id) + "#manutencoes";
+      return;
+    }
+
+    if (docsBtn) {
+      e.stopPropagation();
+      const id = docsBtn.getAttribute("data-docs");
+      window.location.href =
+        "veiculo.html?id=" + encodeURIComponent(id) + "#docs";
+      return;
+    }
+
+
 });
 
 // ================ SUBMETER MODAL ================

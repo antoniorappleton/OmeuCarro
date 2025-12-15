@@ -299,3 +299,97 @@ async function getAbastecimentoDoVeiculoById(veiculoId, abastecimentoId) {
 
   return { id: snap.id, ...snap.data() };
 }
+// ======================================================================
+//  DOCUMENTOS DO VEÍCULO (FOTOS)  -> Firestore + Firebase Storage
+//  Estrutura:
+//    veiculos/{veiculoId}/documentos/{docId}
+//  Storage:
+//    users/{uid}/veiculos/{veiculoId}/documentos/{docId}-{filename}
+// ======================================================================
+
+async function uploadDocumentoVeiculo(veiculoId, file, meta = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  if (!veiculoId) throw new Error("veiculoId é obrigatório");
+  if (!file) throw new Error("Ficheiro obrigatório");
+
+  const docRef = db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("documentos")
+    .doc();
+
+  const safeName = (file.name || "foto.jpg").replace(/[^\w.\-]+/g, "_");
+  const storagePath = `users/${user.uid}/veiculos/${veiculoId}/documentos/${docRef.id}-${safeName}`;
+
+  const storageRef = firebase.storage().ref().child(storagePath);
+
+  // Upload
+  const snap = await storageRef.put(file, {
+    contentType: file.type || "image/jpeg",
+  });
+
+  // URL download
+  const downloadURL = await snap.ref.getDownloadURL();
+
+  const payload = {
+    userId: user.uid,
+    tipo: meta.tipo || "Documento",
+    descricao: meta.descricao || "",
+    nomeOriginal: file.name || "",
+    mimeType: file.type || "",
+    tamanho: file.size || 0,
+    storagePath,
+    downloadURL,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await docRef.set(payload);
+  return { id: docRef.id, ...payload };
+}
+
+async function getDocumentosDoVeiculo(veiculoId, limite = 50) {
+  const user = auth.currentUser;
+  if (!user) return [];
+  if (!veiculoId) return [];
+
+  const snap = await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("documentos")
+    .orderBy("criadoEm", "desc")
+    .limit(limite)
+    .get();
+
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+async function deleteDocumentoDoVeiculo(veiculoId, documentoId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  if (!veiculoId || !documentoId) throw new Error("IDs obrigatórios");
+
+  const ref = db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("documentos")
+    .doc(documentoId);
+
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const data = snap.data();
+
+  // Apaga do Storage (se existir)
+  if (data.storagePath) {
+    try {
+      await firebase.storage().ref().child(data.storagePath).delete();
+    } catch (e) {
+      // se já não existir, não bloqueia
+      console.warn("Storage delete warning:", e);
+    }
+  }
+
+  // Apaga do Firestore
+  await ref.delete();
+}

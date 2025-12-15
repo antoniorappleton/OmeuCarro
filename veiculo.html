@@ -12,11 +12,14 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
 
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
   <script defer src="js/veiculo.js"></script>
+
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
@@ -139,6 +142,35 @@
 
       <div id="fuel-list" class="fuel-list"></div>
     </section>
+
+    <!-- secção “Documentos” -->
+     <section id="docs" class="card">
+        <header class="card-header">
+          <h2>Documentos do veículo</h2>
+          <p class="muted">Fotografa e guarda documentos (ex.: DUA, seguro, inspeção).</p>
+        </header>
+
+        <div class="card-body">
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <select id="doc-tipo">
+              <option value="DUA">DUA</option>
+              <option value="Seguro">Seguro</option>
+              <option value="Inspeção">Inspeção</option>
+              <option value="Fatura">Fatura</option>
+              <option value="Outro">Outro</option>
+            </select>
+
+            <input id="doc-file" type="file" accept="image/*" capture="environment" />
+
+            <button id="btn-doc-upload" type="button">Guardar foto</button>
+
+            <span id="doc-msg" class="muted"></span>
+          </div>
+
+          <div id="docs-list" style="margin-top:16px; display:grid; gap:12px;"></div>
+        </div>
+     </section>
+
 
   </main>
 
