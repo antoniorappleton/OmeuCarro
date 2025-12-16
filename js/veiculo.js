@@ -30,6 +30,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // HELPERS
   // =========================
+  
+  function initTabs() {
+    const tabs = Array.from(document.querySelectorAll(".tab-btn[data-tab]"));
+    const panels = {
+      fuel: document.getElementById("tab-fuel"),
+      docs: document.getElementById("tab-docs"),
+      maint: document.getElementById("tab-maint"),
+    };
+
+    function setActive(key) {
+      tabs.forEach((b) =>
+        b.classList.toggle("is-active", b.dataset.tab === key)
+      );
+      Object.entries(panels).forEach(([k, el]) => {
+        if (!el) return;
+        el.classList.toggle("hidden", k !== key);
+      });
+    }
+
+    tabs.forEach((b) =>
+      b.addEventListener("click", () => setActive(b.dataset.tab))
+    );
+    setActive("fuel");
+  }
+
+
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
   }
@@ -542,51 +568,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
     abs.forEach((a) => {
       const card = document.createElement("article");
-      card.className = "fuel-card";
+      card.className = "record-card record-card--fuel";
 
       const litros = Number(a.litros) || 0;
       const ppl = Number(a.precoPorLitro) || 0;
       const custo = (litros * ppl).toFixed(2);
+      const tipo = (a.tipoCombustivel || "").toLowerCase() || "—";
+      const posto = a.posto ? escapeHtml(a.posto) : "—";
+      const kmTxt = `${Number(a.odometro) || 0} km`;
 
       card.innerHTML = `
-        <div class="fuel-item">
-          <div class="fuel-item-main">
-            <div class="fuel-item-title">${escapeHtml(
-              a.data
-            )} • ${litros} L</div>
-
-            <div class="fuel-item-sub">
-              €${custo} — ${ppl.toFixed(3)} €/L — ${Number(a.odometro) || 0} km
-            </div>
-
-            <div class="fuel-item-sub2">
-              ${escapeHtml(a.tipoCombustivel || "")} ${
-        a.posto ? "— " + escapeHtml(a.posto) : ""
-      }
-            </div>
+        <div class="record-head">
+          <div class="record-title">
+            <span class="record-icon">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-receipt"></use></svg>
+            </span>
+            <span>Abastecimento</span>
           </div>
 
-          <div class="fuel-item-actions">
-            <button class="icon-btn-sm" type="button" data-edit="${
-              a.id
-            }" aria-label="Editar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20h4l10.5-10.5a1.5 1.5 0 0 0-4-4L4 16v4z"
-                  stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+          <span class="record-badge record-badge--fuel">${escapeHtml(tipo)}</span>
+        </div>
 
-            <button class="icon-btn-sm danger" type="button" data-del="${
-              a.id
-            }" aria-label="Eliminar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3 6h18M8 6v12M16 6v12M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"
-                  stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+        <div class="record-meta">
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-calendar"></use></svg>
+          <span>${escapeHtml(a.data || "")}</span>
+        </div>
+
+        <div class="record-grid">
+          <div class="record-kpi">
+            <div class="record-kpi-label">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-droplet"></use></svg>
+              <span>Litros</span>
+            </div>
+            <div class="record-kpi-value">${litros.toFixed(1)} L</div>
           </div>
+
+          <div class="record-kpi">
+            <div class="record-kpi-label">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-wallet"></use></svg>
+              <span>Total</span>
+            </div>
+            <div class="record-kpi-value record-kpi-value--primary">€${custo}</div>
+          </div>
+
+          <div class="record-row">
+            <div class="record-row-label">Preço/L</div>
+            <div class="record-row-value">€${ppl.toFixed(3)}</div>
+          </div>
+
+          <div class="record-row">
+            <div class="record-row-label">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+              <span>Quilometragem</span>
+            </div>
+            <div class="record-row-value">${kmTxt}</div>
+          </div>
+
+          <div class="record-row">
+            <div class="record-row-label">
+              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-pin"></use></svg>
+              <span>Posto</span>
+            </div>
+            <div class="record-row-value">${posto}</div>
+          </div>
+        </div>
+
+        <div class="record-actions">
+          <button class="icon-btn-sm" type="button" data-edit="${
+            a.id
+          }" aria-label="Editar">
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-edit"></use></svg>
+          </button>
+
+          <button class="icon-btn-sm danger" type="button" data-del="${
+            a.id
+          }" aria-label="Eliminar">
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-trash"></use></svg>
+          </button>
         </div>
       `;
 
@@ -613,6 +671,8 @@ document.addEventListener("DOMContentLoaded", () => {
         location.reload();
       }
     });
+    initTabs();
+
   }
 
   // =========================

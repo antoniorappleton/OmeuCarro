@@ -25,8 +25,8 @@
   <!-- HEADER -->
   <header class="app-header">
     <div class="app-header-left">
-      <a href="dashboard.html" class="app-logo">
-        <svg class="icon">
+      <a href="dashboard.html" class="app-logo" aria-label="Voltar à dashboard">
+        <svg class="icon" aria-hidden="true">
           <use href="assets/icons.svg#icon-car"></use>
         </svg>
         <div class="app-logo-text">
@@ -38,15 +38,15 @@
 
     <div class="app-header-actions">
       <a href="estatisticas.html" class="icon-btn" aria-label="Estatísticas">
-        <svg class="icon"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-dashboard"></use></svg>
       </a>
 
       <a href="perfil.html" class="icon-btn" aria-label="Perfil">
-        <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-user"></use></svg>
       </a>
 
       <button id="btn-logout" class="icon-btn" aria-label="Sair">
-        <svg class="icon"><use href="assets/icons.svg#icon-logout"></use></svg>
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-logout"></use></svg>
       </button>
     </div>
   </header>
@@ -56,7 +56,7 @@
     <!-- CARD DO VEÍCULO -->
     <section class="card">
       <h1 class="page-title">
-        <svg class="icon icon-title">
+        <svg class="icon icon-title" aria-hidden="true">
           <use href="assets/icons.svg#icon-car"></use>
         </svg>
         <span id="vehicle-name">Veículo</span>
@@ -78,7 +78,7 @@
       <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
-            <svg class="icon"><use href="assets/icons.svg#icon-wallet"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-wallet"></use></svg>
           </span>
           <h2>Total gasto</h2>
         </div>
@@ -89,7 +89,7 @@
       <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
-            <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-fuel"></use></svg>
           </span>
           <h2>Litros</h2>
         </div>
@@ -100,7 +100,7 @@
       <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
-            <svg class="icon"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-dashboard"></use></svg>
           </span>
           <h2>Consumo médio</h2>
         </div>
@@ -111,7 +111,7 @@
       <article class="stats-card">
         <div class="stats-card-header">
           <span class="stats-card-icon">
-            <svg class="icon"><use href="assets/icons.svg#icon-trend-up"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-trend-up"></use></svg>
           </span>
           <h2>Custo por km</h2>
         </div>
@@ -120,18 +120,36 @@
       </article>
     </section>
 
-    <!-- LISTA DE ABASTECIMENTOS -->
-    <section class="abastecimentos-section" style="margin-bottom: 32px;">
+    <!-- TABS -->
+    <nav class="section-tabs" aria-label="Secções do veículo">
+      <button class="tab-btn is-active" type="button" data-tab="fuel" aria-controls="tab-fuel">
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-fuel"></use></svg>
+        <span>Abastecimentos</span>
+      </button>
+
+      <button class="tab-btn" type="button" data-tab="docs" aria-controls="tab-docs">
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-file"></use></svg>
+        <span>Documentos</span>
+      </button>
+
+      <button class="tab-btn" type="button" data-tab="maint" aria-controls="tab-maint">
+        <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-wrench"></use></svg>
+        <span>Reparações</span>
+      </button>
+    </nav>
+
+    <!-- ABASTECIMENTOS -->
+    <section id="tab-fuel" class="abastecimentos-section" style="margin-bottom: 32px;">
       <div class="card-header-row">
-        <button id="btn-add-fuel" class="btn btn-primary btn-gradient">
-          <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
+        <button id="btn-add-fuel" class="btn btn-primary btn-gradient" type="button">
+          <svg class="icon icon-left" aria-hidden="true"><use href="assets/icons.svg#icon-plus"></use></svg>
           <span>Novo abastecimento</span>
         </button>
       </div>
 
       <div id="fuel-empty" class="vehicles-empty hidden">
         <div class="vehicles-empty-icon">
-          <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-fuel"></use></svg>
         </div>
         <h3>Nenhum abastecimento</h3>
         <p>Registe o primeiro abastecimento deste veículo.</p>
@@ -141,10 +159,10 @@
     </section>
 
     <!-- DOCUMENTOS -->
-    <section id="docs" class="card" style="margin-bottom:80px;">
+    <section id="tab-docs" class="card hidden" style="margin-bottom:80px;">
       <header class="card-header">
-        <h2 style="display:flex; gap:10px; align-items:center;">
-          <svg class="icon"><use href="assets/icons.svg#icon-file"></use></svg>
+        <h2 style="display:flex; gap:10px; align-items:center; margin:0;">
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-file"></use></svg>
           <span>Documentos do veículo</span>
         </h2>
         <p class="muted">Guarda ficheiros (PDF/JPG) na nuvem e/ou regista um link externo (Drive, OneDrive, etc.).</p>
@@ -152,17 +170,17 @@
 
       <div class="card-body">
 
-        <!-- FORM: Link externo (noutros sítios) -->
+        <!-- FORM: Link externo -->
         <div class="card" style="margin:14px 0 0 0; padding:14px;">
           <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
 
             <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
               <label class="muted" for="ext-categoria" style="font-size:12px;">Categoria</label>
-                <select id="ext-categoria">
-                  <option value="Carro">Documentos do carro</option>
-                  <option value="Reparacao">Reparações</option>
-                  <option value="Outros">Outros</option>
-                </select>
+              <select id="ext-categoria">
+                <option value="Carro">Documentos do carro</option>
+                <option value="Reparacao">Reparações</option>
+                <option value="Outros">Outros</option>
+              </select>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
@@ -181,13 +199,9 @@
 
             <div style="display:flex; flex-direction:column; gap:6px; min-width:260px; flex:1;">
               <label class="muted" for="ext-url" style="font-size:12px;">Link externo (PDF/JPG)</label>
-              <input
-                id="ext-url"
-                type="url"
-                placeholder="https://drive.google.com/... ou https://..."
-                inputmode="url"
-              />
+              <input id="ext-url" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
             </div>
+
             <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
               <label class="muted" for="ext-titulo" style="font-size:12px;">Nome do documento</label>
               <input id="ext-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
@@ -198,9 +212,8 @@
               <input id="ext-nota" type="text" placeholder="Ex.: válido até 31/12/2025" />
             </div>
 
-
             <button id="btn-ext-save" type="button" class="btn btn-secondary" style="white-space:nowrap;">
-              <svg class="icon icon-left"><use href="assets/icons.svg#icon-link"></use></svg>
+              <svg class="icon icon-left" aria-hidden="true"><use href="assets/icons.svg#icon-link"></use></svg>
               <span>Guardar link</span>
             </button>
 
@@ -215,47 +228,40 @@
         <!-- LISTA -->
         <div style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
           <h3 style="margin:0; display:flex; gap:10px; align-items:center;">
-            <svg class="icon"><use href="assets/icons.svg#icon-folder"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-folder"></use></svg>
             <span>Documentos guardados</span>
           </h3>
 
-          <!-- opcional: filtro rápido -->
           <div style="display:flex; gap:10px; align-items:center;">
             <span class="muted" style="font-size:12px;">Filtrar:</span>
-              <select id="docs-filter">
-                <option value="Todos">Todos</option>
-                <option value="Carro">Documentos do carro</option>
-                <option value="Reparacao">Reparações</option>
-                <option value="Outros">Outros</option>
-              </select>
+            <select id="docs-filter">
+              <option value="Todos">Todos</option>
+              <option value="Carro">Documentos do carro</option>
+              <option value="Reparacao">Reparações</option>
+              <option value="Outros">Outros</option>
+            </select>
           </div>
         </div>
 
-        <!-- O JS vai preencher aqui com cards -->
         <div id="docs-list" style="margin-top:12px; display:grid; gap:12px;"></div>
+      </div>
+    </section>
 
-        <!-- Template visual (referência) do que o JS deve renderizar:
-          <article class="card" style="margin:0; padding:14px;">
-            <div style="display:flex; justify-content:space-between; gap:12px;">
-              <div style="display:flex; gap:12px; align-items:flex-start;">
-                <span class="badge badge-secondary">Seguro</span>
-                <div>
-                  <strong>Apólice</strong>
-                  <div class="muted" style="font-size:12px;">PDF • 2025-12-16</div>
-                </div>
-              </div>
-              <div style="display:flex; gap:10px; align-items:center;">
-                <a class="icon-btn" href="URL" target="_blank" rel="noopener" aria-label="Abrir">
-                  <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
-                </a>
-                <button class="icon-btn" aria-label="Apagar">
-                  <svg class="icon"><use href="assets/icons.svg#icon-trash"></use></svg>
-                </button>
-              </div>
-            </div>
-          </article>
-        -->
-
+    <!-- REPARAÇÕES (placeholder) -->
+    <section id="tab-maint" class="card hidden" style="margin-bottom:80px;">
+      <header class="card-header">
+        <h2 style="display:flex; gap:10px; align-items:center; margin:0;">
+          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-wrench"></use></svg>
+          <span>Reparações</span>
+        </h2>
+        <p class="muted">Organiza aqui manutenções e reparações (em breve).</p>
+      </header>
+      <div class="card-body">
+        <div class="vehicles-empty" style="margin:0;">
+          <div class="vehicles-empty-icon">🛠️</div>
+          <h3>Nenhum registo</h3>
+          <p>Quando ativares esta secção, vão aparecer aqui os cartões.</p>
+        </div>
       </div>
     </section>
 
@@ -264,19 +270,19 @@
   <!-- FOOTER -->
   <footer>
     <a href="dashboard.html">
-      <svg class="icon"><use href="assets/icons.svg#icon-home"></use></svg>
+      <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-home"></use></svg>
       <span>Home</span>
     </a>
     <a href="abastecimentos.html">
-      <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+      <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-fuel"></use></svg>
       <span>Abastecer</span>
     </a>
     <a href="veiculos.html" class="active">
-      <svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg>
+      <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-car"></use></svg>
       <span>Veículos</span>
     </a>
     <a href="perfil.html">
-      <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
+      <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-user"></use></svg>
       <span>Perfil</span>
     </a>
   </footer>

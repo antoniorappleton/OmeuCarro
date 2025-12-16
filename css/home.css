@@ -908,3 +908,251 @@ html, body {
     margin-top: 8px;
   }
 }
+/* ===== Tabs por ícones (secções) ===== */
+.section-tabs{
+  position: sticky;
+  top: 62px; /* fica por baixo do header */
+  z-index: 15;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 14px 0 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.7);
+  overflow-x: auto;
+}
+
+.tab-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(148,163,184,.35);
+  background: #fff;
+  color: #0f172a;
+  padding: 10px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: .2s;
+}
+
+.tab-btn .icon{ width:18px; height:18px; }
+.tab-btn:hover{ transform: translateY(-1px); }
+.tab-btn.is-active{
+  border-color: rgba(27,155,130,.35);
+  background: rgba(27,155,130,0.10);
+  color: #0f766e;
+}
+
+/* ===== Abastecimentos (novo card) ===== */
+.fuel-card{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 16px;
+  padding: 14px 14px;
+  box-shadow: 0 10px 28px rgba(15,23,42,0.08);
+}
+
+.fuel-item{
+  display:flex;
+  gap: 12px;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+
+.fuel-item-left{
+  display:flex;
+  gap: 12px;
+  min-width:0;
+  flex:1;
+}
+
+.fuel-bubble{
+  width:44px; height:44px;
+  border-radius: 14px;
+  background: rgba(27,155,130,0.12);
+  border: 1px solid rgba(27,155,130,0.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#0f766e;
+  flex:0 0 auto;
+}
+
+.fuel-item-main{ min-width:0; flex:1; }
+
+.fuel-item-title{
+  font-weight: 750;
+  color:#0f172a;
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.fuel-pill-mini{
+  display:inline-flex;
+  align-items:center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(148,163,184,.35);
+  background:#fff;
+  color:#334155;
+}
+
+.fuel-item-sub,
+.fuel-item-sub2{
+  font-size: 13px;
+  color:#64748b;
+  margin-top: 4px;
+}
+
+.fuel-item-actions{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex:0 0 auto;
+}
+
+/* mobile: ações em baixo */
+@media (max-width: 480px){
+  .fuel-item{ flex-wrap: wrap; }
+  .fuel-item-actions{ width:100%; justify-content:flex-end; margin-top:10px; }
+}
+/* ===== Cards “pro” (Abastecimento / Docs / Reparações) ===== */
+.record-card{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(148,163,184,0.28);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15,23,42,0.08);
+  overflow: hidden;
+  padding: 14px;
+}
+
+.record-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.record-title{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-weight: 800;
+  color:#0f172a;
+}
+
+.record-icon{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(27,155,130,0.12);
+  border: 1px solid rgba(27,155,130,0.20);
+  color:#0f766e;
+  flex: 0 0 auto;
+}
+
+.record-badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(148,163,184,0.30);
+  background: #fff;
+  color:#0f172a;
+  white-space: nowrap;
+}
+
+.record-badge--fuel{
+  background: rgba(34,197,94,0.14);
+  border-color: rgba(34,197,94,0.22);
+  color:#166534;
+  text-transform: lowercase;
+}
+
+.record-meta{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  color:#64748b;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.record-grid{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148,163,184,0.22);
+}
+
+.record-kpi-label{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-size: 13px;
+  color:#64748b;
+}
+
+.record-kpi-value{
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 900;
+  color:#0f172a;
+}
+
+.record-kpi-value--primary{
+  color: var(--color-primary-start);
+}
+
+.record-row{
+  grid-column: 1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148,163,184,0.18);
+}
+
+.record-row-label{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  color:#64748b;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.record-row-value{
+  color:#0f172a;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.record-actions{
+  margin-top: 12px;
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+}
+
+.record-card .icon{ width:18px; height:18px; }
+
+/* Mobile */
+@media (max-width: 420px){
+  .record-grid{ grid-template-columns: 1fr; }
+  .record-row-value{ white-space: normal; text-align:right; }
+}
