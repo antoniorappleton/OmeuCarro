@@ -231,9 +231,12 @@ body.app-page {
 
 .vehicles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: 1fr; /* mobile: 1 coluna */
   gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 
 .vehicle-card {
   padding: 14px 16px 12px;
@@ -324,6 +327,12 @@ body.app-page {
     padding: 24px 20px 18px;
   }
 }
+@media (min-width: 600px) {
+  .vehicles-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
 .vehicle-card-actions {
   display: flex;
   gap: 4px;
@@ -350,7 +359,17 @@ body.app-page {
    VEHICLE CARD – estilo referência
    ============================== */
 
+.vehicle-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.vehicle-card * {
+  min-width: 0;
+}
+
 .vehicle-card-modern {
+
   padding: 0;
   overflow: hidden;
 }
@@ -846,4 +865,46 @@ body.app-page {
   gap: 10px;
   align-items: center;
   justify-content: flex-end;
+}
+/* ===== FIX MOBILE: doc-cards não saem do ecrã ===== */
+
+/* evita qualquer overflow horizontal provocado por conteúdo longo */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* deixa o layout do cartão flexível em ecrãs pequenos */
+.doc-row {
+  flex-wrap: wrap;          /* permite descer ações para a linha de baixo */
+  align-items: flex-start;
+}
+
+/* garante que a coluna do texto pode encolher (importante em flex) */
+.doc-meta {
+  min-width: 0;
+}
+
+/* URL: em mobile NÃO pode ser nowrap + max-width fixo */
+.doc-url {
+  max-width: 100% !important;
+  width: 100%;
+  white-space: normal;          /* permite quebrar linha */
+  overflow-wrap: anywhere;      /* quebra mesmo em URLs sem espaços */
+  word-break: break-word;       /* fallback */
+}
+
+/* ações não devem “forçar” largura e podem ir para a linha de baixo */
+.doc-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* em mobile, mete as ações em baixo e alinhadas à direita (fica clean) */
+@media (max-width: 480px) {
+  .doc-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
 }
