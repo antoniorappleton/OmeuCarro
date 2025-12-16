@@ -8,18 +8,16 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/home.css" />
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
+  <!-- Firebase v9 (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <script defer src="js/firebase-config.js"></script>
   <script defer src="js/auth.js"></script>
   <script defer src="js/firestore.js"></script>
   <script defer src="js/veiculo.js"></script>
-
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
@@ -39,15 +37,15 @@
     </div>
 
     <div class="app-header-actions">
-      <a href="estatisticas.html" class="icon-btn">
+      <a href="estatisticas.html" class="icon-btn" aria-label="Estatísticas">
         <svg class="icon"><use href="assets/icons.svg#icon-dashboard"></use></svg>
       </a>
 
-      <a href="perfil.html" class="icon-btn">
+      <a href="perfil.html" class="icon-btn" aria-label="Perfil">
         <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
       </a>
 
-      <button id="btn-logout" class="icon-btn">
+      <button id="btn-logout" class="icon-btn" aria-label="Sair">
         <svg class="icon"><use href="assets/icons.svg#icon-logout"></use></svg>
       </button>
     </div>
@@ -123,9 +121,8 @@
     </section>
 
     <!-- LISTA DE ABASTECIMENTOS -->
-    <section class="abastecimentos-section" style="margin-bottom: 80px;">
+    <section class="abastecimentos-section" style="margin-bottom: 32px;">
       <div class="card-header-row">
-
         <button id="btn-add-fuel" class="btn btn-primary btn-gradient">
           <svg class="icon icon-left"><use href="assets/icons.svg#icon-plus"></use></svg>
           <span>Novo abastecimento</span>
@@ -143,43 +140,135 @@
       <div id="fuel-list" class="fuel-list"></div>
     </section>
 
-    <!-- secção “Documentos” -->
-     <section id="docs" class="card">
-        <header class="card-header">
-          <h2>Documentos do veículo</h2>
-          <p class="muted">Fotografa e guarda documentos (ex.: DUA, seguro, inspeção).</p>
-        </header>
+    <!-- DOCUMENTOS -->
+    <section id="docs" class="card" style="margin-bottom:80px;">
+      <header class="card-header">
+        <h2 style="display:flex; gap:10px; align-items:center;">
+          <svg class="icon"><use href="assets/icons.svg#icon-file"></use></svg>
+          <span>Documentos do veículo</span>
+        </h2>
+        <p class="muted">Guarda ficheiros (PDF/JPG) na nuvem e/ou regista um link externo (Drive, OneDrive, etc.).</p>
+      </header>
 
-        <div class="card-body">
-          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <select id="doc-tipo">
-              <option value="DUA">DUA</option>
-              <option value="Seguro">Seguro</option>
-              <option value="Inspeção">Inspeção</option>
-              <option value="Fatura">Fatura</option>
-              <option value="Outro">Outro</option>
-            </select>
+      <div class="card-body">
 
-            <input id="doc-file" type="file" accept="image/*" capture="environment" />
+        <!-- FORM: Link externo (noutros sítios) -->
+        <div class="card" style="margin:14px 0 0 0; padding:14px;">
+          <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
 
-            <button id="btn-doc-upload" type="button">Guardar foto</button>
+            <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
+              <label class="muted" for="ext-categoria" style="font-size:12px;">Categoria</label>
+                <select id="ext-categoria">
+                  <option value="Carro">Documentos do carro</option>
+                  <option value="Reparacao">Reparações</option>
+                  <option value="Outros">Outros</option>
+                </select>
+            </div>
 
-            <span id="doc-msg" class="muted"></span>
+            <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
+              <label class="muted" for="ext-tipo" style="font-size:12px;">Tipo</label>
+              <select id="ext-tipo">
+                <option value="DUA">DUA</option>
+                <option value="Seguro">Seguro</option>
+                <option value="Inspeção">Inspeção</option>
+                <option value="IUC">IUC</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Reparação">Reparação</option>
+                <option value="Fatura">Fatura</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:6px; min-width:260px; flex:1;">
+              <label class="muted" for="ext-url" style="font-size:12px;">Link externo (PDF/JPG)</label>
+              <input
+                id="ext-url"
+                type="url"
+                placeholder="https://drive.google.com/... ou https://..."
+                inputmode="url"
+              />
+            </div>
+
+            <button id="btn-ext-save" type="button" class="btn btn-secondary" style="white-space:nowrap;">
+              <svg class="icon icon-left"><use href="assets/icons.svg#icon-link"></use></svg>
+              <span>Guardar link</span>
+            </button>
+
+            <span id="ext-msg" class="muted" style="min-width:140px;"></span>
           </div>
 
-          <div id="docs-list" style="margin-top:16px; display:grid; gap:12px;"></div>
+          <p class="muted" style="margin-top:10px; font-size:12px;">
+            Dica: certifica-te que o link tem permissões para abrir (ex.: “qualquer pessoa com o link”).
+          </p>
         </div>
-     </section>
 
+        <!-- LISTA -->
+        <div style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <h3 style="margin:0; display:flex; gap:10px; align-items:center;">
+            <svg class="icon"><use href="assets/icons.svg#icon-folder"></use></svg>
+            <span>Documentos guardados</span>
+          </h3>
+
+          <!-- opcional: filtro rápido -->
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span class="muted" style="font-size:12px;">Filtrar:</span>
+              <select id="docs-filter">
+                <option value="Todos">Todos</option>
+                <option value="Carro">Documentos do carro</option>
+                <option value="Reparacao">Reparações</option>
+                <option value="Outros">Outros</option>
+              </select>
+          </div>
+        </div>
+
+        <!-- O JS vai preencher aqui com cards -->
+        <div id="docs-list" style="margin-top:12px; display:grid; gap:12px;"></div>
+
+        <!-- Template visual (referência) do que o JS deve renderizar:
+          <article class="card" style="margin:0; padding:14px;">
+            <div style="display:flex; justify-content:space-between; gap:12px;">
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                <span class="badge badge-secondary">Seguro</span>
+                <div>
+                  <strong>Apólice</strong>
+                  <div class="muted" style="font-size:12px;">PDF • 2025-12-16</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <a class="icon-btn" href="URL" target="_blank" rel="noopener" aria-label="Abrir">
+                  <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
+                </a>
+                <button class="icon-btn" aria-label="Apagar">
+                  <svg class="icon"><use href="assets/icons.svg#icon-trash"></use></svg>
+                </button>
+              </div>
+            </div>
+          </article>
+        -->
+
+      </div>
+    </section>
 
   </main>
 
   <!-- FOOTER -->
   <footer>
-    <a href="dashboard.html"><svg class="icon"><use href="assets/icons.svg#icon-home"></use></svg><span>Home</span></a>
-    <a href="abastecimentos.html"><svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg><span>Abastecer</span></a>
-    <a href="veiculos.html" class="active"><svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg><span>Veículos</span></a>
-    <a href="perfil.html"><svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg><span>Perfil</span></a>
+    <a href="dashboard.html">
+      <svg class="icon"><use href="assets/icons.svg#icon-home"></use></svg>
+      <span>Home</span>
+    </a>
+    <a href="abastecimentos.html">
+      <svg class="icon"><use href="assets/icons.svg#icon-fuel"></use></svg>
+      <span>Abastecer</span>
+    </a>
+    <a href="veiculos.html" class="active">
+      <svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg>
+      <span>Veículos</span>
+    </a>
+    <a href="perfil.html">
+      <svg class="icon"><use href="assets/icons.svg#icon-user"></use></svg>
+      <span>Perfil</span>
+    </a>
   </footer>
 
 </body>

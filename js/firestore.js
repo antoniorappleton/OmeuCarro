@@ -334,6 +334,11 @@ async function uploadDocumentoVeiculo(veiculoId, file, meta = {}) {
 
   const payload = {
     userId: user.uid,
+
+    // NOVO
+    categoria: meta.categoria || "Carro", // Carro | Reparacao | Outros
+    linkExterno: meta.linkExterno || "", // para compatibilidade (normalmente vazio no upload)
+
     tipo: meta.tipo || "Documento",
     descricao: meta.descricao || "",
     nomeOriginal: file.name || "",
@@ -344,9 +349,59 @@ async function uploadDocumentoVeiculo(veiculoId, file, meta = {}) {
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
+
   await docRef.set(payload);
   return { id: docRef.id, ...payload };
 }
+
+// ======================================================================
+//  DOCUMENTOS DO VEÍCULO (LINK EXTERNO) -> Firestore apenas
+//  Estrutura:
+//    veiculos/{veiculoId}/documentos/{docId}
+// ======================================================================
+
+async function addDocumentoLinkExterno(veiculoId, data = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  if (!veiculoId) throw new Error("veiculoId é obrigatório");
+
+  const url = (data.url || data.linkExterno || "").trim();
+  if (!url || !/^https?:\/\/.+/i.test(url)) {
+    throw new Error("Link inválido. Tem de começar por http:// ou https://");
+  }
+
+  const categoria = data.categoria || "Outros"; // Carro | Reparacao | Outros
+  const tipo = data.tipo || "Documento";
+
+  const docRef = db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("documentos")
+    .doc();
+
+  const payload = {
+    userId: user.uid,
+
+    // NOVO
+    categoria,
+    linkExterno: url,
+
+    // campos compatíveis com docs de upload (ficam vazios)
+    tipo,
+    descricao: data.descricao || "",
+    nomeOriginal: data.nomeOriginal || "",
+    mimeType: data.mimeType || "",
+    tamanho: 0,
+    storagePath: "",
+    downloadURL: "",
+
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await docRef.set(payload);
+  return { id: docRef.id, ...payload };
+}
+
 
 async function getDocumentosDoVeiculo(veiculoId, limite = 50) {
   const user = auth.currentUser;
