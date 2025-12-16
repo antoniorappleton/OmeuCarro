@@ -1,6 +1,7 @@
 // js/veiculo.js
 // DETALHE DE UM VEÍCULO + ABASTECIMENTOS (SUBCOLEÇÃO)
 // + DOCUMENTOS (LINK EXTERNO / STORAGE) COM CATEGORIA + FILTRO + ÍCONES
+// + TÍTULO (NOME) + NOTA NO DOCUMENTO
 
 document.addEventListener("DOMContentLoaded", () => {
   // =========================
@@ -60,8 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (v === "Manutenção / Reparações") return "Reparacao";
     if (v === "Manutencao") return "Reparacao";
 
-    // mantém o que vier do select: Carro | Seguro | Reparacao | Outros (ou outras)
-    return v;
+    return v; // Carro | Seguro | Reparacao | Outros (ou outras)
   }
 
   function detectKind(url = "", mimeType = "") {
@@ -74,49 +74,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return "link";
   }
 
-  // =========================
-  // DOCUMENTOS (LINK EXTERNO)
-  // =========================
-  async function saveDocumentoLinkExterno(veiculoId, { categoria, tipo, url }) {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Utilizador não autenticado");
-    if (!veiculoId) throw new Error("veiculoId é obrigatório");
-
-    const cleanUrl = (url || "").trim();
-    if (!cleanUrl || !/^https?:\/\/.+/i.test(cleanUrl)) {
-      throw new Error("Link inválido. Tem de começar por http:// ou https://");
-    }
-
-    const kind = detectKind(cleanUrl, "");
-    const mimeType =
-      kind === "pdf" ? "application/pdf" : kind === "image" ? "image/*" : "";
-
-    const payload = {
-      userId: user.uid,
-      categoria: normalizeCategoria(categoria),
-      tipo: (tipo || "Documento").trim(),
-      linkExterno: cleanUrl,
-
-      // compat (docs antigos / storage)
-      downloadURL: "",
-      storagePath: "",
-      nomeOriginal: "",
-      mimeType,
-      tamanho: 0,
-
-      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-
-    // grava diretamente (para não dependeres de nova função no firestore.js)
-    const ref = await db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("documentos")
-      .add(payload);
-
-    return { id: ref.id, ...payload };
+  function encodeDataUrl(url) {
+    // evita problemas com & ? etc em data-attributes
+    return encodeURIComponent(url || "");
   }
 
+  function decodeDataUrl(enc) {
+    try {
+      return decodeURIComponent(enc || "");
+    } catch {
+      return enc || "";
+    }
+  }
+
+  // =========================
+  // DOCUMENTOS
+  // =========================
   async function renderDocumentos(veiculoId) {
     const list = document.getElementById("docs-list");
     if (!list) return;
@@ -151,9 +124,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const kind = detectKind(openUrl, d.mimeType || "");
         const categoria = normalizeCategoria(d.categoria || "Outros");
 
+        const titulo = (d.titulo || "").trim();
+        const nota = (d.nota || "").trim();
+
         const preview =
           kind === "image" && openUrl
-            ? `<img src="${openUrl}" alt="${escapeHtml(d.tipo || "Documento")}"
+            ? `<img src="${openUrl}" alt="${escapeHtml(
+                titulo || d.tipo || "Documento"
+              )}"
                 style="width:64px;height:64px;object-fit:cover;border-radius:12px;border:1px solid rgba(0,0,0,.08);" />`
             : `<div style="width:64px;height:64px;border-radius:12px;border:1px solid rgba(0,0,0,.08);
                         display:flex;align-items:center;justify-content:center;">
@@ -164,9 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
           kind === "pdf" ? "PDF" : kind === "image" ? "Imagem" : "Link";
 
         return `
-          <article class="card doc-card" data-open-url="${encodeURIComponent(
-            openUrl
-          )}"
+          <article class="card doc-card"
+                  data-open-url="${encodeDataUrl(openUrl)}"
                   style="margin:0; padding:14px; cursor:${
                     openUrl ? "pointer" : "default"
                   };">
@@ -182,14 +159,24 @@ document.addEventListener("DOMContentLoaded", () => {
                       badgeKind
                     )}</span>
                   </div>
+
                   <div style="margin-top:6px; font-weight:600;">
-                    ${escapeHtml(d.tipo || "Documento")}
+                    ${escapeHtml(titulo || d.tipo || "Documento")}
                   </div>
+
+                  ${
+                    nota
+                      ? `<div class="muted" style="font-size:12px; margin-top:4px;">
+                           ${escapeHtml(nota)}
+                         </div>`
+                      : ""
+                  }
+
                   ${
                     openUrl
-                      ? `<div class="muted" style="font-size:12px; margin-top:4px; word-break:break-all;">${escapeHtml(
-                          openUrl
-                        )}</div>`
+                      ? `<div class="muted" style="font-size:12px; margin-top:4px; word-break:break-all;">
+                           ${escapeHtml(openUrl)}
+                         </div>`
                       : ""
                   }
                 </div>
@@ -215,23 +202,25 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .join("");
 
-    // abrir ao clicar no cartão (exceto em botões/links)
+    // Abrir ao clicar no cartão (exceto em botões/links)
     list.querySelectorAll(".doc-card").forEach((card) => {
       card.addEventListener("click", (e) => {
-        // se clicou num botão/link dentro do card, não faz o "open" do card
         if (e.target.closest("button, a")) return;
 
         const enc = card.getAttribute("data-open-url");
-        if (!enc) return;
-        const url = decodeURIComponent(enc);
+        const url = decodeDataUrl(enc);
+        if (!url) return;
+
         window.open(url, "_blank", "noopener");
       });
     });
 
-    // bind deletes
+    // Apagar
     list.querySelectorAll("[data-doc-del]").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         e.preventDefault();
+        e.stopPropagation(); // evita abrir o card ao apagar
+
         const docId = btn.getAttribute("data-doc-del");
         if (!confirm("Apagar este documento?")) return;
         await deleteDocumentoDoVeiculo(veiculoId, docId);
@@ -244,6 +233,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const catEl = document.getElementById("ext-categoria");
     const tipoEl = document.getElementById("ext-tipo");
     const urlEl = document.getElementById("ext-url");
+
+    // NOVOS campos
+    const tituloEl = document.getElementById("ext-titulo");
+    const notaEl = document.getElementById("ext-nota");
+
     const btn = document.getElementById("btn-ext-save");
     const msg = document.getElementById("ext-msg");
     const filterEl = document.getElementById("docs-filter");
@@ -254,6 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
         urlEl,
         catEl,
         tipoEl,
+        tituloEl,
+        notaEl,
       });
     }
 
@@ -270,6 +266,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const tipo = (tipoEl?.value || "Documento").trim();
           const url = (urlEl?.value || "").trim();
 
+          const titulo = (tituloEl?.value || "").trim();
+          const nota = (notaEl?.value || "").trim();
+
           if (!url || !/^https?:\/\/.+/i.test(url)) {
             if (msg) msg.textContent = "Coloca um link válido (https://...).";
             return;
@@ -278,11 +277,20 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.disabled = true;
           if (msg) msg.textContent = "A guardar...";
 
-          await addDocumentoLinkExterno(veiculoId, { categoria, tipo, url });
+          // Usa a função do firestore.js (recomendado)
+          await addDocumentoLinkExterno(veiculoId, {
+            categoria,
+            tipo,
+            url,
+            titulo,
+            nota,
+          });
 
           urlEl.value = "";
-          if (msg) msg.textContent = "Link guardado ✅";
+          if (tituloEl) tituloEl.value = "";
+          if (notaEl) notaEl.value = "";
 
+          if (msg) msg.textContent = "Link guardado ✅";
           await renderDocumentos(veiculoId);
         } catch (e) {
           console.error(e);
@@ -293,7 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // carrega lista inicial
     renderDocumentos(veiculoId);
   }
 
