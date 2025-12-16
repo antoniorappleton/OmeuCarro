@@ -21,3 +21,118 @@ icon-wrench
 icon-trend-up
 icon-home
 icon-gauge
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+
+  <!-- ===== Navegação / Geral ===== -->
+  <symbol id="icon-home" viewBox="0 0 24 24">
+    <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>
+  </symbol>
+
+  <symbol id="icon-car" viewBox="0 0 24 24">
+    <path d="M5 11 7 6a2 2 0 0 1 2-1h6a2 2 0 0 1 2 1l2 5M3 11h18v6a2 2 0 0 1-2 2h-1a2 2 0 0 1-4 0H10a2 2 0 0 1-4 0H5a2 2 0 0 1-2-2z"/>
+  </symbol>
+
+  <symbol id="icon-user" viewBox="0 0 24 24">
+    <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"/>
+  </symbol>
+
+  <symbol id="icon-logout" viewBox="0 0 24 24">
+    <path d="M16 17l5-5-5-5M21 12H9"/>
+    <path d="M13 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/>
+  </symbol>
+
+  <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+    <path d="M9 6l6 6-6 6"/>
+  </symbol>
+
+  <symbol id="icon-close" viewBox="0 0 24 24">
+    <path d="M6 6l12 12M18 6l-12 12"/>
+  </symbol>
+
+  <symbol id="icon-plus" viewBox="0 0 24 24">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+
+  <!-- ===== Abastecimentos / Métricas ===== -->
+  <symbol id="icon-fuel" viewBox="0 0 24 24">
+    <path d="M4 3h10v18H4z"/>
+    <path d="M14 8h2l3 3v8a2 2 0 0 1-2 2h-1"/>
+  </symbol>
+
+  <symbol id="icon-droplet" viewBox="0 0 24 24">
+    <path d="M12 2s7 7.5 7 13a7 7 0 0 1-14 0c0-5.5 7-13 7-13z"/>
+  </symbol>
+
+  <symbol id="icon-receipt" viewBox="0 0 24 24">
+    <path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/>
+  </symbol>
+
+  <symbol id="icon-wallet" viewBox="0 0 24 24">
+    <path d="M3 7h18v10H3z"/>
+    <path d="M16 12h3"/>
+  </symbol>
+
+  <symbol id="icon-dashboard" viewBox="0 0 24 24">
+    <path d="M3 13a9 9 0 1 1 18 0"/>
+    <path d="M12 13l3-5"/>
+  </symbol>
+
+  <symbol id="icon-odometer" viewBox="0 0 24 24">
+    <circle cx="12" cy="13" r="8"/>
+    <path d="M12 13l4-4"/>
+  </symbol>
+
+  <symbol id="icon-trend-up" viewBox="0 0 24 24">
+    <path d="M3 17l6-6 4 4 7-7"/>
+    <path d="M14 8h7v7"/>
+  </symbol>
+
+  <!-- ===== Localização / Postos ===== -->
+  <symbol id="icon-station" viewBox="0 0 24 24">
+    <path d="M6 2h8v20H6z"/>
+    <path d="M14 6h2l3 3v11a2 2 0 0 1-2 2h-1"/>
+  </symbol>
+
+  <symbol id="icon-pin" viewBox="0 0 24 24">
+    <path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/>
+    <circle cx="12" cy="10" r="2.5"/>
+  </symbol>
+
+  <!-- ===== Documentos ===== -->
+  <symbol id="icon-file" viewBox="0 0 24 24">
+    <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
+  </symbol>
+
+  <symbol id="icon-file-text" viewBox="0 0 24 24">
+    <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
+    <path d="M9 13h6M9 17h6M9 9h3"/>
+  </symbol>
+
+  <symbol id="icon-folder" viewBox="0 0 24 24">
+    <path d="M3 6h6l2 2h10v10a2 2 0 0 1-2 2H3z"/>
+  </symbol>
+
+  <symbol id="icon-link" viewBox="0 0 24 24">
+    <path d="M10 13a5 5 0 0 1 0-7l2-2a5 5 0 0 1 7 7l-1 1"/>
+    <path d="M14 11a5 5 0 0 1 0 7l-2 2a5 5 0 0 1-7-7l1-1"/>
+  </symbol>
+
+  <!-- ===== Ações ===== -->
+  <symbol id="icon-edit" viewBox="0 0 24 24">
+    <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75z"/>
+    <path d="M14.06 4.94l3.75 3.75"/>
+  </symbol>
+
+  <symbol id="icon-trash" viewBox="0 0 24 24">
+    <path d="M3 6h18"/>
+    <path d="M8 6V4h8v2"/>
+    <path d="M6 6l1 14h10l1-14"/>
+  </symbol>
+
+  <symbol id="icon-wrench" viewBox="0 0 24 24">
+    <path d="M14 7a4 4 0 1 0 3 3l4 4-2 2-4-4a4 4 0 0 1-1-5z"/>
+  </symbol>
+
+</svg>
