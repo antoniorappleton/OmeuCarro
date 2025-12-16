@@ -448,3 +448,30 @@ async function deleteDocumentoDoVeiculo(veiculoId, documentoId) {
   // Apaga do Firestore
   await ref.delete();
 }
+
+async function updateDocumentoDoVeiculo(veiculoId, docId, data = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+  if (!veiculoId || !docId) throw new Error("IDs obrigatórios");
+
+  const ref = db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("documentos")
+    .doc(docId);
+
+  const payload = {
+    categoria: data.categoria ?? undefined,
+    tipo: data.tipo ?? undefined,
+    titulo: data.titulo ?? undefined,
+    nota: data.nota ?? undefined,
+    linkExterno: data.linkExterno ?? undefined,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  Object.keys(payload).forEach(
+    (k) => payload[k] === undefined && delete payload[k]
+  );
+
+  await ref.update(payload);
+}

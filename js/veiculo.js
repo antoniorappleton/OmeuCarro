@@ -1,7 +1,8 @@
 // js/veiculo.js
 // DETALHE DE UM VEÍCULO + ABASTECIMENTOS (SUBCOLEÇÃO)
 // + DOCUMENTOS (LINK EXTERNO / STORAGE) COM CATEGORIA + FILTRO + ÍCONES
-// + TÍTULO (NOME) + NOTA NO DOCUMENTO
+// + TÍTULO (NOME) + NOTA
+// + EDITAR INLINE
 
 document.addEventListener("DOMContentLoaded", () => {
   // =========================
@@ -57,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const v = (c || "").trim();
     if (!v) return "Outros";
 
-    // compat com opções antigas
+    // compat
     if (v === "Manutenção / Reparações") return "Reparacao";
     if (v === "Manutencao") return "Reparacao";
 
@@ -74,16 +75,25 @@ document.addEventListener("DOMContentLoaded", () => {
     return "link";
   }
 
-  function encodeDataUrl(url) {
-    // evita problemas com & ? etc em data-attributes
-    return encodeURIComponent(url || "");
+  function enc(s) {
+    return encodeURIComponent(s || "");
+  }
+  function dec(s) {
+    try {
+      return decodeURIComponent(s || "");
+    } catch {
+      return s || "";
+    }
   }
 
-  function decodeDataUrl(enc) {
+  function safeJsonEnc(obj) {
+    return enc(JSON.stringify(obj || {}));
+  }
+  function safeJsonDec(str) {
     try {
-      return decodeURIComponent(enc || "");
+      return JSON.parse(dec(str || ""));
     } catch {
-      return enc || "";
+      return {};
     }
   }
 
@@ -126,32 +136,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const titulo = (d.titulo || "").trim();
         const nota = (d.nota || "").trim();
+        const tipo = (d.tipo || "Documento").trim();
 
         const preview =
           kind === "image" && openUrl
-            ? `<img src="${openUrl}" alt="${escapeHtml(
-                titulo || d.tipo || "Documento"
-              )}"
-                style="width:64px;height:64px;object-fit:cover;border-radius:12px;border:1px solid rgba(0,0,0,.08);" />`
-            : `<div style="width:64px;height:64px;border-radius:12px;border:1px solid rgba(0,0,0,.08);
-                        display:flex;align-items:center;justify-content:center;">
-                <svg class="icon"><use href="assets/icons.svg#icon-file"></use></svg>
-              </div>`;
+            ? `<img class="doc-preview-img" src="${openUrl}" alt="${escapeHtml(
+                titulo || tipo
+              )}" />`
+            : `<div class="doc-preview-box">
+                 <svg class="icon"><use href="assets/icons.svg#icon-file"></use></svg>
+               </div>`;
 
         const badgeKind =
           kind === "pdf" ? "PDF" : kind === "image" ? "Imagem" : "Link";
 
+        const packed = safeJsonEnc({
+          categoria,
+          tipo,
+          titulo,
+          nota,
+          linkExterno: openUrl,
+        });
+
         return `
-          <article class="card doc-card"
-                  data-open-url="${encodeDataUrl(openUrl)}"
-                  style="margin:0; padding:14px; cursor:${
-                    openUrl ? "pointer" : "default"
-                  };">
-            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
-              <div style="display:flex; gap:12px; align-items:flex-start;">
+          <article class="card doc-card" data-open-url="${enc(
+            openUrl
+          )}" data-doc-id="${d.id}">
+            <div class="doc-row">
+              <div class="doc-left">
                 ${preview}
-                <div>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+
+                <div class="doc-meta">
+                  <div class="doc-badges">
                     <span class="badge badge-secondary">${escapeHtml(
                       categoria
                     )}</span>
@@ -160,36 +176,41 @@ document.addEventListener("DOMContentLoaded", () => {
                     )}</span>
                   </div>
 
-                  <div style="margin-top:6px; font-weight:600;">
-                    ${escapeHtml(titulo || d.tipo || "Documento")}
+                  <div class="doc-title">
+                    ${escapeHtml(titulo || tipo || "Documento")}
                   </div>
 
                   ${
                     nota
-                      ? `<div class="muted" style="font-size:12px; margin-top:4px;">
-                           ${escapeHtml(nota)}
-                         </div>`
+                      ? `<div class="doc-note muted">${escapeHtml(nota)}</div>`
                       : ""
                   }
 
                   ${
                     openUrl
-                      ? `<div class="muted" style="font-size:12px; margin-top:4px; word-break:break-all;">
-                           ${escapeHtml(openUrl)}
-                         </div>`
+                      ? `<div class="doc-url muted">${escapeHtml(
+                          openUrl
+                        )}</div>`
                       : ""
                   }
                 </div>
               </div>
 
-              <div style="display:flex; gap:10px; align-items:center;">
+              <div class="doc-actions">
                 ${
                   openUrl
                     ? `<a class="icon-btn" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
-                        <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
-                      </a>`
+                         <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
+                       </a>`
                     : ""
                 }
+
+                <button class="icon-btn" type="button" data-doc-edit="${
+                  d.id
+                }" data-doc="${packed}" aria-label="Editar">
+                  <svg class="icon"><use href="assets/icons.svg#icon-edit"></use></svg>
+                </button>
+
                 <button class="icon-btn" type="button" data-doc-del="${
                   d.id
                 }" aria-label="Apagar">
@@ -197,61 +218,177 @@ document.addEventListener("DOMContentLoaded", () => {
                 </button>
               </div>
             </div>
+
+            <!-- Editor inline -->
+            <div class="doc-editor" data-editor="${d.id}">
+              <div class="doc-editor-grid">
+                <label class="muted">Categoria
+                  <select data-ed-cat>
+                    <option value="Carro">Carro</option>
+                    <option value="Seguro">Seguro</option>
+                    <option value="Reparacao">Reparação</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </label>
+
+                <label class="muted">Tipo
+                  <input type="text" data-ed-tipo placeholder="Ex.: DUA, Seguro, Fatura" />
+                </label>
+
+                <label class="muted">Nome
+                  <input type="text" data-ed-titulo placeholder="Ex.: Apólice 2025" />
+                </label>
+
+                <label class="muted">Nota
+                  <input type="text" data-ed-nota placeholder="Opcional" />
+                </label>
+
+                <label class="muted" style="grid-column:1/-1;">Link
+                  <input type="url" data-ed-url placeholder="https://..." inputmode="url" />
+                </label>
+
+                <div class="doc-editor-actions" style="grid-column:1/-1;">
+                  <button type="button" class="btn btn-secondary" data-ed-cancel>Cancelar</button>
+                  <button type="button" class="btn btn-primary" data-ed-save="${
+                    d.id
+                  }">Guardar</button>
+                  <span class="muted" data-ed-msg></span>
+                </div>
+              </div>
+            </div>
           </article>
         `;
       })
       .join("");
 
-    // Abrir ao clicar no cartão (exceto em botões/links)
-    list.querySelectorAll(".doc-card").forEach((card) => {
-      card.addEventListener("click", (e) => {
-        if (e.target.closest("button, a")) return;
+    // Um único handler para tudo (abre/editar/apagar)
+    list.onclick = async (e) => {
+      const card = e.target.closest(".doc-card");
 
-        const enc = card.getAttribute("data-open-url");
-        const url = decodeDataUrl(enc);
-        if (!url) return;
+      // Abrir ao clicar no cartão (exceto em botões/links/editor)
+      if (card && !e.target.closest("button, a, .doc-editor")) {
+        const url = dec(card.getAttribute("data-open-url") || "");
+        if (url) window.open(url, "_blank", "noopener");
+        return;
+      }
 
-        window.open(url, "_blank", "noopener");
-      });
-    });
-
-    // Apagar
-    list.querySelectorAll("[data-doc-del]").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
+      // Apagar
+      const delBtn = e.target.closest("[data-doc-del]");
+      if (delBtn) {
         e.preventDefault();
-        e.stopPropagation(); // evita abrir o card ao apagar
+        e.stopPropagation();
 
-        const docId = btn.getAttribute("data-doc-del");
+        const docId = delBtn.getAttribute("data-doc-del");
         if (!confirm("Apagar este documento?")) return;
+
         await deleteDocumentoDoVeiculo(veiculoId, docId);
         await renderDocumentos(veiculoId);
-      });
-    });
+        return;
+      }
+
+      // Abrir/fechar editor
+      const editBtn = e.target.closest("[data-doc-edit]");
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const docId = editBtn.getAttribute("data-doc-edit");
+        const editor = list.querySelector(`[data-editor="${docId}"]`);
+        if (!editor) return;
+
+        const data = safeJsonDec(editBtn.getAttribute("data-doc") || "");
+
+        editor.classList.toggle("is-open");
+
+        // preencher campos
+        editor.querySelector("[data-ed-cat]").value = normalizeCategoria(
+          data.categoria || "Outros"
+        );
+        editor.querySelector("[data-ed-tipo]").value = data.tipo || "Documento";
+        editor.querySelector("[data-ed-titulo]").value = data.titulo || "";
+        editor.querySelector("[data-ed-nota]").value = data.nota || "";
+        editor.querySelector("[data-ed-url]").value = data.linkExterno || "";
+
+        const msgEl = editor.querySelector("[data-ed-msg]");
+        if (msgEl) msgEl.textContent = "";
+
+        return;
+      }
+
+      // Cancelar editor
+      const cancelBtn = e.target.closest("[data-ed-cancel]");
+      if (cancelBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const editor = cancelBtn.closest(".doc-editor");
+        editor?.classList.remove("is-open");
+        return;
+      }
+
+      // Guardar edição
+      const saveBtn = e.target.closest("[data-ed-save]");
+      if (saveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const docId = saveBtn.getAttribute("data-ed-save");
+        const editor = saveBtn.closest(".doc-editor");
+        if (!editor) return;
+
+        const msgEl = editor.querySelector("[data-ed-msg]");
+
+        const categoria = normalizeCategoria(
+          editor.querySelector("[data-ed-cat]").value
+        );
+        const tipo =
+          (editor.querySelector("[data-ed-tipo]").value || "").trim() ||
+          "Documento";
+        const titulo = (
+          editor.querySelector("[data-ed-titulo]").value || ""
+        ).trim();
+        const nota = (
+          editor.querySelector("[data-ed-nota]").value || ""
+        ).trim();
+        const linkExterno = (
+          editor.querySelector("[data-ed-url]").value || ""
+        ).trim();
+
+        if (!linkExterno || !/^https?:\/\/.+/i.test(linkExterno)) {
+          if (msgEl) msgEl.textContent = "Link inválido (https://...)";
+          return;
+        }
+
+        try {
+          if (msgEl) msgEl.textContent = "A guardar...";
+
+          await updateDocumentoDoVeiculo(veiculoId, docId, {
+            categoria,
+            tipo,
+            titulo,
+            nota,
+            linkExterno,
+          });
+
+          if (msgEl) msgEl.textContent = "Guardado ✅";
+          await renderDocumentos(veiculoId);
+        } catch (err) {
+          console.error(err);
+          if (msgEl) msgEl.textContent = err.message || "Erro ao guardar";
+        }
+      }
+    };
   }
 
   function initDocumentos(veiculoId) {
     const catEl = document.getElementById("ext-categoria");
     const tipoEl = document.getElementById("ext-tipo");
     const urlEl = document.getElementById("ext-url");
-
-    // NOVOS campos
     const tituloEl = document.getElementById("ext-titulo");
     const notaEl = document.getElementById("ext-nota");
 
     const btn = document.getElementById("btn-ext-save");
     const msg = document.getElementById("ext-msg");
     const filterEl = document.getElementById("docs-filter");
-
-    if (!btn || !urlEl || !catEl || !tipoEl) {
-      console.warn("initDocumentos(): elementos não encontrados", {
-        btn,
-        urlEl,
-        catEl,
-        tipoEl,
-        tituloEl,
-        notaEl,
-      });
-    }
 
     if (filterEl) {
       filterEl.addEventListener("change", () => renderDocumentos(veiculoId));
@@ -265,7 +402,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const categoria = normalizeCategoria(catEl?.value || "Outros");
           const tipo = (tipoEl?.value || "Documento").trim();
           const url = (urlEl?.value || "").trim();
-
           const titulo = (tituloEl?.value || "").trim();
           const nota = (notaEl?.value || "").trim();
 
@@ -277,7 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.disabled = true;
           if (msg) msg.textContent = "A guardar...";
 
-          // Usa a função do firestore.js (recomendado)
           await addDocumentoLinkExterno(veiculoId, {
             categoria,
             tipo,
@@ -458,7 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
       el.fuelList.appendChild(card);
     });
 
-    // EDITAR / ELIMINAR
+    // EDITAR / ELIMINAR abastecimentos
     el.fuelList.addEventListener("click", async (e) => {
       const edit = e.target.closest("[data-edit]");
       const del = e.target.closest("[data-del]");
