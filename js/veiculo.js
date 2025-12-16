@@ -164,7 +164,12 @@ document.addEventListener("DOMContentLoaded", () => {
           kind === "pdf" ? "PDF" : kind === "image" ? "Imagem" : "Link";
 
         return `
-          <article class="card" style="margin:0; padding:14px;">
+          <article class="card doc-card" data-open-url="${encodeURIComponent(
+            openUrl
+          )}"
+                  style="margin:0; padding:14px; cursor:${
+                    openUrl ? "pointer" : "default"
+                  };">
             <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
               <div style="display:flex; gap:12px; align-items:flex-start;">
                 ${preview}
@@ -194,8 +199,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${
                   openUrl
                     ? `<a class="icon-btn" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
-                         <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
-                       </a>`
+                        <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
+                      </a>`
                     : ""
                 }
                 <button class="icon-btn" type="button" data-doc-del="${
@@ -209,6 +214,19 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       })
       .join("");
+
+    // abrir ao clicar no cartão (exceto em botões/links)
+    list.querySelectorAll(".doc-card").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        // se clicou num botão/link dentro do card, não faz o "open" do card
+        if (e.target.closest("button, a")) return;
+
+        const enc = card.getAttribute("data-open-url");
+        if (!enc) return;
+        const url = decodeURIComponent(enc);
+        window.open(url, "_blank", "noopener");
+      });
+    });
 
     // bind deletes
     list.querySelectorAll("[data-doc-del]").forEach((btn) => {
