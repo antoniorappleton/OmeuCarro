@@ -104,61 +104,57 @@ function destroyChartIfExists(ref) {
 // KPIs – CÁLCULO
 // ======================================================================
 
-function calcularKPIs(abastecimentos) {
-  if (!abastecimentos.length) {
-    return {
-      totalLitros: 0,
-      totalGastos: 0,
-      consumoMedioL100: null,
-      custoPorKm: null,
-    };
-  }
+function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
+  // 1️⃣ Filtrar por veículo (se não for "todos")
+  const filtrados = veiculoSelecionadoId
+    ? abastecimentos.filter((a) => a.veiculoId === veiculoSelecionadoId)
+    : abastecimentos;
 
-  let totalLitros = 0;
-  let totalGastos = 0;
-
-  abastecimentos.forEach((ab) => {
-    const litros = Number(ab.litros) || 0;
-    const preco = Number(ab.precoPorLitro) || 0;
-    totalLitros += litros;
-    totalGastos += litros * preco;
+  // 2️⃣ Agrupar por veículo (IMPORTANTE para "Todos")
+  const porVeiculo = {};
+  filtrados.forEach((a) => {
+    if (!a.veiculoId) return;
+    if (!porVeiculo[a.veiculoId]) porVeiculo[a.veiculoId] = [];
+    porVeiculo[a.veiculoId].push(a);
   });
 
-  // Segmentado por abastecimentos completos
-  const ordenados = [...abastecimentos].sort(
-    (a, b) => (a.odometro || 0) - (b.odometro || 0)
-  );
+  let totalLitros = 0;
+  let totalCusto = 0;
+  let totalKm = 0;
 
-  let totalComb = 0;
-  let totalDist = 0;
-  let totalCustoSeg = 0;
+  Object.values(porVeiculo).forEach((lista) => {
+    // ordenar por odómetro
+    const ordenados = [...lista]
+      .filter((a) => a.completo) // 🔑 só completos
+      .sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
 
-  for (let i = 1; i < ordenados.length; i++) {
-    const prev = ordenados[i - 1];
-    const atual = ordenados[i];
+    for (let i = 1; i < ordenados.length; i++) {
+      const prev = ordenados[i - 1];
+      const atual = ordenados[i];
 
-    if (!atual.completo) continue;
+      const km = Number(atual.odometro) - Number(prev.odometro);
+      if (km <= 0) continue;
 
-    const od0 = Number(prev.odometro);
-    const od1 = Number(atual.odometro);
-    const litros = Number(atual.litros);
-    const preco = Number(atual.precoPorLitro);
+      const litros = Number(atual.litros);
+      const preco = Number(atual.precoPorLitro);
 
-    if (isNaN(od0) || isNaN(od1) || isNaN(litros)) continue;
+      if (isNaN(litros) || isNaN(preco)) continue;
 
-    const dist = od1 - od0;
-    if (dist <= 0) continue;
+      totalKm += km;
+      totalLitros += litros;
+      totalCusto += litros * preco;
+    }
+  });
 
-    totalComb += litros;
-    totalDist += dist;
-    totalCustoSeg += litros * preco;
-  }
+  const consumoMedio = totalKm > 0 ? totalLitros / (totalKm / 100) : 0;
+
+  const custoPorKm = totalKm > 0 ? totalCusto / totalKm : 0;
 
   return {
     totalLitros,
-    totalGastos,
-    consumoMedioL100: totalDist > 0 ? (totalComb * 100) / totalDist : null,
-    custoPorKm: totalDist > 0 ? totalCustoSeg / totalDist : null,
+    totalCusto,
+    consumoMedio,
+    custoPorKm,
   };
 }
 
