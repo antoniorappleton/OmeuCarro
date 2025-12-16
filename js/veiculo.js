@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 titulo || tipo
               )}" />`
             : `<div class="doc-preview-box">
-                 <svg class="icon"><use href="assets/icons.svg#icon-file"></use></svg>
+                 <svg class="icon"><use href="assets/icons-unified.svg#icon-file"></use></svg>
                </div>`;
 
         const badgeKind =
@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${
                   openUrl
                     ? `<a class="icon-btn" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
-                         <svg class="icon"><use href="assets/icons.svg#icon-link"></use></svg>
+                         <svg class="icon"><use href="assets/icons-unified.svg#icon-link"></use></svg>
                        </a>`
                     : ""
                 }
@@ -234,13 +234,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="icon-btn" type="button" data-doc-edit="${
                   d.id
                 }" data-doc="${packed}" aria-label="Editar">
-                  <svg class="icon"><use href="assets/icons.svg#icon-edit"></use></svg>
+                  <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
                 </button>
 
                 <button class="icon-btn" type="button" data-doc-del="${
                   d.id
                 }" aria-label="Apagar">
-                  <svg class="icon"><use href="assets/icons.svg#icon-trash"></use></svg>
+                  <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
                 </button>
               </div>
             </div>
@@ -581,23 +581,25 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="record-head">
           <div class="record-title">
             <span class="record-icon">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-receipt"></use></svg>
+              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-receipt"></use></svg>
             </span>
             <span>Abastecimento</span>
           </div>
 
-          <span class="record-badge record-badge--fuel">${escapeHtml(tipo)}</span>
+          <span class="record-badge record-badge--fuel">${escapeHtml(
+            tipo
+          )}</span>
         </div>
 
         <div class="record-meta">
-          <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-calendar"></use></svg>
+          <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
           <span>${escapeHtml(a.data || "")}</span>
         </div>
 
         <div class="record-grid">
           <div class="record-kpi">
             <div class="record-kpi-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-droplet"></use></svg>
+              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-droplet"></use></svg>
               <span>Litros</span>
             </div>
             <div class="record-kpi-value">${litros.toFixed(1)} L</div>
@@ -605,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="record-kpi">
             <div class="record-kpi-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-wallet"></use></svg>
+              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-wallet"></use></svg>
               <span>Total</span>
             </div>
             <div class="record-kpi-value record-kpi-value--primary">€${custo}</div>
@@ -618,7 +620,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="record-row">
             <div class="record-row-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-dashboard"></use></svg>
+              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-dashboard"></use></svg>
               <span>Quilometragem</span>
             </div>
             <div class="record-row-value">${kmTxt}</div>
@@ -626,7 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="record-row">
             <div class="record-row-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-pin"></use></svg>
+              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-pin"></use></svg>
               <span>Posto</span>
             </div>
             <div class="record-row-value">${posto}</div>
@@ -637,13 +639,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="icon-btn-sm" type="button" data-edit="${
             a.id
           }" aria-label="Editar">
-            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-edit"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
           </button>
 
           <button class="icon-btn-sm danger" type="button" data-del="${
             a.id
           }" aria-label="Eliminar">
-            <svg class="icon" aria-hidden="true"><use href="assets/icons.svg#icon-trash"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
           </button>
         </div>
       `;

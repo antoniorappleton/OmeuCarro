@@ -159,7 +159,7 @@ veiculos.forEach((v) => {
         <div class="vehicle-left">
           <div class="vehicle-avatar">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#icon-car"></use>
+              <use href="assets/icons-unified.svg#icon-car"></use>
             </svg>
           </div>
 
@@ -174,7 +174,7 @@ veiculos.forEach((v) => {
                   ? `
                 <span class="badge badge-year">
                   <svg class="icon icon-badge" aria-hidden="true">
-                    <use href="assets/icons.svg#icon-calendar"></use>
+                    <use href="assets/icons-unified.svg#icon-calendar"></use>
                   </svg>
                   ${ano}
                 </span>`
@@ -206,7 +206,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Abastecimentos">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#icon-droplet"></use>
+              <use href="assets/icons-unified.svg#icon-droplet"></use>
             </svg>
           </button>
 
@@ -214,7 +214,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Reparações e Manutenções">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#icon-wrench"></use>
+              <use href="assets/icons-unified.svg#icon-wrench"></use>
             </svg>
           </button>
 
@@ -222,13 +222,13 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Documentos do veículo">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons.svg#icon-file-text"></use>
+              <use href="assets/icons-unified.svg#icon-file-text"></use>
             </svg>
           </button>
 
           <span class="vehicle-arrow" aria-hidden="true">
             <svg class="icon icon-chevron">
-              <use href="assets/icons.svg#icon-chevron-right"></use>
+              <use href="assets/icons-unified.svg#icon-chevron-right"></use>
             </svg>
           </span>
         </div>
