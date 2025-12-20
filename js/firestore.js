@@ -402,7 +402,6 @@ async function addDocumentoLinkExterno(veiculoId, data = {}) {
   return { id: docRef.id, ...payload };
 }
 
-
 async function getDocumentosDoVeiculo(veiculoId, limite = 50) {
   const user = auth.currentUser;
   if (!user) return [];
@@ -474,4 +473,60 @@ async function updateDocumentoDoVeiculo(veiculoId, docId, data = {}) {
   );
 
   await ref.update(payload);
+}
+
+// =========================
+// REPARAÇÕES
+// =========================
+
+async function addReparacao(veiculoId, data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Não autenticado");
+
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .add({
+      userId: user.uid,
+      data: data.data || "",
+      descricao: data.descricao || "",
+      custo: Number(data.custo) || 0,
+      km: Number(data.km) || null,
+      oficina: data.oficina || "",
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+async function getReparacoesDoVeiculo(veiculoId, limite = 100) {
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .orderBy("data", "desc")
+    .limit(limite)
+    .get()
+    .then((snap) =>
+      snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    );
+}
+
+async function deleteReparacao(veiculoId, reparacaoId) {
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .doc(reparacaoId)
+    .delete();
+}
+
+async function addReparacaoAoVeiculo(veiculoId, data) {
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .add({
+      ...data,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
 }

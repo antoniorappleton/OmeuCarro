@@ -55,6 +55,67 @@ document.addEventListener("DOMContentLoaded", () => {
     setActive("fuel");
   }
 
+  function initReparacoesModal(veiculoId) {
+    const modal = document.getElementById("maint-modal");
+    const openBtn = document.getElementById("btn-add-maint");
+    const closeBtn = document.getElementById("maint-close");
+    const cancelBtn = document.getElementById("rep-cancel");
+    const saveBtn = document.getElementById("rep-save");
+    const msg = document.getElementById("rep-msg");
+
+    const descEl = document.getElementById("rep-desc");
+    const dateEl = document.getElementById("rep-date");
+    const kmEl = document.getElementById("rep-km");
+    const costEl = document.getElementById("rep-cost");
+    const shopEl = document.getElementById("rep-shop");
+
+    function open() {
+      modal.classList.remove("hidden");
+      msg.textContent = "";
+    }
+
+    function close() {
+      modal.classList.add("hidden");
+      descEl.value = "";
+      dateEl.value = "";
+      kmEl.value = "";
+      costEl.value = "";
+      shopEl.value = "";
+    }
+
+    openBtn?.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    cancelBtn?.addEventListener("click", close);
+
+    saveBtn?.addEventListener("click", async () => {
+      try {
+        const descricao = descEl.value.trim();
+        const data = dateEl.value;
+
+        if (!descricao || !data) {
+          msg.textContent = "Descrição e data são obrigatórias.";
+          return;
+        }
+
+        msg.textContent = "A guardar...";
+
+        await addReparacaoAoVeiculo(veiculoId, {
+          descricao,
+          data,
+          km: Number(kmEl.value) || null,
+          custo: Number(costEl.value) || 0,
+          oficina: shopEl.value.trim(),
+        });
+
+        close();
+        await renderReparacoes(veiculoId);
+
+      } catch (e) {
+        console.error(e);
+        msg.textContent = "Erro ao guardar reparação.";
+      }
+    });
+  }
 
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
@@ -405,6 +466,49 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // =========================
+  // REPARAÇÕES
+  // =========================
+  async function renderReparacoes(veiculoId) {
+    const list = document.getElementById("maint-list");
+    const empty = document.getElementById("maint-empty");
+    if (!list) return;
+
+    const reps = await getReparacoesDoVeiculo(veiculoId);
+    reps.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+
+    if (!reps.length) {
+      empty?.classList.remove("hidden");
+      list.innerHTML = "";
+      return;
+    }
+
+    empty?.classList.add("hidden");
+    list.innerHTML = "";
+
+    reps.forEach((r) => {
+      const card = document.createElement("article");
+      card.className = "record-card";
+
+      card.innerHTML = `
+        <div class="record-head">
+          <strong>${r.descricao || "Reparação"}</strong>
+          <span>€${(r.custo || 0).toFixed(2)}</span>
+        </div>
+
+        <div class="record-meta">
+          ${r.data || ""} ${r.km ? "• " + r.km + " km" : ""}
+        </div>
+
+        <div class="record-row">
+          Oficina: ${r.oficina || "—"}
+        </div>
+      `;
+
+      list.appendChild(card);
+    });
+  }
+
   function initDocumentos(veiculoId) {
     const catEl = document.getElementById("ext-categoria");
     const tipoEl = document.getElementById("ext-tipo");
@@ -425,7 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           if (msg) msg.textContent = "";
 
-          const categoria = normalizeCategoria(catEl?.value || "Outros");
+          const categoria = "Carro";
           const tipo = (tipoEl?.value || "Documento").trim();
           const url = (urlEl?.value || "").trim();
           const titulo = (tituloEl?.value || "").trim();
@@ -507,6 +611,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // DOCUMENTOS
     initDocumentos(veiculoId);
+    // REPARAÇÕES
+    renderReparacoes(veiculoId);
+    initReparacoesModal(veiculoId);
+
 
 // =========================
 // ABASTECIMENTOS

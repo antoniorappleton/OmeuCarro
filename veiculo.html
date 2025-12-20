@@ -173,16 +173,6 @@
         <!-- FORM: Link externo -->
         <div class="card" style="margin:14px 0 0 0; padding:14px;">
           <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-
-            <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
-              <label class="muted" for="ext-categoria" style="font-size:12px;">Categoria</label>
-              <select id="ext-categoria">
-                <option value="Carro">Documentos do carro</option>
-                <option value="Reparacao">Reparações</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-
             <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
               <label class="muted" for="ext-tipo" style="font-size:12px;">Tipo</label>
               <select id="ext-tipo">
@@ -190,8 +180,6 @@
                 <option value="Seguro">Seguro</option>
                 <option value="Inspeção">Inspeção</option>
                 <option value="IUC">IUC</option>
-                <option value="Manutenção">Manutenção</option>
-                <option value="Reparação">Reparação</option>
                 <option value="Fatura">Fatura</option>
                 <option value="Outro">Outro</option>
               </select>
@@ -237,7 +225,6 @@
             <select id="docs-filter">
               <option value="Todos">Todos</option>
               <option value="Carro">Documentos do carro</option>
-              <option value="Reparacao">Reparações</option>
               <option value="Outros">Outros</option>
             </select>
           </div>
@@ -254,17 +241,29 @@
           <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-wrench"></use></svg>
           <span>Reparações</span>
         </h2>
-        <p class="muted">Organiza aqui manutenções e reparações (em breve).</p>
-      </header>
-      <div class="card-body">
-        <div class="vehicles-empty" style="margin:0;">
-          <div class="vehicles-empty-icon">🛠️</div>
-          <h3>Nenhum registo</h3>
-          <p>Quando ativares esta secção, vão aparecer aqui os cartões.</p>
+        <p class="muted">Regista manutenções, reparações e custos associados.</p>
+        <div class="card-header-row">
+          <button id="btn-add-maint" class="btn btn-primary btn-gradient" type="button">
+            <svg class="icon icon-left"><use href="assets/icons-unified.svg#icon-plus"></use></svg>
+            <span>Nova reparação</span>
+          </button>
         </div>
-      </div>
-    </section>
 
+      </header>
+        <div class="card-body">
+
+          <!-- EMPTY STATE -->
+          <div id="maint-empty" class="vehicles-empty" style="margin:0;">
+            <div class="vehicles-empty-icon">🛠️</div>
+            <h3>Nenhuma reparação</h3>
+            <p>Regista a primeira reparação para acompanhar custos e histórico.</p>
+          </div>
+
+          <!-- LISTA DE REPARAÇÕES -->
+          <div id="maint-list" style="display:grid; gap:12px;"></div>
+
+        </div>
+    </section>
   </main>
 
   <!-- FOOTER -->
@@ -286,6 +285,63 @@
       <span>Perfil</span>
     </a>
   </footer>
+
+  <!-- MODAL: NOVA REPARAÇÃO -->
+  <div id="maint-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-card">
+          <header class="modal-header">
+            <h2>
+              <svg class="icon"><use href="assets/icons-unified.svg#icon-wrench"></use></svg>
+              Nova reparação
+            </h2>
+            <button id="maint-close" class="icon-btn">
+              <svg class="icon"><use href="assets/icons-unified.svg#icon-close"></use></svg>
+            </button>
+          </header>
+
+          <div class="modal-body">
+            <div class="form-grid">
+
+              <label>
+                <span class="muted">Descrição</span>
+                <input id="rep-desc" type="text" placeholder="Ex.: Troca de óleo" />
+              </label>
+
+              <label>
+                <span class="muted">Data</span>
+                <input id="rep-date" type="date" />
+              </label>
+
+              <label>
+                <span class="muted">Quilómetros</span>
+                <input id="rep-km" type="number" placeholder="123456" />
+              </label>
+
+              <label>
+                <span class="muted">Custo (€)</span>
+                <input id="rep-cost" type="number" step="0.01" placeholder="89.90" />
+              </label>
+
+              <label style="grid-column:1/-1;">
+                <span class="muted">Oficina</span>
+                <input id="rep-shop" type="text" placeholder="Nome da oficina (opcional)" />
+              </label>
+
+            </div>
+
+            <p id="rep-msg" class="muted"></p>
+          </div>
+
+          <footer class="modal-footer">
+            <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
+            <button id="rep-save" class="btn btn-primary btn-gradient">
+              Guardar reparação
+            </button>
+          </footer>
+        </div>
+  </div>
 
 </body>
 </html>

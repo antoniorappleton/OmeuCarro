@@ -189,7 +189,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Editar veículo">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-edit"></use>
+              <use href="assets/icons-extra.svg#icon-edit"></use>
             </svg>
           </button>
 
@@ -197,7 +197,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Eliminar veículo">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-trash"></use>
+              <use href="assets/icons-extra.svg#icon-trash"></use>
             </svg>
           </button>
 
