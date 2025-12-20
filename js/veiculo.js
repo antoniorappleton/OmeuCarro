@@ -56,13 +56,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function initReparacoesModal(veiculoId) {
+    let editingId = null;
     const modal = document.getElementById("maint-modal");
     const openBtn = document.getElementById("btn-add-maint");
     const closeBtn = document.getElementById("maint-close");
     const cancelBtn = document.getElementById("rep-cancel");
     const saveBtn = document.getElementById("rep-save");
     const msg = document.getElementById("rep-msg");
-
+    const linkEl = document.getElementById("rep-link");
     const descEl = document.getElementById("rep-desc");
     const dateEl = document.getElementById("rep-date");
     const kmEl = document.getElementById("rep-km");
@@ -81,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
       kmEl.value = "";
       costEl.value = "";
       shopEl.value = "";
+      linkEl.value = "";
+      editingId = null; // ✅ MUITO IMPORTANTE
     }
 
     openBtn?.addEventListener("click", open);
@@ -91,22 +94,36 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const descricao = descEl.value.trim();
         const data = dateEl.value;
+        const link = linkEl.value.trim();
 
         if (!descricao || !data) {
           msg.textContent = "Descrição e data são obrigatórias.";
           return;
         }
 
+        if (link && !/^https?:\/\/.+/i.test(link)) {
+          msg.textContent = "Link inválido.";
+          return;
+        }
+
         msg.textContent = "A guardar...";
 
-        await addReparacaoAoVeiculo(veiculoId, {
+        const payload = {
           descricao,
           data,
           km: Number(kmEl.value) || null,
           custo: Number(costEl.value) || 0,
           oficina: shopEl.value.trim(),
-        });
+          linkDocumento: link || null,
+        };
 
+        if (editingId) {
+          await updateReparacaoDoVeiculo(veiculoId, editingId, payload);
+        } else {
+          await addReparacaoAoVeiculo(veiculoId, payload);
+        }
+
+        editingId = null;
         close();
         await renderReparacoes(veiculoId);
 
@@ -115,6 +132,21 @@ document.addEventListener("DOMContentLoaded", () => {
         msg.textContent = "Erro ao guardar reparação.";
       }
     });
+    window.openReparacaoForEdit = async (veiculoId, repId) => {
+      const rep = await getReparacaoById(veiculoId, repId);
+      if (!rep) return;
+
+      editingId = repId;
+
+      descEl.value = rep.descricao || "";
+      dateEl.value = rep.data || "";
+      kmEl.value = rep.km || "";
+      costEl.value = rep.custo || "";
+      shopEl.value = rep.oficina || "";
+      linkEl.value = rep.linkDocumento || "";
+
+      modal.classList.remove("hidden");
+    };
   }
 
   function getParam(name) {
@@ -474,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const empty = document.getElementById("maint-empty");
     if (!list) return;
 
-    const reps = await getReparacoesDoVeiculo(veiculoId);
+    const reps = (await getReparacoesDoVeiculo(veiculoId)) || [];
     reps.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
 
     if (!reps.length) {
@@ -489,7 +521,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reps.forEach((r) => {
       const card = document.createElement("article");
       card.className = "record-card";
-
       card.innerHTML = `
         <div class="record-head">
           <strong>${r.descricao || "Reparação"}</strong>
@@ -503,10 +534,52 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="record-row">
           Oficina: ${r.oficina || "—"}
         </div>
+        ${
+          r.linkDocumento
+            ? `<div class="record-row">
+                <a href="${r.linkDocumento}" target="_blank" rel="noopener">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-link"></use>
+                  </svg>
+                  <span style="margin-left:6px;">Documento</span>
+                </a>
+              </div>`
+            : ""
+        }
+        <div class="record-actions">
+          <button class="icon-btn-sm" data-edit="${r.id}">
+            <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
+          </button>
+
+          <button class="icon-btn-sm danger" data-del="${r.id}">
+            <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+          </button>
+        </div>
       `;
 
       list.appendChild(card);
     });
+
+    list.onclick = async (e) => {
+  const editBtn = e.target.closest("[data-edit]");
+  const delBtn = e.target.closest("[data-del]");
+
+  // ✏️ EDITAR
+  if (editBtn) {
+    const id = editBtn.dataset.edit;
+    openReparacaoForEdit(veiculoId, id);
+  }
+
+  // 🗑️ ELIMINAR
+  if (delBtn) {
+    const id = delBtn.dataset.del;
+    if (!confirm("Eliminar esta reparação?")) return;
+
+    await deleteReparacaoDoVeiculo(veiculoId, id);
+    await renderReparacoes(veiculoId);
+  }
+};
+
   }
 
   function initDocumentos(veiculoId) {

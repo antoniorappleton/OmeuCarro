@@ -479,23 +479,40 @@ async function updateDocumentoDoVeiculo(veiculoId, docId, data = {}) {
 // REPARAÇÕES
 // =========================
 
-async function addReparacao(veiculoId, data) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("Não autenticado");
+// 🔍 obter UMA reparação por ID
+async function getReparacaoById(veiculoId, reparacaoId) {
+  const snap = await db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .doc(reparacaoId)
+    .get();
 
+  if (!snap.exists) return null;
+  return { id: snap.id, ...snap.data() };
+}
+
+// ✏️ atualizar reparação
+async function updateReparacaoDoVeiculo(veiculoId, reparacaoId, data) {
   return db
     .collection("veiculos")
     .doc(veiculoId)
     .collection("reparacoes")
-    .add({
-      userId: user.uid,
-      data: data.data || "",
-      descricao: data.descricao || "",
-      custo: Number(data.custo) || 0,
-      km: Number(data.km) || null,
-      oficina: data.oficina || "",
-      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    .doc(reparacaoId)
+    .update({
+      ...data,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
+}
+
+// 🗑️ apagar reparação
+async function deleteReparacaoDoVeiculo(veiculoId, reparacaoId) {
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("reparacoes")
+    .doc(reparacaoId)
+    .delete();
 }
 
 async function getReparacoesDoVeiculo(veiculoId, limite = 100) {
@@ -511,15 +528,6 @@ async function getReparacoesDoVeiculo(veiculoId, limite = 100) {
     );
 }
 
-async function deleteReparacao(veiculoId, reparacaoId) {
-  return db
-    .collection("veiculos")
-    .doc(veiculoId)
-    .collection("reparacoes")
-    .doc(reparacaoId)
-    .delete();
-}
-
 async function addReparacaoAoVeiculo(veiculoId, data) {
   return db
     .collection("veiculos")
@@ -527,6 +535,6 @@ async function addReparacaoAoVeiculo(veiculoId, data) {
     .collection("reparacoes")
     .add({
       ...data,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
 }
