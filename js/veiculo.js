@@ -508,108 +508,102 @@ document.addEventListener("DOMContentLoaded", () => {
     // DOCUMENTOS
     initDocumentos(veiculoId);
 
-    // ABASTECIMENTOS
-    const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
+// =========================
+// ABASTECIMENTOS
+// =========================
+const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
 
-    if (!abs.length) {
-      if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
-      if (el.fuelList) el.fuelList.innerHTML = "";
-      if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
-      return;
+if (!abs.length) {
+  if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
+  if (el.fuelList) el.fuelList.innerHTML = "";
+  if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
+} else {
+  if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+
+  // KPIs
+  let totalLitros = 0;
+  let totalGasto = 0;
+
+  abs.forEach((a) => {
+    const L = Number(a.litros) || 0;
+    const P = Number(a.precoPorLitro) || 0;
+    totalLitros += L;
+    totalGasto += L * P;
+  });
+
+  if (el.kpiGasto) el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
+  if (el.kpiLitros) el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
+  if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
+
+  // consumo médio e custo/km
+  abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
+
+  let km = 0;
+  let litrosSeg = 0;
+  let custoSeg = 0;
+
+  for (let i = 1; i < abs.length; i++) {
+    const d = (abs[i].odometro || 0) - (abs[i - 1].odometro || 0);
+    if (d > 0) {
+      km += d;
+      litrosSeg += Number(abs[i].litros) || 0;
+      custoSeg +=
+        (Number(abs[i].litros) || 0) *
+        (Number(abs[i].precoPorLitro) || 0);
     }
+  }
 
-    if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+  if (el.kpiConsumo) {
+    el.kpiConsumo.textContent =
+      km > 0 ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km" : "—";
+  }
 
-    // KPIs
-    let totalLitros = 0;
-    let totalGasto = 0;
+  if (el.kpiCustoKm) {
+    el.kpiCustoKm.textContent =
+      km > 0 ? (custoSeg / km).toFixed(3) + " €/km" : "—";
+  }
 
-    abs.forEach((a) => {
-      const L = Number(a.litros) || 0;
-      const P = Number(a.precoPorLitro) || 0;
-      totalLitros += L;
-      totalGasto += L * P;
-    });
-
-    if (el.kpiGasto) el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
-    if (el.kpiLitros) el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
-    if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
-
-    // consumo médio e custo/km
-    abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
-
-    let km = 0;
-    let litrosSeg = 0;
-    let custoSeg = 0;
-
-    for (let i = 1; i < abs.length; i++) {
-      const d = (abs[i].odometro || 0) - (abs[i - 1].odometro || 0);
-      if (d > 0) {
-        km += d;
-        litrosSeg += Number(abs[i].litros) || 0;
-        custoSeg +=
-          (Number(abs[i].litros) || 0) * (Number(abs[i].precoPorLitro) || 0);
-      }
-    }
-
-    if (el.kpiConsumo) {
-      el.kpiConsumo.textContent =
-        km > 0 ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km" : "—";
-    }
-
-    if (el.kpiCustoKm) {
-      el.kpiCustoKm.textContent =
-        km > 0 ? (custoSeg / km).toFixed(3) + " €/km" : "—";
-    }
-
-    // LISTA DE ABASTECIMENTOS
-    if (!el.fuelList) return;
+  // LISTA
+  if (el.fuelList) {
     el.fuelList.innerHTML = "";
 
     abs.forEach((a) => {
-      const card = document.createElement("article");
-      card.className = "record-card record-card--fuel";
-
       const litros = Number(a.litros) || 0;
       const ppl = Number(a.precoPorLitro) || 0;
       const custo = (litros * ppl).toFixed(2);
-      const tipo = (a.tipoCombustivel || "").toLowerCase() || "—";
-      const posto = a.posto ? escapeHtml(a.posto) : "—";
       const kmTxt = `${Number(a.odometro) || 0} km`;
+      const posto = a.posto ? escapeHtml(a.posto) : "—";
+
+      const card = document.createElement("article");
+      card.className = "record-card record-card--fuel";
 
       card.innerHTML = `
         <div class="record-head">
           <div class="record-title">
             <span class="record-icon">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-receipt"></use></svg>
+              <svg class="icon"><use href="assets/icons-unified.svg#icon-receipt"></use></svg>
             </span>
             <span>Abastecimento</span>
           </div>
 
-          <span class="record-badge record-badge--fuel">${escapeHtml(
-            tipo
-          )}</span>
+          <span class="record-badge record-badge--fuel">
+            ${escapeHtml(a.tipoCombustivel || "—")}
+          </span>
         </div>
 
         <div class="record-meta">
-          <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
+          <svg class="icon"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
           <span>${escapeHtml(a.data || "")}</span>
         </div>
 
         <div class="record-grid">
           <div class="record-kpi">
-            <div class="record-kpi-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-droplet"></use></svg>
-              <span>Litros</span>
-            </div>
+            <div class="record-kpi-label">Litros</div>
             <div class="record-kpi-value">${litros.toFixed(1)} L</div>
           </div>
 
           <div class="record-kpi">
-            <div class="record-kpi-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-wallet"></use></svg>
-              <span>Total</span>
-            </div>
+            <div class="record-kpi-label">Total</div>
             <div class="record-kpi-value record-kpi-value--primary">€${custo}</div>
           </div>
 
@@ -619,41 +613,29 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div class="record-row">
-            <div class="record-row-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-dashboard"></use></svg>
-              <span>Quilometragem</span>
-            </div>
+            <div class="record-row-label">Quilometragem</div>
             <div class="record-row-value">${kmTxt}</div>
           </div>
 
           <div class="record-row">
-            <div class="record-row-label">
-              <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-pin"></use></svg>
-              <span>Posto</span>
-            </div>
+            <div class="record-row-label">Posto</div>
             <div class="record-row-value">${posto}</div>
           </div>
         </div>
 
         <div class="record-actions">
-          <button class="icon-btn-sm" type="button" data-edit="${
-            a.id
-          }" aria-label="Editar">
-            <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
+          <button class="icon-btn-sm" type="button" data-edit="${a.id}">
+            <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
           </button>
 
-          <button class="icon-btn-sm danger" type="button" data-del="${
-            a.id
-          }" aria-label="Eliminar">
-            <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+          <button class="icon-btn-sm danger" type="button" data-del="${a.id}">
+            <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
           </button>
         </div>
       `;
 
       el.fuelList.appendChild(card);
     });
-
-    // EDITAR / ELIMINAR abastecimentos
     el.fuelList.addEventListener("click", async (e) => {
       const edit = e.target.closest("[data-edit]");
       const del = e.target.closest("[data-del]");
@@ -663,7 +645,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = `abastecimentos.html?id=${encodeURIComponent(
           idAbs
         )}&veiculoId=${encodeURIComponent(veiculoId)}`;
-        return;
       }
 
       if (del) {
@@ -673,8 +654,11 @@ document.addEventListener("DOMContentLoaded", () => {
         location.reload();
       }
     });
-    initTabs();
+  }
+}
 
+// ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
+initTabs();
   }
 
   // =========================
