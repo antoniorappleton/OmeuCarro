@@ -149,6 +149,63 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function initDocumentosModal(veiculoId) {
+    const modal = document.getElementById("doc-modal");
+    const openBtn = document.getElementById("btn-add-doc");
+    const closeBtn = document.getElementById("doc-close");
+    const cancelBtn = document.getElementById("doc-cancel");
+    const saveBtn = document.getElementById("doc-save");
+    const msg = document.getElementById("doc-msg");
+
+    const tipoEl = document.getElementById("doc-tipo");
+    const tituloEl = document.getElementById("doc-titulo");
+    const urlEl = document.getElementById("doc-url");
+    const notaEl = document.getElementById("doc-nota");
+
+    function open() {
+      modal.classList.remove("hidden");
+      msg.textContent = "";
+    }
+
+    function close() {
+      modal.classList.add("hidden");
+      tipoEl.value = "Documento";
+      tituloEl.value = "";
+      urlEl.value = "";
+      notaEl.value = "";
+    }
+
+    openBtn?.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    cancelBtn?.addEventListener("click", close);
+
+    saveBtn?.addEventListener("click", async () => {
+      try {
+        const url = urlEl.value.trim();
+        if (!url || !/^https?:\/\/.+/i.test(url)) {
+          msg.textContent = "Coloca um link válido (https://...)";
+          return;
+        }
+
+        msg.textContent = "A guardar...";
+
+        await addDocumentoLinkExterno(veiculoId, {
+          categoria: "Carro",
+          tipo: tipoEl.value,
+          titulo: tituloEl.value.trim(),
+          nota: notaEl.value.trim(),
+          url,
+        });
+
+        close();
+        await renderDocumentos(veiculoId);
+      } catch (e) {
+        console.error(e);
+        msg.textContent = "Erro ao guardar documento.";
+      }
+    });
+  }
+
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
   }
@@ -684,6 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // DOCUMENTOS
     initDocumentos(veiculoId);
+    initDocumentosModal(veiculoId);
     // REPARAÇÕES
     renderReparacoes(veiculoId);
     initReparacoesModal(veiculoId);

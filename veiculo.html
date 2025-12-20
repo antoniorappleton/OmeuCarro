@@ -166,52 +166,15 @@
           <span>Documentos do veículo</span>
         </h2>
         <p class="muted">Guarda Documentos do carro e outros ficheiiros via link externo (Drive, OneDrive, etc.)</p>
+        <div class="card-header-row">
+          <button id="btn-add-doc" class="btn btn-primary btn-gradient" type="button">
+            <svg class="icon icon-left"><use href="assets/icons-unified.svg#icon-plus"></use></svg>
+            <span>Novo documento</span>
+          </button>
+        </div>
       </header>
 
       <div class="card-body">
-
-        <!-- FORM: Link externo -->
-        <div class="card" style="margin:14px 0 0 0; padding:14px;">
-          <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-            <div style="display:flex; flex-direction:column; gap:6px; min-width:200px;">
-              <label class="muted" for="ext-tipo" style="font-size:12px;">Tipo</label>
-              <select id="ext-tipo">
-                <option value="DUA">DUA</option>
-                <option value="Seguro">Seguro</option>
-                <option value="Inspeção">Inspeção</option>
-                <option value="IUC">IUC</option>
-                <option value="Fatura">Fatura</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:6px; min-width:260px; flex:1;">
-              <label class="muted" for="ext-url" style="font-size:12px;">Link externo (PDF/JPG)</label>
-              <input id="ext-url" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
-              <label class="muted" for="ext-titulo" style="font-size:12px;">Nome do documento</label>
-              <input id="ext-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:6px; min-width:260px; flex:1;">
-              <label class="muted" for="ext-nota" style="font-size:12px;">Nota (opcional)</label>
-              <input id="ext-nota" type="text" placeholder="Ex.: válido até 31/12/2025" />
-            </div>
-
-            <button id="btn-ext-save" type="button" class="btn btn-secondary" style="white-space:nowrap;">
-              <svg class="icon icon-left" aria-hidden="true"><use href="assets/icons-unified.svg#icon-link"></use></svg>
-              <span>Guardar link</span>
-            </button>
-
-            <span id="ext-msg" class="muted" style="min-width:140px;"></span>
-          </div>
-
-          <p class="muted" style="margin-top:10px; font-size:12px;">
-            Dica: certifica-te que o link tem permissões para abrir (ex.: “qualquer pessoa com o link”).
-          </p>
-        </div>
 
         <!-- LISTA -->
         <div style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
@@ -351,6 +314,70 @@
             </button>
           </footer>
         </div>
+  </div>
+
+  <!-- MODAL: NOVO DOCUMENTO -->
+  <div id="doc-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon"><use href="assets/icons-unified.svg#icon-file"></use></svg>
+          Novo documento
+        </h2>
+        <button id="doc-close" class="icon-btn">
+          <svg class="icon"><use href="assets/icons-unified.svg#icon-close"></use></svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <label>
+            <span class="muted">Tipo</span>
+            <select id="doc-tipo">
+              <option value="DUA">DUA</option>
+              <option value="Seguro">Seguro</option>
+              <option value="Inspeção">Inspeção</option>
+              <option value="IUC">IUC</option>
+              <option value="Fatura">Fatura</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="muted">Nome do documento</span>
+            <input id="doc-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
+          </label>
+
+          <label style="grid-column:1/-1;">
+            <span class="muted">Link do documento</span>
+            <input
+              id="doc-url"
+              type="url"
+              placeholder="https://drive.google.com/... ou https://..."
+              inputmode="url"
+            />
+          </label>
+
+          <label style="grid-column:1/-1;">
+            <span class="muted">Nota (opcional)</span>
+            <input id="doc-nota" type="text" />
+          </label>
+
+        </div>
+
+        <p id="doc-msg" class="muted"></p>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="doc-save" class="btn btn-primary btn-gradient">
+          Guardar documento
+        </button>
+      </footer>
+    </div>
   </div>
 
 </body>
