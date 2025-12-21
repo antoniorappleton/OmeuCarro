@@ -142,14 +142,18 @@
     <section id="tab-fuel" class="abastecimentos-section" style="margin-bottom: 32px;">
       <div class="card-header-row">
         <button id="btn-add-fuel" class="btn btn-primary btn-gradient" type="button">
-          <svg class="icon icon-left" aria-hidden="true"><use href="assets/icons-unified.svg#icon-plus"></use></svg>
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons-unified.svg#icon-plus"></use>
+          </svg>
           <span>Novo abastecimento</span>
         </button>
       </div>
 
       <div id="fuel-empty" class="vehicles-empty hidden">
         <div class="vehicles-empty-icon">
-          <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/icons-unified.svg#icon-fuel"></use>
+          </svg>
         </div>
         <h3>Nenhum abastecimento</h3>
         <p>Registe o primeiro abastecimento deste veículo.</p>
@@ -161,45 +165,34 @@
     <!-- DOCUMENTOS -->
     <section id="tab-docs" class="card hidden" style="margin-bottom:80px;">
       <header class="card-header">
-        <h2 style="display:flex; gap:10px; align-items:center; margin:0;">
-          <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-file"></use></svg>
-          <span>Documentos do veículo</span>
-        </h2>
-        <p class="muted">Guarda Documentos do carro e outros ficheiiros via link externo (Drive, OneDrive, etc.)</p>
-        <section class="section-hero section-hero--fuel">
-          <div class="section-hero-content">
-            <div class="section-hero-left">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div>
+            <h2 style="display:flex; gap:10px; align-items:center; margin:0;">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-file"></use>
               </svg>
-              <div>
-                <h2>Abastecimentos</h2>
-                <p>
-                  Regista cada abastecimento para calcular consumos, custos e médias.
-                </p>
-              </div>
-            </div>
-
-            <button
-              id="btn-add-fuel"
-              class="btn btn-primary btn-gradient"
-              type="button"
-            >
-              <svg class="icon icon-left">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
-              </svg>
-              Novo abastecimento
-            </button>
+              <span>Documentos do veículo</span>
+            </h2>
+            <p class="muted">
+              Guarda documentos do carro e outros ficheiros via link externo (Drive, OneDrive, etc.)
+            </p>
           </div>
-        </section>
+
+          <button id="btn-add-doc" class="btn btn-primary btn-gradient" type="button">
+            <svg class="icon icon-left" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-plus"></use>
+            </svg>
+            <span>Novo documento</span>
+          </button>
+        </div>
       </header>
 
       <div class="card-body">
-
-        <!-- LISTA -->
         <div style="margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
           <h3 style="margin:0; display:flex; gap:10px; align-items:center;">
-            <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-folder"></use></svg>
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-folder"></use>
+            </svg>
             <span>Documentos guardados</span>
           </h3>
 
