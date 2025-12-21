@@ -639,65 +639,97 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-  function initDocumentos(veiculoId) {
-    const catEl = document.getElementById("ext-categoria");
-    const tipoEl = document.getElementById("ext-tipo");
-    const urlEl = document.getElementById("ext-url");
-    const tituloEl = document.getElementById("ext-titulo");
-    const notaEl = document.getElementById("ext-nota");
 
-    const btn = document.getElementById("btn-ext-save");
-    const msg = document.getElementById("ext-msg");
-    const filterEl = document.getElementById("docs-filter");
+  function initAbastecimentoModal(veiculoId) {
+  let editingId = null;
 
-    if (filterEl) {
-      filterEl.addEventListener("change", () => renderDocumentos(veiculoId));
-    }
+  const modal = document.getElementById("fuel-modal");
+  const openBtn = document.getElementById("btn-add-fuel");
+  const closeBtn = document.getElementById("fuel-close");
+  const cancelBtn = document.getElementById("fuel-cancel");
+  const saveBtn = document.getElementById("fuel-save");
+  const msg = document.getElementById("fuel-msg");
 
-    if (btn) {
-      btn.addEventListener("click", async () => {
-        try {
-          if (msg) msg.textContent = "";
+  const dateEl = document.getElementById("fuel-date");
+  const typeEl = document.getElementById("fuel-type");
+  const litersEl = document.getElementById("fuel-liters");
+  const priceEl = document.getElementById("fuel-price");
+  const kmEl = document.getElementById("fuel-km");
+  const stationEl = document.getElementById("fuel-station");
+  const notesEl = document.getElementById("fuel-notes");
 
-          const categoria = "Carro";
-          const tipo = (tipoEl?.value || "Documento").trim();
-          const url = (urlEl?.value || "").trim();
-          const titulo = (tituloEl?.value || "").trim();
-          const nota = (notaEl?.value || "").trim();
-
-          if (!url || !/^https?:\/\/.+/i.test(url)) {
-            if (msg) msg.textContent = "Coloca um link válido (https://...).";
-            return;
-          }
-
-          btn.disabled = true;
-          if (msg) msg.textContent = "A guardar...";
-
-          await addDocumentoLinkExterno(veiculoId, {
-            categoria,
-            tipo,
-            url,
-            titulo,
-            nota,
-          });
-
-          urlEl.value = "";
-          if (tituloEl) tituloEl.value = "";
-          if (notaEl) notaEl.value = "";
-
-          if (msg) msg.textContent = "Link guardado ✅";
-          await renderDocumentos(veiculoId);
-        } catch (e) {
-          console.error(e);
-          if (msg) msg.textContent = e.message || "Erro ao guardar.";
-        } finally {
-          btn.disabled = false;
-        }
-      });
-    }
-
-    renderDocumentos(veiculoId);
+  function open() {
+    modal.classList.remove("hidden");
+    msg.textContent = "";
   }
+
+  function close() {
+    modal.classList.add("hidden");
+    dateEl.value = "";
+    litersEl.value = "";
+    priceEl.value = "";
+    kmEl.value = "";
+    stationEl.value = "";
+    notesEl.value = "";
+    editingId = null;
+  }
+
+  openBtn?.addEventListener("click", open);
+  closeBtn?.addEventListener("click", close);
+  cancelBtn?.addEventListener("click", close);
+
+  saveBtn?.addEventListener("click", async () => {
+    try {
+      if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {
+        msg.textContent = "Preenche os campos obrigatórios.";
+        return;
+      }
+
+      msg.textContent = "A guardar...";
+
+      const payload = {
+        data: dateEl.value,
+        tipoCombustivel: typeEl.value,
+        litros: Number(litersEl.value),
+        precoPorLitro: Number(priceEl.value),
+        odometro: Number(kmEl.value),
+        posto: stationEl.value.trim(),
+        observacoes: notesEl.value.trim(),
+      };
+
+      if (editingId) {
+        await updateAbastecimento(veiculoId, editingId, payload);
+      } else {
+        await createAbastecimento(veiculoId, payload);
+      }
+
+      close();
+      location.reload(); // simples e seguro
+    } catch (e) {
+      console.error(e);
+      msg.textContent = e.message || "Erro ao guardar.";
+    }
+  });
+
+  // Expor para edição futura
+  window.openAbastecimentoForEdit = async (veiculoId, absId) => {
+    const a = await getAbastecimentoDoVeiculoById(veiculoId, absId);
+    if (!a) return;
+
+    editingId = absId;
+
+    dateEl.value = a.data || "";
+    typeEl.value = a.tipoCombustivel || "Gasolina";
+    litersEl.value = a.litros || "";
+    priceEl.value = a.precoPorLitro || "";
+    kmEl.value = a.odometro || "";
+    stationEl.value = a.posto || "";
+    notesEl.value = a.observacoes || "";
+
+    open();
+  };
+}
+
 
   // =========================
   // INIT PRINCIPAL
@@ -730,22 +762,13 @@ document.addEventListener("DOMContentLoaded", () => {
     el.fuel.textContent = v.combustivelPadrao || "—";
     el.odo.textContent = `${v.odometroInicial} km`;
 
-    // BOTÃO NOVO ABASTECIMENTO
-    if (el.btnAddFuel) {
-      el.btnAddFuel.onclick = () => {
-        window.location.href = `abastecimentos.html?veiculoId=${encodeURIComponent(
-          veiculoId
-        )}`;
-      };
-    }
-
     // DOCUMENTOS
-    initDocumentos(veiculoId);
     initDocumentosModal(veiculoId);
+    await renderDocumentos(veiculoId);
     // REPARAÇÕES
     renderReparacoes(veiculoId);
     initReparacoesModal(veiculoId);
-
+    initAbastecimentoModal(veiculoId);
 
 // =========================
 // ABASTECIMENTOS
@@ -881,9 +904,7 @@ if (!abs.length) {
 
       if (edit) {
         const idAbs = edit.getAttribute("data-edit");
-        window.location.href = `abastecimentos.html?id=${encodeURIComponent(
-          idAbs
-        )}&veiculoId=${encodeURIComponent(veiculoId)}`;
+        openAbastecimentoForEdit(veiculoId, idAbs);
       }
 
       if (del) {

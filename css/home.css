@@ -1236,3 +1236,34 @@ html, body {
   padding: 16px 18px;
   border-top: 1px solid #eee;
 }
+.section-hero {
+  background: linear-gradient(135deg, #0f766e, #1e9e89);
+  border-radius: 16px;
+  padding: 24px;
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+.section-hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.section-hero h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.section-hero p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}

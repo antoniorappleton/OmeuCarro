@@ -166,12 +166,32 @@
           <span>Documentos do veículo</span>
         </h2>
         <p class="muted">Guarda Documentos do carro e outros ficheiiros via link externo (Drive, OneDrive, etc.)</p>
-        <div class="card-header-row">
-          <button id="btn-add-doc" class="btn btn-primary btn-gradient" type="button">
-            <svg class="icon icon-left"><use href="assets/icons-unified.svg#icon-plus"></use></svg>
-            <span>Novo documento</span>
-          </button>
-        </div>
+        <section class="section-hero section-hero--fuel">
+          <div class="section-hero-content">
+            <div class="section-hero-left">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-fuel"></use>
+              </svg>
+              <div>
+                <h2>Abastecimentos</h2>
+                <p>
+                  Regista cada abastecimento para calcular consumos, custos e médias.
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="btn-add-fuel"
+              class="btn btn-primary btn-gradient"
+              type="button"
+            >
+              <svg class="icon icon-left">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              Novo abastecimento
+            </button>
+          </div>
+        </section>
       </header>
 
       <div class="card-body">
@@ -234,10 +254,6 @@
     <a href="dashboard.html">
       <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-home"></use></svg>
       <span>Home</span>
-    </a>
-    <a href="abastecimentos.html">
-      <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
-      <span>Abastecer</span>
     </a>
     <a href="veiculos.html" class="active">
       <svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-car"></use></svg>
@@ -375,6 +391,82 @@
         <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
         <button id="doc-save" class="btn btn-primary btn-gradient">
           Guardar documento
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO ABASTECIMENTO -->
+  <div id="fuel-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-fuel"></use>
+          </svg>
+          Novo abastecimento
+        </h2>
+        <button id="fuel-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <label>
+            <span class="muted">Data</span>
+            <input id="fuel-date" type="date" />
+          </label>
+
+          <label>
+            <span class="muted">Tipo de combustível</span>
+            <select id="fuel-type">
+              <option value="Gasolina">Gasolina</option>
+              <option value="Gasóleo">Gasóleo</option>
+              <option value="GPL">GPL</option>
+              <option value="Elétrico">Elétrico</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="muted">Litros</span>
+            <input id="fuel-liters" type="number" step="0.01" />
+          </label>
+
+          <label>
+            <span class="muted">Preço por litro (€)</span>
+            <input id="fuel-price" type="number" step="0.001" />
+          </label>
+
+          <label>
+            <span class="muted">Quilómetros</span>
+            <input id="fuel-km" type="number" />
+          </label>
+
+          <label>
+            <span class="muted">Posto</span>
+            <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
+          </label>
+
+          <label style="grid-column:1/-1;">
+            <span class="muted">Observações</span>
+            <input id="fuel-notes" type="text" placeholder="Opcional" />
+          </label>
+
+        </div>
+
+        <p id="fuel-msg" class="muted"></p>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="fuel-save" class="btn btn-primary btn-gradient">
+          Guardar abastecimento
         </button>
       </footer>
     </div>
