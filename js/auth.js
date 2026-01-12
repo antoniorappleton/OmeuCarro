@@ -132,9 +132,35 @@ if (logoutBtn) {
         showLoginMessage("Login efetuado com sucesso! ✅", "success");
         window.location.href = "./dashboard.html";
       } catch (err) {
-        console.error(err);
-        showLoginMessage(err.message || "Erro ao entrar.", "error");
+        console.error("[LOGIN ERROR]", {
+          code: err?.code,
+          message: err?.message,
+          full: err,
+        });
+
+        const code = err?.code || "";
+
+        const map = {
+          "auth/user-not-found": "Este email não está registado.",
+          "auth/wrong-password": "Password incorreta.",
+          "auth/invalid-email": "Email inválido.",
+          "auth/user-disabled": "Conta desativada.",
+          "auth/too-many-requests": "Muitas tentativas. Tenta mais tarde.",
+          "auth/network-request-failed":
+            "Falha de rede (offline/adblock/proxy).",
+          "auth/unauthorized-domain":
+            "Domínio não autorizado no Firebase Auth.",
+          "auth/invalid-api-key": "Config/API key inválida (firebase-config).",
+          "auth/app-not-authorized":
+            "App não autorizada (firebase-config/domínio).",
+        };
+
+        showLoginMessage(
+          map[code] || err?.message || "Erro ao entrar.",
+          "error"
+        );
       }
+
     });
   }
 
@@ -178,9 +204,29 @@ if (logoutBtn) {
         showSignupMessage("Conta criada com sucesso! ✅", "success");
         window.location.href = "./dashboard.html";
       } catch (err) {
-        console.error(err);
-        showSignupMessage(err.message || "Erro ao criar conta.", "error");
+        console.error("[SIGNUP ERROR]", {
+          code: err?.code,
+          message: err?.message,
+          full: err,
+        });
+
+        const code = err?.code || "";
+        const map = {
+          "auth/email-already-in-use": "Este email já está registado.",
+          "auth/invalid-email": "Email inválido.",
+          "auth/weak-password": "Password fraca (mín. 6).",
+          "auth/unauthorized-domain":
+            "Domínio não autorizado no Firebase Auth.",
+          "auth/network-request-failed":
+            "Falha de rede (offline/adblock/proxy).",
+        };
+
+        showSignupMessage(
+          map[code] || err?.message || "Erro ao criar conta.",
+          "error"
+        );
       }
+
     });
   }
 

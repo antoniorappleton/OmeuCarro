@@ -6,19 +6,40 @@
   <title>Login - Fuel Manager</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
+  <!-- Firebase SDK v8 (global firebase.*) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Config Firebase (inicializa firebase, cria auth e db) -->
   <script defer src="js/firebase-config.js"></script>
+
+  <!-- Lógica de autenticação -->
   <script defer src="js/auth.js"></script>
+
 </head>
-<body>
+<body data-page="auth">
   <div class="auth-container">
     <h1>Login</h1>
 
-    <input type="email" id="login-email" placeholder="Email">
-    <input type="password" id="login-password" placeholder="Password">
+    <!-- IMPORTANTE: o auth.js espera data-page="auth" -->
+    <!-- Se preferires, também podes pôr isto no <body> -->
+    <form id="login-form">
+      <input type="email" id="login-email" placeholder="Email" required>
+      <input type="password" id="login-password" placeholder="Password" required>
 
-    <button onclick="loginUser()">Entrar</button>
+      <!-- Mensagem de erro/sucesso (o auth.js escreve aqui) -->
+      <p id="login-message" class="form-message"></p>
+
+      <!-- auth.js faz login no submit -->
+      <button type="submit">Entrar</button>
+
+      <!-- reset password (auth.js usa este id) -->
+      <button type="button" id="btn-password-reset">Esqueci-me da password</button>
+    </form>
 
     <p>Não tens conta? <a href="register.html">Criar conta</a></p>
   </div>
+
 </body>
 </html>
