@@ -10,6 +10,7 @@
   --color-primary-dark: #0f172a;
   --color-primary-start: #0e7490; /* cyan-700 */
   --color-primary-end: #06b6d4;   /* cyan-500 */
+  --color-primary-solid: #0e7490; /* fallback solid */
   --color-accent: #10b981;        /* emerald-500 */
   
   /* UI Colors */
@@ -18,8 +19,8 @@
   --color-surface-glass: rgba(255, 255, 255, 0.9);
   
   /* Text Colors */
-  --color-text-main: #1e293b;     /* slate-800 */
-  --color-text-muted: #64748b;    /* slate-500 */
+  --color-text-main: #0f172a;     /* slate-900 (mais escuro que 800) */
+  --color-text-muted: #475569;    /* slate-600 (mais escuro que 500) */
   --color-text-light: #94a3b8;    /* slate-400 */
   
   /* Functional Colors */

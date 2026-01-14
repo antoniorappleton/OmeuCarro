@@ -36,7 +36,7 @@
 
 /* ======== FILTERS ======== */
 .filters-card {
-  background: white;
+  background: var(--color-surface);
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -70,7 +70,7 @@
 }
 
 .kpi-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);
@@ -101,7 +101,7 @@
 
 /* ======== CHART CARDS ======== */
 .chart-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 25px;

@@ -12,6 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function carregarEstatisticas() {
+  // Configuração Global do Chart.js para alto contraste (com suporte a Dark Mode)
+  if (typeof Chart !== "undefined") {
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    Chart.defaults.color = isDark ? "#cbd5e1" : "#0f172a"; // slate-300 vs slate-900
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.scale.grid.color = isDark ? "#334155" : "#e2e8f0";
+  }
+
   try {
     const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
 
