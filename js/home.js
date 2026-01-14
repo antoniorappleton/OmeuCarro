@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="vehicle-card-top">
             <div class="vehicle-left">
               <div class="vehicle-avatar">
-                <svg class="icon"><use href="assets/icons.svg#icon-car"></use></svg>
+                <svg class="icon"><use href="assets/icons-unified.svg#icon-car"></use></svg>
               </div>
 
               <div class="vehicle-text">
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div class="vehicle-arrow">
-              <svg class="icon"><use href="assets/icons.svg#icon-chevron-right"></use></svg>
+              <svg class="icon"><use href="assets/icons-unified.svg#icon-chevron-right"></use></svg>
             </div>
           </div>
 

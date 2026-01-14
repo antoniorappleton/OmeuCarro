@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>L100 – Perfil</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/home.css" />
+
+  <!-- Firebase v9 -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/firestore.js"></script>
+  
+  <script defer src="js/perfil.js"></script>
+</head>
+
+<body class="app-page" data-page="perfil">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="app-logo">
+        <svg class="icon"><use href="assets/icons-unified.svg#icon-user"></use></svg>
+      </div>
+      <div class="app-logo-text">
+        <span class="app-logo-title">L100</span>
+        <span class="app-logo-subtitle">O meu perfil</span>
+      </div>
+    </div>
+
+    <div class="app-header-actions">
+      <a href="dashboard.html" class="icon-btn">
+        <svg class="icon"><use href="assets/icons-unified.svg#icon-home"></use></svg>
+      </a>
+      <button id="btn-logout" class="icon-btn">
+        <svg class="icon"><use href="assets/icons-unified.svg#icon-logout"></use></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="home-main">
+    <div class="container" style="max-width:500px; margin-top:20px;">
+      
+      <section class="card">
+        <h2>Preferências</h2>
+        <p style="color:var(--color-text-muted); font-size:0.9rem;">
+          Gira as suas informações pessoais e configurações da aplicação.
+        </p>
+
+        <form id="profile-form" style="margin-top:20px;">
+          
+          <div class="form-field">
+            <label for="profile-name">Nome de exibição</label>
+            <input type="text" id="profile-name" placeholder="O seu nome" />
+          </div>
+
+          <div class="form-field">
+            <label for="profile-email">Email</label>
+            <input type="email" id="profile-email" disabled style="opacity:0.7; cursor:not-allowed;" />
+          </div>
+
+          <div class="form-field">
+            <label for="profile-currency">Moeda preferida</label>
+            <select id="profile-currency">
+              <option value="EUR">Euro (€)</option>
+              <option value="USD">Dólar ($)</option>
+              <option value="BRL">Real (R$)</option>
+            </select>
+          </div>
+
+           <div class="form-field">
+            <label for="profile-unit">Unidade de consumo</label>
+            <select id="profile-unit">
+              <option value="L/100km">Litros / 100km</option>
+              <option value="km/L">km / Litro</option>
+              <option value="MPG">Milhas / Galão</option>
+            </select>
+          </div>
+
+          <p id="profile-message" class="form-message"></p>
+
+          <button type="submit" class="btn btn-primary full-width">
+            Guardar alterações
+          </button>
+        </form>
+
+      </section>
+
+       <section class="card" style="margin-top:20px; border-color:var(--color-danger);">
+        <h3 style="color:var(--color-danger);">Zona de Perigo</h3>
+        <p style="font-size:0.85rem; color:var(--color-text-muted);">
+          Estas ações não podem ser desfeitas.
+        </p>
+        <button type="button" class="btn btn-ghost full-width" style="color:var(--color-danger); border:1px solid var(--color-danger);">
+          Eliminar conta
+        </button>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="dashboard.html">
+      <svg class="icon"><use href="assets/icons-unified.svg#icon-home"></use></svg>
+      <span>Home</span>
+    </a>
+    <a href="veiculos.html">
+      <svg class="icon"><use href="assets/icons-unified.svg#icon-car"></use></svg>
+      <span>Veículos</span>
+    </a>
+    <a href="perfil.html" class="active">
+      <svg class="icon"><use href="assets/icons-unified.svg#icon-user"></use></svg>
+      <span>Perfil</span>
+    </a>
+  </footer>
+
+</body>
+</html>

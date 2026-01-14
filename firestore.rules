@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is authenticated and is the owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // =========================================================
+    // USERS COLLECTION
+    // Users can only read/write their own profile
+    // =========================================================
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // =========================================================
+    // VEÍCULOS COLLECTION
+    // Documents must have a 'userId' field matching the auth token
+    // =========================================================
+    match /veiculos/{veiculoId} {
+      // Allow create if authenticated and the new document has the correct userId
+      allow create: if request.auth != null && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Allow read/update/delete if the existing document belongs to the user
+      allow read, update, delete: if request.auth != null && 
+                                     resource.data.userId == request.auth.uid;
+
+      // -------------------------------------------------------
+      // SUBCOLLECTIONS (abastecimentos, documentos, reparacoes)
+      // Inherit access from the parent vehicle
+      // -------------------------------------------------------
+      
+      match /abastecimentos/{abastId} {
+        // We check the PARENT vehicle's ownership using get()
+        // Note: usage of get() counts as a read operation.
+        // For optimization, we often store userId on subcollection docs too,
+        // but checking parent is safer for strict hierarchy if userId isn't redundant.
+        // However, your code saves userId on abastecimentos too.
+        // So we can check resource.data.userId for existing, and request.resource.data for new.
+        
+        allow convert: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
+
+      match /documentos/{docId} {
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
+
+      match /reparacoes/{repId} {
+         // Your code for repairs currently might NOT be saving userId explicitly?
+         // Let's check the code... 
+         // Assuming consistent pattern or parent check:
+         allow read, write: if request.auth != null && 
+            get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
+      }
+    }
+  }
+}

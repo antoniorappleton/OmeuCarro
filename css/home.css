@@ -13,12 +13,9 @@ body.app-page {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 
-  /* evita bugs em mobile, especialmente iOS */
-  /* podes testar depois com background-attachment: fixed se quiseres efeito parallax */
-  /* background-attachment: fixed; */
-
-  color: #033b39;
+  color: var(--color-text-main);
   padding-bottom: 80px; /* espaço para o footer fixo */
 }
 

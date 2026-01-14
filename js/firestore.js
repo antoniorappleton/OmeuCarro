@@ -5,6 +5,16 @@
 //    const db   = firebase.firestore();
 // ======================================================================
 
+// ENABLE OFFLINE PERSISTENCE
+db.enablePersistence()
+  .catch((err) => {
+    if (err.code == 'failed-precondition') {
+        console.warn('Persistência falhou: Múltiplas abas abertas.');
+    } else if (err.code == 'unimplemented') {
+        console.warn('Persistência não suportada neste browser.');
+    }
+  });
+
 // ======================================================================
 //  USERS
 // ======================================================================
