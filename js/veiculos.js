@@ -82,6 +82,13 @@ function openModal(editing = false, data = null) {
 
   document.getElementById("vehicle-inspection-center").value =
     data.inspecao?.centro ?? "";
+
+  // ===== IUC =====
+  document.getElementById("vehicle-iuc-date").value = data.iuc?.dataLimite
+    ? data.iuc.dataLimite.toDate().toISOString().split("T")[0]
+    : "";
+
+  document.getElementById("vehicle-iuc-value").value = data.iuc?.valor ?? "";
 }
 
 function closeModal() {
@@ -355,6 +362,15 @@ modalForm.addEventListener("submit", async (e) => {
       centro:
         document.getElementById("vehicle-inspection-center")?.value.trim() ||
         "",
+    },
+
+    // 🔹 IUC
+    iuc: {
+      dataLimite: document.getElementById("vehicle-iuc-date")?.value
+        ? new Date(document.getElementById("vehicle-iuc-date").value)
+        : null,
+      valor:
+        Number(document.getElementById("vehicle-iuc-value")?.value) || null,
     },
   };
 

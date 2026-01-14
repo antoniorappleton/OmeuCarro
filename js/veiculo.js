@@ -273,6 +273,77 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
+  // LOGIC: RESPONSABILIDADES (ALARMES)
+  // =========================
+  function updateResponsibilities(v) {
+    // Helpers
+    function getDaysDiff(targetDate) {
+      if (!targetDate) return null;
+      const now = new Date();
+      // Reset hours for fair comp
+      now.setHours(0, 0, 0, 0);
+      const tgt = new Date(
+        targetDate.toDate ? targetDate.toDate() : targetDate
+      );
+      tgt.setHours(0, 0, 0, 0);
+
+      const diffTime = tgt - now;
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    function setStatus(elId, valId, dateObj, labelWhenNull) {
+      const card = document.getElementById(elId);
+      const valEl = document.getElementById(valId);
+      const statusEl = document.querySelector(`#${elId} .resp-status`);
+      if (!card || !valEl || !statusEl) return;
+
+      if (!dateObj) {
+        valEl.textContent = labelWhenNull || "Não definido";
+        statusEl.textContent = "N/A";
+        statusEl.className = "resp-status"; // neutral
+        return;
+      }
+
+      // Formatar data
+      const date = dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
+      valEl.textContent = date.toLocaleDateString("pt-PT");
+
+      // Dias restantes
+      const days = getDaysDiff(dateObj);
+
+      if (days < 0) {
+        statusEl.textContent = `Expirou há ${Math.abs(days)} dias`;
+        statusEl.className = "resp-status status-red";
+      } else if (days <= 30) {
+        statusEl.textContent = `Faltam ${days} dias`;
+        statusEl.className = "resp-status status-yellow";
+      } else {
+        statusEl.textContent = `Válido (${days} dias)`;
+        statusEl.className = "resp-status status-green";
+      }
+    }
+
+    // 1. SEGURO
+    setStatus("resp-seguro", "val-seguro", v.seguro?.validade, "Sem data");
+
+    // 2. IUC
+    setStatus("resp-iuc", "val-iuc", v.iuc?.dataLimite, "Sem data");
+    // Opcional: mostrar valor do IUC se existir
+    if (v.iuc?.valor) {
+      const valEl = document.getElementById("val-iuc");
+      if (valEl) valEl.textContent += ` (€${v.iuc.valor})`;
+    }
+
+    // 3. INSPEÇÃO
+    setStatus(
+      "resp-inspecao",
+      "val-inspecao",
+      v.inspecao?.proximaData,
+      "Sem data"
+    );
+  }
+
+  // =========================
   // DOCUMENTOS
   // =========================
   async function renderDocumentos(veiculoId) {
@@ -765,10 +836,29 @@ document.addEventListener("DOMContentLoaded", () => {
     // DOCUMENTOS
     initDocumentosModal(veiculoId);
     await renderDocumentos(veiculoId);
+
     // REPARAÇÕES
     renderReparacoes(veiculoId);
     initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId);
+
+    // RESPONSABILIDADES (ALARMES)
+    updateResponsibilities(v);
+
+    // Listener para o botão Editar Datas
+    const btnEditDates = document.getElementById("btn-edit-dates");
+    if (btnEditDates) {
+      btnEditDates.onclick = () => {
+        // Como o modal de edição completo está na veiculos.html,
+        // podemos redirecionar para lá com um param para abrir o modal,
+        // ou simplesmente informar. Vamos tentar ser prestáveis:
+        // "Por favor edite os dados na lista de veículos."
+        alert(
+          "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos."
+        );
+        window.location.href = "veiculos.html";
+      };
+    }
 
     // =========================
     // ABASTECIMENTOS

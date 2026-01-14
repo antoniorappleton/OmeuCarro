@@ -6,14 +6,13 @@
 // ======================================================================
 
 // ENABLE OFFLINE PERSISTENCE
-db.enablePersistence()
-  .catch((err) => {
-    if (err.code == 'failed-precondition') {
-        console.warn('Persistência falhou: Múltiplas abas abertas.');
-    } else if (err.code == 'unimplemented') {
-        console.warn('Persistência não suportada neste browser.');
-    }
-  });
+db.enablePersistence().catch((err) => {
+  if (err.code == "failed-precondition") {
+    console.warn("Persistência falhou: Múltiplas abas abertas.");
+  } else if (err.code == "unimplemented") {
+    console.warn("Persistência não suportada neste browser.");
+  }
+});
 
 // ======================================================================
 //  USERS
@@ -80,6 +79,7 @@ async function createVeiculo(data) {
     // seguro / inspeção
     seguro: data.seguro || {},
     inspecao: data.inspecao || {},
+    iuc: data.iuc || {}, // NOVO
 
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -126,6 +126,7 @@ async function updateVeiculo(id, data) {
     // seguro / inspeção
     seguro: data.seguro || {},
     inspecao: data.inspecao || {},
+    iuc: data.iuc || {}, // NOVO
 
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -154,7 +155,6 @@ async function deleteVeiculo(id) {
 
   await batch.commit();
 }
-
 
 // ======================================================================
 //  ABASTECIMENTOS
@@ -359,7 +359,6 @@ async function uploadDocumentoVeiculo(veiculoId, file, meta = {}) {
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
-
   await docRef.set(payload);
   return { id: docRef.id, ...payload };
 }
@@ -533,9 +532,7 @@ async function getReparacoesDoVeiculo(veiculoId, limite = 100) {
     .orderBy("data", "desc")
     .limit(limite)
     .get()
-    .then((snap) =>
-      snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-    );
+    .then((snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() })));
 }
 
 async function addReparacaoAoVeiculo(veiculoId, data) {
