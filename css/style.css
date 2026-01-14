@@ -345,10 +345,14 @@ footer a .icon {
 /* ----------- AUTH PAGE SPECIFIC ----------- */
 .auth-page {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #0f172a 0%, #0e7490 100%);
-  padding: 1.5rem;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Premium Offroad Background */
+  background-image: linear-gradient(to bottom, rgba(18, 20, 23, 0.4), rgba(18, 20, 23, 0.95)), url("../images/offroad01.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  padding: 0;
 }
 
 .auth-container {
