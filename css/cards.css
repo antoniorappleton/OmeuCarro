@@ -1,12 +1,131 @@
-.card {
-  background: white;
-  border-left: 4px solid var(--primary);
-  padding: 15px;
-  border-radius: 10px;
-  margin: 10px 0;
-  transition: 0.3s;
+/* =============================
+   UNIFIED RECORD CARD (Clean, Professional, Elegant)
+   ============================= */
+.record-card {
+  background: var(--color-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* Icon | Content | Actions */
+  gap: 1rem;
+  align-items: start;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
-.card:hover {
-  box-shadow: 0 4px 12px #bbb;
+.record-card:hover {
+  border-color: rgba(14, 116, 144, 0.3);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* --- Left Icon Box --- */
+.record-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-start);
+  flex-shrink: 0;
+}
+
+.record-icon-box.is-fuel { background: rgba(14, 116, 144, 0.1); color: var(--color-primary-start); }
+.record-icon-box.is-doc { background: rgba(99, 102, 241, 0.1); color: #6366f1; }       /* indigo-500 */
+.record-icon-box.is-repair { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }   /* amber-500 */
+
+/* --- Middle Content --- */
+.record-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* Truncate text properly */
+}
+
+.record-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.record-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-main);
+}
+
+.record-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.record-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  flex-wrap: wrap;
+}
+
+.record-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Values Highlight */
+.record-value {
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+.record-value.is-primary { color: var(--color-primary-solid); }
+
+/* --- Right Actions --- */
+.record-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (min-width: 640px) {
+  .record-actions {
+    flex-direction: row;
+  }
+}
+
+/* --- Grid Details (Fuel logs usually have more data) --- */
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-light);
+  width: 100%;
+}
+
+.record-grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.record-grid-label {
+  font-size: 0.7rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.record-grid-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-main);
 }

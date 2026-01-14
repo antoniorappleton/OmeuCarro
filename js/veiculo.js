@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // HELPERS
   // =========================
-  
+
   function initTabs() {
     const tabs = Array.from(document.querySelectorAll(".tab-btn[data-tab]"));
     const panels = {
@@ -126,7 +126,6 @@ document.addEventListener("DOMContentLoaded", () => {
         editingId = null;
         close();
         await renderReparacoes(veiculoId);
-
       } catch (e) {
         console.error(e);
         msg.textContent = "Erro ao guardar reparação.";
@@ -316,16 +315,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const preview =
           kind === "image" && openUrl
-            ? `<img class="doc-preview-img" src="${openUrl}" alt="${escapeHtml(
-                titulo || tipo
-              )}" />`
-            : `<div class="doc-preview-box">
+            ? `<div class="record-icon-box is-doc" style="background-image:url('${openUrl}'); background-size:cover; background-position:center;"></div>`
+            : `<div class="record-icon-box is-doc">
                  <svg class="icon"><use href="assets/icons-unified.svg#icon-file"></use></svg>
                </div>`;
 
         const badgeKind =
-          kind === "pdf" ? "PDF" : kind === "image" ? "Imagem" : "Link";
-
+          kind === "pdf" ? "PDF" : kind === "image" ? "IMG" : "LINK";
         const packed = safeJsonEnc({
           categoria,
           tipo,
@@ -335,70 +331,65 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         return `
-          <article class="card doc-card" data-open-url="${enc(
+          <article class="record-card doc-card" data-open-url="${enc(
             openUrl
           )}" data-doc-id="${d.id}">
-            <div class="doc-row">
-              <div class="doc-left">
-                ${preview}
+            
+            ${preview}
 
-                <div class="doc-meta">
-                  <div class="doc-badges">
-                    <span class="badge badge-secondary">${escapeHtml(
-                      categoria
-                    )}</span>
-                    <span class="badge badge-outline">${escapeHtml(
-                      badgeKind
-                    )}</span>
-                  </div>
-
-                  <div class="doc-title">
-                    ${escapeHtml(titulo || tipo || "Documento")}
-                  </div>
-
-                  ${
-                    nota
-                      ? `<div class="doc-note muted">${escapeHtml(nota)}</div>`
-                      : ""
-                  }
-
-                  ${
-                    openUrl
-                      ? `<div class="doc-url muted">${escapeHtml(
-                          openUrl
-                        )}</div>`
-                      : ""
-                  }
-                </div>
+            <div class="record-content">
+              <div class="record-header-row">
+                <span class="record-title">${escapeHtml(
+                  titulo || tipo || "Documento"
+                )}</span>
+                <span class="badge badge-secondary">${escapeHtml(
+                  categoria
+                )}</span>
+                <span class="badge badge-outline">${escapeHtml(
+                  badgeKind
+                )}</span>
               </div>
-
-              <div class="doc-actions">
-                ${
-                  openUrl
-                    ? `<a class="icon-btn" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
-                         <svg class="icon"><use href="assets/icons-unified.svg#icon-link"></use></svg>
-                       </a>`
-                    : ""
-                }
-
-                <button class="icon-btn" type="button" data-doc-edit="${
-                  d.id
-                }" data-doc="${packed}" aria-label="Editar">
-                  <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
-                </button>
-
-                <button class="icon-btn" type="button" data-doc-del="${
-                  d.id
-                }" aria-label="Apagar">
-                  <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
-                </button>
-              </div>
+              
+              ${
+                nota
+                  ? `<div class="record-subtitle">${escapeHtml(nota)}</div>`
+                  : ""
+              }
+              ${
+                openUrl
+                  ? `<div class="record-subtitle muted" style="font-size:0.75rem;">${escapeHtml(
+                      openUrl
+                    )}</div>`
+                  : ""
+              }
             </div>
 
-            <!-- Editor inline -->
+            <div class="record-actions">
+              ${
+                openUrl
+                  ? `<a class="icon-btn-sm" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
+                       <svg class="icon"><use href="assets/icons-unified.svg#icon-link"></use></svg>
+                     </a>`
+                  : ""
+              }
+
+              <button class="icon-btn-sm" type="button" data-doc-edit="${
+                d.id
+              }" data-doc="${packed}" aria-label="Editar">
+                <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
+              </button>
+
+              <button class="icon-btn-sm danger" type="button" data-doc-del="${
+                d.id
+              }" aria-label="Apagar">
+                <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+              </button>
+            </div>
+            
+            <!-- Editor inline (mantido oculto mas presente) -->
             <div class="doc-editor" data-editor="${d.id}">
               <div class="doc-editor-grid">
-                <label class="muted">Categoria
+               <label class="muted">Categoria
                   <select data-ed-cat>
                     <option value="Carro">Carro</option>
                     <option value="Seguro">Seguro</option>
@@ -406,23 +397,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <option value="Outros">Outros</option>
                   </select>
                 </label>
-
-                <label class="muted">Tipo
-                  <input type="text" data-ed-tipo placeholder="Ex.: DUA, Seguro, Fatura" />
-                </label>
-
-                <label class="muted">Nome
-                  <input type="text" data-ed-titulo placeholder="Ex.: Apólice 2025" />
-                </label>
-
-                <label class="muted">Nota
-                  <input type="text" data-ed-nota placeholder="Opcional" />
-                </label>
-
-                <label class="muted" style="grid-column:1/-1;">Link
-                  <input type="url" data-ed-url placeholder="https://..." inputmode="url" />
-                </label>
-
+                <label class="muted">Tipo <input type="text" data-ed-tipo placeholder="Ex.: DUA..." /></label>
+                <label class="muted">Nome <input type="text" data-ed-titulo placeholder="Ex.: Apólice 2025" /></label>
+                <label class="muted">Nota <input type="text" data-ed-nota placeholder="Opcional" /></label>
+                <label class="muted" style="grid-column:1/-1;">Link <input type="url" data-ed-url placeholder="https://" /></label>
                 <div class="doc-editor-actions" style="grid-column:1/-1;">
                   <button type="button" class="btn btn-secondary" data-ed-cancel>Cancelar</button>
                   <button type="button" class="btn btn-primary" data-ed-save="${
@@ -432,6 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
             </div>
+
           </article>
         `;
       })
@@ -577,37 +556,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
     reps.forEach((r) => {
       const card = document.createElement("article");
-      card.className = "record-card";
+      card.className = "record-card"; // Nova classe unificada
       card.innerHTML = `
-        <div class="record-head">
-          <strong>${r.descricao || "Reparação"}</strong>
-          <span>€${(r.custo || 0).toFixed(2)}</span>
+        <div class="record-icon-box is-repair">
+          <svg class="icon"><use href="assets/icons-unified.svg#icon-wrench"></use></svg>
         </div>
 
-        <div class="record-meta">
-          ${r.data || ""} ${r.km ? "• " + r.km + " km" : ""}
+        <div class="record-content">
+          <div class="record-header-row">
+            <span class="record-title">${escapeHtml(
+              r.descricao || "Reparação"
+            )}</span>
+            <span class="badge badge-secondary">Oficina: ${escapeHtml(
+              r.oficina || "—"
+            )}</span>
+          </div>
+          
+          <div class="record-meta-row">
+            <div class="record-meta-item">
+              <svg class="icon"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
+              <span>${escapeHtml(r.data || "—")}</span>
+            </div>
+            ${
+              r.km
+                ? `
+            <div class="record-meta-item" style="margin-left:8px;">
+               <svg class="icon"><use href="assets/icons-unified.svg#icon-car"></use></svg>
+               <span>${r.km} km</span>
+            </div>`
+                : ""
+            }
+          </div>
+          
+          <div class="record-grid">
+             <div class="record-grid-item">
+               <span class="record-grid-label">Custo</span>
+               <span class="record-grid-value">€${(r.custo || 0).toFixed(
+                 2
+               )}</span>
+             </div>
+             ${
+               r.linkDocumento
+                 ? `
+             <div class="record-grid-item">
+               <span class="record-grid-label">Documento</span>
+               <a href="${r.linkDocumento}" target="_blank" class="record-grid-value" style="text-decoration:underline;">Ver anexo</a>
+             </div>`
+                 : ""
+             }
+          </div>
         </div>
 
-        <div class="record-row">
-          Oficina: ${r.oficina || "—"}
-        </div>
-        ${
-          r.linkDocumento
-            ? `<div class="record-row">
-                <a href="${r.linkDocumento}" target="_blank" rel="noopener">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-link"></use>
-                  </svg>
-                  <span style="margin-left:6px;">Documento</span>
-                </a>
-              </div>`
-            : ""
-        }
         <div class="record-actions">
           <button class="icon-btn-sm" data-edit="${r.id}">
             <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
           </button>
-
           <button class="icon-btn-sm danger" data-del="${r.id}">
             <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
           </button>
@@ -618,118 +621,115 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     list.onclick = async (e) => {
-  const editBtn = e.target.closest("[data-edit]");
-  const delBtn = e.target.closest("[data-del]");
+      const editBtn = e.target.closest("[data-edit]");
+      const delBtn = e.target.closest("[data-del]");
 
-  // ✏️ EDITAR
-  if (editBtn) {
-    const id = editBtn.dataset.edit;
-    openReparacaoForEdit(veiculoId, id);
+      // ✏️ EDITAR
+      if (editBtn) {
+        const id = editBtn.dataset.edit;
+        openReparacaoForEdit(veiculoId, id);
+      }
+
+      // 🗑️ ELIMINAR
+      if (delBtn) {
+        const id = delBtn.dataset.del;
+        if (!confirm("Eliminar esta reparação?")) return;
+
+        await deleteReparacaoDoVeiculo(veiculoId, id);
+        await renderReparacoes(veiculoId);
+      }
+    };
   }
-
-  // 🗑️ ELIMINAR
-  if (delBtn) {
-    const id = delBtn.dataset.del;
-    if (!confirm("Eliminar esta reparação?")) return;
-
-    await deleteReparacaoDoVeiculo(veiculoId, id);
-    await renderReparacoes(veiculoId);
-  }
-};
-
-  }
-
 
   function initAbastecimentoModal(veiculoId) {
-  let editingId = null;
+    let editingId = null;
 
-  const modal = document.getElementById("fuel-modal");
-  const openBtn = document.getElementById("btn-add-fuel");
-  const closeBtn = document.getElementById("fuel-close");
-  const cancelBtn = document.getElementById("fuel-cancel");
-  const saveBtn = document.getElementById("fuel-save");
-  const msg = document.getElementById("fuel-msg");
+    const modal = document.getElementById("fuel-modal");
+    const openBtn = document.getElementById("btn-add-fuel");
+    const closeBtn = document.getElementById("fuel-close");
+    const cancelBtn = document.getElementById("fuel-cancel");
+    const saveBtn = document.getElementById("fuel-save");
+    const msg = document.getElementById("fuel-msg");
 
-  const dateEl = document.getElementById("fuel-date");
-  const typeEl = document.getElementById("fuel-type");
-  const litersEl = document.getElementById("fuel-liters");
-  const priceEl = document.getElementById("fuel-price");
-  const kmEl = document.getElementById("fuel-km");
-  const stationEl = document.getElementById("fuel-station");
-  const notesEl = document.getElementById("fuel-notes");
+    const dateEl = document.getElementById("fuel-date");
+    const typeEl = document.getElementById("fuel-type");
+    const litersEl = document.getElementById("fuel-liters");
+    const priceEl = document.getElementById("fuel-price");
+    const kmEl = document.getElementById("fuel-km");
+    const stationEl = document.getElementById("fuel-station");
+    const notesEl = document.getElementById("fuel-notes");
 
-  function open() {
-    modal.classList.remove("hidden");
-    msg.textContent = "";
-  }
-
-  function close() {
-    modal.classList.add("hidden");
-    dateEl.value = "";
-    litersEl.value = "";
-    priceEl.value = "";
-    kmEl.value = "";
-    stationEl.value = "";
-    notesEl.value = "";
-    editingId = null;
-  }
-
-  openBtn?.addEventListener("click", open);
-  closeBtn?.addEventListener("click", close);
-  cancelBtn?.addEventListener("click", close);
-
-  saveBtn?.addEventListener("click", async () => {
-    try {
-      if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {
-        msg.textContent = "Preenche os campos obrigatórios.";
-        return;
-      }
-
-      msg.textContent = "A guardar...";
-
-      const payload = {
-        data: dateEl.value,
-        tipoCombustivel: typeEl.value,
-        litros: Number(litersEl.value),
-        precoPorLitro: Number(priceEl.value),
-        odometro: Number(kmEl.value),
-        posto: stationEl.value.trim(),
-        observacoes: notesEl.value.trim(),
-      };
-
-      if (editingId) {
-        await updateAbastecimento(veiculoId, editingId, payload);
-      } else {
-        await createAbastecimento(veiculoId, payload);
-      }
-
-      close();
-      location.reload(); // simples e seguro
-    } catch (e) {
-      console.error(e);
-      msg.textContent = e.message || "Erro ao guardar.";
+    function open() {
+      modal.classList.remove("hidden");
+      msg.textContent = "";
     }
-  });
 
-  // Expor para edição futura
-  window.openAbastecimentoForEdit = async (veiculoId, absId) => {
-    const a = await getAbastecimentoDoVeiculoById(veiculoId, absId);
-    if (!a) return;
+    function close() {
+      modal.classList.add("hidden");
+      dateEl.value = "";
+      litersEl.value = "";
+      priceEl.value = "";
+      kmEl.value = "";
+      stationEl.value = "";
+      notesEl.value = "";
+      editingId = null;
+    }
 
-    editingId = absId;
+    openBtn?.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    cancelBtn?.addEventListener("click", close);
 
-    dateEl.value = a.data || "";
-    typeEl.value = a.tipoCombustivel || "Gasolina";
-    litersEl.value = a.litros || "";
-    priceEl.value = a.precoPorLitro || "";
-    kmEl.value = a.odometro || "";
-    stationEl.value = a.posto || "";
-    notesEl.value = a.observacoes || "";
+    saveBtn?.addEventListener("click", async () => {
+      try {
+        if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {
+          msg.textContent = "Preenche os campos obrigatórios.";
+          return;
+        }
 
-    open();
-  };
-}
+        msg.textContent = "A guardar...";
 
+        const payload = {
+          data: dateEl.value,
+          tipoCombustivel: typeEl.value,
+          litros: Number(litersEl.value),
+          precoPorLitro: Number(priceEl.value),
+          odometro: Number(kmEl.value),
+          posto: stationEl.value.trim(),
+          observacoes: notesEl.value.trim(),
+        };
+
+        if (editingId) {
+          await updateAbastecimento(veiculoId, editingId, payload);
+        } else {
+          await createAbastecimento(veiculoId, payload);
+        }
+
+        close();
+        location.reload(); // simples e seguro
+      } catch (e) {
+        console.error(e);
+        msg.textContent = e.message || "Erro ao guardar.";
+      }
+    });
+
+    // Expor para edição futura
+    window.openAbastecimentoForEdit = async (veiculoId, absId) => {
+      const a = await getAbastecimentoDoVeiculoById(veiculoId, absId);
+      if (!a) return;
+
+      editingId = absId;
+
+      dateEl.value = a.data || "";
+      typeEl.value = a.tipoCombustivel || "Gasolina";
+      litersEl.value = a.litros || "";
+      priceEl.value = a.precoPorLitro || "";
+      kmEl.value = a.odometro || "";
+      stationEl.value = a.posto || "";
+      notesEl.value = a.observacoes || "";
+
+      open();
+    };
+  }
 
   // =========================
   // INIT PRINCIPAL
@@ -770,155 +770,158 @@ document.addEventListener("DOMContentLoaded", () => {
     initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId);
 
-// =========================
-// ABASTECIMENTOS
-// =========================
-const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
+    // =========================
+    // ABASTECIMENTOS
+    // =========================
+    const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
 
-if (!abs.length) {
-  if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
-  if (el.fuelList) el.fuelList.innerHTML = "";
-  if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
-} else {
-  if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+    if (!abs.length) {
+      if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
+      if (el.fuelList) el.fuelList.innerHTML = "";
+      if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
+    } else {
+      if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
 
-  // KPIs
-  let totalLitros = 0;
-  let totalGasto = 0;
+      // KPIs
+      let totalLitros = 0;
+      let totalGasto = 0;
 
-  abs.forEach((a) => {
-    const L = Number(a.litros) || 0;
-    const P = Number(a.precoPorLitro) || 0;
-    totalLitros += L;
-    totalGasto += L * P;
-  });
+      abs.forEach((a) => {
+        const L = Number(a.litros) || 0;
+        const P = Number(a.precoPorLitro) || 0;
+        totalLitros += L;
+        totalGasto += L * P;
+      });
 
-  if (el.kpiGasto) el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
-  if (el.kpiLitros) el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
-  if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
+      if (el.kpiGasto) el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
+      if (el.kpiLitros)
+        el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
+      if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
 
-  // consumo médio e custo/km
-  abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
+      // consumo médio e custo/km
+      abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
 
-  let km = 0;
-  let litrosSeg = 0;
-  let custoSeg = 0;
+      let km = 0;
+      let litrosSeg = 0;
+      let custoSeg = 0;
 
-  for (let i = 1; i < abs.length; i++) {
-    const d = (abs[i].odometro || 0) - (abs[i - 1].odometro || 0);
-    if (d > 0) {
-      km += d;
-      litrosSeg += Number(abs[i].litros) || 0;
-      custoSeg +=
-        (Number(abs[i].litros) || 0) *
-        (Number(abs[i].precoPorLitro) || 0);
-    }
-  }
+      for (let i = 1; i < abs.length; i++) {
+        const d = (abs[i].odometro || 0) - (abs[i - 1].odometro || 0);
+        if (d > 0) {
+          km += d;
+          litrosSeg += Number(abs[i].litros) || 0;
+          custoSeg +=
+            (Number(abs[i].litros) || 0) * (Number(abs[i].precoPorLitro) || 0);
+        }
+      }
 
-  if (el.kpiConsumo) {
-    el.kpiConsumo.textContent =
-      km > 0 ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km" : "—";
-  }
+      if (el.kpiConsumo) {
+        el.kpiConsumo.textContent =
+          km > 0 ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km" : "—";
+      }
 
-  if (el.kpiCustoKm) {
-    el.kpiCustoKm.textContent =
-      km > 0 ? (custoSeg / km).toFixed(3) + " €/km" : "—";
-  }
+      if (el.kpiCustoKm) {
+        el.kpiCustoKm.textContent =
+          km > 0 ? (custoSeg / km).toFixed(3) + " €/km" : "—";
+      }
 
-  // LISTA
-  if (el.fuelList) {
-    el.fuelList.innerHTML = "";
+      // LISTA
+      if (el.fuelList) {
+        el.fuelList.innerHTML = "";
 
-    abs.forEach((a) => {
-      const litros = Number(a.litros) || 0;
-      const ppl = Number(a.precoPorLitro) || 0;
-      const custo = (litros * ppl).toFixed(2);
-      const kmTxt = `${Number(a.odometro) || 0} km`;
-      const posto = a.posto ? escapeHtml(a.posto) : "—";
+        abs.forEach((a) => {
+          const litros = Number(a.litros) || 0;
+          const ppl = Number(a.precoPorLitro) || 0;
+          const custo = (litros * ppl).toFixed(2);
+          const kmTxt = `${Number(a.odometro) || 0} km`;
+          const posto = a.posto ? escapeHtml(a.posto) : "—";
 
-      const card = document.createElement("article");
-      card.className = "record-card record-card--fuel";
+          const card = document.createElement("article");
+          card.className = "record-card"; // Unified class
 
-      card.innerHTML = `
-        <div class="record-head">
-          <div class="record-title">
-            <span class="record-icon">
-              <svg class="icon"><use href="assets/icons-unified.svg#icon-receipt"></use></svg>
-            </span>
-            <span>Abastecimento</span>
-          </div>
-
-          <span class="record-badge record-badge--fuel">
-            ${escapeHtml(a.tipoCombustivel || "—")}
-          </span>
+          card.innerHTML = `
+        <div class="record-icon-box is-fuel">
+          <svg class="icon"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
         </div>
 
-        <div class="record-meta">
-          <svg class="icon"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
-          <span>${escapeHtml(a.data || "")}</span>
-        </div>
-
-        <div class="record-grid">
-          <div class="record-kpi">
-            <div class="record-kpi-label">Litros</div>
-            <div class="record-kpi-value">${litros.toFixed(1)} L</div>
+        <div class="record-content">
+          <div class="record-header-row">
+            <span class="record-title">Abastecimento</span>
+            <span class="badge badge-secondary">${escapeHtml(
+              a.tipoCombustivel || "—"
+            )}</span>
           </div>
 
-          <div class="record-kpi">
-            <div class="record-kpi-label">Total</div>
-            <div class="record-kpi-value record-kpi-value--primary">€${custo}</div>
+          <div class="record-meta-row">
+            <div class="record-meta-item">
+               <svg class="icon"><use href="assets/icons-unified.svg#icon-calendar"></use></svg>
+               <span>${escapeHtml(a.data || "")}</span>
+            </div>
           </div>
 
-          <div class="record-row">
-            <div class="record-row-label">Preço/L</div>
-            <div class="record-row-value">€${ppl.toFixed(3)}</div>
-          </div>
+          <div class="record-grid">
+            <div class="record-grid-item">
+              <span class="record-grid-label">Total</span>
+              <span class="record-grid-value is-primary">€${custo}</span>
+            </div>
+            
+            <div class="record-grid-item">
+              <span class="record-grid-label">Litros</span>
+              <span class="record-grid-value">${litros.toFixed(1)} L</span>
+            </div>
+            
+            <div class="record-grid-item">
+              <span class="record-grid-label">Preço/L</span>
+              <span class="record-grid-value">€${ppl.toFixed(3)}</span>
+            </div>
 
-          <div class="record-row">
-            <div class="record-row-label">Quilometragem</div>
-            <div class="record-row-value">${kmTxt}</div>
-          </div>
+            <div class="record-grid-item">
+              <span class="record-grid-label">Km</span>
+              <span class="record-grid-value">${kmTxt}</span>
+            </div>
 
-          <div class="record-row">
-            <div class="record-row-label">Posto</div>
-            <div class="record-row-value">${posto}</div>
+            <div class="record-grid-item" style="grid-column: 1 / -1;">
+              <span class="record-grid-label">Posto</span>
+              <span class="record-grid-value" style="font-weight:400;">${posto}</span>
+            </div>
           </div>
         </div>
 
         <div class="record-actions">
-          <button class="icon-btn-sm" type="button" data-edit="${a.id}">
-            <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
-          </button>
-
-          <button class="icon-btn-sm danger" type="button" data-del="${a.id}">
-            <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
-          </button>
+           <button class="icon-btn-sm" type="button" data-edit="${a.id}">
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
+           </button>
+           <button class="icon-btn-sm danger" type="button" data-del="${a.id}">
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+           </button>
         </div>
       `;
 
-      el.fuelList.appendChild(card);
-    });
-    el.fuelList.addEventListener("click", async (e) => {
-      const edit = e.target.closest("[data-edit]");
-      const del = e.target.closest("[data-del]");
+          el.fuelList.appendChild(card);
+        });
 
-      if (edit) {
-        const idAbs = edit.getAttribute("data-edit");
-        openAbastecimentoForEdit(veiculoId, idAbs);
+        // Event Delegation (mantido igual)
+        el.fuelList.addEventListener("click", async (e) => {
+          const edit = e.target.closest("[data-edit]");
+          const del = e.target.closest("[data-del]");
+
+          if (edit) {
+            const idAbs = edit.getAttribute("data-edit");
+            openAbastecimentoForEdit(veiculoId, idAbs);
+          }
+
+          if (del) {
+            const idAbs = del.getAttribute("data-del");
+            if (!confirm("Eliminar este abastecimento?")) return;
+            await deleteAbastecimento(veiculoId, idAbs);
+            location.reload();
+          }
+        });
       }
+    }
 
-      if (del) {
-        const idAbs = del.getAttribute("data-del");
-        if (!confirm("Eliminar este abastecimento?")) return;
-        await deleteAbastecimento(veiculoId, idAbs);
-        location.reload();
-      }
-    });
-  }
-}
-
-// ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
-initTabs();
+    // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
+    initTabs();
   }
 
   // =========================

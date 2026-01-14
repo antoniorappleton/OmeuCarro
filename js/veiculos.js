@@ -48,48 +48,41 @@ function openModal(editing = false, data = null) {
   inputOdometer.value = data.odometroInicial || "";
 
   // ===== NOVOS CAMPOS TÉCNICOS =====
-  document.getElementById("vehicle-year").value =
-    data.ano ?? "";
+  document.getElementById("vehicle-year").value = data.ano ?? "";
 
-  document.getElementById("vehicle-vin").value =
-    data.vin ?? "";
+  document.getElementById("vehicle-vin").value = data.vin ?? "";
 
-  document.getElementById("vehicle-engine").value =
-    data.cilindradaCc ?? "";
+  document.getElementById("vehicle-engine").value = data.cilindradaCc ?? "";
 
-  document.getElementById("vehicle-power").value =
-    data.potenciaCv ?? "";
+  document.getElementById("vehicle-power").value = data.potenciaCv ?? "";
 
   document.getElementById("vehicle-tank").value =
     data.capacidadeDepositoLitros ?? "";
 
-  document.getElementById("vehicle-acquisition").value =
-    data.dataAquisicao
-      ? data.dataAquisicao.toDate().toISOString().split("T")[0]
-      : "";
+  document.getElementById("vehicle-acquisition").value = data.dataAquisicao
+    ? data.dataAquisicao.toDate().toISOString().split("T")[0]
+    : "";
 
   // ===== SEGURO =====
   document.getElementById("vehicle-insurer").value =
     data.seguro?.seguradora ?? "";
 
-  document.getElementById("vehicle-policy").value =
-    data.seguro?.apolice ?? "";
+  document.getElementById("vehicle-policy").value = data.seguro?.apolice ?? "";
 
-  document.getElementById("vehicle-insurance-validity").value =
-    data.seguro?.validade
-      ? data.seguro.validade.toDate().toISOString().split("T")[0]
-      : "";
+  document.getElementById("vehicle-insurance-validity").value = data.seguro
+    ?.validade
+    ? data.seguro.validade.toDate().toISOString().split("T")[0]
+    : "";
 
   // ===== INSPEÇÃO =====
-  document.getElementById("vehicle-inspection-date").value =
-    data.inspecao?.proximaData
-      ? data.inspecao.proximaData.toDate().toISOString().split("T")[0]
-      : "";
+  document.getElementById("vehicle-inspection-date").value = data.inspecao
+    ?.proximaData
+    ? data.inspecao.proximaData.toDate().toISOString().split("T")[0]
+    : "";
 
   document.getElementById("vehicle-inspection-center").value =
     data.inspecao?.centro ?? "";
 }
-
 
 function closeModal() {
   modalOverlay.classList.remove("is-open");
@@ -117,34 +110,34 @@ async function carregarVeiculos() {
     return;
   }
 
-listEl.classList.remove("hidden");
-emptyEl.classList.add("hidden");
+  listEl.classList.remove("hidden");
+  emptyEl.classList.add("hidden");
 
-// 🔹 carregar TODOS os abastecimentos (subcoleções)
-const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
+  // 🔹 carregar TODOS os abastecimentos (subcoleções)
+  const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
 
-// 🔹 mapear estatísticas por veículo
-const statsPorVeiculo = {};
+  // 🔹 mapear estatísticas por veículo
+  const statsPorVeiculo = {};
 
-abastecimentos.forEach((abs) => {
-  const vid = abs.veiculoId;
-  if (!vid) return;
+  abastecimentos.forEach((abs) => {
+    const vid = abs.veiculoId;
+    if (!vid) return;
 
-  const litros = Number(abs.litros) || 0;
-  const preco = Number(abs.precoPorLitro) || 0;
-  const custo = litros * preco;
+    const litros = Number(abs.litros) || 0;
+    const preco = Number(abs.precoPorLitro) || 0;
+    const custo = litros * preco;
 
-  if (!statsPorVeiculo[vid]) {
-    statsPorVeiculo[vid] = { count: 0, total: 0 };
-  }
+    if (!statsPorVeiculo[vid]) {
+      statsPorVeiculo[vid] = { count: 0, total: 0 };
+    }
 
-  statsPorVeiculo[vid].count += 1;
-  statsPorVeiculo[vid].total += custo;
-});
+    statsPorVeiculo[vid].count += 1;
+    statsPorVeiculo[vid].total += custo;
+  });
 
-// 🔹 agora sim: criar cartões
-veiculos.forEach((v) => {
-  const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
+  // 🔹 agora sim: criar cartões
+  veiculos.forEach((v) => {
+    const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
     const card = document.createElement("article");
     card.className = "vehicle-card vehicle-card-modern";
     card.dataset.veiculoId = v.id;
@@ -189,7 +182,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Editar veículo">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-extra.svg#icon-edit"></use>
+              <use href="assets/icons-unified.svg#icon-edit"></use>
             </svg>
           </button>
 
@@ -197,7 +190,7 @@ veiculos.forEach((v) => {
             v.id
           }" aria-label="Eliminar veículo">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-extra.svg#icon-trash"></use>
+              <use href="assets/icons-unified.svg#icon-trash"></use>
             </svg>
           </button>
 
@@ -254,7 +247,6 @@ veiculos.forEach((v) => {
       </div>
     `;
 
-
     card.addEventListener("click", (e) => {
       if (e.target.closest("a") || e.target.closest("button")) return;
       window.location.href = "veiculo.html?id=" + encodeURIComponent(v.id);
@@ -287,35 +279,33 @@ listEl.addEventListener("click", async (e) => {
     await carregarVeiculos();
   }
 
-    const fuelBtn = e.target.closest("[data-fuel]");
-    const maintBtn = e.target.closest("[data-maint]");
-    const docsBtn = e.target.closest("[data-docs]");
+  const fuelBtn = e.target.closest("[data-fuel]");
+  const maintBtn = e.target.closest("[data-maint]");
+  const docsBtn = e.target.closest("[data-docs]");
 
-    if (fuelBtn) {
-      e.stopPropagation();
-      const id = fuelBtn.getAttribute("data-fuel");
-      window.location.href =
-        "veiculo.html?id=" + encodeURIComponent(id) + "#abastecimentos";
-      return;
-    }
+  if (fuelBtn) {
+    e.stopPropagation();
+    const id = fuelBtn.getAttribute("data-fuel");
+    window.location.href =
+      "veiculo.html?id=" + encodeURIComponent(id) + "#abastecimentos";
+    return;
+  }
 
-    if (maintBtn) {
-      e.stopPropagation();
-      const id = maintBtn.getAttribute("data-maint");
-      window.location.href =
-        "veiculo.html?id=" + encodeURIComponent(id) + "#manutencoes";
-      return;
-    }
+  if (maintBtn) {
+    e.stopPropagation();
+    const id = maintBtn.getAttribute("data-maint");
+    window.location.href =
+      "veiculo.html?id=" + encodeURIComponent(id) + "#manutencoes";
+    return;
+  }
 
-    if (docsBtn) {
-      e.stopPropagation();
-      const id = docsBtn.getAttribute("data-docs");
-      window.location.href =
-        "veiculo.html?id=" + encodeURIComponent(id) + "#docs";
-      return;
-    }
-
-
+  if (docsBtn) {
+    e.stopPropagation();
+    const id = docsBtn.getAttribute("data-docs");
+    window.location.href =
+      "veiculo.html?id=" + encodeURIComponent(id) + "#docs";
+    return;
+  }
 });
 
 // ================ SUBMETER MODAL ================
@@ -338,8 +328,7 @@ modalForm.addEventListener("submit", async (e) => {
     cilindradaCc:
       Number(document.getElementById("vehicle-engine")?.value) || null,
 
-    potenciaCv:
-      Number(document.getElementById("vehicle-power")?.value) || null,
+    potenciaCv: Number(document.getElementById("vehicle-power")?.value) || null,
 
     capacidadeDepositoLitros:
       Number(document.getElementById("vehicle-tank")?.value) || null,
@@ -352,8 +341,7 @@ modalForm.addEventListener("submit", async (e) => {
     seguro: {
       seguradora:
         document.getElementById("vehicle-insurer")?.value.trim() || "",
-      apolice:
-        document.getElementById("vehicle-policy")?.value.trim() || "",
+      apolice: document.getElementById("vehicle-policy")?.value.trim() || "",
       validade: document.getElementById("vehicle-insurance-validity")?.value
         ? new Date(document.getElementById("vehicle-insurance-validity").value)
         : null,
@@ -362,12 +350,11 @@ modalForm.addEventListener("submit", async (e) => {
     // 🔹 INSPEÇÃO
     inspecao: {
       proximaData: document.getElementById("vehicle-inspection-date")?.value
-        ? new Date(
-            document.getElementById("vehicle-inspection-date").value
-          )
+        ? new Date(document.getElementById("vehicle-inspection-date").value)
         : null,
       centro:
-        document.getElementById("vehicle-inspection-center")?.value.trim() || "",
+        document.getElementById("vehicle-inspection-center")?.value.trim() ||
+        "",
     },
   };
 
