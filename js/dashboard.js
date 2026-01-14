@@ -65,9 +65,7 @@ async function obterAbastecimentosFiltrados() {
 
   // filtrar por veículo
   if (veiculoId) {
-    abastecimentos = abastecimentos.filter(
-      (a) => a.veiculoId === veiculoId
-    );
+    abastecimentos = abastecimentos.filter((a) => a.veiculoId === veiculoId);
   }
 
   // filtrar por data
@@ -87,8 +85,10 @@ async function obterAbastecimentosFiltrados() {
 
 // Configuração Global do Chart.js para alto contraste (com suporte a Dark Mode)
 if (typeof Chart !== "undefined") {
-  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
+  const isDark =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
   Chart.defaults.color = isDark ? "#cbd5e1" : "#0f172a"; // slate-300 vs slate-900 (mais escuro)
   Chart.defaults.font.family = "'Inter', sans-serif";
   Chart.defaults.scale.grid.color = isDark ? "#334155" : "#e2e8f0"; // slate-700 vs slate-200
@@ -114,12 +114,29 @@ function destroyChartIfExists(ref) {
 // ======================================================================
 
 function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
-  // 1️⃣ Filtrar por veículo (se não for "todos")
+  // 1️⃣ Filtrar por veículo
   const filtrados = veiculoSelecionadoId
     ? abastecimentos.filter((a) => a.veiculoId === veiculoSelecionadoId)
     : abastecimentos;
 
-  // 2️⃣ Agrupar por veículo (IMPORTANTE para "Todos")
+  // 2️⃣ Totais Gerais (Soma direta de tudo)
+  let totalLitros = 0;
+  let totalCusto = 0;
+
+  filtrados.forEach((a) => {
+    const L = Number(a.litros) || 0;
+    const P = Number(a.precoPorLitro) || 0;
+    totalLitros += L;
+    totalCusto += L * P;
+  });
+
+  // 3️⃣ Cálculo de Eficiência (Consumo Médio e Custo/Km)
+  // Requer intervalos válidos entre abastecimentos completos
+  let distTotalEficiencia = 0;
+  let litrosTotalEficiencia = 0;
+  let custoTotalEficiencia = 0;
+
+  // Agrupar por veículo
   const porVeiculo = {};
   filtrados.forEach((a) => {
     if (!a.veiculoId) return;
@@ -127,14 +144,10 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
     porVeiculo[a.veiculoId].push(a);
   });
 
-  let totalLitros = 0;
-  let totalCusto = 0;
-  let totalKm = 0;
-
   Object.values(porVeiculo).forEach((lista) => {
-    // ordenar por odómetro
+    // Ordenar por odómetro
     const ordenados = [...lista]
-      .filter((a) => a.completo) // 🔑 só completos
+      .filter((a) => a.completo) // só completos para eficiência
       .sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
 
     for (let i = 1; i < ordenados.length; i++) {
@@ -142,22 +155,26 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
       const atual = ordenados[i];
 
       const km = Number(atual.odometro) - Number(prev.odometro);
-      if (km <= 0) continue;
+      if (km <= 0) continue; // erro ou sem movimento
 
       const litros = Number(atual.litros);
       const preco = Number(atual.precoPorLitro);
 
       if (isNaN(litros) || isNaN(preco)) continue;
 
-      totalKm += km;
-      totalLitros += litros;
-      totalCusto += litros * preco;
+      distTotalEficiencia += km;
+      litrosTotalEficiencia += litros;
+      custoTotalEficiencia += litros * preco;
     }
   });
 
-  const consumoMedio = totalKm > 0 ? totalLitros / (totalKm / 100) : 0;
+  const consumoMedio =
+    distTotalEficiencia > 0
+      ? litrosTotalEficiencia / (distTotalEficiencia / 100)
+      : null; // null se não houver dados suficientes
 
-  const custoPorKm = totalKm > 0 ? totalCusto / totalKm : 0;
+  const custoPorKm =
+    distTotalEficiencia > 0 ? custoTotalEficiencia / distTotalEficiencia : null;
 
   return {
     totalLitros,
@@ -402,17 +419,18 @@ async function carregarDashboard() {
     }
 
     // KPI globais
-    const { totalLitros, totalGastos, consumoMedioL100 } =
+    const { totalLitros, totalCusto, consumoMedio } =
       calcularKPIs(abastecimentos);
 
     litrosEl.textContent = `${totalLitros.toFixed(1)} L`;
-    gastosEl.textContent = `€${totalGastos.toFixed(2)}`;
+    gastosEl.textContent = `€${totalCusto.toFixed(2)}`;
+
+    // Preço Médio (Total Gasto / Total Litros) - simples
     precoMedioEl.textContent =
-      totalLitros > 0 ? `€${(totalGastos / totalLitros).toFixed(3)}` : "--";
+      totalLitros > 0 ? `€${(totalCusto / totalLitros).toFixed(3)}` : "--";
+
     eficienciaEl.textContent =
-      consumoMedioL100 != null
-        ? `${consumoMedioL100.toFixed(1)} L/100km`
-        : "--";
+      consumoMedio != null ? `${consumoMedio.toFixed(1)} L/100km` : "--";
 
     // Gráficos e ranking
     gerarGraficoConsumo(abastecimentos);
