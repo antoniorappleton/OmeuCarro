@@ -47,6 +47,22 @@ const settingsForm = document.getElementById("settings-form");
 const displayNameHeader = document.getElementById("display-name-header");
 const displayEmailHeader = document.getElementById("display-email-header");
 
+// Theme Toggle
+const themeToggle = document.getElementById("setting-theme-toggle");
+
+// Initialize Theme Toggle State
+if (themeToggle && window.AppTheme) {
+  // Check if current effective theme is dark
+  const currentMode = AppTheme.getDisplayMode();
+  themeToggle.checked = currentMode === 'dark';
+
+  // Listen for changes
+  themeToggle.addEventListener('change', (e) => {
+    const newMode = e.target.checked ? 'dark' : 'light';
+    AppTheme.set(newMode);
+  });
+}
+
 // ===================================
 // LOAD DATA
 // ===================================
