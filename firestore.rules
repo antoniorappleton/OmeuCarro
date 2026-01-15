@@ -13,6 +13,11 @@ service cloud.firestore {
     // =========================================================
     match /users/{userId} {
       allow read, write: if isOwner(userId);
+
+      // Allow access to settings subcollection
+      match /settings/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // =========================================================
@@ -41,8 +46,10 @@ service cloud.firestore {
         // However, your code saves userId on abastecimentos too.
         // So we can check resource.data.userId for existing, and request.resource.data for new.
         
-        allow convert: if request.auth != null && request.resource.data.userId == request.auth.uid;
-        allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        // Allow read/write if the user owns the parent vehicle
+        allow read, update, delete: if request.auth != null && 
+          get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
       }
 
       match /documentos/{docId} {

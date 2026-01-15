@@ -25,10 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     emptyEl.classList.add("hidden");
 
     try {
-      const [veiculos, abastecimentos] = await Promise.all([
+      // Carregar settings para saber a moeda
+      const [veiculos, abastecimentos, settings] = await Promise.all([
         getVeiculosDoUtilizador(),
         getTodosAbastecimentosDoUtilizador(500),
+        getUserSettings()
       ]);
+      
+      const moeda = settings?.moeda || "EUR";
+      const moedaSymbol = moeda === "USD" ? "$" : moeda === "BRL" ? "R$" : "€";
 
       if (!veiculos.length) {
         emptyEl.classList.remove("hidden");
@@ -95,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div class="metric metric-center">
-              <div class="metric-value metric-value-primary">€${stats.total.toFixed(
+              <div class="metric-value metric-value-primary">${moedaSymbol}${stats.total.toFixed(
                 0
               )}</div>
               <div class="metric-label">Total gasto</div>

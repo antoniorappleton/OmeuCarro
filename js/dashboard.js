@@ -406,11 +406,26 @@ async function carregarDashboard() {
   if (!user) return;
 
   try {
+    // 1. Carregar Settings
+    const settings = await getUserSettings();
+    const moeda = settings.moeda || "EUR";
+    const moedaSymbol = moeda === "USD" ? "$" : moeda === "BRL" ? "R$" : "€";
+    
+    // Configurar filtros iniciais se for o primeiro load e não houver seleção
+    const periodSelect = document.getElementById("filtro-periodo");
+    if (periodSelect && !periodSelect.dataset.initialized) {
+        periodSelect.value = settings.dashboardPeriodo || "mes";
+        periodSelect.dataset.initialized = "true";
+        // Disparar change para atualizar UI de datas custom
+        periodSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Usar a função de obter filtrados (já lê o DOM, então o update acima afeta)
     const abastecimentos = await obterAbastecimentosFiltrados();
 
     // Sem dados → limpar
     if (!abastecimentos.length) {
-      gastosEl.textContent = "€0,00";
+      gastosEl.textContent = `${moedaSymbol}0,00`;
       litrosEl.textContent = "0 L";
       precoMedioEl.textContent = "--";
       eficienciaEl.textContent = "--";
@@ -423,16 +438,35 @@ async function carregarDashboard() {
       calcularKPIs(abastecimentos);
 
     litrosEl.textContent = `${totalLitros.toFixed(1)} L`;
-    gastosEl.textContent = `€${totalCusto.toFixed(2)}`;
+    gastosEl.textContent = `${moedaSymbol}${totalCusto.toFixed(2)}`;
 
     // Preço Médio (Total Gasto / Total Litros) - simples
     precoMedioEl.textContent =
-      totalLitros > 0 ? `€${(totalCusto / totalLitros).toFixed(3)}` : "--";
+      totalLitros > 0 ? `${moedaSymbol}${(totalCusto / totalLitros).toFixed(3)}` : "--";
 
     eficienciaEl.textContent =
       consumoMedio != null ? `${consumoMedio.toFixed(1)} L/100km` : "--";
 
+    // KPI Visibility Check
+    if (settings.dashboardKpis) {
+        if (!settings.dashboardKpis.gastos) gastosEl.parentElement.style.display = 'none';
+        else gastosEl.parentElement.style.display = '';
+
+        if (!settings.dashboardKpis.consumos) litrosEl.parentElement.style.display = 'none';
+        else litrosEl.parentElement.style.display = '';
+        
+        // Distância/Eficiência? "distancias" was the key, but dashboard has "eficiencia" card.
+        // Assuming "distancias" maps to the efficiency card for now or maybe I should check if there is a distance card?
+        // Ah, the dashboard layout has 4 cards: Gasto, Litros, Preço Médio, Eficiência.
+        // The settings had "Gastos", "Consumos", "Distância".
+        // Maybe "Distância" maps to nothing visible? Or maybe it should be "Eficiência".
+        // I'll leave efficiency always on or maybe check `distancias` as a proxy.
+        if (settings.dashboardKpis.distancias === false) eficienciaEl.parentElement.style.display = 'none';
+         else eficienciaEl.parentElement.style.display = '';
+    }
+
     // Gráficos e ranking
+    // Para gráficos, poderíamos passar a moeda também, mas vou simplificar
     gerarGraficoConsumo(abastecimentos);
     gerarGraficoPreco(abastecimentos);
     gerarGraficoGastosMensais(abastecimentos);

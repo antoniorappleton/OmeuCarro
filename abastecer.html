@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+  <title>L100 - Novo Abastecimento</title>
+  
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#007780",
+                    "background-light": "#f6f7f8",
+                    "background-dark": "#19212e",
+                },
+                fontFamily: {
+                    "display": ["Manrope", "sans-serif"]
+                },
+                borderRadius: {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+                },
+            },
+        },
+    }
+  </script>
+  <style>
+       body {
+           font-family: 'Manrope', sans-serif;
+           min-height: 100vh;
+       }
+       /* Custom scroll hide for mobile feel */
+       ::-webkit-scrollbar { display: none; }
+       .ios-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/firestore.js"></script>
+  <script defer src="js/abastecer.js"></script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0c1b1d] dark:text-white transition-colors duration-300">
+  
+  <div class="relative flex min-h-screen w-full flex-col max-w-[480px] mx-auto overflow-x-hidden pb-24">
+    
+    <!-- TopAppBar -->
+    <header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-[#cde8ea] dark:border-primary/20">
+      <button onclick="history.back()" class="text-primary flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+        <span class="material-symbols-outlined" style="font-size: 28px;">arrow_back_ios_new</span>
+      </button>
+      <h1 class="text-[#0c1b1d] dark:text-white text-xl font-extrabold leading-tight tracking-tight flex-1 text-center pr-10">Novo Abastecimento</h1>
+    </header>
+
+    <main class="flex-1 px-4 pt-6 space-y-6">
+      
+      <!-- Vehicle Picker Card -->
+      <section class="bg-white dark:bg-slate-800 rounded-xl p-5 ios-shadow border border-[#cde8ea] dark:border-transparent">
+        <label class="flex flex-col w-full">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-outlined text-primary">local_shipping</span>
+            <p class="text-[#0c1b1d] dark:text-white text-sm font-bold uppercase tracking-wider">Veículo</p>
+          </div>
+          <div class="relative">
+            <select id="vehicle-select" class="form-select w-full rounded-lg border-[#cde8ea] dark:border-slate-700 bg-background-light dark:bg-slate-900 text-[#0c1b1d] dark:text-white h-14 pl-4 pr-10 text-lg font-semibold focus:ring-primary focus:border-primary appearance-none">
+              <option disabled selected value="">A carregar...</option>
+            </select>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
+              <span class="material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+        </label>
+      </section>
+
+      <!-- Odometer Section -->
+      <section class="bg-white dark:bg-slate-800 rounded-xl p-5 ios-shadow border border-[#cde8ea] dark:border-transparent">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">speed</span>
+            <p class="text-[#0c1b1d] dark:text-white text-sm font-bold uppercase tracking-wider">Odómetro (km)</p>
+          </div>
+        </div>
+        <div class="flex items-stretch rounded-lg overflow-hidden border border-[#cde8ea] dark:border-slate-700">
+          <input id="input-odometer" class="form-input flex-1 bg-background-light dark:bg-slate-900 border-none h-16 text-2xl font-bold px-4 text-[#0c1b1d] dark:text-white placeholder:text-[#459ba1]/50 focus:ring-0" inputmode="numeric" placeholder="000.000" type="number"/>
+          <div class="bg-primary/10 dark:bg-primary/20 flex items-center px-4 text-primary font-bold border-l border-[#cde8ea] dark:border-slate-700">KM</div>
+        </div>
+        <p id="last-odometer-text" class="text-[#459ba1] dark:text-primary/70 text-xs font-semibold mt-2 pl-1">
+            Selecione um veículo...
+        </p>
+      </section>
+
+      <!-- Grid for Liters and Price -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Liters -->
+        <section class="bg-white dark:bg-slate-800 rounded-xl p-4 ios-shadow border border-[#cde8ea] dark:border-transparent">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-primary text-sm">local_gas_station</span>
+            <p class="text-[#0c1b1d] dark:text-white text-[10px] font-bold uppercase tracking-widest">Litros (L)</p>
+          </div>
+          <div class="relative">
+            <input id="input-liters" class="form-input w-full bg-background-light dark:bg-slate-900 rounded-lg border-[#cde8ea] dark:border-slate-700 h-14 text-xl font-bold px-3 text-[#0c1b1d] dark:text-white focus:ring-primary focus:border-primary" inputmode="decimal" placeholder="0.00" type="number" step="0.01"/>
+          </div>
+        </section>
+        
+        <!-- Total Price -->
+        <section class="bg-white dark:bg-slate-800 rounded-xl p-4 ios-shadow border border-[#cde8ea] dark:border-transparent">
+          <div class="flex items-center gap-2 mb-2">
+             <span class="material-symbols-outlined text-primary text-sm">payments</span>
+             <p class="text-[#0c1b1d] dark:text-white text-[10px] font-bold uppercase tracking-widest">Preço Total (€)</p>
+          </div>
+          <div class="relative">
+             <!-- Using Total Price instead of price/L as per mock label, 
+                  but backend usually wants price per liter. 
+                  I will check logic. Usually user inputs Total Price and Liters, 
+                  we calculate price/L automatically. -->
+             <input id="input-total-price" class="form-input w-full bg-background-light dark:bg-slate-900 rounded-lg border-[#cde8ea] dark:border-slate-700 h-14 text-xl font-bold px-3 text-[#0c1b1d] dark:text-white focus:ring-primary focus:border-primary" inputmode="decimal" placeholder="0.00" type="number" step="0.01"/>
+          </div>
+        </section>
+      </div>
+
+      <!-- Receipt Photo (Optional) -->
+      <button class="w-full flex items-center justify-center gap-3 p-6 border-2 border-dashed border-[#cde8ea] dark:border-slate-700 rounded-xl bg-white/50 dark:bg-slate-800/50 hover:bg-primary/5 transition-all group">
+        <span class="material-symbols-outlined text-[#459ba1] group-hover:text-primary transition-colors">add_a_photo</span>
+        <span class="text-[#459ba1] font-bold">Anexar Fatura</span>
+      </button>
+
+      <!-- Metadata Info -->
+      <div class="flex flex-col items-center gap-1 pt-4 text-center">
+        <p class="text-xs text-[#459ba1] font-medium" id="current-date-display">--</p>
+        <p class="text-[10px] text-[#459ba1]/60 uppercase tracking-tighter">Localização capturada automaticamente</p>
+      </div>
+      
+    </main>
+
+    <!-- Fixed Bottom Action Area -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-xl border-t border-[#cde8ea] dark:border-primary/20 p-4 pb-8">
+      <button id="btn-save" class="w-full bg-primary hover:bg-[#005f66] active:scale-[0.98] text-white py-4 rounded-xl font-extrabold text-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined">save</span>
+        Registar Abastecimento
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Theme Switcher (Mini Utility) -->
+  <div class="fixed top-20 right-4 z-[60]">
+     <button class="bg-white dark:bg-slate-700 size-10 rounded-full ios-shadow flex items-center justify-center border border-[#cde8ea] dark:border-slate-600" onclick="document.documentElement.classList.toggle('dark')">
+       <span class="material-symbols-outlined text-primary">dark_mode</span>
+     </button>
+  </div>
+
+</body>
+</html>

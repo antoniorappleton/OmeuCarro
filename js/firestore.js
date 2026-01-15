@@ -28,6 +28,7 @@ async function saveUserProfile(user, extraData = {}) {
     nome: extraData.nome || user.displayName || "",
     email: user.email,
     fotoUrl: user.photoURL || "",
+    // Legacy fields kept for compatibility, but preferences should move to settings
     idioma: extraData.idioma || "pt",
     moeda: extraData.moeda || "EUR",
     unidadeConsumo: extraData.unidadeConsumo || "L/100km",
@@ -38,6 +39,61 @@ async function saveUserProfile(user, extraData = {}) {
   await userRef.set(data, { merge: true });
   return userRef;
 }
+
+// Guarda definições em users/{uid}/settings/general
+async function saveUserSettings(settings) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  const settingsRef = db
+    .collection("users")
+    .doc(user.uid)
+    .collection("settings")
+    .doc("general");
+
+  await settingsRef.set(
+    {
+      ...settings,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+// Lê definições de users/{uid}/settings/general
+async function getUserSettings() {
+  const user = auth.currentUser;
+  if (!user) return null;
+
+  const snap = await db
+    .collection("users")
+    .doc(user.uid)
+    .collection("settings")
+    .doc("general")
+    .get();
+
+  // Defaults seguros
+  const defaults = {
+    idioma: "pt",
+    moeda: "EUR",
+    unidadeDistancia: "km",
+    unidadeConsumo: "L/100km",
+    combustivelPadrao: "Gasolina 95",
+    abastecimentoCompletoDefault: true,
+    validarOdometro: true,
+    veiculoPrincipal: "",
+    mostrarInativos: false,
+    alertasAtivos: { seguro: true, inspecao: true, iuc: true },
+    dashboardPeriodo: "mes",
+    dashboardKpis: { gastos: true, consumos: true, distancias: true },
+    tipoGrafico: "bar", // ou line
+    notificacoesAtivas: true,
+    alertaAntecedencia: "15", // dias
+  };
+
+  return snap.exists ? { ...defaults, ...snap.data() } : defaults;
+}
+
 
 // lê o perfil do utilizador autenticado
 async function getCurrentUserProfile() {
@@ -525,6 +581,8 @@ async function deleteReparacaoDoVeiculo(veiculoId, reparacaoId) {
 }
 
 async function getReparacoesDoVeiculo(veiculoId, limite = 100) {
+  const user = auth.currentUser;
+  if (!user) return [];
   return db
     .collection("veiculos")
     .doc(veiculoId)

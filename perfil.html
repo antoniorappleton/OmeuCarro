@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>L100 – Perfil</title>
+  <title>L100 – Definições</title>
 
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/home.css" />
@@ -19,6 +19,214 @@
   <script defer src="js/firestore.js"></script>
   
   <script defer src="js/perfil.js"></script>
+
+  <style>
+    /* Settings Specific Styles */
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 0;
+    }
+    
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(14, 116, 144, 0.3);
+      border: 3px solid var(--color-surface);
+    }
+    
+    .settings-section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-light);
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+      font-weight: 700;
+    }
+
+    .settings-list {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--color-surface);
+      min-height: 3rem;
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      font-weight: 500;
+      color: var(--color-text-main);
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+
+    /* Inputs aligned right */
+    .settings-input, 
+    .settings-select {
+      text-align: right;
+      background: transparent;
+      border: none;
+      color: var(--color-primary-start);
+      font-weight: 600;
+      font-size: 0.95rem;
+      font-family: inherit;
+      padding: 0;
+      max-width: 50%;
+      cursor: pointer;
+    }
+
+    .settings-select {
+       direction: rtl;
+    }
+    
+    .settings-input:focus,
+    .settings-select:focus {
+      outline: none;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1; /* slate-300 */
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-success);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px var(--color-success);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Checkbox list styles */
+    .checkbox-group {
+      display: flex; 
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn-action {
+      color: var(--color-primary-start);
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 0;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-action.danger {
+      color: var(--color-danger);
+    }
+
+    .version-text {
+      text-align: center;
+      color: var(--color-text-light);
+      font-size: 0.75rem;
+      margin: 2rem 0;
+      opacity: 0.7;
+    }
+
+    /* Floating Save Button */
+    .fab-save {
+      position: fixed;
+      bottom: calc(var(--footer-height) + 20px);
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--color-primary-start);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .fab-save:active {
+      transform: scale(0.95);
+    }
+    
+    .fab-save.hidden {
+        display: none; /* Only show when dirty? Or always? Prompt says "Guardar" button. Let's make it always visible or sticky. */
+    }
+
+    /* Select option fix */
+    option {
+        direction: ltr;
+        color: var(--color-text-main);
+    }
+  </style>
 </head>
 
 <body class="app-page" data-page="perfil">
@@ -26,82 +234,237 @@
   <!-- HEADER -->
   <header class="app-header">
     <div class="app-header-left">
-      <div class="app-logo">
-        <svg class="icon"><use href="assets/icons-unified.svg#icon-user"></use></svg>
-      </div>
       <div class="app-logo-text">
-        <span class="app-logo-title">L100</span>
-        <span class="app-logo-subtitle">O meu perfil</span>
+        <span class="app-logo-title">Definições</span>
       </div>
-    </div>
-
-    <div class="app-header-actions">
-      <a href="dashboard.html" class="icon-btn">
-        <svg class="icon"><use href="assets/icons-unified.svg#icon-home"></use></svg>
-      </a>
-      <button id="btn-logout" class="icon-btn">
-        <svg class="icon"><use href="assets/icons-unified.svg#icon-logout"></use></svg>
-      </button>
     </div>
   </header>
 
-  <main class="home-main">
-    <div class="container" style="max-width:500px; margin-top:20px;">
+  <main class="home-main" style="padding-bottom: 80px;"> <!-- Extra padding for FAB -->
+    <div class="container" style="max-width:600px;">
       
-      <section class="card">
-        <h2>Preferências</h2>
-        <p style="color:var(--color-text-muted); font-size:0.9rem;">
-          Gira as suas informações pessoais e configurações da aplicação.
-        </p>
+      <!-- Profile Snippet -->
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <svg class="icon" style="width:40px;height:40px;"><use href="assets/icons-unified.svg#icon-user"></use></svg>
+        </div>
+        <h2 id="display-name-header" style="font-size:1.2rem; margin:0;">Utilizador</h2>
+        <span id="display-email-header" style="font-size:0.85rem; color:var(--color-text-muted);">carregando...</span>
+      </div>
 
-        <form id="profile-form" style="margin-top:20px;">
-          
-          <div class="form-field">
-            <label for="profile-name">Nome de exibição</label>
-            <input type="text" id="profile-name" placeholder="O seu nome" />
-          </div>
+      <form id="settings-form">
+        
+        <!-- ================= CONTA & PERFIL ================= -->
+        <h3 class="settings-section-title">Conta</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-name">Nome</label>
+             <input type="text" id="setting-name" class="settings-input" placeholder="O seu nome" />
+           </div>
+           <div class="settings-row">
+             <label class="settings-label">Email</label>
+             <input type="email" id="setting-email" class="settings-input" disabled style="opacity:0.6; -webkit-text-fill-color: var(--color-text-muted);" />
+           </div>
+           <button type="button" id="btn-reset-password" class="settings-row btn-action">
+             <span>Alterar palavra-passe</span>
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-chevron-right"></use></svg>
+           </button>
+        </div>
 
-          <div class="form-field">
-            <label for="profile-email">Email</label>
-            <input type="email" id="profile-email" disabled style="opacity:0.7; cursor:not-allowed;" />
-          </div>
+        <!-- ================= REGIONAIS ================= -->
+        <h3 class="settings-section-title">Regional</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-lang">Idioma</label>
+             <select id="setting-lang" class="settings-select">
+                <option value="pt">Português</option>
+                <option value="en">English</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-currency">Moeda</label>
+             <select id="setting-currency" class="settings-select">
+                <option value="EUR">Euro (€)</option>
+                <option value="USD">Dólar ($)</option>
+                <option value="BRL">Real (R$)</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-dist-unit">Distância</label>
+             <select id="setting-dist-unit" class="settings-select">
+                <option value="km">Quilómetros (km)</option>
+                <option value="mi">Milhas (mi)</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-cons-unit">Consumo</label>
+             <select id="setting-cons-unit" class="settings-select">
+                <option value="L/100km">L/100km</option>
+                <option value="km/L">km/L</option>
+                <option value="MPG">MPG</option>
+             </select>
+           </div>
+        </div>
 
-          <div class="form-field">
-            <label for="profile-currency">Moeda preferida</label>
-            <select id="profile-currency">
-              <option value="EUR">Euro (€)</option>
-              <option value="USD">Dólar ($)</option>
-              <option value="BRL">Real (R$)</option>
-            </select>
-          </div>
+        <!-- ================= ABASTECIMENTO ================= -->
+        <h3 class="settings-section-title">Abastecimento</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-fuel-default">Combustível Padrão</label>
+             <select id="setting-fuel-default" class="settings-select">
+                <option value="Gasolina 95">Gasolina 95</option>
+                <option value="Gasolina 98">Gasolina 98</option>
+                <option value="Gasoleo">Gasóleo</option>
+                <option value="Gasoleo Aditivado">Gasóleo +</option>
+                <option value="GPL">GPL</option>
+                <option value="Eletrico">Elétrico</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-fill-full">Depósito Cheio por defeito</label>
+             <label class="toggle-switch">
+               <input type="checkbox" id="setting-fill-full">
+               <span class="slider"></span>
+             </label>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-validate-odo">Validar odómetro</label>
+             <label class="toggle-switch">
+               <input type="checkbox" id="setting-validate-odo">
+               <span class="slider"></span>
+             </label>
+           </div>
+        </div>
 
-           <div class="form-field">
-            <label for="profile-unit">Unidade de consumo</label>
-            <select id="profile-unit">
-              <option value="L/100km">Litros / 100km</option>
-              <option value="km/L">km / Litro</option>
-              <option value="MPG">Milhas / Galão</option>
-            </select>
-          </div>
+        <!-- ================= VEÍCULOS ================= -->
+        <h3 class="settings-section-title">Veículos</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-main-vehicle">Veículo Principal</label>
+             <select id="setting-main-vehicle" class="settings-select">
+                <option value="">(Nenhum)</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-show-inactive">Mostrar inativos</label>
+             <label class="toggle-switch">
+               <input type="checkbox" id="setting-show-inactive">
+               <span class="slider"></span>
+             </label>
+           </div>
+        </div>
 
-          <p id="profile-message" class="form-message"></p>
+        <!-- ================= DASHBOARD & ESTATÍSTICAS ================= -->
+        <h3 class="settings-section-title">Dashboard</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-dash-period">Período Inicial</label>
+             <select id="setting-dash-period" class="settings-select">
+                <option value="semana">Semana</option>
+                <option value="mes">Mês</option>
+                <option value="ano">Ano</option>
+             </select>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-chart-type">Tipo de Gráfico</label>
+             <select id="setting-chart-type" class="settings-select">
+                <option value="bar">Barras</option>
+                <option value="line">Linhas</option>
+             </select>
+           </div>
+           <!-- KPIs Toggles -->
+           <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:0.5rem; padding-bottom:1rem;">
+             <label class="settings-label" style="width:100%;">KPIs Visíveis</label>
+             <div class="checkbox-group" style="width:100%; justify-content:space-between;">
+                <label style="font-size:0.85rem; display:flex; align-items:center; gap:0.5rem;">
+                  <input type="checkbox" id="kpi-gastos" checked> Gastos
+                </label>
+                <label style="font-size:0.85rem; display:flex; align-items:center; gap:0.5rem;">
+                  <input type="checkbox" id="kpi-consumos" checked> Consumos
+                </label>
+                <label style="font-size:0.85rem; display:flex; align-items:center; gap:0.5rem;">
+                  <input type="checkbox" id="kpi-distancias" checked> Distância
+                </label>
+             </div>
+           </div>
+        </div>
 
-          <button type="submit" class="btn btn-primary full-width">
-            Guardar alterações
-          </button>
-        </form>
+        <!-- ================= ALERTAS ================= -->
+        <h3 class="settings-section-title">Alertas</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <label class="settings-label" for="setting-notif-active">Notificações</label>
+             <label class="toggle-switch">
+               <input type="checkbox" id="setting-notif-active">
+               <span class="slider"></span>
+             </label>
+           </div>
+           <div class="settings-row">
+             <label class="settings-label" for="setting-alert-days">Antecedência (dias)</label>
+             <select id="setting-alert-days" class="settings-select">
+                <option value="7">7 dias</option>
+                <option value="15">15 dias</option>
+                <option value="30">30 dias</option>
+             </select>
+           </div>
+        </div>
 
-      </section>
+        <!-- ================= DADOS & EXPORTAÇÃO ================= -->
+        <h3 class="settings-section-title">Dados</h3>
+        <div class="settings-list">
+           <button type="button" id="btn-export-csv" class="settings-row btn-action">
+             <span>Exportar CSV (Todos os dados)</span>
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-download"></use></svg>
+           </button>
+           <div class="settings-row">
+             <label class="settings-label" for="include-docs">Incluir links de documentos</label>
+             <label class="toggle-switch">
+               <input type="checkbox" id="include-docs">
+               <span class="slider"></span>
+             </label>
+           </div>
+        </div>
 
-       <section class="card" style="margin-top:20px; border-color:var(--color-danger);">
-        <h3 style="color:var(--color-danger);">Zona de Perigo</h3>
-        <p style="font-size:0.85rem; color:var(--color-text-muted);">
-          Estas ações não podem ser desfeitas.
-        </p>
-        <button type="button" class="btn btn-ghost full-width" style="color:var(--color-danger); border:1px solid var(--color-danger);">
-          Eliminar conta
+        <!-- ================= APP ================= -->
+        <h3 class="settings-section-title">Aplicação</h3>
+        <div class="settings-list">
+           <div class="settings-row">
+             <span class="settings-label">Estado da Rede</span>
+             <span id="app-status-network" style="font-size:0.85rem; color:var(--color-success); font-weight:600;">Online</span>
+           </div>
+           <div class="settings-row">
+             <span class="settings-label">Última Sincronização</span>
+             <span id="app-last-sync" style="font-size:0.85rem; color:var(--color-text-muted);">Agora mesmo</span>
+           </div>
+           <button type="button" id="btn-clear-cache" class="settings-row btn-action" style="color:var(--color-warning);">
+             <span>Limpar Cache Local</span>
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+           </button>
+        </div>
+
+        <!-- ================= AÇÕES PERIGOSAS ================= -->
+        <h3 class="settings-section-title" style="color:var(--color-danger);">Zona de Perigo</h3>
+        <div class="settings-list" style="border-color:rgba(239,68,68,0.3);">
+           <button type="button" id="btn-logout" class="settings-row btn-action">
+             <span>Terminar Sessão</span>
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-logout"></use></svg>
+           </button>
+           <button type="button" id="btn-delete-account" class="settings-row btn-action danger">
+             <span>Eliminar Conta</span>
+             <svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+           </button>
+        </div>
+
+        <!-- Floating Save Button -->
+        <button type="submit" class="fab-save">
+          <svg class="icon" style="width:24px;height:24px; stroke-width:3px;"><use href="assets/icons-unified.svg#icon-check"></use></svg>
         </button>
-      </section>
+
+      </form>
+      
+      <div class="version-text">
+        L100 App v2.0 • by antonioappleton 2026
+      </div>
 
     </div>
   </main>
@@ -118,7 +481,7 @@
     </a>
     <a href="perfil.html" class="active">
       <svg class="icon"><use href="assets/icons-unified.svg#icon-user"></use></svg>
-      <span>Perfil</span>
+      <span>Definições</span>
     </a>
   </footer>
 

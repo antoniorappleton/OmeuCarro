@@ -250,6 +250,36 @@ textarea {
   /* Remove default styling */
 }
 
+input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  appearance: none;
+  background-color: var(--color-bg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  position: relative;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--color-success); /* Green as requested */
+  border-color: var(--color-success);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg);
+  margin-top: -2px;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -352,7 +382,10 @@ footer a .icon {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  padding: 0;
+  padding: 20px;
+  /* Centering */
+  justify-content: center;
+  align-items: center;
 }
 
 .auth-container {
