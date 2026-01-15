@@ -505,12 +505,162 @@ function configurarEventosFiltro() {
 // INIT
 // ======================================================================
 
+// ======================================================================
+// MODAL DE ABASTECIMENTO (DASHBOARD)
+// ======================================================================
+
+function initDashboardRefuelModal() {
+  const modal = document.getElementById("fuel-modal");
+  const openBtn = document.getElementById("btn-quick-refuel"); // Updated ID
+  const closeBtn = document.getElementById("fuel-close");
+  const cancelBtn = document.getElementById("fuel-cancel");
+  const saveBtn = document.getElementById("fuel-save");
+  const msg = document.getElementById("fuel-msg");
+
+  const vehicleSelect = document.getElementById("fuel-vehicle-select");
+  const dateEl = document.getElementById("fuel-date");
+  const typeEl = document.getElementById("fuel-type");
+  const litersEl = document.getElementById("fuel-liters");
+  const priceEl = document.getElementById("fuel-price");
+  const kmEl = document.getElementById("fuel-km");
+  const stationEl = document.getElementById("fuel-station");
+  const notesEl = document.getElementById("fuel-notes");
+  const fullEl = document.getElementById("fuel-full");
+
+  async function open() {
+    modal.classList.remove("hidden");
+    msg.textContent = "";
+    
+    // Set default date
+    if (!dateEl.value) {
+        dateEl.value = new Date().toISOString().slice(0, 10);
+    }
+    
+    // Load Vehicles
+    try {
+        vehicleSelect.innerHTML = `<option value="">A carregar...</option>`;
+        const veiculos = await getVeiculosDoUtilizador();
+        
+        if (!veiculos.length) {
+            vehicleSelect.innerHTML = `<option value="">Sem veículos registados</option>`;
+            return;
+        }
+
+        vehicleSelect.innerHTML = `<option value="">Selecione...</option>`;
+        veiculos.forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.id;
+            opt.textContent = `${v.nome} (${v.marca})`;
+            vehicleSelect.appendChild(opt);
+        });
+
+        // Pre-select if only one
+        if (veiculos.length === 1) {
+            vehicleSelect.value = veiculos[0].id;
+            updateVehicleDefaults(veiculos[0]);
+        }
+        
+    } catch (e) {
+        console.error(e);
+        vehicleSelect.innerHTML = `<option value="">Erro ao carregar</option>`;
+    }
+  }
+
+  function close() {
+    modal.classList.add("hidden");
+    // Clear fields if desired, or keep for convenience? Usually clear.
+    dateEl.value = "";
+    litersEl.value = "";
+    priceEl.value = "";
+    kmEl.value = "";
+    stationEl.value = "";
+    notesEl.value = "";
+    if (fullEl) fullEl.checked = false;
+    vehicleSelect.value = "";
+  }
+
+  // Update logic when vehicle changes (e.g. pre-fill fuel type or odometer)
+  vehicleSelect?.addEventListener('change', async () => {
+     const vid = vehicleSelect.value;
+     if (!vid) return;
+     // Optimization: we could store vehicles in memory to avoid refetch, 
+     // but getting single from cache is fast enough or finding in array if we had it.
+     // Let's assume user picks. We can try to guess fuel type?
+     // For now, simple.
+  });
+  
+  function updateVehicleDefaults(v) {
+      if (v.combustivelPadrao) {
+          // Map backend values to select values if needed
+          // "gasolina" -> "Gasolina" (Capitalized in select?)
+          // The select has "Gasolina", "Gasóleo", etc.
+          // v.combustivelPadrao might be lowercase.
+          const val = v.combustivelPadrao.charAt(0).toUpperCase() + v.combustivelPadrao.slice(1);
+           // Try to find matching option
+           for (const opt of typeEl.options) {
+               if (opt.value.toLowerCase() === val.toLowerCase()) {
+                   typeEl.value = opt.value;
+                   break;
+               }
+           }
+      }
+  }
+
+  openBtn?.addEventListener("click", (e) => {
+      e.preventDefault(); // Prevent link navigation if it was a link
+      open();
+  });
+  
+  closeBtn?.addEventListener("click", close);
+  cancelBtn?.addEventListener("click", close);
+
+  saveBtn?.addEventListener("click", async () => {
+    try {
+      const vid = vehicleSelect.value;
+      if (!vid) {
+          msg.textContent = "Selecione um veículo.";
+          return;
+      }
+      if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {
+        msg.textContent = "Preenche os campos obrigatórios.";
+        return;
+      }
+
+      msg.textContent = "A guardar...";
+
+      const payload = {
+        data: dateEl.value,
+        tipoCombustivel: typeEl.value,
+        litros: Number(litersEl.value),
+        precoPorLitro: Number(priceEl.value),
+        odometro: Number(kmEl.value),
+        posto: stationEl.value.trim(),
+        observacoes: notesEl.value.trim(),
+        completo: fullEl ? fullEl.checked : false
+      };
+
+      await createAbastecimento(vid, payload);
+
+      close();
+      // Reload dashboard stats
+      await carregarDashboard();
+      
+      // Optional toast?
+      // alert("Guardado!");
+    } catch (e) {
+      console.error(e);
+      msg.textContent = e.message || "Erro ao guardar.";
+    }
+  });
+}
+
 window.addEventListener("load", () => {
   const unsub = auth.onAuthStateChanged(async (u) => {
     if (!u) return;
     await carregarVeiculosNoFiltro();
     configurarEventosFiltro();
     carregarDashboard();
+    initDashboardRefuelModal(); // Initialize Modal
     unsub();
   });
 });

@@ -36,9 +36,14 @@
       >
         ←
       </button>
-      <div>
-        <h1>Estatísticas</h1>
-        <p>Análise detalhada dos seus abastecimentos</p>
+      <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div>
+           <h1>Estatísticas</h1>
+           <p>Análise detalhada dos seus abastecimentos</p>
+        </div>
+        <select id="filter-vehicle" style="max-width: 200px; padding: 8px; border-radius: 8px; border: 1px solid var(--border-light); background: var(--color-surface); color: var(--color-text);">
+            <option value="">A carregar...</option>
+        </select>
       </div>
     </header>
 
