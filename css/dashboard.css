@@ -1,3 +1,17 @@
+/* ======== BODY (Background) ======== */
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Lighter overlay */
+  background-image: linear-gradient(to bottom, rgba(18, 20, 23, 0.4), rgba(18, 20, 23, 0.7)), url("../images/offroad01.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-text-main);
+  padding-bottom: 80px;
+}
+
 /* ======== HEADER ======== */
 .top-header {
   background: linear-gradient(135deg, #096279, #1B9B82);
@@ -6,6 +20,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .back-btn {
@@ -32,11 +47,12 @@
   padding: 20px;
   max-width: 1200px;
   margin: auto;
+  background: transparent;
 }
 
 /* ======== FILTERS ======== */
 .filters-card {
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
   padding: 15px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -70,11 +86,12 @@
 }
 
 .kpi-card {
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);
   transition: .2s;
+  border: 1px solid var(--border-light);
 }
 
 .kpi-card:hover {
@@ -101,11 +118,12 @@
 
 /* ======== CHART CARDS ======== */
 .chart-card {
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 25px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-light);
 }
 
 .chart-card h3 {

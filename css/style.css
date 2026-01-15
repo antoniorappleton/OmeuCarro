@@ -21,7 +21,8 @@
   --color-bg: #f8fafc;
   /* slate-50 */
   --color-surface: #ffffff;
-  --color-surface-glass: rgba(255, 255, 255, 0.9);
+    --color-surface-glass: rgba(255, 255, 255, 0.75);
+    --color-surface-container: rgba(255, 255, 255, 0.5);
 
   /* Text Colors */
   --color-text-main: #0f172a;
@@ -59,7 +60,8 @@
   :root {
     --color-bg: #0f172a;
     --color-surface: #1e293b;
-    --color-surface-glass: rgba(30, 41, 59, 0.9);
+    --color-surface-glass: rgba(30, 41, 59, 0.75);
+    --color-surface-container: rgba(30, 41, 59, 0.5);
     --color-text-main: #f1f5f9;
     --color-text-muted: #94a3b8;
     --border-light: #334155;
@@ -206,7 +208,7 @@ a {
 
 /* ----------- COMPONENTS: CARDS ----------- */
 .card {
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.5rem;

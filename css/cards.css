@@ -2,7 +2,7 @@
    UNIFIED RECORD CARD (Clean, Professional, Elegant)
    ============================= */
 .record-card {
-  background: var(--color-surface);
+  background: var(--color-surface-glass);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
