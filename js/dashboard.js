@@ -147,7 +147,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
   Object.values(porVeiculo).forEach((lista) => {
     // Ordenar por odómetro
     const ordenados = [...lista]
-      .filter((a) => a.completo) // só completos para eficiência
+      // .filter((a) => a.completo) // REMOVIDO: User quer cálculo sempre, independente de ser cheio ou não
       .sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
 
     for (let i = 1; i < ordenados.length; i++) {

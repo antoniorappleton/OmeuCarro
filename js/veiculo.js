@@ -729,6 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const kmEl = document.getElementById("fuel-km");
     const stationEl = document.getElementById("fuel-station");
     const notesEl = document.getElementById("fuel-notes");
+    const fullEl = document.getElementById("fuel-full");
 
     function open() {
       modal.classList.remove("hidden");
@@ -743,6 +744,7 @@ document.addEventListener("DOMContentLoaded", () => {
       kmEl.value = "";
       stationEl.value = "";
       notesEl.value = "";
+      if (fullEl) fullEl.checked = false;
       editingId = null;
     }
 
@@ -767,6 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
           odometro: Number(kmEl.value),
           posto: stationEl.value.trim(),
           observacoes: notesEl.value.trim(),
+          completo: fullEl ? fullEl.checked : false // NEW
         };
 
         if (editingId) {
@@ -797,8 +800,9 @@ document.addEventListener("DOMContentLoaded", () => {
       kmEl.value = a.odometro || "";
       stationEl.value = a.posto || "";
       notesEl.value = a.observacoes || "";
+      if (fullEl) fullEl.checked = !!a.completo;
 
-      open();
+      modal.classList.remove("hidden");
     };
   }
 
@@ -929,6 +933,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const card = document.createElement("article");
           card.className = "record-card"; // Unified class
 
+          // Icon indicator for FULL TANK
+          const fullTankIcon = a.completo 
+            ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
+            : "";
+
           card.innerHTML = `
         <div class="record-icon-box is-fuel">
           <svg class="icon"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
@@ -936,7 +945,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="record-content">
           <div class="record-header-row">
-            <span class="record-title">Abastecimento</span>
+            <span class="record-title">Abastecimento ${fullTankIcon}</span>
             <span class="badge badge-secondary">${escapeHtml(
               a.tipoCombustivel || "—"
             )}</span>
