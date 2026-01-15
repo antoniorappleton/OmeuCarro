@@ -14,8 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // =================================================
   auth.onAuthStateChanged((user) => {
     if (isAuthPage) {
-      // Não redirecionar automaticamente aqui
-      // (importante para PWA + UX)
+      if (user) {
+        // Se já está logado e abriu a página de login, vai para o dashboard
+        window.location.replace("./dashboard.html");
+      }
       return;
     }
 

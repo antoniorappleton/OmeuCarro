@@ -154,13 +154,57 @@ async function carregarVeiculos() {
     // Se tiveres ano no documento (ex: v.ano), mostramos. Se não, não aparece.
     const ano = v.ano || "";
 
+    // 🔹 Calcular estados (Seguro, IPO, IUC)
+    const now = new Date();
+    // Helper para badge
+    function getStatusBadge(label, dateObj) {
+      if (!dateObj) return ""; // Não tem data
+
+      // Converter Timestamp para Date se necessário
+      const date = dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
+      if (isNaN(date.getTime())) return "";
+
+      const diffTime = date - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      let statusClass = "badge-status-success";
+      let icon = "icon-check";
+      let text = "Válido";
+
+      if (diffDays < 0) {
+        statusClass = "badge-status-danger";
+        icon = "icon-alert-circle"; // Assumindo que existe, ou x
+        text = "Expirou";
+      } else if (diffDays <= 30) {
+        statusClass = "badge-status-warning";
+        icon = "icon-alert-triangle"; 
+        text = `Expira em ${diffDays}d`;
+      }
+
+      return `
+        <div class="status-item ${statusClass}">
+           <div class="status-label">${label}</div>
+           <div class="status-value">
+             <svg class="badge-icon"><use href="assets/icons-unified.svg#${icon}"></use></svg>
+             <span>${text}</span>
+           </div>
+        </div>
+      `;
+    }
+
+    const seguroBadge = getStatusBadge("Seguro", v.seguro?.validade);
+    const ipoBadge = getStatusBadge("IPO / Inspeção", v.inspecao?.proximaData);
+    const iucBadge = getStatusBadge("IUC", v.iuc?.dataLimite);
+
     card.innerHTML = `
       <div class="vehicle-card-top">
         <div class="vehicle-left">
           <div class="vehicle-avatar">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-car"></use>
-            </svg>
+            ${
+              v.fotoUrl 
+              ? `<img src="${v.fotoUrl}" alt="${v.nome}">`
+              : `<svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-car"></use></svg>`
+            }
           </div>
 
           <div class="vehicle-text">
@@ -181,6 +225,13 @@ async function carregarVeiculos() {
                   : ""
               }
             </div>
+
+            <!-- STATUS GRID -->
+            ${ (seguroBadge || ipoBadge || iucBadge) 
+               ? `<div class="vehicle-status-grid">${seguroBadge}${ipoBadge}${iucBadge}</div>` 
+               : "" 
+            }
+
           </div>
         </div>
 
@@ -202,34 +253,10 @@ async function carregarVeiculos() {
           </button>
 
           <!-- NOVOS atalhos -->
-          <button class="icon-btn-sm" type="button" data-fuel="${
-            v.id
-          }" aria-label="Abastecimentos">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-droplet"></use>
-            </svg>
-          </button>
+          <!-- (Moved to compact toolbar) -->
 
-          <button class="icon-btn-sm" type="button" data-maint="${
-            v.id
-          }" aria-label="Reparações e Manutenções">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-wrench"></use>
-            </svg>
-          </button>
-
-          <button class="icon-btn-sm" type="button" data-docs="${
-            v.id
-          }" aria-label="Documentos do veículo">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-file-text"></use>
-            </svg>
-          </button>
-
-          <span class="vehicle-arrow" aria-hidden="true">
-            <svg class="icon icon-chevron">
-              <use href="assets/icons-unified.svg#icon-chevron-right"></use>
-            </svg>
+          <span class="vehicle-arrow" aria-hidden="true" style="display:none;">
+            <!-- Chevron hidden in compact mode -->
           </span>
         </div>
 

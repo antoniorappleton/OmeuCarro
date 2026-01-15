@@ -138,6 +138,10 @@ async function createVeiculo(data) {
     iuc: data.iuc || {}, // NOVO
 
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    
+    // Foto
+    fotoUrl: data.fotoUrl || null,
+    fotoPath: data.fotoPath || null,
   };
 
   return db.collection("veiculos").add(veiculo);
@@ -156,6 +160,29 @@ async function getVeiculosDoUtilizador() {
   return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
+// Upload foto do veículo
+async function uploadVehiclePhoto(file, vehicleId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+  
+  // Create unique filename or fixed name per vehicle?
+  // Using fixed name "photo.jpg" allows easy overwrite. 
+  // But browser caching issues. Better unique or metadata check.
+  // Let's use "photo_{timestamp}.jpg" and clean up old if needed, 
+  // or just overwrite "photo.jpg" and rely on getDownloadURL refreshing?
+  // Safest for simple app: "photo_<timestamp>.jpg"
+  
+  const ext = file.name.split('.').pop();
+  const filename = `photo_${Date.now()}.${ext}`;
+  const path = `veiculos/${vehicleId}/${filename}`;
+  const storageRef = firebase.storage().ref().child(path);
+  
+  const snapshot = await storageRef.put(file);
+  const downloadURL = await snapshot.ref.getDownloadURL();
+  
+  return { downloadURL, path };
+}
+
 // atualizar veículo
 async function updateVeiculo(id, data) {
   const user = auth.currentUser;
@@ -170,6 +197,10 @@ async function updateVeiculo(id, data) {
     combustivelPadrao: data.combustivelPadrao || "",
     odometroInicial: Number(data.odometroInicial) || 0,
     ativo: data.ativo !== false,
+
+    // Foto
+    fotoUrl: data.fotoUrl || null,
+    fotoPath: data.fotoPath || null,
 
     // técnicos
     ano: data.ano ?? null,
@@ -186,6 +217,11 @@ async function updateVeiculo(id, data) {
 
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
+
+  // Remove nulls/undefined from payload to avoid overwriting existing photo if not provided?
+  // No, the caller should pass existing if not changing.
+  // We'll clean undefined keys.
+  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
   return db.collection("veiculos").doc(id).update(payload);
 }

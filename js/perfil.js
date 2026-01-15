@@ -149,9 +149,9 @@ if (settingsForm) {
     const user = auth.currentUser;
     if (!user) return;
 
-    const btnSave = document.querySelector(".fab-save");
-    const originalIcon = btnSave.innerHTML;
-    btnSave.innerHTML = '<div class="spinner"></div>'; // You might want to add CSS for spinner or just text
+    const btnSave = document.getElementById("btn-save-settings");
+    const originalText = btnSave.textContent;
+    btnSave.textContent = "A guardar...";
     btnSave.disabled = true;
 
     try {
@@ -202,19 +202,13 @@ if (settingsForm) {
         if (displayNameHeader) displayNameHeader.textContent = payload.nome;
         }
 
-        // Feedback
-        // Just blink or toast
-        btnSave.style.backgroundColor = "var(--color-success)";
-        setTimeout(() => {
-            btnSave.innerHTML = originalIcon;
-            btnSave.disabled = false;
-            btnSave.style.backgroundColor = "var(--color-primary-start)";
-        }, 1500);
+        alert("Definições guardadas com sucesso! ✅");
+        window.location.reload();
 
     } catch (err) {
         console.error(err);
-        alert("Erro ao guardar.");
-        btnSave.innerHTML = originalIcon;
+        alert("Erro ao guardar: " + err.message);
+        btnSave.textContent = originalText;
         btnSave.disabled = false;
     }
     });
