@@ -406,9 +406,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         return `
-          <article class="record-card doc-card" data-open-url="${enc(
+          <article class="record-card doc-card clickable-card" data-open-url="${enc(
             openUrl
-          )}" data-doc-id="${d.id}">
+          )}" data-doc-id="${d.id}" style="cursor: pointer;">
             
             ${preview}
 
@@ -431,22 +431,14 @@ document.addEventListener("DOMContentLoaded", () => {
                   : ""
               }
               ${
-                openUrl
-                  ? `<div class="record-subtitle muted" style="font-size:0.75rem;">${escapeHtml(
-                      openUrl
-                    )}</div>`
+                nota
+                  ? `<div class="record-subtitle">${escapeHtml(nota)}</div>`
                   : ""
               }
             </div>
 
             <div class="record-actions">
-              ${
-                openUrl
-                  ? `<a class="icon-btn-sm" href="${openUrl}" target="_blank" rel="noopener" aria-label="Abrir">
-                       <svg class="icon"><use href="assets/icons-unified.svg#icon-link"></use></svg>
-                     </a>`
-                  : ""
-              }
+              <!-- Link button hidden as per request (click card to open) -->
 
               <button class="icon-btn-sm" type="button" data-doc-edit="${
                 d.id
