@@ -18,6 +18,8 @@
     <script defer src="js/firebase-config.js"></script>
     <script defer src="js/auth.js"></script>
     <script defer src="js/firestore.js"></script>
+    <script defer src="js/utils.js"></script>
+    <!-- depois os ficheiros específicos da página -->
     <script defer src="js/veiculo.js"></script>
   </head>
 
@@ -607,8 +609,21 @@
             </label>
 
             <!-- CHECKBOX CHEIO -->
-            <label class="checkbox-label" style="grid-column: 1/-1; display: flex; align-items: center; gap: 10px; cursor: pointer;">
-              <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer;" />
+            <label
+              class="checkbox-label"
+              style="
+                grid-column: 1/-1;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="fuel-full"
+                style="width: auto; margin: 0; cursor: pointer"
+              />
               <span>Depósito Cheio (para cálculo exato de médias)</span>
             </label>
 

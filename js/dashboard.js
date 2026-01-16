@@ -113,7 +113,7 @@ function destroyChartIfExists(ref) {
 // KPIs – CÁLCULO
 // ======================================================================
 
-function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
+function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
   // 1️⃣ Filtrar por veículo
   const filtrados = veiculoSelecionadoId
     ? abastecimentos.filter((a) => a.veiculoId === veiculoSelecionadoId)
@@ -168,10 +168,11 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
     }
   });
 
-  const consumoMedio =
-    distTotalEficiencia > 0
-      ? litrosTotalEficiencia / (distTotalEficiencia / 100)
-      : null; // null se não houver dados suficientes
+  const eficiencia = calculateEfficiency(
+    distTotalEficiencia,
+    litrosTotalEficiencia,
+    settings.unidadeConsumo
+  );
 
   const custoPorKm =
     distTotalEficiencia > 0 ? custoTotalEficiencia / distTotalEficiencia : null;
@@ -179,7 +180,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
   return {
     totalLitros,
     totalCusto,
-    consumoMedio,
+    eficiencia,
     custoPorKm,
   };
 }
@@ -192,7 +193,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null) {
 // ======================================================================
 
 /* --- GRÁFICO 1: Consumo --- */
-function gerarGraficoConsumo(abastecimentos) {
+function gerarGraficoConsumo(abastecimentos, settings) {
   const canvas = document.getElementById("chart-consumo");
   if (!canvas) return;
 
@@ -214,7 +215,7 @@ function gerarGraficoConsumo(abastecimentos) {
     const litros = Number(a.litros);
     if (d > 0 && litros > 0) {
       labels.push(a.data);
-      valores.push((litros * 100) / d);
+      valores.push(calculateEfficiency(d, litros, settings?.unidadeConsumo));
     }
   }
 
@@ -227,7 +228,7 @@ function gerarGraficoConsumo(abastecimentos) {
       labels,
       datasets: [
         {
-          label: "Consumo (L/100km)",
+          label: `Consumo (${settings?.unidadeConsumo || "L/100km"})`,
           data: valores,
           tension: 0.3,
           fill: false,
@@ -239,7 +240,7 @@ function gerarGraficoConsumo(abastecimentos) {
 }
 
 /* --- GRÁFICO 2: Preço por litro --- */
-function gerarGraficoPreco(abastecimentos) {
+function gerarGraficoPreco(abastecimentos, settings) {
   const canvas = document.getElementById("chart-preco");
   if (!canvas) return;
 
@@ -254,14 +255,22 @@ function gerarGraficoPreco(abastecimentos) {
     type: "line",
     data: {
       labels,
-      datasets: [{ label: "Preço por Litro (€)", data: valores, tension: 0.3 }],
+      datasets: [
+        {
+          label: `Preço por Litro (${getCurrencySymbol(
+            settings?.moeda || "EUR"
+          )})`,
+          data: valores,
+          tension: 0.3,
+        },
+      ],
     },
     options: { responsive: true, maintainAspectRatio: false },
   });
 }
 
 /* --- GRÁFICO 3: Gastos mensais --- */
-function gerarGraficoGastosMensais(abastecimentos) {
+function gerarGraficoGastosMensais(abastecimentos, settings) {
   const canvas = document.getElementById("chart-gastos-mes");
   if (!canvas) return;
 
@@ -283,7 +292,15 @@ function gerarGraficoGastosMensais(abastecimentos) {
   const ctx = canvas.getContext("2d");
   charts.gastosMes = new Chart(ctx, {
     type: "bar",
-    data: { labels, datasets: [{ label: "Gastos (€)", data: valores }] },
+    data: {
+      labels,
+      datasets: [
+        {
+          label: `Gastos (${getCurrencySymbol(settings?.moeda || "EUR")})`,
+          data: valores,
+        },
+      ],
+    },
     options: { responsive: true, maintainAspectRatio: false },
   });
 }
@@ -345,7 +362,7 @@ function gerarGraficoTiposCombustivel(abastecimentos) {
 // RANKING DE POSTOS
 // ======================================================================
 
-function gerarRankingPostos(abastecimentos) {
+function gerarRankingPostos(abastecimentos, settings) {
   const container = document.getElementById("ranking-postos");
   if (!container) return;
   container.innerHTML = "";
@@ -386,7 +403,10 @@ function gerarRankingPostos(abastecimentos) {
             (r.visitas / max) * 100
           }%"></div>
         </div>
-        <span class="ranking-total">€${r.total.toFixed(2)} gastos</span>
+        <span class="ranking-total">${formatCurrency(
+          r.total,
+          settings?.moeda
+        )} gastos</span>
       </div>`;
     container.appendChild(row);
   });
@@ -408,16 +428,14 @@ async function carregarDashboard() {
   try {
     // 1. Carregar Settings
     const settings = await getUserSettings();
-    const moeda = settings.moeda || "EUR";
-    const moedaSymbol = moeda === "USD" ? "$" : moeda === "BRL" ? "R$" : "€";
-    
+
     // Configurar filtros iniciais se for o primeiro load e não houver seleção
     const periodSelect = document.getElementById("filtro-periodo");
     if (periodSelect && !periodSelect.dataset.initialized) {
-        periodSelect.value = settings.dashboardPeriodo || "mes";
-        periodSelect.dataset.initialized = "true";
-        // Disparar change para atualizar UI de datas custom
-        periodSelect.dispatchEvent(new Event('change'));
+      periodSelect.value = settings.dashboardPeriodo || "mes";
+      periodSelect.dataset.initialized = "true";
+      // Disparar change para atualizar UI de datas custom
+      periodSelect.dispatchEvent(new Event("change"));
     }
 
     // Usar a função de obter filtrados (já lê o DOM, então o update acima afeta)
@@ -425,7 +443,7 @@ async function carregarDashboard() {
 
     // Sem dados → limpar
     if (!abastecimentos.length) {
-      gastosEl.textContent = `${moedaSymbol}0,00`;
+      gastosEl.textContent = formatCurrency(0, settings.moeda);
       litrosEl.textContent = "0 L";
       precoMedioEl.textContent = "--";
       eficienciaEl.textContent = "--";
@@ -434,45 +452,48 @@ async function carregarDashboard() {
     }
 
     // KPI globais
-    const { totalLitros, totalCusto, consumoMedio } =
-      calcularKPIs(abastecimentos);
+    const { totalLitros, totalCusto, eficiencia } = calcularKPIs(
+      abastecimentos,
+      null,
+      settings
+    );
 
     litrosEl.textContent = `${totalLitros.toFixed(1)} L`;
-    gastosEl.textContent = `${moedaSymbol}${totalCusto.toFixed(2)}`;
+    gastosEl.textContent = formatCurrency(totalCusto, settings.moeda);
 
     // Preço Médio (Total Gasto / Total Litros) - simples
+    const pm = totalLitros > 0 ? totalCusto / totalLitros : 0;
     precoMedioEl.textContent =
-      totalLitros > 0 ? `${moedaSymbol}${(totalCusto / totalLitros).toFixed(3)}` : "--";
+      pm > 0 ? formatCurrency(pm, settings.moeda) : "--";
 
     eficienciaEl.textContent =
-      consumoMedio != null ? `${consumoMedio.toFixed(1)} L/100km` : "--";
+      eficiencia != null
+        ? formatConsumption(eficiencia, settings.unidadeConsumo)
+        : "--";
 
     // KPI Visibility Check
     if (settings.dashboardKpis) {
-        if (!settings.dashboardKpis.gastos) gastosEl.parentElement.style.display = 'none';
-        else gastosEl.parentElement.style.display = '';
+      if (!settings.dashboardKpis.gastos)
+        gastosEl.parentElement.style.display = "none";
+      else gastosEl.parentElement.style.display = "";
 
-        if (!settings.dashboardKpis.consumos) litrosEl.parentElement.style.display = 'none';
-        else litrosEl.parentElement.style.display = '';
-        
-        // Distância/Eficiência? "distancias" was the key, but dashboard has "eficiencia" card.
-        // Assuming "distancias" maps to the efficiency card for now or maybe I should check if there is a distance card?
-        // Ah, the dashboard layout has 4 cards: Gasto, Litros, Preço Médio, Eficiência.
-        // The settings had "Gastos", "Consumos", "Distância".
-        // Maybe "Distância" maps to nothing visible? Or maybe it should be "Eficiência".
-        // I'll leave efficiency always on or maybe check `distancias` as a proxy.
-        if (settings.dashboardKpis.distancias === false) eficienciaEl.parentElement.style.display = 'none';
-         else eficienciaEl.parentElement.style.display = '';
+      if (!settings.dashboardKpis.consumos)
+        litrosEl.parentElement.style.display = "none";
+      else litrosEl.parentElement.style.display = "";
+
+      if (settings.dashboardKpis.distancias === false)
+        eficienciaEl.parentElement.style.display = "none";
+      else eficienciaEl.parentElement.style.display = "";
     }
 
     // Gráficos e ranking
     // Para gráficos, poderíamos passar a moeda também, mas vou simplificar
-    gerarGraficoConsumo(abastecimentos);
-    gerarGraficoPreco(abastecimentos);
-    gerarGraficoGastosMensais(abastecimentos);
+    gerarGraficoConsumo(abastecimentos, settings);
+    gerarGraficoPreco(abastecimentos, settings);
+    gerarGraficoGastosMensais(abastecimentos, settings);
     gerarGraficoLitrosMensais(abastecimentos);
     gerarGraficoTiposCombustivel(abastecimentos);
-    gerarRankingPostos(abastecimentos);
+    gerarRankingPostos(abastecimentos, settings);
   } catch (err) {
     console.error("[dashboard] Erro:", err);
   }
@@ -530,39 +551,38 @@ function initDashboardRefuelModal() {
   async function open() {
     modal.classList.remove("hidden");
     msg.textContent = "";
-    
+
     // Set default date
     if (!dateEl.value) {
-        dateEl.value = new Date().toISOString().slice(0, 10);
+      dateEl.value = new Date().toISOString().slice(0, 10);
     }
-    
+
     // Load Vehicles
     try {
-        vehicleSelect.innerHTML = `<option value="">A carregar...</option>`;
-        const veiculos = await getVeiculosDoUtilizador();
-        
-        if (!veiculos.length) {
-            vehicleSelect.innerHTML = `<option value="">Sem veículos registados</option>`;
-            return;
-        }
+      vehicleSelect.innerHTML = `<option value="">A carregar...</option>`;
+      const veiculos = await getVeiculosDoUtilizador();
 
-        vehicleSelect.innerHTML = `<option value="">Selecione...</option>`;
-        veiculos.forEach(v => {
-            const opt = document.createElement("option");
-            opt.value = v.id;
-            opt.textContent = `${v.nome} (${v.marca})`;
-            vehicleSelect.appendChild(opt);
-        });
+      if (!veiculos.length) {
+        vehicleSelect.innerHTML = `<option value="">Sem veículos registados</option>`;
+        return;
+      }
 
-        // Pre-select if only one
-        if (veiculos.length === 1) {
-            vehicleSelect.value = veiculos[0].id;
-            updateVehicleDefaults(veiculos[0]);
-        }
-        
+      vehicleSelect.innerHTML = `<option value="">Selecione...</option>`;
+      veiculos.forEach((v) => {
+        const opt = document.createElement("option");
+        opt.value = v.id;
+        opt.textContent = `${v.nome} (${v.marca})`;
+        vehicleSelect.appendChild(opt);
+      });
+
+      // Pre-select if only one
+      if (veiculos.length === 1) {
+        vehicleSelect.value = veiculos[0].id;
+        updateVehicleDefaults(veiculos[0]);
+      }
     } catch (e) {
-        console.error(e);
-        vehicleSelect.innerHTML = `<option value="">Erro ao carregar</option>`;
+      console.error(e);
+      vehicleSelect.innerHTML = `<option value="">Erro ao carregar</option>`;
     }
   }
 
@@ -580,37 +600,39 @@ function initDashboardRefuelModal() {
   }
 
   // Update logic when vehicle changes (e.g. pre-fill fuel type or odometer)
-  vehicleSelect?.addEventListener('change', async () => {
-     const vid = vehicleSelect.value;
-     if (!vid) return;
-     // Optimization: we could store vehicles in memory to avoid refetch, 
-     // but getting single from cache is fast enough or finding in array if we had it.
-     // Let's assume user picks. We can try to guess fuel type?
-     // For now, simple.
+  vehicleSelect?.addEventListener("change", async () => {
+    const vid = vehicleSelect.value;
+    if (!vid) return;
+    // Optimization: we could store vehicles in memory to avoid refetch,
+    // but getting single from cache is fast enough or finding in array if we had it.
+    // Let's assume user picks. We can try to guess fuel type?
+    // For now, simple.
   });
-  
+
   function updateVehicleDefaults(v) {
-      if (v.combustivelPadrao) {
-          // Map backend values to select values if needed
-          // "gasolina" -> "Gasolina" (Capitalized in select?)
-          // The select has "Gasolina", "Gasóleo", etc.
-          // v.combustivelPadrao might be lowercase.
-          const val = v.combustivelPadrao.charAt(0).toUpperCase() + v.combustivelPadrao.slice(1);
-           // Try to find matching option
-           for (const opt of typeEl.options) {
-               if (opt.value.toLowerCase() === val.toLowerCase()) {
-                   typeEl.value = opt.value;
-                   break;
-               }
-           }
+    if (v.combustivelPadrao) {
+      // Map backend values to select values if needed
+      // "gasolina" -> "Gasolina" (Capitalized in select?)
+      // The select has "Gasolina", "Gasóleo", etc.
+      // v.combustivelPadrao might be lowercase.
+      const val =
+        v.combustivelPadrao.charAt(0).toUpperCase() +
+        v.combustivelPadrao.slice(1);
+      // Try to find matching option
+      for (const opt of typeEl.options) {
+        if (opt.value.toLowerCase() === val.toLowerCase()) {
+          typeEl.value = opt.value;
+          break;
+        }
       }
+    }
   }
 
   openBtn?.addEventListener("click", (e) => {
-      e.preventDefault(); // Prevent link navigation if it was a link
-      open();
+    e.preventDefault(); // Prevent link navigation if it was a link
+    open();
   });
-  
+
   closeBtn?.addEventListener("click", close);
   cancelBtn?.addEventListener("click", close);
 
@@ -618,8 +640,8 @@ function initDashboardRefuelModal() {
     try {
       const vid = vehicleSelect.value;
       if (!vid) {
-          msg.textContent = "Selecione um veículo.";
-          return;
+        msg.textContent = "Selecione um veículo.";
+        return;
       }
       if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {
         msg.textContent = "Preenche os campos obrigatórios.";
@@ -636,7 +658,7 @@ function initDashboardRefuelModal() {
         odometro: Number(kmEl.value),
         posto: stationEl.value.trim(),
         observacoes: notesEl.value.trim(),
-        completo: fullEl ? fullEl.checked : false
+        completo: fullEl ? fullEl.checked : false,
       };
 
       await createAbastecimento(vid, payload);
@@ -644,7 +666,7 @@ function initDashboardRefuelModal() {
       close();
       // Reload dashboard stats
       await carregarDashboard();
-      
+
       // Optional toast?
       // alert("Guardado!");
     } catch (e) {

@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // LOGIC: RESPONSABILIDADES (ALARMES)
   // =========================
-  function updateResponsibilities(v) {
+  function updateResponsibilities(v, settings) {
     // Helpers
     function getDaysDiff(targetDate) {
       if (!targetDate) return null;
@@ -331,7 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Opcional: mostrar valor do IUC se existir
     if (v.iuc?.valor) {
       const valEl = document.getElementById("val-iuc");
-      if (valEl) valEl.textContent += ` (€${v.iuc.valor})`;
+      if (valEl)
+        valEl.textContent += ` (${formatCurrency(
+          v.iuc.valor,
+          settings?.moeda
+        )})`;
     }
 
     // 3. INSPEÇÃO
@@ -608,10 +612,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // REPARAÇÕES
   // =========================
-  async function renderReparacoes(veiculoId) {
+  async function renderReparacoes(veiculoId, settings) {
     const list = document.getElementById("maint-list");
     const empty = document.getElementById("maint-empty");
     if (!list) return;
+
+    // Se settings nao vier (chamada inicial s/ await init?), tenta obter
+    if (!settings) settings = await getUserSettings();
 
     const reps = (await getReparacoesDoVeiculo(veiculoId)) || [];
     reps.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
@@ -662,8 +669,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="record-grid">
              <div class="record-grid-item">
                <span class="record-grid-label">Custo</span>
-               <span class="record-grid-value">€${(r.custo || 0).toFixed(
-                 2
+               <span class="record-grid-value">${formatCurrency(
+                 r.custo || 0,
+                 settings?.moeda
                )}</span>
              </div>
              ${
@@ -769,7 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
           odometro: Number(kmEl.value),
           posto: stationEl.value.trim(),
           observacoes: notesEl.value.trim(),
-          completo: fullEl ? fullEl.checked : false // NEW
+          completo: fullEl ? fullEl.checked : false, // NEW
         };
 
         if (editingId) {
@@ -822,6 +830,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Obter settings do utilizador
+    const settings = await getUserSettings();
+
     // VEÍCULO
     const veiculos = await getVeiculosDoUtilizador();
     const v = veiculos.find((x) => x.id === veiculoId);
@@ -842,12 +853,12 @@ document.addEventListener("DOMContentLoaded", () => {
     await renderDocumentos(veiculoId);
 
     // REPARAÇÕES
-    renderReparacoes(veiculoId);
+    renderReparacoes(veiculoId, settings);
     initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId);
 
     // RESPONSABILIDADES (ALARMES)
-    updateResponsibilities(v);
+    updateResponsibilities(v, settings);
 
     // Listener para o botão Editar Datas
     const btnEditDates = document.getElementById("btn-edit-dates");
@@ -887,7 +898,8 @@ document.addEventListener("DOMContentLoaded", () => {
         totalGasto += L * P;
       });
 
-      if (el.kpiGasto) el.kpiGasto.textContent = `€${totalGasto.toFixed(2)}`;
+      if (el.kpiGasto)
+        el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
       if (el.kpiLitros)
         el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
       if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
@@ -910,13 +922,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (el.kpiConsumo) {
-        el.kpiConsumo.textContent =
-          km > 0 ? (litrosSeg / (km / 100)).toFixed(1) + " L/100km" : "—";
+        const ef = calculateEfficiency(km, litrosSeg, settings.unidadeConsumo);
+        el.kpiConsumo.textContent = ef
+          ? formatConsumption(ef, settings.unidadeConsumo)
+          : "—";
       }
 
       if (el.kpiCustoKm) {
         el.kpiCustoKm.textContent =
-          km > 0 ? (custoSeg / km).toFixed(3) + " €/km" : "—";
+          km > 0
+            ? (custoSeg / km).toFixed(3) +
+              ` ${getCurrencySymbol(settings.moeda)}/km`
+            : "—";
       }
 
       // LISTA
@@ -934,7 +951,7 @@ document.addEventListener("DOMContentLoaded", () => {
           card.className = "record-card"; // Unified class
 
           // Icon indicator for FULL TANK
-          const fullTankIcon = a.completo 
+          const fullTankIcon = a.completo
             ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
             : "";
 
@@ -961,7 +978,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="record-grid">
             <div class="record-grid-item">
               <span class="record-grid-label">Total</span>
-              <span class="record-grid-value is-primary">€${custo}</span>
+              <span class="record-grid-value is-primary">${formatCurrency(
+                custo,
+                settings.moeda
+              )}</span>
             </div>
             
             <div class="record-grid-item">
@@ -971,7 +991,10 @@ document.addEventListener("DOMContentLoaded", () => {
             
             <div class="record-grid-item">
               <span class="record-grid-label">Preço/L</span>
-              <span class="record-grid-value">€${ppl.toFixed(3)}</span>
+              <span class="record-grid-value">${formatCurrency(
+                ppl,
+                settings.moeda
+              )}</span>
             </div>
 
             <div class="record-grid-item">
