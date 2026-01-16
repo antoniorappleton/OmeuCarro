@@ -552,12 +552,18 @@ function initDashboardRefuelModal() {
     modal.classList.remove("hidden");
     msg.textContent = "";
 
-    // Set default date
+    // Default Date
     if (!dateEl.value) {
       dateEl.value = new Date().toISOString().slice(0, 10);
     }
 
-    // Load Vehicles
+    // Default Fuel
+    const settings = await getUserSettings();
+    if (settings?.combustivelPadrao && typeEl && !typeEl.value) {
+      typeEl.value = settings.combustivelPadrao;
+    }
+
+    // Load Vehicles...
     try {
       vehicleSelect.innerHTML = `<option value="">A carregar...</option>`;
       const veiculos = await getVeiculosDoUtilizador();

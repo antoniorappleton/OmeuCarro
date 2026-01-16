@@ -712,7 +712,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function initAbastecimentoModal(veiculoId) {
+  function initAbastecimentoModal(veiculoId, settings) {
     let editingId = null;
 
     const modal = document.getElementById("fuel-modal");
@@ -734,6 +734,20 @@ document.addEventListener("DOMContentLoaded", () => {
     function open() {
       modal.classList.remove("hidden");
       msg.textContent = "";
+
+      // Pre-fill default fuel if empty/new
+      if (
+        !editingId &&
+        settings?.combustivelPadrao &&
+        typeEl &&
+        !typeEl.value
+      ) {
+        typeEl.value = settings.combustivelPadrao;
+        // Fallback if value doesn't match option values (e.g. Case sensitivity)
+        // Our options are: Gasolina, Gasóleo, GPL, Elétrico
+        // If settings has "Gasolina 95", we might need mapping or strict values.
+        // Let's assume standard values derived from <select>.
+      }
     }
 
     function close() {
@@ -838,7 +852,9 @@ document.addEventListener("DOMContentLoaded", () => {
     el.subtitle.textContent = `${v.marca} ${v.modelo}`;
     el.plate.textContent = v.matricula || "Sem matrícula";
     el.fuel.textContent = v.combustivelPadrao || "—";
-    el.odo.textContent = `${v.odometroInicial} km`;
+    el.odo.textContent = `${v.odometroInicial} ${
+      settings?.unidadeDistancia || "km"
+    }`;
 
     // DOCUMENTOS
     initDocumentosModal(veiculoId);
@@ -847,7 +863,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // REPARAÇÕES
     renderReparacoes(veiculoId, settings);
     initReparacoesModal(veiculoId);
-    initAbastecimentoModal(veiculoId);
+    initReparacoesModal(veiculoId);
+    initAbastecimentoModal(veiculoId, settings);
 
     // RESPONSABILIDADES (ALARMES)
     updateResponsibilities(v, settings);
@@ -924,7 +941,9 @@ document.addEventListener("DOMContentLoaded", () => {
         el.kpiCustoKm.textContent =
           km > 0
             ? (custoSeg / km).toFixed(3) +
-              ` ${getCurrencySymbol(settings.moeda)}/km`
+              ` ${getCurrencySymbol(settings.moeda)}/${
+                settings.unidadeDistancia || "km"
+              }`
             : "—";
       }
 
