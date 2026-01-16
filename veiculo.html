@@ -333,6 +333,60 @@
         </div>
       </section>
 
+      <!-- MANUTENÇÕES PLANEADAS -->
+      <section
+        class="details-section"
+        id="section-plan"
+        style="margin-bottom: 24px"
+      >
+        <header class="card-header">
+          <div class="card-header-left">
+            <h2
+              style="display: flex; gap: 10px; align-items: center; margin: 0"
+            >
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-clipboard"></use>
+              </svg>
+              <span>Planeamento</span>
+            </h2>
+          </div>
+
+          <div class="card-header-row">
+            <button
+              id="btn-add-plan"
+              class="btn btn-primary btn-gradient"
+              type="button"
+            >
+              <svg class="icon icon-left">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              <span>Novo Plano</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="card-body">
+          <!-- LISTA -->
+          <div
+            id="plan-list"
+            style="
+              display: grid;
+              gap: 12px;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            "
+          ></div>
+
+          <!-- EMPTY -->
+          <div
+            id="plan-empty"
+            class="vehicles-empty"
+            style="display: none; margin: 0"
+          >
+            <p>Nenhum plano de manutenção definido.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- REPARAÇÕES (placeholder) -->
       <section id="tab-maint" class="card hidden" style="margin-bottom: 80px">
         <header class="card-header">
@@ -640,6 +694,69 @@
           <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
           <button id="fuel-save" class="btn btn-primary btn-gradient">
             Guardar abastecimento
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- MODAL: PLANO MANUTENÇÃO -->
+    <div id="plan-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>Plano de Manutenção</h2>
+          <button id="plan-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label>
+              <span class="muted">Serviço</span>
+              <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
+            </label>
+            <label>
+              <span class="muted">Intervalo (Km)</span>
+              <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
+            </label>
+            <label>
+              <span class="muted">Intervalo (Meses)</span>
+              <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
+            </label>
+
+            <div
+              class="vehicle-divider"
+              style="grid-column: 1/-1; margin: 8px 0"
+            ></div>
+
+            <label>
+              <span class="muted">Último Registo (Km)</span>
+              <input
+                id="plan-last-km"
+                type="number"
+                placeholder="Km atuais..."
+              />
+            </label>
+            <label>
+              <span class="muted">Última Data</span>
+              <input id="plan-last-date" type="date" />
+            </label>
+          </div>
+          <p id="plan-msg" class="form-message"></p>
+        </div>
+        <footer class="modal-footer">
+          <button
+            id="plan-delete"
+            class="btn btn-ghost danger hidden"
+            style="margin-right: auto"
+          >
+            Apagar
+          </button>
+          <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="plan-save" class="btn btn-primary btn-gradient">
+            Guardar
           </button>
         </footer>
       </div>

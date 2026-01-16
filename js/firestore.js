@@ -639,3 +639,70 @@ async function addReparacaoAoVeiculo(veiculoId, data) {
       criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
 }
+
+// ======================================================================
+// MANUTENÇÕES PLANEADAS
+// ======================================================================
+
+async function getManutencoesPlaneadas(veiculoId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Utilizador não autenticado');
+
+  const snap = await db
+    .collection('users')
+    .doc(user.uid)
+    .collection('veiculos')
+    .doc(veiculoId)
+    .collection('manutencoesPlaneadas')
+    .get();
+
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+async function addManutencaoPlaneada(veiculoId, data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Utilizador não autenticado');
+
+  await db
+    .collection('users')
+    .doc(user.uid)
+    .collection('veiculos')
+    .doc(veiculoId)
+    .collection('manutencoesPlaneadas')
+    .add({
+      ...data,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+async function updateManutencaoPlaneada(veiculoId, docId, data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Utilizador não autenticado');
+
+  await db
+    .collection('users')
+    .doc(user.uid)
+    .collection('veiculos')
+    .doc(veiculoId)
+    .collection('manutencoesPlaneadas')
+    .doc(docId)
+    .update({
+      ...data,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+}
+
+async function deleteManutencaoPlaneada(veiculoId, docId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Utilizador não autenticado');
+
+  await db
+    .collection('users')
+    .doc(user.uid)
+    .collection('veiculos')
+    .doc(veiculoId)
+    .collection('manutencoesPlaneadas')
+    .doc(docId)
+    .delete();
+}
+

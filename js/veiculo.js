@@ -821,6 +821,190 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
+  // MANUTENÇÕES PLANEADAS
+  // =========================
+  async function renderPlanos(veiculoId, veiculo, settings) {
+    const container = document.getElementById("plan-list");
+    const empty = document.getElementById("plan-empty");
+    if (!container) return;
+
+    const planos = await getManutencoesPlaneadas(veiculoId);
+
+    if (!planos.length) {
+      container.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    container.innerHTML = planos
+      .map((p) => {
+        // Calcular status
+        const status = calculateMaintenanceStatus(
+          veiculo.odometro,
+          p.ultimoKm,
+          p.intervaloKm,
+          p.ultimaData,
+          p.intervaloMeses
+        );
+
+        let badgeClass = "badge-secondary"; // ok
+        let statusLabel = "OK";
+
+        if (status.status === "delayed") {
+          badgeClass = "badge-danger";
+          statusLabel = "ATRASADA";
+        } else if (status.status === "warning") {
+          badgeClass = "badge-warning";
+          statusLabel = "PRÓXIMA";
+        }
+
+        const encoded = safeJsonEnc(p);
+
+        return `
+            <article class="record-card clickable-card" style="cursor:pointer;" onclick="openPlanModalForEdit('${veiculoId}', '${encoded}')">
+                <div class="record-content">
+                    <div class="record-header-row">
+                        <span class="record-title">${escapeHtml(p.tipo)}</span>
+                        <span class="badge ${badgeClass}">${statusLabel}</span>
+                    </div>
+                    
+                    <div class="record-meta-row">
+                        ${
+                          status.nextKm
+                            ? `
+                        <div class="record-meta-item">
+                            <span>Próx:</span>
+                            <span class="record-value ${
+                              status.status !== "ok" ? "is-primary" : ""
+                            }">${status.nextKm} ${
+                                settings?.unidadeDistancia || "km"
+                              }</span>
+                            <span class="muted">(${
+                              status.diffKm > 0 ? "falta" : "passou"
+                            } ${Math.abs(status.diffKm)})</span>
+                        </div>`
+                            : ""
+                        }
+                        
+                        ${
+                          status.nextDate
+                            ? `
+                        <div class="record-meta-item">
+                            <span>Data:</span>
+                            <span class="record-value">${status.nextDate.toLocaleDateString()}</span>
+                        </div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            </article>
+          `;
+      })
+      .join("");
+  }
+
+  window.openPlanModalForEdit = (vid, encoded) => {
+    const data = safeJsonDec(encoded);
+    initPlanModal(vid, data);
+  };
+
+  function initPlanModal(veiculoId, editData = null) {
+    const modal = document.getElementById("plan-modal");
+    if (!modal) return;
+
+    const closeBtn = document.getElementById("plan-close");
+    const cancelBtn = document.getElementById("plan-cancel");
+    const saveBtn = document.getElementById("plan-save");
+    const delBtn = document.getElementById("plan-delete");
+    const msg = document.getElementById("plan-msg");
+
+    // Inputs
+    const typeEl = document.getElementById("plan-type");
+    const kmIntEl = document.getElementById("plan-int-km");
+    const monthIntEl = document.getElementById("plan-int-months");
+    const lastKmEl = document.getElementById("plan-last-km");
+    const lastDateEl = document.getElementById("plan-last-date");
+
+    const openBtn = document.getElementById("btn-add-plan"); // Header button
+
+    function open() {
+      modal.classList.remove("hidden");
+      msg.textContent = "";
+
+      if (editData) {
+        typeEl.value = editData.tipo || "";
+        kmIntEl.value = editData.intervaloKm || "";
+        monthIntEl.value = editData.intervaloMeses || "";
+        lastKmEl.value = editData.ultimoKm || "";
+        lastDateEl.value = editData.ultimaData || "";
+        delBtn.classList.remove("hidden");
+      } else {
+        // New
+        typeEl.value = "";
+        kmIntEl.value = "";
+        monthIntEl.value = "";
+        lastKmEl.value = ""; // Could pre-fill with current odo? user might want that.
+        lastDateEl.value = new Date().toISOString().slice(0, 10);
+        delBtn.classList.add("hidden");
+      }
+    }
+
+    function close() {
+      modal.classList.add("hidden");
+    }
+
+    // Handlers (remove old to prevent dupes if called multiple times? logic here is simple init)
+    // A better pattern is to separate init from open, but I'll stick to simple binding.
+    if (openBtn)
+      openBtn.onclick = () => {
+        editData = null;
+        open();
+      };
+    if (editData) open(); // If called with data, open immediately
+
+    closeBtn.onclick = close;
+    cancelBtn.onclick = close;
+
+    saveBtn.onclick = async () => {
+      try {
+        if (!typeEl.value) {
+          msg.textContent = "Nome do serviço obrigatório.";
+          return;
+        }
+        const payload = {
+          tipo: typeEl.value,
+          intervaloKm: Number(kmIntEl.value) || 0,
+          intervaloMeses: Number(monthIntEl.value) || 0,
+          ultimoKm: Number(lastKmEl.value) || 0,
+          ultimaData: lastDateEl.value || "",
+        };
+
+        msg.textContent = "A guardar...";
+        if (editData && editData.id) {
+          await updateManutencaoPlaneada(veiculoId, editData.id, payload);
+        } else {
+          await addManutencaoPlaneada(veiculoId, payload);
+        }
+        location.reload();
+      } catch (e) {
+        msg.textContent = "Erro: " + e.message;
+      }
+    };
+
+    delBtn.onclick = async () => {
+      if (!editData) return;
+      if (!confirm("Apagar este plano?")) return;
+      try {
+        await deleteManutencaoPlaneada(veiculoId, editData.id);
+        location.reload();
+      } catch (e) {
+        msg.textContent = e.message;
+      }
+    };
+  }
+
+  // =========================
   // INIT PRINCIPAL
   // =========================
   async function init() {
@@ -865,6 +1049,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initReparacoesModal(veiculoId);
     initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId, settings);
+
+    // MANUTENÇÕES PLANEADAS
+    renderPlanos(veiculoId, v, settings);
+    initPlanModal(veiculoId);
 
     // RESPONSABILIDADES (ALARMES)
     updateResponsibilities(v, settings);

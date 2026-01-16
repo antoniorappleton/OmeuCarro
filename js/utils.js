@@ -82,3 +82,74 @@ window.getCurrencySymbol = getCurrencySymbol;
 window.formatCurrency = formatCurrency;
 window.formatConsumption = formatConsumption;
 window.calculateEfficiency = calculateEfficiency;
+window.calculateMaintenanceStatus = calculateMaintenanceStatus;
+
+/**
+ * Calcula estado da manutenção (ok, warning, delayed).
+ *
+ * @param {number} currentKm Odómetro atual do carro
+ * @param {number} lastKm Odómetro na ultima manutenção
+ * @param {number} intervalKm Intervalo em Km (ex: 10000)
+ * @param {string} lastDate Data da ultima manutenção (YYYY-MM-DD)
+ * @param {number} intervalMonths Intervalo em meses (ex: 12)
+ */
+function calculateMaintenanceStatus(
+  currentKm,
+  lastKm,
+  intervalKm,
+  lastDate,
+  intervalMonths
+) {
+  const result = {
+    status: "ok", // ok, warning, delayed
+    labelKm: "",
+    labelDate: "",
+    nextKm: null,
+    nextDate: null,
+    diffKm: 0,
+    diffDays: 0,
+  };
+
+  // 1. KM Calc
+  if (intervalKm && !isNaN(intervalKm)) {
+    const pKm = Number(lastKm || 0) + Number(intervalKm);
+    result.nextKm = pKm;
+    result.diffKm = pKm - (currentKm || 0);
+  }
+
+  // 2. Date Calc
+  if (intervalMonths && !isNaN(intervalMonths) && lastDate) {
+    const d = new Date(lastDate);
+    d.setMonth(d.getMonth() + Number(intervalMonths));
+    result.nextDate = d;
+
+    const now = new Date();
+    // Diff in days
+    const diffTime = d - now;
+    result.diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  // 3. Determine Status
+  // Priority: Delayed (Red) > Warning (Yellow) > OK (Green)
+
+  let isDelayed = false;
+  let isWarning = false;
+
+  // Check Km
+  if (result.nextKm !== null) {
+    if (result.diffKm < 0) isDelayed = true;
+    else if (result.diffKm < 1000) isWarning = true; // Warning if < 1000km left
+  }
+
+  // Check Days
+  if (result.nextDate !== null) {
+    if (result.diffDays < 0) isDelayed = true;
+    else if (result.diffDays < 30) isWarning = true; // Warning if < 30 days left
+  }
+
+  if (isDelayed) result.status = "delayed";
+  else if (isWarning) result.status = "warning";
+  else result.status = "ok";
+
+  return result;
+}
