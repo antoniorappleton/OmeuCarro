@@ -205,6 +205,37 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function setupTabsToggle(vehicleId) {
+    const btn = document.getElementById("btn-toggle-tabs");
+    const container = document.querySelector("main");
+
+    if (!btn || !container) return;
+
+    const storageKey = `l100_vehicle_tabsCollapsed_${vehicleId}`;
+    let isCollapsed = localStorage.getItem(storageKey) === "true";
+
+    function update() {
+      if (isCollapsed) {
+        container.classList.add("tabs-collapsed");
+        btn.setAttribute("aria-expanded", "false");
+        btn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#icon-chevron-down"></use></svg>`;
+      } else {
+        container.classList.remove("tabs-collapsed");
+        btn.setAttribute("aria-expanded", "true");
+        btn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#icon-chevron-up"></use></svg>`;
+      }
+    }
+
+    // Apply initial state
+    update();
+
+    btn.addEventListener("click", () => {
+      isCollapsed = !isCollapsed;
+      localStorage.setItem(storageKey, String(isCollapsed));
+      update();
+    });
+  }
+
   function getParam(name) {
     return new URLSearchParams(window.location.search).get(name);
   }
@@ -1261,6 +1292,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
     initTabs();
+    setupTabsToggle(veiculoId);
   }
 
   // =========================
