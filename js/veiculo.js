@@ -292,15 +292,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function setStatus(elId, valId, dateObj, labelWhenNull) {
-      const card = document.getElementById(elId);
-      const valEl = document.getElementById(valId);
-      const statusEl = document.querySelector(`#${elId} .resp-status`);
-      if (!card || !valEl || !statusEl) return;
+      // IDs: status element (indicator), value element (date), text element (txt-...)
+      // The elId passed is usually "card-alert-seguro" or similar in old code, but I need to adapt.
+      // Calling code uses: setStatus("resp-seguro", "val-seguro", ...)
+      // In my new HTML:
+      // Indicator ID = "status-seguro" (was previously the text span)
+      // Date ID = "val-seguro"
+      // Text ID = "txt-seguro"
+
+      // I need to map the "old" elId (which might be used for scoping) to the specific new IDs.
+      // Actually, the caller passes "resp-seguro" which is NOT the ID of the indicator anymore in my HTML calls?
+      // Wait, in previous step I saw: setStatus("resp-seguro", "val-seguro", ...)
+      // But in HTML I have `id="status-seguro"` for the indicator.
+      // Let's assume I hardcode theSuffix since the logic is specific.
+
+      const flavor = valId.replace("val-", ""); // seguro, iuc, inspecao
+      const indicatorEl = document.getElementById(`status-${flavor}`);
+      const valEl = document.getElementById(`val-${flavor}`);
+      const txtEl = document.getElementById(`txt-${flavor}`);
+
+      if (!valEl) return;
 
       if (!dateObj) {
         valEl.textContent = labelWhenNull || "Não definido";
-        statusEl.textContent = "N/A";
-        statusEl.className = "resp-status"; // neutral
+        if (txtEl) txtEl.textContent = "";
+        if (indicatorEl)
+          indicatorEl.className = "alert-status-indicator status-neutral";
         return;
       }
 
@@ -310,24 +327,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Dias restantes
       const days = getDaysDiff(dateObj);
+      let statusClass = "status-green";
+      let statusText = `(${days} dias)`;
 
       if (days < 0) {
-        statusEl.textContent = `Expirou há ${Math.abs(days)} dias`;
-        statusEl.className = "resp-status status-red";
+        statusText = `Expirou há ${Math.abs(days)} dias`;
+        statusClass = "status-red";
       } else if (days <= 30) {
-        statusEl.textContent = `Faltam ${days} dias`;
-        statusEl.className = "resp-status status-yellow";
+        // Should use config.days from settings if available
+        statusText = `Expira em ${days} dias`;
+        statusClass = "status-yellow";
       } else {
-        statusEl.textContent = `Válido (${days} dias)`;
-        statusEl.className = "resp-status status-green";
+        statusText = `Válido (${days} dias)`;
       }
+
+      if (txtEl) txtEl.textContent = statusText;
+      if (indicatorEl)
+        indicatorEl.className = `alert-status-indicator ${statusClass}`;
     }
 
     // 1. SEGURO
-    setStatus("resp-seguro", "val-seguro", v.seguro?.validade, "Sem data");
+    setStatus("unused", "val-seguro", v.seguro?.validade, "Sem data");
 
     // 2. IUC
-    setStatus("resp-iuc", "val-iuc", v.iuc?.dataLimite, "Sem data");
+    setStatus("unused", "val-iuc", v.iuc?.dataLimite, "Sem data");
     // Opcional: mostrar valor do IUC se existir
     if (v.iuc?.valor) {
       const valEl = document.getElementById("val-iuc");
@@ -339,12 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 3. INSPEÇÃO
-    setStatus(
-      "resp-inspecao",
-      "val-inspecao",
-      v.inspecao?.proximaData,
-      "Sem data"
-    );
+    setStatus("unused", "val-inspecao", v.inspecao?.proximaData, "Sem data");
   }
 
   // =========================

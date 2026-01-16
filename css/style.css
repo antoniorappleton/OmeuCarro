@@ -1117,3 +1117,251 @@ footer a .icon {
   align-items: center;
   gap: 0.4rem;
 }
+/* =========================================
+   VEHICLE DETAIL REDESIGN (CLEAN UX)
+   ========================================= */
+
+/* --- Hero Section --- */
+.vehicle-hero {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.vehicle-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.vehicle-hero-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- Quick Actions Row --- */
+.vehicle-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.action-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  gap: 8px;
+  height: auto;
+  min-height: 80px;
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.icon-box-sm {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2); 
+}
+.icon-box-sm .icon { width: 18px; height: 18px; color: #fff; }
+
+.action-card-btn.btn-secondary .icon-box-sm.doc { background: rgba(99, 102, 241, 0.2); }
+.action-card-btn.btn-secondary .icon-box-sm.doc .icon { color: #6366f1; }
+
+.action-card-btn.btn-secondary .icon-box-sm.maint { background: rgba(245, 158, 11, 0.2); }
+.action-card-btn.btn-secondary .icon-box-sm.maint .icon { color: #f59e0b; }
+
+
+/* --- Compact KPIs --- */
+.vehicle-kpis-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .vehicle-kpis-compact {
+     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stats-card.compact {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.stats-card.compact .muted { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.stats-card.compact strong { font-size: 1.1rem; color: var(--color-text-main); }
+
+
+/* --- Alerts Config Panel --- */
+.alerts-config {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-light);
+}
+
+.config-select-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+.config-select-row select {
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--color-bg);
+  color: var(--color-text-main);
+}
+
+.config-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--color-text-muted);
+  transition: .4s;
+  border-radius: 24px;
+  opacity: 0.3;
+}
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: var(--color-primary-start);
+  opacity: 1;
+}
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+/* Resp Card Adjustment for alerts list */
+.resp-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.resp-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+
+/* =========================================
+   PRIORITY LAYOUT ADJUSTMENTS (CLEAN)
+   ========================================= */
+
+/* Hero */
+.vehicle-hero {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.vehicle-hero-info .page-title { margin-bottom: 2px; }
+
+/* Alerts Summary (Priority List) */
+.vehicle-alerts-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+.alert-item:hover { background: rgba(0,0,0,0.02); }
+
+.alert-status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.alert-status-indicator.status-green { background: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+.alert-status-indicator.status-yellow { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); }
+.alert-status-indicator.status-red { background: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+.alert-status-indicator.status-neutral { background: var(--border-light); }
+
+.alert-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.alert-label { font-size: 0.85rem; color: var(--color-text-muted); font-weight: 500; }
+.alert-value { font-size: 0.95rem; font-weight: 600; color: var(--color-text-main); }
+
+/* Section Titles */
+.vehicle-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Config Details */
+.alerts-config-details summary {
+  list-style: none; /* simple reset */
+  cursor: pointer;
+}
+.alerts-config-details[open] summary {
+  margin-bottom: 12px;
+}
+

@@ -64,366 +64,372 @@
     </header>
 
     <main class="home-main">
-      <!-- CARD DO VEÍCULO -->
-      <section class="card">
-        <h1 class="page-title">
-          <svg class="icon icon-title" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-car"></use>
-          </svg>
-          <span id="vehicle-name">Veículo</span>
-        </h1>
-
-        <p id="vehicle-subtitle" class="card-subtitle"></p>
-
-        <div class="vehicle-detail-badges">
-          <span id="vehicle-plate" class="badge badge-outline">-</span>
-          <span id="vehicle-fuel" class="badge badge-secondary">-</span>
-          <span id="vehicle-odometer" class="badge badge-outline">-</span>
+      <!-- 1. HERO (Compact) -->
+      <section class="card vehicle-hero">
+        <div class="vehicle-hero-header">
+          <div class="vehicle-hero-info">
+            <h1 id="vehicle-name" class="page-title">Veículo</h1>
+            <p id="vehicle-subtitle" class="muted">Detalhe</p>
+          </div>
+          <div class="vehicle-hero-actions">
+            <button
+              id="btn-edit-vehicle"
+              class="icon-btn"
+              aria-label="Editar Veículo"
+            >
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-edit"></use>
+              </svg>
+            </button>
+            <button id="btn-alerts-quick" class="icon-btn" aria-label="Alertas">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-bell"></use>
+              </svg>
+            </button>
+          </div>
         </div>
 
+        <div class="vehicle-detail-badges">
+          <span id="vehicle-plate" class="badge badge-outline">--</span>
+          <span id="vehicle-fuel" class="badge badge-secondary">--</span>
+          <span id="vehicle-odometer" class="badge badge-outline">-- km</span>
+        </div>
         <p id="vehicle-message" class="form-message"></p>
       </section>
 
-      <!-- KPIs DO VEÍCULO -->
-      <section class="stats-grid">
-        <article class="stats-card">
-          <div class="stats-card-header">
-            <span class="stats-card-icon">
-              <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-wallet"></use>
-              </svg>
-            </span>
-            <h2>Total gasto</h2>
+      <!-- 2. PRIMARY ACTIONS (Command Center) -->
+      <section class="vehicle-actions-row">
+        <button
+          id="btn-add-fuel"
+          class="btn btn-primary btn-gradient action-card-btn"
+        >
+          <div class="icon-box-sm">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
+            </svg>
           </div>
-          <p class="stats-card-value" id="kpi-gasto">€0,00</p>
-          <p class="stats-card-desc">Neste veículo</p>
-        </article>
+          <span>Abastecer</span>
+        </button>
+        <button id="btn-add-doc" class="btn btn-secondary action-card-btn">
+          <div class="icon-box-sm doc">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-file"></use>
+            </svg>
+          </div>
+          <span>Documento</span>
+        </button>
+        <button id="btn-add-maint" class="btn btn-secondary action-card-btn">
+          <div class="icon-box-sm maint">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-wrench"></use>
+            </svg>
+          </div>
+          <span>Reparação</span>
+        </button>
+      </section>
 
-        <article class="stats-card">
-          <div class="stats-card-header">
-            <span class="stats-card-icon">
-              <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
-              </svg>
-            </span>
-            <h2>Litros</h2>
-          </div>
-          <p class="stats-card-value" id="kpi-litros">0 L</p>
-          <p class="stats-card-desc">Acumulado</p>
+      <!-- 3. COMPACT KPIs -->
+      <section class="stats-grid vehicle-kpis-compact">
+        <article class="stats-card compact">
+          <span class="muted">Gasto Total</span>
+          <strong id="kpi-gasto">€0</strong>
         </article>
-
-        <article class="stats-card">
-          <div class="stats-card-header">
-            <span class="stats-card-icon">
-              <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-dashboard"></use>
-              </svg>
-            </span>
-            <h2>Consumo médio</h2>
-          </div>
-          <p class="stats-card-value" id="kpi-consumo">-- L/100km</p>
-          <p class="stats-card-desc">Estimado</p>
+        <article class="stats-card compact">
+          <span class="muted">Litros</span>
+          <strong id="kpi-litros">0 L</strong>
         </article>
-
-        <article class="stats-card">
-          <div class="stats-card-header">
-            <span class="stats-card-icon">
-              <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-trend-up"></use>
-              </svg>
-            </span>
-            <h2>Custo por km</h2>
-          </div>
-          <p class="stats-card-value" id="kpi-custo-km">-- €/km</p>
-          <p class="stats-card-desc">Com base nos registos</p>
+        <article class="stats-card compact">
+          <span class="muted">Média</span>
+          <strong id="kpi-consumo">--</strong>
+        </article>
+        <article class="stats-card compact">
+          <span class="muted">Custo/Km</span>
+          <strong id="kpi-custo-km">--</strong>
         </article>
       </section>
 
-      <!-- TABS -->
-      <nav class="section-tabs" aria-label="Secções do veículo">
+      <!-- 4. ALERTS SUMMARY (Expandable Config) -->
+      <section id="section-alerts" class="card" style="margin-bottom: 24px">
+        <header class="card-header" style="padding-bottom: 12px">
+          <h2 class="vehicle-section-title">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-bell"></use>
+            </svg>
+            Alertas Próximos
+          </h2>
+          <button id="btn-edit-dates" class="btn btn-ghost btn-sm">
+            Editar Datas
+          </button>
+        </header>
+
+        <div class="card-body">
+          <!-- SUMMARY LIST -->
+          <div class="vehicle-alerts-summary">
+            <!-- Seguro -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-seguro"></div>
+              <!-- Class gets added by JS (status-green/etc) -->
+              <div class="alert-info">
+                <span class="alert-label">Seguro</span>
+                <span class="alert-value"
+                  ><span id="val-seguro">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-seguro"
+                  ></span
+                ></span>
+              </div>
+            </div>
+            <!-- IUC -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-iuc"></div>
+              <div class="alert-info">
+                <span class="alert-label">IUC</span>
+                <span class="alert-value"
+                  ><span id="val-iuc">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-iuc"
+                  ></span
+                ></span>
+              </div>
+            </div>
+            <!-- INSPEÇÃO -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-inspecao"></div>
+              <div class="alert-info">
+                <span class="alert-label">Inspeção</span>
+                <span class="alert-value"
+                  ><span id="val-inspecao">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-inspecao"
+                  ></span
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- COLLAPSIBLE CONFIG -->
+          <details id="alerts-config-details" class="alerts-config-details">
+            <summary
+              class="btn btn-secondary btn-sm full-width"
+              style="margin-top: 12px"
+            >
+              Configurar Alertas
+            </summary>
+
+            <div
+              id="alerts-config-panel"
+              class="alerts-config-panel"
+              style="margin-top: 16px"
+            >
+              <div class="vehicle-divider"></div>
+              <h4 class="muted" style="margin: 12px 0 8px">
+                Notificações Ativas
+              </h4>
+
+              <div class="config-row">
+                <span>Seguro</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-seguro" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+              <div class="config-row">
+                <span>IUC</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-iuc" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+              <div class="config-row">
+                <span>Inspeção</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-inspecao" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+
+              <label class="config-select-row">
+                <span>Avisar com antecedência:</span>
+                <select id="select-alert-antecedencia">
+                  <option value="7">7 dias</option>
+                  <option value="15">15 dias</option>
+                  <option value="30">30 dias</option>
+                </select>
+              </label>
+
+              <div class="config-actions">
+                <button
+                  id="btn-save-alert-settings"
+                  class="btn btn-primary btn-sm full-width"
+                >
+                  Guardar Preferências
+                </button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- 5. TABS (History) -->
+      <nav class="section-tabs" aria-label="Histórico">
         <button
           class="tab-btn is-active"
           type="button"
           data-tab="fuel"
           aria-controls="tab-fuel"
         >
-          <svg class="icon" aria-hidden="true">
+          <svg class="icon">
             <use href="assets/icons-unified.svg#icon-fuel"></use>
           </svg>
           <span>Abastecimentos</span>
         </button>
-
         <button
           class="tab-btn"
           type="button"
           data-tab="docs"
           aria-controls="tab-docs"
         >
-          <svg class="icon" aria-hidden="true">
+          <svg class="icon">
             <use href="assets/icons-unified.svg#icon-file"></use>
           </svg>
           <span>Documentos</span>
         </button>
-
         <button
           class="tab-btn"
           type="button"
           data-tab="maint"
           aria-controls="tab-maint"
         >
-          <svg class="icon" aria-hidden="true">
+          <svg class="icon">
             <use href="assets/icons-unified.svg#icon-wrench"></use>
           </svg>
           <span>Reparações</span>
         </button>
       </nav>
 
-      <!-- ABASTECIMENTOS -->
-      <section
-        id="tab-fuel"
-        class="abastecimentos-section"
-        style="margin-bottom: 32px"
-      >
-        <div class="card-header-row">
-          <button
-            id="btn-add-fuel"
-            class="btn btn-primary btn-gradient"
-            type="button"
-          >
-            <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
-            </svg>
-            <span>Novo abastecimento</span>
-          </button>
-        </div>
-
+      <!-- TAB: FUEL -->
+      <section id="tab-fuel" class="tab-content" style="margin-bottom: 32px">
         <div id="fuel-empty" class="vehicles-empty hidden">
           <div class="vehicles-empty-icon">
-            <svg class="icon" aria-hidden="true">
+            <svg class="icon">
               <use href="assets/icons-unified.svg#icon-fuel"></use>
             </svg>
           </div>
           <h3>Nenhum abastecimento</h3>
           <p>Registe o primeiro abastecimento deste veículo.</p>
         </div>
-
         <div id="fuel-list" class="fuel-list"></div>
       </section>
 
-      <!-- DOCUMENTOS -->
-      <section id="tab-docs" class="card hidden" style="margin-bottom: 80px">
-        <header class="card-header">
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              gap: 12px;
-            "
-          >
-            <div>
-              <h2
-                style="display: flex; gap: 10px; align-items: center; margin: 0"
+      <!-- TAB: DOCS -->
+      <section
+        id="tab-docs"
+        class="tab-content hidden"
+        style="margin-bottom: 80px"
+      >
+        <div class="card">
+          <div class="card-body">
+            <div
+              class="list-filters"
+              style="
+                margin-bottom: 12px;
+                display: flex;
+                justify-content: flex-end;
+              "
+            >
+              <select
+                id="docs-filter"
+                style="
+                  padding: 6px;
+                  border-radius: 8px;
+                  border: 1px solid var(--border-light);
+                  background: var(--color-bg);
+                  color: var(--color-text-main);
+                "
               >
-                <svg class="icon" aria-hidden="true">
-                  <use href="assets/icons-unified.svg#icon-file"></use>
-                </svg>
-                <span>Documentos e Datas</span>
-              </h2>
-              <p class="muted">Datas de pagamento e documentos digitais.</p>
-            </div>
-
-            <button
-              id="btn-add-doc"
-              class="btn btn-primary btn-gradient"
-              type="button"
-            >
-              <svg class="icon icon-left" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
-              </svg>
-              <span>Novo documento</span>
-            </button>
-          </div>
-        </header>
-
-        <div class="card-body">
-          <!-- 🔔 RESPONSABILIDADES (ALARMES) -->
-          <div class="responsibilities-grid">
-            <!-- SEGURO -->
-            <div class="resp-card" id="resp-seguro">
-              <div class="resp-icon-box">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-shield"></use>
-                </svg>
-              </div>
-              <div class="resp-content">
-                <span class="resp-label">Seguro</span>
-                <span class="resp-value" id="val-seguro">--</span>
-                <span class="resp-status" id="status-seguro">--</span>
-              </div>
-            </div>
-
-            <!-- IUC -->
-            <div class="resp-card" id="resp-iuc">
-              <div class="resp-icon-box">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-file-text"></use>
-                </svg>
-              </div>
-              <div class="resp-content">
-                <span class="resp-label">IUC</span>
-                <span class="resp-value" id="val-iuc">--</span>
-                <span class="resp-status" id="status-iuc">--</span>
-              </div>
-            </div>
-
-            <!-- INSPEÇÃO -->
-            <div class="resp-card" id="resp-inspecao">
-              <div class="resp-icon-box">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-search"></use>
-                </svg>
-              </div>
-              <div class="resp-content">
-                <span class="resp-label">Inspeção</span>
-                <span class="resp-value" id="val-inspecao">--</span>
-                <span class="resp-status" id="status-inspecao">--</span>
-              </div>
-            </div>
-
-            <!-- EDITAR DATAS ATALHO -->
-            <button class="resp-edit-btn" id="btn-edit-dates">
-              Editar Datas
-            </button>
-          </div>
-
-          <div class="vehicle-divider" style="margin: 24px 0"></div>
-          <div
-            style="
-              margin-top: 16px;
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              gap: 12px;
-            "
-          >
-            <h3
-              style="margin: 0; display: flex; gap: 10px; align-items: center"
-            >
-              <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-folder"></use>
-              </svg>
-              <span>Documentos guardados</span>
-            </h3>
-
-            <div style="display: flex; gap: 10px; align-items: center">
-              <span class="muted" style="font-size: 12px">Filtrar:</span>
-              <select id="docs-filter">
                 <option value="Todos">Todos</option>
                 <option value="Carro">Documentos do carro</option>
                 <option value="Outros">Outros</option>
               </select>
             </div>
+            <div id="docs-list" style="display: grid; gap: 12px"></div>
           </div>
-
-          <div
-            id="docs-list"
-            style="margin-top: 12px; display: grid; gap: 12px"
-          ></div>
         </div>
       </section>
 
-      <!-- MANUTENÇÕES PLANEADAS -->
+      <!-- TAB: MAINT (+ Planning) -->
       <section
-        class="details-section"
-        id="section-plan"
-        style="margin-bottom: 24px"
+        id="tab-maint"
+        class="tab-content hidden"
+        style="margin-bottom: 80px"
       >
-        <header class="card-header">
-          <div class="card-header-left">
-            <h2
-              style="display: flex; gap: 10px; align-items: center; margin: 0"
-            >
+        <!-- Planeamento (Integrated) -->
+        <div class="card" style="margin-bottom: 16px">
+          <header class="card-header">
+            <h3 class="vehicle-section-title">
               <svg class="icon">
                 <use href="assets/icons-unified.svg#icon-clipboard"></use>
               </svg>
-              <span>Planeamento</span>
-            </h2>
-          </div>
-
-          <div class="card-header-row">
+              Próxima Manutenção
+            </h3>
             <button
               id="btn-add-plan"
-              class="btn btn-primary btn-gradient"
-              type="button"
+              class="icon-btn-sm"
+              aria-label="Novo Plano"
             >
-              <svg class="icon icon-left">
+              <svg class="icon">
                 <use href="assets/icons-unified.svg#icon-plus"></use>
               </svg>
-              <span>Novo Plano</span>
             </button>
-          </div>
-        </header>
-
-        <div class="card-body">
-          <!-- LISTA -->
-          <div
-            id="plan-list"
-            style="
-              display: grid;
-              gap: 12px;
-              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            "
-          ></div>
-
-          <!-- EMPTY -->
-          <div
-            id="plan-empty"
-            class="vehicles-empty"
-            style="display: none; margin: 0"
-          >
-            <p>Nenhum plano de manutenção definido.</p>
+          </header>
+          <div class="card-body">
+            <div
+              id="plan-list"
+              style="
+                display: grid;
+                gap: 12px;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              "
+            ></div>
+            <div
+              id="plan-empty"
+              class="vehicles-empty"
+              style="display: none; margin: 0; padding: 12px"
+            >
+              <p style="font-size: 0.9rem">Nenhum plano definido.</p>
+            </div>
           </div>
         </div>
-      </section>
 
-      <!-- REPARAÇÕES (placeholder) -->
-      <section id="tab-maint" class="card hidden" style="margin-bottom: 80px">
-        <header class="card-header">
-          <h2 style="display: flex; gap: 10px; align-items: center; margin: 0">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-wrench"></use>
-            </svg>
-            <span>Reparações</span>
-          </h2>
-          <p class="muted">
-            Regista manutenções, reparações e custos associados.
-          </p>
-          <div class="card-header-row">
-            <button
-              id="btn-add-maint"
-              class="btn btn-primary btn-gradient"
-              type="button"
-            >
-              <svg class="icon icon-left">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
+        <!-- Histórico -->
+        <div class="card">
+          <header class="card-header">
+            <h3 class="vehicle-section-title">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-wrench"></use>
               </svg>
-              <span>Nova reparação</span>
-            </button>
+              Histórico
+            </h3>
+          </header>
+          <div class="card-body">
+            <div
+              id="maint-empty"
+              class="vehicles-empty hidden"
+              style="margin: 0; padding: 20px"
+            >
+              <p>Nenhuma reparação registada.</p>
+            </div>
+            <div id="maint-list" style="display: grid; gap: 12px"></div>
           </div>
-        </header>
-        <div class="card-body">
-          <!-- EMPTY STATE -->
-          <div id="maint-empty" class="vehicles-empty" style="margin: 0">
-            <div class="vehicles-empty-icon">🛠️</div>
-            <h3>Nenhuma reparação</h3>
-            <p>
-              Regista a primeira reparação para acompanhar custos e histórico.
-            </p>
-          </div>
-
-          <!-- LISTA DE REPARAÇÕES -->
-          <div id="maint-list" style="display: grid; gap: 12px"></div>
         </div>
       </section>
     </main>
