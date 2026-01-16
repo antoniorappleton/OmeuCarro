@@ -306,6 +306,52 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // LOGIC: RESPONSABILIDADES (ALARMES)
   // =========================
+  function setupAlertsConfig(v) {
+    const btnSave = document.getElementById("btn-save-alert-settings");
+    if (!btnSave) return;
+
+    // Elements
+    const togSeguro = document.getElementById("toggle-alert-seguro");
+    const togIuc = document.getElementById("toggle-alert-iuc");
+    const togInsp = document.getElementById("toggle-alert-inspecao");
+    const selAnt = document.getElementById("select-alert-antecedencia");
+
+    // Load current values safely
+    const prefs = v.alertasAtivos || {};
+    if (togSeguro) togSeguro.checked = prefs.seguro !== false;
+    if (togIuc) togIuc.checked = prefs.iuc !== false;
+    if (togInsp) togInsp.checked = prefs.inspecao !== false;
+    if (selAnt) selAnt.value = prefs.antecedencia || "30";
+
+    // Save
+    btnSave.addEventListener("click", async (e) => {
+      e.preventDefault();
+      btnSave.disabled = true;
+      btnSave.textContent = "A guardar...";
+
+      const newPrefs = {
+        seguro: togSeguro ? togSeguro.checked : true,
+        iuc: togIuc ? togIuc.checked : true,
+        inspecao: togInsp ? togInsp.checked : true,
+        antecedencia: Number(selAnt ? selAnt.value : 30),
+      };
+
+      try {
+        // Use set with merge: true to avoid overwriting the entire document if updateVeiculo is buggy
+        await db
+          .collection("veiculos")
+          .doc(v.id)
+          .set({ alertasAtivos: newPrefs }, { merge: true });
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao guardar preferências.");
+        btnSave.disabled = false;
+        btnSave.textContent = "Guardar Preferências";
+      }
+    });
+  }
+
   function updateResponsibilities(v, settings) {
     // Helpers
     function getDaysDiff(targetDate) {
@@ -342,6 +388,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const valEl = document.getElementById(`val-${flavor}`);
       const txtEl = document.getElementById(`txt-${flavor}`);
 
+      // Check preferences
+      const prefs = v.alertasAtivos || {};
+      // Default to true if undefined
+      const isEnabled = prefs[flavor] !== false;
+      const warnDays = Number(prefs.antecedencia) || 30;
+
       if (!valEl) return;
 
       if (!dateObj) {
@@ -361,15 +413,20 @@ document.addEventListener("DOMContentLoaded", () => {
       let statusClass = "status-green";
       let statusText = `(${days} dias)`;
 
-      if (days < 0) {
-        statusText = `Expirou há ${Math.abs(days)} dias`;
-        statusClass = "status-red";
-      } else if (days <= 30) {
-        // Should use config.days from settings if available
-        statusText = `Expira em ${days} dias`;
-        statusClass = "status-yellow";
+      // Logic with preferences
+      if (!isEnabled) {
+        statusClass = "status-neutral";
+        // Keep days visible but neutral
       } else {
-        statusText = `Válido (${days} dias)`;
+        if (days < 0) {
+          statusText = `Expirou há ${Math.abs(days)} dias`;
+          statusClass = "status-red";
+        } else if (days <= warnDays) {
+          statusText = `Expira em ${days} dias`;
+          statusClass = "status-yellow";
+        } else {
+          statusText = `Válido (${days} dias)`;
+        }
       }
 
       if (txtEl) txtEl.textContent = statusText;
@@ -1104,6 +1161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initPlanModal(veiculoId);
 
     // RESPONSABILIDADES (ALARMES)
+    setupAlertsConfig(v);
     updateResponsibilities(v, settings);
 
     // Listener para o botão Editar Datas

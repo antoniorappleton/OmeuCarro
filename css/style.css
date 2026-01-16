@@ -1454,6 +1454,30 @@ input:checked+.slider:before {
   padding: 0 4px;
 }
 
+#btn-toggle-tabs {
+  background: var(--color-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  color: var(--color-text-muted);
+}
+
+#btn-toggle-tabs:hover {
+  background: var(--color-bg);
+  border-color: var(--color-primary-start);
+  color: var(--color-primary-start);
+}
+
+#btn-toggle-tabs:active {
+  transform: scale(0.95);
+}
+
 .tabs-collapsed .tab-content {
   display: none !important;
 }
