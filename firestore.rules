@@ -18,6 +18,11 @@ service cloud.firestore {
       match /settings/{document=**} {
         allow read, write: if isOwner(userId);
       }
+      
+      // Allow access to localizacoes subcollection (Trip Planner)
+      match /localizacoes/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // =========================================================

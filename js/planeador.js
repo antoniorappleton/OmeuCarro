@@ -107,22 +107,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // Try getting from first vehicle (simplification)
     try {
       const snap = await db
-        .collection("users")
-        .doc(auth.currentUser.uid)
         .collection("veiculos")
+        .where("userId", "==", auth.currentUser.uid)
         .limit(1)
         .get();
       if (!snap.empty) {
         const v = snap.docs[0].data();
-        // Simple logic: if vehicle has 'consumoMedio' field saved, use it.
-        // Or calculate from last few fillups?
-        // Let's stick to simple "if exists" or generic fallback for V1.
-        // Assuming standard generic fallback for now as calculating real average requires querying subcollection.
-        // Let's query subcollection 'abastecimentos' limit 5
+        if (v.consumo) {
+          // If vehicle has consumption field directly
+          consumoMedio = Number(v.consumo);
+        }
 
+        // Query subcollection 'abastecimentos' of that vehicle
         const absSnap = await db
-          .collection("users")
-          .doc(auth.currentUser.uid)
           .collection("veiculos")
           .doc(snap.docs[0].id)
           .collection("abastecimentos")
