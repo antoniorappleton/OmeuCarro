@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Planeador – L100</title>
+    <title>Mapa – L100</title>
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/planeador-unified.css" />
     <script src="js/theme.js"></script>
 
     <!-- Firebase v9 (compat) -->
@@ -18,309 +19,337 @@
     <script defer src="js/auth.js"></script>
     <script defer src="js/firestore.js"></script>
     <script defer src="js/utils.js"></script>
-    <script defer src="js/planeador.js"></script>
+
+    <!-- Unified Controller -->
+    <script defer src="js/planeador.js?v=unified"></script>
   </head>
 
-  <body class="app-page" data-page="trip-planner">
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="app-header-left">
-        <a
-          href="dashboard.html"
-          class="app-logo"
-          aria-label="Voltar à dashboard"
-        >
-          <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
-          </svg>
-          <div class="app-logo-text">
-            <span class="app-logo-title">L100</span>
-            <span class="app-logo-subtitle">Planeador de Viagem</span>
-          </div>
-        </a>
+  <body class="map-page" data-page="trip-planner">
+    <!-- SEARCH OVERLAY -->
+    <div id="search-overlay" class="search-overlay">
+      <div class="flex items-center gap-2">
+        <div class="w-full relative">
+          <input
+            type="text"
+            id="map-search-input"
+            placeholder="Pesquisar..."
+            class="input-modern"
+            style="padding-right: 36px; border-radius: 99px"
+          />
+          <button id="close-search" class="absolute right-2 top-2 text-muted">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </div>
       </div>
+      <div
+        id="search-results"
+        class="mt-2"
+        style="max-height: 200px; overflow-y: auto"
+      ></div>
+    </div>
 
+    <!-- HEADER -->
+    <header class="map-header app-header">
+      <div class="app-header-left">
+        <div class="app-logo-text">
+          <span class="app-logo-title">Mapa</span>
+        </div>
+      </div>
       <div class="app-header-actions">
-        <!-- Optional: Profile or other actions -->
+        <!-- Search Trigger -->
+        <button
+          id="btn-search-toggle"
+          class="icon-btn"
+          style="background: transparent; color: var(--color-text-main)"
+        >
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-search"></use>
+          </svg>
+        </button>
       </div>
     </header>
 
-    <main class="app-content">
-      <!-- HERO -->
-      <section class="vehicle-hero">
-        <div class="vehicle-hero-info">
-          <h1 class="page-title">Planeador</h1>
-          <p class="text-muted">Simule custos e abra a rota.</p>
+    <!-- MAP LAYER -->
+    <main id="map-container">
+      <!-- Pins injected here -->
+      <div id="map-pins-container"></div>
+    </main>
+
+    <!-- MAP CONTROLS -->
+    <div class="map-controls">
+      <button id="btn-zoom-in" class="control-btn">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-plus"></use>
+        </svg>
+      </button>
+      <button id="btn-zoom-out" class="control-btn">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-minus"></use>
+        </svg>
+      </button>
+      <!-- TODO: Icon minus -->
+      <button id="btn-my-loc" class="control-btn">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-location"></use>
+        </svg>
+      </button>
+    </div>
+
+    <!-- FAB ADD FAVORITE -->
+    <button id="fab-add-favorite" class="fab-add">
+      <svg class="icon" style="width: 24px">
+        <use href="assets/icons-unified.svg#icon-plus"></use>
+      </svg>
+    </button>
+
+    <!-- UNIFIED BOTTOM SHEET -->
+    <div id="sheet-container" class="sheet-container compact">
+      <div class="sheet-handle-bar"></div>
+
+      <div class="sheet-scroll-content">
+        <!-- SECTION: DESTINATION & FAVORITES (Compact/All) -->
+        <div id="sec-destination" class="sheet-section visible">
+          <!-- Selected Destination Header -->
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 id="sheet-dest-name" class="text-lg font-bold">
+                Selecionar Destino
+              </h2>
+              <p id="sheet-dest-address" class="text-sm text-muted truncate">
+                Toque no mapa ou escolha abaixo
+              </p>
+            </div>
+            <button
+              id="btn-clear-dest"
+              class="hidden text-xs text-danger font-medium border border-danger rounded px-2 py-1"
+            >
+              Limpar
+            </button>
+          </div>
+
+          <!-- Horizontal Chips -->
+          <div id="sheet-favorites-list" class="favorites-scroll">
+            <!-- Chips get injected here -->
+            <div class="chip-skeleton" style="width: 80px"></div>
+          </div>
         </div>
-        <div class="vehicle-hero-actions">
+
+        <!-- SECTION: SIMULATION (Half/Full) -->
+        <div id="sec-simulation" class="sheet-section mt-4 hidden">
+          <div class="divider-light mb-4"></div>
+
+          <!-- Segment Control -->
+          <div class="segment-control-container">
+            <div class="segment-control">
+              <label>
+                <input type="radio" name="sim-mode" value="fast" checked />
+                <span class="segment-label">Rápido</span>
+              </label>
+              <label>
+                <input type="radio" name="sim-mode" value="advanced" />
+                <span class="segment-label">Avançado</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Inputs Grid -->
+          <div class="grid-2-col">
+            <div class="input-group">
+              <span class="label-text">Distância (km)</span>
+              <input
+                type="number"
+                id="simp-distance"
+                class="input-modern"
+                placeholder="0"
+              />
+            </div>
+            <div class="input-group">
+              <span class="label-text">Portagens (€)</span>
+              <input
+                type="number"
+                id="simp-tolls"
+                class="input-modern"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div class="grid-2-col mt-2">
+            <div class="input-group">
+              <span class="label-text">Viagens</span>
+              <input
+                type="number"
+                id="simp-trips"
+                class="input-modern"
+                value="1"
+              />
+            </div>
+            <div class="input-group">
+              <span class="label-text">Pessoas</span>
+              <input
+                type="number"
+                id="simp-people"
+                class="input-modern"
+                value="1"
+              />
+            </div>
+          </div>
+
+          <!-- Advanced Inputs -->
+          <div class="advanced-inputs mt-2 grid-2-col" id="adv-inputs">
+            <div class="input-group">
+              <span class="label-text">Consumo</span>
+              <input
+                type="number"
+                id="simp-consumption"
+                class="input-modern"
+                placeholder="6.0"
+              />
+            </div>
+            <div class="input-group">
+              <span class="label-text">Preço/L (€)</span>
+              <input
+                type="number"
+                id="simp-price"
+                class="input-modern"
+                placeholder="1.70"
+              />
+            </div>
+          </div>
+
           <button
-            id="btn-open-destinations"
-            class="icon-btn"
-            aria-label="Mapa e Destinos"
+            id="btn-use-averages"
+            class="text-xs text-primary font-medium mt-2 w-full text-center"
+          >
+            Usar médidas do meu veículo
+          </button>
+        </div>
+
+        <!-- SECTION: RESULTS (Half/Full) -->
+        <div id="sec-results" class="sheet-section mt-6 hidden">
+          <div class="pricing-card text-center">
+            <div class="text-xs text-muted uppercase mb-1">Total Estimado</div>
+            <div class="price-display" id="res-total">€0.00</div>
+
+            <div
+              class="grid-3-col mt-4 border-t pt-2"
+              style="border-color: rgba(0, 0, 0, 0.05)"
+            >
+              <div>
+                <div class="text-xs text-muted">Combustível</div>
+                <div class="font-bold text-sm" id="res-fuel-cost">€0.00</div>
+              </div>
+              <div>
+                <div class="text-xs text-muted">Portagens</div>
+                <div class="font-bold text-sm" id="res-tolls">€0.00</div>
+              </div>
+              <div>
+                <div class="text-xs text-muted">Por pessoa</div>
+                <div class="font-bold text-sm text-primary" id="res-per-person">
+                  €0.00
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <button
+            id="btn-open-route"
+            class="btn btn-primary full-width mt-4"
+            style="height: 48px; font-size: 1rem"
           >
             <svg class="icon">
               <use href="assets/icons-unified.svg#icon-map"></use>
             </svg>
+            <span id="btn-open-route-text">Selecionar Destino</span>
           </button>
-          <button
-            id="btn-add-destination"
-            class="icon-btn"
-            aria-label="Adicionar Destino"
-          >
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
-            </svg>
-          </button>
-        </div>
-      </section>
 
-      <!-- INPUTS (SIMULATION) -->
-      <section class="card" style="margin-bottom: 16px">
-        <header class="card-header">
-          <h3 class="vehicle-section-title">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-settings"></use>
-            </svg>
-            Dados da Viagem
-          </h3>
-          <button id="btn-use-averages" class="btn btn-sm btn-outline">
-            Usar Médias
-          </button>
-        </header>
-        <div class="card-body">
-          <div class="form-grid">
-            <label>
-              <span class="muted">Consumo (L/100km)</span>
-              <input
-                type="number"
-                id="simp-consumption"
-                placeholder="Ex: 5.5"
-                step="0.1"
-                inputmode="decimal"
-              />
-            </label>
-            <label>
-              <span class="muted">Preço/Litro (€)</span>
-              <input
-                type="number"
-                id="simp-price"
-                placeholder="Ex: 1.70"
-                step="0.001"
-                inputmode="decimal"
-              />
-            </label>
-            <label>
-              <span class="muted">Distância (km)</span>
-              <input
-                type="number"
-                id="simp-distance"
-                placeholder="Ex: 150"
-                inputmode="numeric"
-              />
-            </label>
-            <label>
-              <span class="muted">Nº Viagens</span>
-              <input
-                type="number"
-                id="simp-trips"
-                value="1"
-                inputmode="numeric"
-              />
-            </label>
-            <label>
-              <span class="muted">Portagens (€)</span>
-              <input
-                type="number"
-                id="simp-tolls"
-                placeholder="Ex: 12.50"
-                step="0.01"
-                inputmode="decimal"
-              />
-            </label>
-            <label>
-              <span class="muted">Pessoas</span>
-              <input
-                type="number"
-                id="simp-people"
-                value="1"
-                inputmode="numeric"
-              />
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- RESULTS -->
-      <section class="card" style="margin-bottom: 24px">
-        <header class="card-header">
-          <h3 class="vehicle-section-title">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-dashboard"></use>
-            </svg>
-            Estimativa
-          </h3>
-        </header>
-        <div class="card-body">
-          <div class="vehicle-kpis-compact">
-            <div class="kpi-item">
-              <span class="kpi-label">Total Gasto</span>
-              <span class="kpi-value is-primary" id="res-total">0,00 €</span>
-            </div>
-            <div class="kpi-item">
-              <span class="kpi-label">Combustível</span>
-              <span class="kpi-value" id="res-fuel-cost">0,00 €</span>
-            </div>
-            <div class="kpi-item">
-              <span class="kpi-label">Portagens</span>
-              <span class="kpi-value" id="res-tolls">0,00 €</span>
-            </div>
-            <div class="kpi-item">
-              <span class="kpi-label">Por Pessoa</span>
-              <span class="kpi-value" id="res-per-person">0,00 €</span>
-            </div>
-          </div>
-          <div
-            style="
-              margin-top: 16px;
-              font-size: 0.9rem;
-              color: var(--color-text-muted);
-            "
-          >
-            Viagem de <strong id="res-km-total">0</strong> km (<span
-              id="res-liters"
-              >0</span
+          <!-- Edit Favorite Actions (Only if fav selected) -->
+          <div id="fav-actions" class="flex justify-center gap-6 mt-4 hidden">
+            <button
+              id="btn-edit-fav"
+              class="text-sm text-muted flex items-center gap-1"
             >
-            litros)
+              <svg class="icon icon-xs">
+                <use href="assets/icons-unified.svg#icon-edit"></use>
+              </svg>
+              Editar
+            </button>
+            <button
+              id="btn-delete-fav"
+              class="text-sm text-danger flex items-center gap-1"
+            >
+              <svg class="icon icon-xs">
+                <use href="assets/icons-unified.svg#icon-trash"></use>
+              </svg>
+              Apagar
+            </button>
           </div>
         </div>
-      </section>
 
-      <!-- ACTIONS -->
-      <section style="margin-bottom: 80px">
-        <button
-          id="btn-open-route"
-          class="btn btn-primary full-width"
-          style="height: 48px; font-size: 1rem"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-map"></use>
-          </svg>
-          Abrir Rota no Google Maps
-        </button>
-      </section>
-    </main>
+        <!-- SECTION: FORM (Form mode) -->
+        <div id="sec-form" class="sheet-section hidden pb-8">
+          <h3 id="form-title" class="text-lg font-bold mb-4">Novo Favorito</h3>
+          <div class="flex flex-col gap-3">
+            <div class="input-group">
+              <span class="label-text">Nome</span>
+              <input type="text" id="input-fav-name" class="input-modern" />
+            </div>
+            <div class="input-group">
+              <span class="label-text">Endereço</span>
+              <input type="text" id="input-fav-address" class="input-modern" />
+            </div>
+            <div class="input-group">
+              <span class="label-text">Categoria</span>
+              <select id="input-fav-category" class="input-modern">
+                <option value="Outro">Outro</option>
+                <option value="Casa">Casa</option>
+                <option value="Trabalho">Trabalho</option>
+                <option value="Lazer">Lazer</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button id="btn-cancel-form" class="btn btn-secondary flex-1">
+              Cancelar
+            </button>
+            <button id="btn-save-form" class="btn btn-primary flex-1">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- FOOTER -->
     <footer>
       <a href="dashboard.html">
-        <svg class="icon" aria-hidden="true">
+        <svg class="icon">
           <use href="assets/icons-unified.svg#icon-home"></use>
         </svg>
         <span>Home</span>
       </a>
       <a href="veiculos.html">
-        <svg class="icon" aria-hidden="true">
+        <svg class="icon">
           <use href="assets/icons-unified.svg#icon-car"></use>
         </svg>
         <span>Veículos</span>
       </a>
-      <a href="planeador.html" class="active">
+      <a href="mapa.html" class="active">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-map"></use>
+          <!-- Using Location icon for unified purpose "Planeador & Mapa" -->
+          <use href="assets/icons-unified.svg#icon-location"></use>
         </svg>
-        <span>Planeador</span>
+        <span>Mapa</span>
       </a>
       <a href="perfil.html">
-        <svg class="icon" aria-hidden="true">
+        <svg class="icon">
           <use href="assets/icons-unified.svg#icon-user"></use>
         </svg>
         <span>Perfil</span>
       </a>
     </footer>
-
-    <!-- DRAWER: DESTINATIONS & MAP -->
-    <div id="panel-destinations" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>Destino e Rota</h2>
-          <button id="close-panel-dest" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
-        <div class="modal-body">
-          <label style="display: block; margin-bottom: 12px">
-            <span class="muted">Selecionar Destino</span>
-            <select
-              id="sel-destination"
-              style="
-                width: 100%;
-                padding: 10px;
-                border-radius: 8px;
-                border: 1px solid var(--border-light);
-              "
-            >
-              <option value="">A carregar...</option>
-            </select>
-          </label>
-          <p
-            id="dest-address-display"
-            class="text-muted"
-            style="margin-bottom: 24px; font-size: 0.9rem"
-          >
-            <!-- Address will appear here -->
-          </p>
-          <button id="btn-maps-action" class="btn btn-primary full-width">
-            Abrir Maps (Navegar)
-          </button>
-          <button
-            id="btn-update-loc"
-            class="btn btn-sm btn-outline full-width"
-            style="margin-top: 12px"
-          >
-            Atualizar Localização Atual
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- DRAWER: ADD DESTINATION -->
-    <div id="panel-add-dest" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>Novo Destino</h2>
-          <button id="close-panel-add" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
-        <div class="modal-body">
-          <label style="display: block; margin-bottom: 12px">
-            <span class="muted">Nome do Local</span>
-            <input
-              id="new-dest-name"
-              type="text"
-              placeholder="Ex: Casa Praia"
-            />
-          </label>
-          <label style="display: block; margin-bottom: 24px">
-            <span class="muted">Endereço (Google Maps)</span>
-            <input
-              id="new-dest-address"
-              type="text"
-              placeholder="Ex: Rua das Flores, 123, Lisboa"
-            />
-          </label>
-          <button id="btn-save-dest" class="btn btn-primary full-width">
-            Guardar
-          </button>
-          <p id="msg-add-dest" class="form-message"></p>
-        </div>
-      </div>
-    </div>
   </body>
 </html>

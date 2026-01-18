@@ -1,0 +1,527 @@
+/* =========================================
+   PLANEADOR UNIFIED (Map + Planner Merge)
+   ========================================= */
+
+/* --------------------------------
+   UTILITIES (from planeador-refactor)
+   -------------------------------- */
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.my-2 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 0.75rem;
+}
+
+.text-primary {
+    color: var(--color-primary-start);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* Grid for Results */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.grid-3-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+/* --------------------------------
+   MAP SHELL (from mapa.css)
+   -------------------------------- */
+.map-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background: var(--border-light);
+}
+
+.map-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#map-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    /* Merged Background Fix */
+    background-image:
+        linear-gradient(rgba(100, 116, 139, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(100, 116, 139, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom right, var(--color-bg), var(--border-light));
+    background-size: 40px 40px, 40px 40px, 100% 100%;
+    background-repeat: repeat, repeat, no-repeat;
+    background-attachment: scroll, scroll, fixed;
+    overflow: hidden;
+    cursor: grab;
+}
+
+#map-container:active {
+    cursor: grabbing;
+}
+
+/* --------------------------------
+   PINS (from mapa.css)
+   -------------------------------- */
+.map-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.pin-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--color-primary-start);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 3px solid white;
+}
+
+.pin-icon svg {
+    transform: rotate(45deg);
+    color: white;
+    width: 18px;
+    height: 18px;
+}
+
+.map-pin:hover,
+.map-pin.active {
+    z-index: 100;
+    transform: translate(-50%, -110%) scale(1.1);
+}
+
+.map-pin.active .pin-icon {
+    background: var(--color-danger);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.pin-label {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+    margin-top: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.2s;
+    pointer-events: none;
+}
+
+.map-pin:hover .pin-label,
+.map-pin.active .pin-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --------------------------------
+   CONTROLS & OVERLAYS
+   -------------------------------- */
+.map-controls {
+    position: absolute;
+    top: 80px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 15;
+}
+
+.control-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-main);
+    transition: all 0.2s;
+}
+
+.control-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Search Overlay */
+.search-overlay {
+    position: absolute;
+    top: 70px;
+    left: 16px;
+    right: 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    display: none;
+    animation: fadeInDown 0.2s ease;
+}
+
+.search-overlay.visible {
+    display: block;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------
+   BOTTOM SHEET (Unified)
+   -------------------------------- */
+.sheet-container {
+    position: absolute;
+    bottom: var(--footer-height);
+    /* Above native footer */
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 25;
+    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* States */
+.sheet-container.compact {
+    height: 180px;
+}
+
+.sheet-container.half {
+    height: 50vh;
+}
+
+.sheet-container.full {
+    height: 90vh;
+}
+
+.sheet-handle-bar {
+    width: 100%;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    flex-shrink: 0;
+}
+
+.sheet-handle-bar::after {
+    content: '';
+    width: 40px;
+    height: 4px;
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+.sheet-scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+}
+
+/* Sections visibility transitions */
+.sheet-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.sheet-section.visible {
+    display: block;
+}
+
+.sheet-section.flex-visible {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+/* --------------------------------
+   COMPONENTS (Chips, Inputs, Results)
+   -------------------------------- */
+
+/* Chips */
+.favorites-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    /* Hide scrollbar */
+    scrollbar-width: none;
+}
+
+.favorites-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.chip {
+    background: var(--color-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chip:hover,
+.chip.active {
+    border-color: var(--color-primary-start);
+    color: var(--color-primary-start);
+    background: rgba(14, 116, 144, 0.05);
+}
+
+.chip.active {
+    background: rgba(14, 116, 144, 0.1);
+    font-weight: 600;
+}
+
+/* Inputs */
+.input-modern {
+    border: 1px solid var(--border-light);
+    background: var(--color-bg);
+    border-radius: 12px;
+    padding: 10px 12px;
+    width: 100%;
+    font-size: 0.95rem;
+    transition: border 0.2s;
+}
+
+.input-modern:focus {
+    border-color: var(--color-primary-start);
+    outline: none;
+}
+
+/* Segment Control */
+.segment-control-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.segment-control {
+    background: var(--color-surface);
+    padding: 4px;
+    border-radius: 999px;
+    display: inline-flex;
+    border: 1px solid var(--border-light);
+}
+
+.segment-label {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+input:checked+.segment-label {
+    background: var(--color-bg);
+    color: var(--color-text-main);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Results */
+.pricing-card {
+    border: 1px solid rgba(14, 116, 144, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    background: linear-gradient(to bottom, #fff, #f8fafc);
+}
+
+.price-display {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+/* Advanced Inputs Toggle */
+.advanced-inputs {
+    display: none;
+}
+
+.advanced-inputs.visible {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+/* --------------------------------
+   FAB ADD
+   -------------------------------- */
+.fab-add {
+    position: absolute;
+    bottom: 200px;
+    /* Moves with js or fixed relative to sheet? fixed is easier, js adjusts bottom */
+    /* Implementation: Fixed above sheet. 
+       If sheet is compact (180px), FAB is at bottom: calc(footer + 180px + 16px).
+       We will control styling via JS or just fixed z-index.
+    */
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    color: white;
+    box-shadow: 0 8px 20px rgba(14, 116, 144, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    z-index: 30;
+    transition: all 0.3s;
+}
+
+.fab-add:hover {
+    transform: scale(1.05);
+}
+
+.fab-add.hidden {
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Desktop Tweaks */
+@media(min-width: 640px) {
+    .sheet-container {
+        width: 400px;
+        left: 20px;
+        right: auto;
+        bottom: 20px;
+        border-radius: 20px;
+        max-height: 90vh;
+    }
+
+    .sheet-container.compact {
+        height: auto;
+        min-height: 200px;
+    }
+
+    .sheet-container.half {
+        height: auto;
+        min-height: 500px;
+    }
+}

@@ -1,111 +1,371 @@
 // js/planeador.js
-// L100 Trip Planner Logic
-// Handles simulation, navigation, and persistence of destinations.
+// L100 Unified Trip & Map Controller
+// Merges Planner and Map logic into a single cohesive experience.
 
 document.addEventListener("DOMContentLoaded", () => {
-  // =========================
+  // ============================
   // ELEMENTS
-  // =========================
+  // ============================
+  const mapContainer = document.getElementById("map-container");
+  const pinsContainer = document.getElementById("map-pins-container");
+  const sheet = document.getElementById("sheet-container");
+  const sheetHandle = document.querySelector(".sheet-handle-bar");
+
+  // Sections
+  const secDest = document.getElementById("sec-destination");
+  const secSim = document.getElementById("sec-simulation");
+  const secRes = document.getElementById("sec-results");
+  const secForm = document.getElementById("sec-form");
+
+  // Sheet Destination Elements
+  const sheetDestName = document.getElementById("sheet-dest-name");
+  const sheetDestAddress = document.getElementById("sheet-dest-address");
+  const btnClearDest = document.getElementById("btn-clear-dest");
+  const chipsContainer = document.getElementById("sheet-favorites-list");
+
+  // Inputs
   const inputs = {
-    consumo: document.getElementById("simp-consumption"),
-    preco: document.getElementById("simp-price"),
-    distancia: document.getElementById("simp-distance"),
-    viagens: document.getElementById("simp-trips"),
-    portagens: document.getElementById("simp-tolls"),
-    pessoas: document.getElementById("simp-people"),
+    distance: document.getElementById("simp-distance"),
+    tolls: document.getElementById("simp-tolls"),
+    trips: document.getElementById("simp-trips"),
+    people: document.getElementById("simp-people"),
+    consumption: document.getElementById("simp-consumption"),
+    price: document.getElementById("simp-price"),
   };
 
+  // Results
   const results = {
     total: document.getElementById("res-total"),
-    combustivel: document.getElementById("res-fuel-cost"),
-    portagens: document.getElementById("res-tolls"),
-    porPessoa: document.getElementById("res-per-person"),
-    kmTotal: document.getElementById("res-km-total"),
-    litros: document.getElementById("res-liters"),
+    fuel: document.getElementById("res-fuel-cost"),
+    tolls: document.getElementById("res-tolls"),
+    perPerson: document.getElementById("res-per-person"),
   };
 
-  const btns = {
-    useAverages: document.getElementById("btn-use-averages"),
-    openDestinations: document.getElementById("btn-open-destinations"),
-    addDestination: document.getElementById("btn-add-destination"),
-    openRoute: document.getElementById("btn-open-route"),
-    closeDest: document.getElementById("close-panel-dest"),
-    closeAdd: document.getElementById("close-panel-add"),
-    saveDest: document.getElementById("btn-save-dest"),
-    mapsAction: document.getElementById("btn-maps-action"),
-    updateLoc: document.getElementById("btn-update-loc"),
-  };
+  // Buttons
+  const btnOpenRoute = document.getElementById("btn-open-route");
+  const btnOpenRouteText = document.getElementById("btn-open-route-text");
+  const btnUseAverages = document.getElementById("btn-use-averages");
+  const fabAdd = document.getElementById("fab-add-favorite");
 
-  const panels = {
-    dest: document.getElementById("panel-destinations"),
-    add: document.getElementById("panel-add-dest"),
-  };
+  // Map Controls
+  const btnZoomIn = document.getElementById("btn-zoom-in");
+  const btnZoomOut = document.getElementById("btn-zoom-out");
+  const btnMyLoc = document.getElementById("btn-my-loc");
 
-  // =========================
-  // HELPERS
-  // =========================
-  function parseNum(val) {
-    if (!val) return 0;
-    // Replace comma with dot if user types standard generic PT format, but input[type=number] usually handles this.
-    // However, safely parsing is good.
-    return Number(val) || 0;
-  }
+  // Search
+  const searchOverlay = document.getElementById("search-overlay");
+  const searchInput = document.getElementById("map-search-input");
+  const searchResults = document.getElementById("search-results");
+  const btnSearchToggle = document.getElementById("btn-search-toggle");
+  const btnCloseSearch = document.getElementById("close-search");
 
-  function formatCurrency(val) {
-    return new Intl.NumberFormat("pt-PT", {
-      style: "currency",
-      currency: "EUR",
-    }).format(val);
-  }
+  // Form
+  const inputFavName = document.getElementById("input-fav-name");
+  const inputFavAddress = document.getElementById("input-fav-address");
+  const inputFavCategory = document.getElementById("input-fav-category");
+  const btnSaveForm = document.getElementById("btn-save-form");
+  const btnCancelForm = document.getElementById("btn-cancel-form");
+  const favActions = document.getElementById("fav-actions");
+  const btnEditFav = document.getElementById("btn-edit-fav");
+  const btnDeleteFav = document.getElementById("btn-delete-fav");
 
-  // =========================
-  // CALCULATION LOGIC
-  // =========================
-  function calculate() {
-    const c = parseNum(inputs.consumo.value);
-    const p = parseNum(inputs.preco.value);
-    const d = parseNum(inputs.distancia.value);
-    const v = parseNum(inputs.viagens.value) || 1; // min 1
-    const t = parseNum(inputs.portagens.value);
-    const ppl = parseNum(inputs.pessoas.value) || 1; // min 1
+  // State
+  let favorites = [];
+  let selectedDest = null; // { name, address, isFavorite, favId, coords? }
+  let sheetState = "compact"; // compact, half, full, form
+  let isEditMode = false;
+  let currentLoc = null;
 
-    const totalKm = d * v;
-    const totalLiters = (c * totalKm) / 100;
-    const costFuel = totalLiters * p;
-    const costTolls = t * v;
-
-    const grandTotal = costFuel + costTolls;
-    const perPerson = grandTotal / ppl;
-
-    // Render
-    results.total.textContent = formatCurrency(grandTotal);
-    results.combustivel.textContent = formatCurrency(costFuel);
-    results.portagens.textContent = formatCurrency(costTolls);
-    results.porPessoa.textContent = ppl > 1 ? formatCurrency(perPerson) : "—";
-
-    results.kmTotal.textContent = totalKm.toFixed(0);
-    results.litros.textContent = totalLiters.toFixed(1);
-  }
-
-  // Listeners for inputs
-  Object.values(inputs).forEach((el) => {
-    el.addEventListener("input", calculate);
+  // ============================
+  // INIT
+  // ============================
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      loadFavorites();
+      // Also check local storage for intent from other pages?
+      const stored = localStorage.getItem("selected_destination");
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          selectDestination(data, true); // true = center map
+          localStorage.removeItem("selected_destination"); // consume it
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
   });
 
-  // =========================
-  // AVERAGES (From Firestore)
-  // =========================
-  async function loadAverages() {
+  // ============================
+  // LOAD FAVORITES
+  // ============================
+  async function loadFavorites() {
     if (!auth.currentUser) return;
-
-    btns.useAverages.disabled = true;
-    btns.useAverages.textContent = "A carregar...";
-
-    let consumoMedio = 6.0; // fallback
-    let precoMedio = 1.7; // fallback
-
-    // Try getting from first vehicle (simplification)
     try {
+      const snap = await db
+        .collection("users")
+        .doc(auth.currentUser.uid)
+        .collection("localizacoes")
+        .orderBy("createdAt", "desc")
+        .get();
+
+      favorites = [];
+      snap.forEach((doc) => favorites.push({ id: doc.id, ...doc.data() }));
+
+      renderPins();
+      renderChips();
+    } catch (e) {
+      console.error("Error loading favorites", e);
+    }
+  }
+
+  // ============================
+  // RENDERING
+  // ============================
+  function renderPins() {
+    pinsContainer.innerHTML = "";
+    favorites.forEach((fav) => {
+      const pin = document.createElement("div");
+      pin.className = "map-pin";
+
+      // Pseudo-random position for demo
+      const x = (hash(fav.id + "x") % 80) + 10;
+      const y = (hash(fav.id + "y") % 50) + 25;
+      pin.style.left = `${x}%`;
+      pin.style.top = `${y}%`;
+
+      let icon = "icon-pin";
+      if (fav.category === "Casa") icon = "icon-home";
+      if (fav.category === "Trabalho") icon = "icon-car";
+
+      pin.innerHTML = `
+        <div class="pin-icon">
+            <svg class="icon"><use href="assets/icons-unified.svg#${icon}"></use></svg>
+        </div>
+        <div class="pin-label">${fav.nome}</div>
+      `;
+
+      pin.addEventListener("click", (e) => {
+        e.stopPropagation();
+        selectDestination({
+          name: fav.nome,
+          address: fav.endereco,
+          isFavorite: true,
+          favId: fav.id,
+          category: fav.category,
+        });
+      });
+
+      pinsContainer.appendChild(pin);
+      fav._pinElement = pin;
+    });
+  }
+
+  function renderChips() {
+    chipsContainer.innerHTML = "";
+    if (favorites.length === 0) {
+      chipsContainer.innerHTML =
+        '<span class="text-xs text-muted">Ainda sem favoritos.</span>';
+      return;
+    }
+
+    // Quick add chip?
+
+    favorites.forEach((fav) => {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.textContent = fav.nome;
+      chip.addEventListener("click", () => {
+        selectDestination({
+          name: fav.nome,
+          address: fav.endereco,
+          isFavorite: true,
+          favId: fav.id,
+          category: fav.category,
+        });
+      });
+      chipsContainer.appendChild(chip);
+      fav._chipElement = chip;
+    });
+  }
+
+  // ============================
+  // SELECTION LOGIC
+  // ============================
+  function selectDestination(destData, centerMap = false) {
+    selectedDest = destData;
+
+    // UI Updates
+    sheetDestName.textContent = destData.name;
+    sheetDestAddress.textContent = destData.address;
+    btnClearDest.classList.remove("hidden");
+
+    // Highlight Pin
+    document
+      .querySelectorAll(".map-pin")
+      .forEach((p) => p.classList.remove("active"));
+    if (destData.isFavorite && destData.favId) {
+      const fav = favorites.find((f) => f.id === destData.favId);
+      if (fav && fav._pinElement) fav._pinElement.classList.add("active");
+      if (fav && fav._chipElement) {
+        document
+          .querySelectorAll(".chip")
+          .forEach((c) => c.classList.remove("active"));
+        fav._chipElement.classList.add("active");
+      }
+      favActions.classList.remove("hidden");
+    } else {
+      favActions.classList.add("hidden");
+    }
+
+    // Expand Sheet logic
+    // If selecting, we probably want to simulate immediately
+    setSheetState("half");
+    calculate(); // Attempt calc
+  }
+
+  function clearSelection() {
+    selectedDest = null;
+    sheetDestName.textContent = "Selecionar Destino";
+    sheetDestAddress.textContent = "Toque no mapa ou escolha abaixo";
+    btnClearDest.classList.add("hidden");
+
+    document
+      .querySelectorAll(".map-pin")
+      .forEach((p) => p.classList.remove("active"));
+    document
+      .querySelectorAll(".chip")
+      .forEach((c) => c.classList.remove("active"));
+    favActions.classList.add("hidden");
+
+    setSheetState("compact");
+    // Reset inputs? Maybe keep them.
+    updateCTA(0);
+  }
+
+  btnClearDest.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearSelection();
+  });
+
+  mapContainer.addEventListener("click", () => {
+    // Clicking map toggles compact if nothing selected?
+    // Or deselects?
+    if (sheetState !== "compact") {
+      setSheetState("compact");
+    }
+  });
+
+  // ============================
+  // SHEET STATE MACHINE
+  // ============================
+  function setSheetState(newState) {
+    sheetState = newState;
+
+    // Reset classes
+    sheet.classList.remove("compact", "half", "full");
+    sheet.classList.add(newState);
+
+    // Section Visibility
+    // Default hiding
+    secSim.classList.add("hidden");
+    secRes.classList.add("hidden");
+    secForm.classList.add("hidden");
+    secDest.classList.remove("hidden"); // Always show dest unless form?
+    fabAdd.classList.remove("hidden");
+
+    if (newState === "compact") {
+      fabAdd.style.bottom = "200px"; // Adjust position
+    } else if (newState === "half") {
+      secSim.classList.remove("hidden");
+      secRes.classList.remove("hidden");
+      fabAdd.classList.add("hidden"); // Hide FAB when implementing
+      // Populate distance if zero?
+      if (!inputs.distance.value)
+        inputs.distance.value = (Math.random() * 20 + 5).toFixed(1); // Fake distance for UX feel
+    } else if (newState === "full") {
+      secSim.classList.remove("hidden");
+      secRes.classList.remove("hidden");
+      fabAdd.classList.add("hidden");
+    } else if (newState === "form") {
+      secDest.classList.add("hidden"); // Hide dest headers
+      secForm.classList.remove("hidden");
+      fabAdd.classList.add("hidden");
+      sheet.classList.remove("form"); // no specific class, mimics full or half
+      sheet.classList.add("half"); // Form fits in half usually
+    }
+  }
+
+  // Handle Drag/Click (Simplistic toggle)
+  sheetHandle.addEventListener("click", () => {
+    if (sheetState === "compact") setSheetState("half");
+    else if (sheetState === "half")
+      setSheetState("compact"); // or full?
+    else if (sheetState === "full") setSheetState("half");
+  });
+
+  // ============================
+  // CALCULATOR
+  // ============================
+  function calculate() {
+    if (!selectedDest && sheetState === "compact") return;
+
+    const dist = parseFloat(inputs.distance.value) || 0;
+    const tolls = parseFloat(inputs.tolls.value) || 0;
+    const trips = parseFloat(inputs.trips.value) || 1;
+    const people = parseFloat(inputs.people.value) || 1;
+    const cons = parseFloat(inputs.consumption.value) || 0;
+    const price = parseFloat(inputs.price.value) || 0;
+
+    const totalKm = dist * trips;
+    const totalLiters = (cons * totalKm) / 100;
+    const costFuel = totalLiters * price;
+    const costTolls = tolls * trips;
+    const total = costFuel + costTolls;
+    const perPerson = people > 1 ? total / people : total;
+
+    results.total.textContent = formatCurrency(total);
+    results.fuel.textContent = formatCurrency(costFuel);
+    results.tolls.textContent = formatCurrency(costTolls);
+    results.perPerson.textContent =
+      people > 1 ? formatCurrency(perPerson) : "—";
+
+    updateCTA(total);
+  }
+
+  // Bind inputs
+  Object.values(inputs).forEach((inp) =>
+    inp.addEventListener("input", calculate),
+  );
+
+  // Segment Control
+  document.querySelectorAll('input[name="sim-mode"]').forEach((r) => {
+    r.addEventListener("change", (e) => {
+      const mode = e.target.value;
+      const adv = document.getElementById("adv-inputs");
+      if (mode === "advanced") adv.classList.add("visible");
+      else adv.classList.remove("visible");
+    });
+  });
+
+  function updateCTA(total) {
+    if (!selectedDest) {
+      btnOpenRouteText.textContent = "Selecionar Destino";
+      btnOpenRoute.classList.add("btn-secondary");
+      // Actually primary usually better for main CTA even if disabled style logic
+    } else if (total > 0) {
+      btnOpenRouteText.textContent = `Navegar (€${total.toFixed(2)})`;
+    } else {
+      btnOpenRouteText.textContent = "Navegar (Google Maps)";
+    }
+  }
+
+  // Averages
+  btnUseAverages.addEventListener("click", async () => {
+    if (!auth.currentUser) return;
+    btnUseAverages.textContent = "...";
+    try {
+      // Reuse fetch logic briefly
       const snap = await db
         .collection("veiculos")
         .where("userId", "==", auth.currentUser.uid)
@@ -113,255 +373,178 @@ document.addEventListener("DOMContentLoaded", () => {
         .get();
       if (!snap.empty) {
         const v = snap.docs[0].data();
-        if (v.consumo) {
-          // If vehicle has consumption field directly
-          consumoMedio = Number(v.consumo);
-        }
-
-        // Query subcollection 'abastecimentos' of that vehicle
-        const absSnap = await db
-          .collection("veiculos")
-          .doc(snap.docs[0].id)
-          .collection("abastecimentos")
-          .orderBy("data", "desc")
-          .limit(5)
-          .get();
-
-        if (!absSnap.empty) {
-          let sumPrice = 0;
-          let count = 0;
-          absSnap.forEach((doc) => {
-            const d = doc.data();
-            if (d.precoPorLitro) {
-              sumPrice += Number(d.precoPorLitro);
-              count++;
-            }
-          });
-          if (count > 0) precoMedio = sumPrice / count;
-        }
+        if (v.consumo) inputs.consumption.value = v.consumo;
+        // Could fetch price too
       }
-    } catch (e) {
-      console.error("Error loading averages", e);
-    }
-
-    inputs.consumo.value = consumoMedio.toFixed(1);
-    inputs.preco.value = precoMedio.toFixed(3);
+    } catch (e) {}
+    inputs.price.value = "1.750"; // Mock/Fallback
     calculate();
-
-    btns.useAverages.disabled = false;
-    btns.useAverages.textContent = "Usar Médias";
-  }
-
-  btns.useAverages.addEventListener("click", loadAverages);
-
-  // =========================
-  // PANELS & MODALS
-  // =========================
-  function openPanel(name) {
-    document
-      .querySelectorAll(".modal")
-      .forEach((m) => m.classList.add("hidden"));
-    if (panels[name]) panels[name].classList.remove("hidden");
-  }
-  function closePanels() {
-    document
-      .querySelectorAll(".modal")
-      .forEach((m) => m.classList.add("hidden"));
-  }
-
-  btns.openDestinations.addEventListener("click", () => {
-    openPanel("dest");
-    loadDestinations();
-  });
-  btns.addDestination.addEventListener("click", () => openPanel("add"));
-  btns.closeDest.addEventListener("click", closePanels);
-  btns.closeAdd.addEventListener("click", closePanels);
-  document
-    .querySelectorAll(".modal-overlay")
-    .forEach((el) => el.addEventListener("click", closePanels));
-
-  // =========================
-  // DESTINATIONS (Load/Save)
-  // =========================
-  const destSelect = document.getElementById("sel-destination");
-  const destAddress = document.getElementById("dest-address-display");
-  let currentDestinations = [];
-
-  async function loadDestinations() {
-    if (!auth.currentUser) return;
-
-    destSelect.innerHTML = '<option value="">A carregar...</option>';
-
-    try {
-      const snap = await db
-        .collection("users")
-        .doc(auth.currentUser.uid)
-        .collection("localizacoes")
-        .orderBy("nome")
-        .get();
-
-      currentDestinations = [];
-      destSelect.innerHTML = '<option value="">-- Selecione --</option>';
-
-      snap.forEach((doc) => {
-        const d = doc.data();
-        currentDestinations.push(d);
-        const opt = document.createElement("option");
-        opt.value = d.endereco; // Value is address for easier usage
-        opt.textContent = d.nome;
-        destSelect.appendChild(opt);
-      });
-    } catch (e) {
-      console.error(e);
-      destSelect.innerHTML = '<option value="">Erro ao carregar</option>';
-    }
-  }
-
-  destSelect.addEventListener("change", () => {
-    destAddress.textContent = destSelect.value || "Nenhum selecionado";
+    btnUseAverages.textContent = "Médias aplicadas";
+    setTimeout(
+      () => (btnUseAverages.textContent = "Usar médias do meu veículo"),
+      2000,
+    );
   });
 
-  // Save New
-  btns.saveDest.addEventListener("click", async () => {
-    const name = document.getElementById("new-dest-name").value.trim();
-    const address = document.getElementById("new-dest-address").value.trim();
-    const msg = document.getElementById("msg-add-dest");
-
-    if (!name || !address) {
-      msg.textContent = "Preencha nome e endereço.";
+  // ============================
+  // NAVIGATION
+  // ============================
+  btnOpenRoute.addEventListener("click", () => {
+    if (!selectedDest) {
+      // Shake or focus search?
+      btnSearchToggle.click();
       return;
     }
 
-    btns.saveDest.disabled = true;
-    btns.saveDest.textContent = "A guardar...";
+    const dest = encodeURIComponent(selectedDest.address);
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${dest}`,
+      "_blank",
+    );
+  });
 
+  // ============================
+  // CRUD FORM
+  // ============================
+  fabAdd.addEventListener("click", () => {
+    openForm();
+  });
+
+  btnEditFav.addEventListener("click", () => {
+    if (!selectedDest || !selectedDest.isFavorite) return;
+    const fav = favorites.find((f) => f.id === selectedDest.favId);
+    if (fav) openForm(fav);
+  });
+
+  function openForm(fav = null) {
+    isEditMode = !!fav;
+    if (fav) {
+      inputFavName.value = fav.nome;
+      inputFavAddress.value = fav.endereco;
+      inputFavCategory.value = fav.category || "Outro";
+    } else {
+      inputFavName.value = "";
+      inputFavAddress.value = selectedDest ? selectedDest.address : ""; // Pre-fill if map clicked (future)
+      inputFavCategory.value = "Outro";
+    }
+    setSheetState("form");
+  }
+
+  btnCancelForm.addEventListener("click", () => {
+    setSheetState(selectedDest ? "half" : "compact");
+  });
+
+  btnSaveForm.addEventListener("click", async () => {
+    const name = inputFavName.value.trim();
+    const addr = inputFavAddress.value.trim();
+    const cat = inputFavCategory.value;
+    if (!name || !addr) return alert("Preencha tudo");
+
+    try {
+      btnSaveForm.textContent = "Guardando...";
+      const data = {
+        nome: name,
+        endereco: addr,
+        category: cat,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (isEditMode && selectedDest) {
+        await db
+          .collection("users")
+          .doc(auth.currentUser.uid)
+          .collection("localizacoes")
+          .doc(selectedDest.favId)
+          .update(data);
+      } else {
+        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db
+          .collection("users")
+          .doc(auth.currentUser.uid)
+          .collection("localizacoes")
+          .add(data);
+      }
+
+      await loadFavorites();
+      setSheetState("compact");
+    } catch (e) {
+      console.error(e);
+      alert("Erro");
+    } finally {
+      btnSaveForm.textContent = "Guardar";
+    }
+  });
+
+  btnDeleteFav.addEventListener("click", async () => {
+    if (!confirm("Apagar?")) return;
     try {
       await db
         .collection("users")
         .doc(auth.currentUser.uid)
         .collection("localizacoes")
-        .add({
-          nome: name,
-          endereco: address,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-      closePanels();
-      // Clear inputs
-      document.getElementById("new-dest-name").value = "";
-      document.getElementById("new-dest-address").value = "";
-      alert("Destino guardado!");
+        .doc(selectedDest.favId)
+        .delete();
+      clearSelection();
+      loadFavorites();
     } catch (e) {
       console.error(e);
-      msg.textContent = "Erro ao guardar.";
-    } finally {
-      btns.saveDest.disabled = false;
-      btns.saveDest.textContent = "Guardar";
     }
   });
 
-  // =========================
-  // GOOGLE MAPS & GEO
-  // =========================
-  let currentLoc = null;
+  // ============================
+  // SEARCH
+  // ============================
+  btnSearchToggle.addEventListener("click", () => {
+    searchOverlay.classList.toggle("visible");
+    if (searchOverlay.classList.contains("visible")) searchInput.focus();
+  });
+  btnCloseSearch.addEventListener("click", () =>
+    searchOverlay.classList.remove("visible"),
+  );
 
-  function getGeo() {
-    if (!navigator.geolocation) {
-      alert("Geolocalização não suportada.");
-      return;
-    }
-    btns.updateLoc.textContent = "A obter localização...";
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        currentLoc = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        btns.updateLoc.textContent = "Localização Atualizada ✅";
-      },
-      (err) => {
-        console.error(err);
-        btns.updateLoc.textContent = "Erro de localização ❌";
-        alert(
-          "Não foi possível obter a sua localização. A rota abrirá apenas com o destino."
-        );
-      }
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    searchResults.innerHTML = "";
+    if (!term) return;
+
+    const matches = favorites.filter(
+      (f) =>
+        f.nome.toLowerCase().includes(term) ||
+        f.endereco.toLowerCase().includes(term),
     );
-  }
 
-  btns.updateLoc.addEventListener("click", getGeo);
-
-  function openMaps() {
-    const dest = destSelect.value;
-    if (!dest) {
-      alert("Selecione um destino primeiro.");
-      return;
-    }
-
-    let url = "https://www.google.com/maps/dir/?api=1";
-
-    // Origin
-    if (currentLoc) {
-      url += `&origin=${currentLoc.lat},${currentLoc.lng}`;
-    }
-
-    // Destination
-    url += `&destination=${encodeURIComponent(dest)}`;
-
-    window.open(url, "_blank");
-  }
-
-  btns.mapsAction.addEventListener("click", openMaps);
-
-  // Also MAIN button in page should open panel if no dest selected, or open maps if fixed logic?
-  // Requirement says: "Abrir Rota" (on page) -> opens maps with selected destination.
-  // Meaning we probably should have the destination logic available in the main view or linked.
-  // Current implementation: "Mapa" button opens panel. "Abrir Rota" button at bottom... should strictly follow spec.
-  // Spec: "Painel para escolher destino". And "Botão para abrir percurso".
-  // Let's make the bottom button also trigger the maps logic, checking if a dest is selected from the panel?
-  // Or better: The bottom button opens the panel IF no destination is selected?
-  // Let's assume the user selects destination in the panel.
-
-  btns.openRoute.addEventListener("click", () => {
-    // Since the select is inside the panel, we check if it has a value
-    if (destSelect.value) {
-      // Ensure we have location or try to get it fast?
-      if (!currentLoc) {
-        // Try one-shot geo then open
-        if (!navigator.geolocation) {
-          openMaps(); // fallback without origin
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            currentLoc = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            };
-            openMaps();
-          },
-          () => {
-            openMaps(); // error fallback
-          }
-        );
-      } else {
-        openMaps();
-      }
-    } else {
-      // Open panel to force selection
-      openPanel("dest");
-      loadDestinations();
-    }
+    matches.forEach((f) => {
+      const div = document.createElement("div");
+      div.className = "p-2 border-b flex justify-between cursor-pointer";
+      div.innerHTML = `<span>${f.nome}</span> <span class="text-xs text-muted">${f.endereco}</span>`;
+      div.addEventListener("click", () => {
+        selectDestination({
+          name: f.nome,
+          address: f.endereco,
+          isFavorite: true,
+          favId: f.id,
+          category: f.category,
+        });
+        searchOverlay.classList.remove("visible");
+        searchInput.value = "";
+      });
+      searchResults.appendChild(div);
+    });
   });
 
-  // =========================
-  // INIT
-  // =========================
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      calculate();
-      getGeo();
-    } else {
-      console.log("No user");
-    }
-  });
+  // ============================
+  // UTILS
+  // ============================
+  function formatCurrency(v) {
+    return new Intl.NumberFormat("pt-PT", {
+      style: "currency",
+      currency: "EUR",
+    }).format(v);
+  }
+  function hash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++)
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return Math.abs(hash);
+  }
 });

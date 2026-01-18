@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Mapa – L100</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/mapa.css" />
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+
+    <script src="js/theme.js"></script>
+
+    <!-- Firebase v9 (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script defer src="js/firebase-config.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/firestore.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/mapa.js"></script>
+  </head>
+  <body class="map-page-standalone">
+    <!-- HEADER -->
+    <header class="map-header">
+      <div class="map-header-title">Mapa</div>
+      <button
+        class="map-header-btn"
+        id="btn-search-open"
+        aria-label="Pesquisar"
+      >
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-search"></use>
+        </svg>
+      </button>
+    </header>
+
+    <!-- MAP LAYER -->
+    <div id="map-container">
+      <!-- Pins inject here -->
+      <div id="map-pins-layer"></div>
+    </div>
+
+    <!-- FLOATING CONTROLS -->
+    <div class="map-controls-group">
+      <button
+        class="control-btn"
+        id="btn-my-loc"
+        aria-label="Minha Localização"
+      >
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-location"></use>
+        </svg>
+      </button>
+
+      <div class="zoom-group">
+        <button class="zoom-btn" id="btn-zoom-in" aria-label="Aumentar Zoom">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-plus"></use>
+          </svg>
+        </button>
+        <div class="zoom-divider"></div>
+        <button class="zoom-btn" id="btn-zoom-out" aria-label="Diminuir Zoom">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-minus"></use>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- FAB ADD -->
+    <button class="fab-add" id="fab-add" aria-label="Adicionar Favorito">
+      <svg class="icon">
+        <use href="assets/icons-unified.svg#icon-plus"></use>
+      </svg>
+    </button>
+
+    <!-- BOTTOM SHEET -->
+    <div class="sheet-container" id="sheet" data-state="compact">
+      <div class="sheet-handle-area">
+        <div class="sheet-handle-bar"></div>
+      </div>
+      <div class="sheet-content">
+        <!-- VIEW: QUICK (Chips) -->
+        <div class="sheet-view active" id="view-quick">
+          <div class="details-header u-mb-sm">
+            <div class="details-title u-text-base">Favoritos Rápidos</div>
+          </div>
+          <div class="chips-row" id="quick-chips">
+            <div class="chip-skeleton"></div>
+            <div class="chip-skeleton"></div>
+            <div class="chip-skeleton"></div>
+          </div>
+        </div>
+
+        <!-- VIEW: DETAILS (Selected) -->
+        <div class="sheet-view" id="view-details">
+          <div class="details-header">
+            <h2 class="details-title" id="det-name">Nome do Local</h2>
+            <p class="details-subtitle" id="det-address">
+              Endereço completo...
+            </p>
+          </div>
+
+          <div class="details-actions">
+            <button class="btn-action-primary" id="btn-use-planner">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-map"></use>
+              </svg>
+              Usar no Planeador
+            </button>
+
+            <div class="u-grid-2">
+              <button class="btn-action-secondary" id="btn-edit">Editar</button>
+              <button
+                class="btn-action-secondary u-text-danger"
+                id="btn-delete"
+              >
+                Apagar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW: FORM (Add/Edit) -->
+        <div class="sheet-view" id="view-form">
+          <h3 class="form-title" id="form-heading">Novo Favorito</h3>
+
+          <div class="form-group">
+            <label class="form-label">Nome</label>
+            <input
+              type="text"
+              class="form-input"
+              id="inp-name"
+              placeholder="Ex: Casa, Trabalho..."
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Endereço</label>
+            <input
+              type="text"
+              class="form-input"
+              id="inp-address"
+              placeholder="Rua..."
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="inp-category">
+              <option value="Outro">Outro</option>
+              <option value="Casa">Casa</option>
+              <option value="Trabalho">Trabalho</option>
+              <option value="Lazer">Lazer</option>
+            </select>
+          </div>
+
+          <div class="u-flex-gap">
+            <button class="btn-action-secondary u-flex-1" id="btn-cancel-form">
+              Cancelar
+            </button>
+            <button class="btn-action-primary u-flex-1" id="btn-save-form">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH OVERLAY -->
+    <div class="search-overlay" id="search-overlay">
+      <div class="search-header">
+        <button class="map-header-btn" id="btn-search-close">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+          </svg>
+        </button>
+        <input
+          type="text"
+          class="search-input-pill"
+          id="search-input"
+          placeholder="Pesquisar favoritos..."
+        />
+      </div>
+      <div class="search-results" id="search-results">
+        <!-- Items injected here -->
+      </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL CONFIRM -->
+    <div class="modal-backdrop" id="modal-confirm">
+      <div class="modal-card">
+        <div class="modal-title">Apagar Favorito?</div>
+        <div class="modal-text">Esta ação não pode ser desfeita.</div>
+        <div class="modal-actions">
+          <button class="btn-modal cancel" id="btn-modal-cancel">
+            Cancelar
+          </button>
+          <button class="btn-modal confirm" id="btn-modal-confirm">
+            Apagar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER NAV -->
+    <footer>
+      <a href="dashboard.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="veiculos.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html" class="active">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-location"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="perfil.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
+  </body>
+</html>
