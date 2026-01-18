@@ -98,7 +98,7 @@ function calculateMaintenanceStatus(
   lastKm,
   intervalKm,
   lastDate,
-  intervalMonths
+  intervalMonths,
 ) {
   const result = {
     status: "ok", // ok, warning, delayed
@@ -153,3 +153,35 @@ function calculateMaintenanceStatus(
 
   return result;
 }
+
+/**
+ * Global Toast Notification
+ * @param {string} msg Mensagem a exibir
+ * @param {string} type 'info', 'success', 'error'
+ */
+function showToast(msg, type = "info") {
+  let container = document.getElementById("global-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "global-toast-container";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+
+  container.appendChild(el);
+
+  // Animate In
+  requestAnimationFrame(() => el.classList.add("visible"));
+
+  // Auto Dismiss
+  setTimeout(() => {
+    el.classList.remove("visible");
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+window.showToast = showToast;

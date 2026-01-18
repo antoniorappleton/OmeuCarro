@@ -753,38 +753,8 @@ body.map-page-standalone {
 /* --------------------------------
    TOAST & MODAL
    -------------------------------- */
-.toast-container {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: var(--z-toast);
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 90%;
-    max-width: 400px;
-}
-
-.toast {
-    background: #1e293b;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 99px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    box-shadow: var(--shadow-float);
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.3s;
-    text-align: center;
-}
-
-.toast.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
+/* TOAST & MODAL */
+/* Toast styles moved to global style.css */
 
 /* Modal Confirm */
 .modal-backdrop {
@@ -914,9 +884,7 @@ body.map-page-standalone {
     height: 16px;
 }
 
-.toast.error {
-    background: var(--color-danger);
-}
+
 
 /* Add borders and stronger shadows to controls */
 .btn-modal,

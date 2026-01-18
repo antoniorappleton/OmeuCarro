@@ -1478,6 +1478,58 @@ input:checked+.slider:before {
   transform: scale(0.95);
 }
 
-.tabs-collapsed .tab-content {
-  display: none !important;
+
+/* =============================
+   GLOBAL TOAST SYSTEM
+   ============================= */
+.toast-container {
+  position: fixed;
+  /* Fixed so it floats over everything */
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.toast {
+  background: #1e293b;
+  /* Slate-800 */
+  color: white;
+  padding: 12px 20px;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  pointer-events: auto;
+  /* Allow clicking if needed, but mainly for display */
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.error {
+  background: #ef4444;
+  /* Red-500 */
+}
+
+.toast.success {
+  background: #10b981;
+  /* Emerald-500 */
+}
+
+.toast.info {
+  background: #3b82f6;
+  /* Blue-500 */
 }

@@ -21,6 +21,7 @@ if (window.__L100_MAP_INIT__) {
       initialZoom: 13,
       initialCenter: [38.722, -9.139], // Lisbon Default
       userMarker: null,
+      currentLocation: null, // [lat, lng]
     };
 
     const els = {
@@ -99,6 +100,34 @@ if (window.__L100_MAP_INIT__) {
       state.map.on("click", () => {
         deselect();
       });
+
+      // GPS Watcher
+      if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            state.currentLocation = [latitude, longitude];
+
+            // Update user marker
+            if (state.userMarker) {
+              state.userMarker.setLatLng([latitude, longitude]);
+            } else {
+              state.userMarker = L.circleMarker([latitude, longitude], {
+                radius: 8,
+                fillColor: "#3b82f6",
+                color: "#fff",
+                weight: 3,
+                fillOpacity: 1,
+              }).addTo(state.map);
+            }
+
+            // Update nav link if needed
+            updateNavigationLink();
+          },
+          (err) => console.warn("GPS Watch Error", err),
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 },
+        );
+      }
     }
 
     // ============================
@@ -114,34 +143,26 @@ if (window.__L100_MAP_INIT__) {
 
     document.getElementById("btn-my-loc").addEventListener("click", () => {
       showToast("A obter localização...");
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            state.map.flyTo([latitude, longitude], 16);
-
-            // Show user marker (Single Instance)
-            if (state.userMarker) {
-              state.userMarker.setLatLng([latitude, longitude]);
-            } else {
-              state.userMarker = L.circleMarker([latitude, longitude], {
-                radius: 8,
-                fillColor: "#3b82f6",
-                color: "#fff",
-                weight: 3,
-                fillOpacity: 1,
-              }).addTo(state.map);
-            }
-
-            showToast("Localização encontrada!");
-          },
-          (err) => {
-            console.error(err);
-            showToast("Permissão negada ou erro de GPS", "error");
-          },
-        );
+      if (state.currentLocation) {
+        state.map.flyTo(state.currentLocation, 16);
+        showToast("Localização encontrada!");
       } else {
-        showToast("Geolocalização não suportada", "error");
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              state.map.flyTo([latitude, longitude], 16);
+              // (Marker updated by watcher eventually)
+              showToast("Localização encontrada!");
+            },
+            (err) => {
+              console.error(err);
+              showToast("Permissão negada ou erro de GPS", "error");
+            },
+          );
+        } else {
+          showToast("Geolocalização não suportada", "error");
+        }
       }
     });
 
@@ -272,21 +293,87 @@ if (window.__L100_MAP_INIT__) {
         chip.className = "chip";
         if (!fav.lat || !fav.lng) chip.classList.add("warning");
         chip.textContent = fav.nome;
-        chip.addEventListener("click", () => {
+        chip.textContent = fav.nome;
+        chip.addEventListener("click", async () => {
           if (fav.lat && fav.lng) {
             const m = markers[fav.id];
             selectFavorite(fav, m);
           } else {
-            showToast("Local sem coordenadas. Edite para corrigir.");
-            // Auto-select for edit without flying
-            state.selected = fav;
-            els.detName.textContent = fav.nome;
-            els.detAddr.textContent = fav.endereco;
-            setSheet("half", "details");
+            // AUTO-REPAIR: Try to geocode on the fly
+            showToast(`A obter coordenadas para "${fav.nome}"...`, "info");
+
+            try {
+              const coords = await geocodeAddress(fav.endereco);
+              if (coords) {
+                // Update DB
+                await db
+                  .collection("users")
+                  .doc(auth.currentUser.uid)
+                  .collection("localizacoes")
+                  .doc(fav.id)
+                  .update({
+                    lat: coords.lat,
+                    lng: coords.lng,
+                  });
+
+                showToast("Localização corrigida!", "success");
+
+                // Update Local State & Map (Wait for listener or manual update)
+                // We manually update here to be snappy
+                fav.lat = coords.lat;
+                fav.lng = coords.lng;
+
+                /* Re-render pins to include new one */
+                renderPins();
+
+                /* Select it */
+                // We need to find the new marker.
+                // renderPins is sync but might need a moment? No, it's instant.
+                const m = markers[fav.id];
+                if (m) selectFavorite(fav, m);
+              } else {
+                throw new Error("Geocode Falhou");
+              }
+            } catch (err) {
+              console.error(err);
+              showToast("Não foi possível encontrar o local. Edite.", "error");
+              // Fallback to Edit Mode
+              state.selected = fav;
+              els.detName.textContent = fav.nome;
+              els.detAddr.textContent = fav.endereco;
+              setSheet("half", "details");
+            }
           }
         });
         els.chips.appendChild(chip);
       });
+    }
+
+    // ============================
+    // HELPER: Update Nav Link
+    // ============================
+    function updateNavigationLink() {
+      const btnNav = document.getElementById("btn-navigate");
+      if (!btnNav) return;
+
+      const fav = state.selected;
+      if (fav && fav.lat && fav.lng) {
+        let url = `https://www.google.com/maps/dir/?api=1&destination=${fav.lat},${fav.lng}`;
+
+        // Add Origin if known
+        if (state.currentLocation) {
+          const [uLat, uLng] = state.currentLocation;
+          url += `&origin=${uLat},${uLng}`;
+        }
+
+        btnNav.href = url;
+        btnNav.style.opacity = "1";
+        btnNav.style.pointerEvents = "auto";
+      } else {
+        btnNav.removeAttribute("href");
+        btnNav.style.opacity = "0.5";
+        btnNav.style.pointerEvents = "none";
+      }
     }
 
     function selectFavorite(fav, markerInstance) {
@@ -307,6 +394,9 @@ if (window.__L100_MAP_INIT__) {
 
       els.detName.textContent = fav.nome;
       els.detAddr.textContent = fav.endereco;
+
+      updateNavigationLink();
+
       setSheet("half", "details");
     }
 
@@ -362,12 +452,45 @@ if (window.__L100_MAP_INIT__) {
                      <div class="result-info"><div>${fav.nome}</div><div>${fav.endereco}</div></div>
                      <div><svg class="icon icon-result"><use href="assets/icons-unified.svg#icon-car"></use></svg></div>
                  `;
-        item.addEventListener("click", () => {
+        item.addEventListener("click", async () => {
           const m = markers[fav.id]; // Might be null if no coords
           if (m) {
             selectFavorite(fav, m);
+          } else if (!fav.lat || !fav.lng) {
+            // AUTO-REPAIR Logic (Search Context)
+            showToast("A recuperar coordenadas...", "info");
+            try {
+              const coords = await geocodeAddress(fav.endereco);
+              if (coords) {
+                await db
+                  .collection("users")
+                  .doc(auth.currentUser.uid)
+                  .collection("localizacoes")
+                  .doc(fav.id)
+                  .update({
+                    lat: coords.lat,
+                    lng: coords.lng,
+                  });
+                showToast("Localizado!", "success");
+                // Update local & visual
+                fav.lat = coords.lat;
+                fav.lng = coords.lng;
+                renderPins();
+
+                const newM = markers[fav.id];
+                if (newM) selectFavorite(fav, newM);
+              } else {
+                throw new Error("No coords");
+              }
+            } catch (e) {
+              showToast("Morada desconhecida. Edite.", "error");
+              state.selected = fav;
+              els.detName.textContent = fav.nome;
+              els.detAddr.textContent = fav.endereco;
+              setSheet("half", "details");
+            }
           } else {
-            // Select without marker
+            // Should not happen if m exists, but fallback
             state.selected = fav;
             els.detName.textContent = fav.nome;
             els.detAddr.textContent = fav.endereco;
@@ -571,6 +694,10 @@ if (window.__L100_MAP_INIT__) {
     });
 
     // ============================
+    // NAVIGATION LOGIC (Handled in selectFavorite)
+    // ============================
+
+    // ============================
     // USE PLANNER (REMOVED)
     // ============================
     // Logic removed as per user request.
@@ -608,18 +735,7 @@ if (window.__L100_MAP_INIT__) {
       }
     });
 
-    function showToast(msg, type = "info") {
-      const el = document.createElement("div");
-      el.className = "toast";
-      if (type === "error") el.classList.add("error");
-      el.textContent = msg;
-      document.getElementById("toast-container").appendChild(el);
-      requestAnimationFrame(() => el.classList.add("visible"));
-      setTimeout(() => {
-        el.classList.remove("visible");
-        setTimeout(() => el.remove(), 300);
-      }, 3000);
-    }
+    // Local showToast removed in favor of global window.showToast from utils.js
 
     // Init
     initMap();
