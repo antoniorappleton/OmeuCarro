@@ -35,13 +35,23 @@
     <script defer src="js/firebase-config.js"></script>
     <script defer src="js/auth.js"></script>
     <script defer src="js/firestore.js"></script>
-    <script defer src="js/utils.js"></script>
-    <script defer src="js/mapa.js"></script>
+    <script src="js/utils.js"></script>
+    <script type="module" src="js/mapa.js"></script>
   </head>
   <body class="map-page-standalone">
     <!-- HEADER -->
     <header class="map-header">
       <div class="map-header-title">Mapa</div>
+      <button
+        class="map-header-btn"
+        id="btn-simulator-open"
+        aria-label="Simulador de Custos"
+        style="margin-right: 8px"
+      >
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-calculator"></use>
+        </svg>
+      </button>
       <button
         class="map-header-btn"
         id="btn-search-open"
@@ -133,6 +143,17 @@
                 <use href="assets/icons-unified.svg#icon-navigation"></use>
               </svg>
               Navegar
+            <!-- ViaMichelin Button -->
+             <a
+              class="btn-action-secondary full-width u-mb-sm"
+              id="btn-viamichelin"
+              target="_blank"
+              style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;"
+            >
+              <svg class="icon" style="color: var(--color-primary-start);">
+                <use href="assets/icons-unified.svg#icon-pin"></use>
+              </svg>
+              Calcular Custos (ViaMichelin)
             </a>
 
             <div class="u-grid-2">
@@ -254,6 +275,142 @@
             <button class="btn-action-primary full-width" id="btn-save-form">
               Guardar Alterações
             </button>
+          </div>
+        </div>
+
+        <!-- VIEW: SIMULATOR -->
+        <div class="sheet-view" id="view-simulator">
+          <div class="form-header">
+            <button class="map-header-btn" id="btn-close-simulator">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+              </svg>
+            </button>
+            <h3 class="form-title">Simulador de Viagem</h3>
+            <div style="width: 40px"></div>
+          </div>
+
+          <div class="form-content-scroll">
+            <!-- Distance -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Distância (km)</span>
+              </label>
+              <div class="input-with-icon">
+                <input
+                  type="number"
+                  class="form-input-clean"
+                  id="sim-dist"
+                  placeholder="0"
+                />
+                <div class="input-icon-right">
+                  <span
+                    style="
+                      font-size: 0.9rem;
+                      font-weight: 600;
+                      color: var(--color-text-muted);
+                    "
+                    >km</span
+                  >
+                </div>
+              </div>
+            </div>
+
+              </div>
+            </div>
+
+            <!-- Consumption & Price Row (Compact) -->
+            <div class="u-grid-2 u-mb-sm">
+                <!-- Consumption -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label-row">
+                    <span class="form-label-text">Consumo</span>
+                    <button class="btn-text-action" id="btn-use-db" style="font-size: 0.7rem; color: var(--color-primary-start);" title="Usar Média da BD">
+                       <svg class="icon" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;">
+                         <use href="assets/icons-unified.svg#icon-server"></use>
+                       </svg>
+                       BD
+                    </button>
+                  </label>
+                  <div class="input-with-icon">
+                    <input type="number" class="form-input-clean" id="sim-cons" placeholder="5.0" value="5.5" />
+                    <div class="input-icon-right">L/100</div>
+                  </div>
+                </div>
+                
+                <!-- Price -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label-row">
+                    <span class="form-label-text">Preço/L</span>
+                  </label>
+                  <div class="input-with-icon">
+                    <input type="number" class="form-input-clean" id="sim-price" placeholder="1.70" value="1.70" />
+                    <div class="input-icon-right">€</div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="u-grid-2 u-mb-sm">
+                 <!-- Trips -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label-row">
+                    <span class="form-label-text">Viagens</span>
+                  </label>
+                  <div class="input-with-icon">
+                    <input type="number" class="form-input-clean" id="sim-trips" placeholder="1" value="1" />
+                    <div class="input-icon-right">x</div>
+                  </div>
+                </div>
+
+                <!-- Tolls -->
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label-row">
+                    <span class="form-label-text">Portagens</span>
+                  </label>
+                  <div class="input-with-icon">
+                    <input type="number" class="form-input-clean" id="sim-tolls" placeholder="0" value="0" />
+                    <div class="input-icon-right">€</div>
+                  </div>
+                </div>
+            </div>
+
+            <!-- People -->
+            <div class="form-group">
+                <label class="form-label-row">
+                <span class="form-label-text">Dividir por (Pessoas)</span>
+                </label>
+                <div class="input-with-icon">
+                <input type="number" class="form-input-clean" id="sim-people" placeholder="1" value="1" min="1" />
+                <div class="input-icon-right">
+                    <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-users"></use>
+                    </svg>
+                </div>
+                </div>
+            </div>
+
+            <!-- Result Card -->
+            <div class="sim-result-card" style="background: var(--color-bg-card, #2d3748); padding: 20px; border-radius: 16px; text-align: center; margin-top: 10px; border: 1px solid var(--color-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+                     <div style="text-align: left;">
+                         <div style="font-size: 0.8rem; color: var(--color-text-muted);">Combustível</div>
+                         <div style="font-weight: 600; color: var(--color-text-main);" id="sim-res-fuel-cost">0.00 €</div>
+                     </div>
+                     <div style="text-align: right;">
+                         <div style="font-size: 0.8rem; color: var(--color-text-muted);">Portagens</div>
+                         <div style="font-weight: 600; color: var(--color-text-main);" id="sim-res-tolls">0.00 €</div>
+                     </div>
+                </div>
+                
+                <div style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 4px;">Custo Total</div>
+                <div class="sim-total" id="sim-result-cost" style="font-size: 2.2rem; font-weight: 800; color: var(--color-primary-start); line-height: 1;">0.00 €</div>
+                
+                <div id="sim-res-split-container" style="margin-top: 12px; background: rgba(128,128,128,0.1); padding: 8px; border-radius: 8px;">
+                     <span style="font-size: 0.9rem; color: var(--color-text-main);">
+                        <span style="font-weight: 700;" id="sim-res-person">0.00 €</span> / pessoa
+                     </span>
+                </div>
+            </div>
           </div>
         </div>
       </div>

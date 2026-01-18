@@ -1,6 +1,7 @@
 // js/mapa.js
 // L100 Premium Map Logic
 // Leaflet Integration + Real Geocoding (Nominatim)
+import { TripCalculator } from "./tripCalculator.js";
 
 if (window.__L100_MAP_INIT__) {
   console.warn("Map already initialized");
@@ -31,6 +32,7 @@ if (window.__L100_MAP_INIT__) {
         quick: document.getElementById("view-quick"),
         details: document.getElementById("view-details"),
         form: document.getElementById("view-form"),
+        simulator: document.getElementById("view-simulator"),
       },
       fab: document.getElementById("fab-add"),
       overlay: document.getElementById("search-overlay"),
@@ -354,25 +356,53 @@ if (window.__L100_MAP_INIT__) {
     // ============================
     function updateNavigationLink() {
       const btnNav = document.getElementById("btn-navigate");
-      if (!btnNav) return;
+      const btnVia = document.getElementById("btn-viamichelin");
+
+      if (!btnNav && !btnVia) return;
 
       const fav = state.selected;
-      if (fav && fav.lat && fav.lng) {
-        let url = `https://www.google.com/maps/dir/?api=1&destination=${fav.lat},${fav.lng}`;
 
-        // Add Origin if known
-        if (state.currentLocation) {
-          const [uLat, uLng] = state.currentLocation;
-          url += `&origin=${uLat},${uLng}`;
+      // 1. Google Maps Navigation
+      if (btnNav) {
+        if (fav && fav.lat && fav.lng) {
+          let url = `https://www.google.com/maps/dir/?api=1&destination=${fav.lat},${fav.lng}`;
+          if (state.currentLocation) {
+            const [uLat, uLng] = state.currentLocation;
+            url += `&origin=${uLat},${uLng}`;
+          }
+          btnNav.href = url;
+          btnNav.style.opacity = "1";
+          btnNav.style.pointerEvents = "auto";
+        } else {
+          btnNav.removeAttribute("href");
+          btnNav.style.opacity = "0.5";
+          btnNav.style.pointerEvents = "none";
         }
+      }
 
-        btnNav.href = url;
-        btnNav.style.opacity = "1";
-        btnNav.style.pointerEvents = "auto";
-      } else {
-        btnNav.removeAttribute("href");
-        btnNav.style.opacity = "0.5";
-        btnNav.style.pointerEvents = "none";
+      // 2. ViaMichelin Route Planner
+      if (btnVia) {
+        if (fav && fav.lat && fav.lng) {
+          // Base: Destination
+          // Format: https://www.viamichelin.pt/web/Itinerarios?arrival={lat},{lng}&arrivalTid=gps
+          // Note: ViaMichelin uses comma separated lat,lng but URL encoded often safer -> actually they use {lat},{lng} in query params usually
+          // but constructing valid query params:
+
+          let vmUrl = `https://www.viamichelin.pt/web/Itinerarios?arrival=${fav.lat},${fav.lng}&arrivalTid=gps`;
+
+          if (state.currentLocation) {
+            const [uLat, uLng] = state.currentLocation;
+            vmUrl += `&departure=${uLat},${uLng}&departureTid=gps`;
+          }
+
+          btnVia.href = vmUrl;
+          btnVia.style.opacity = "1";
+          btnVia.style.pointerEvents = "auto";
+        } else {
+          btnVia.removeAttribute("href");
+          btnVia.style.opacity = "0.5";
+          btnVia.style.pointerEvents = "none";
+        }
       }
     }
 
@@ -726,6 +756,96 @@ if (window.__L100_MAP_INIT__) {
     // UX Premium: Backdrop click + ESC
     modal.addEventListener("click", (e) => {
       if (e.target === modal) hideModal();
+    });
+
+    // ============================
+    // SIMULATOR LOGIC
+    // ============================
+    const simInputs = {
+      dist: document.getElementById("sim-dist"),
+      cons: document.getElementById("sim-cons"),
+      price: document.getElementById("sim-price"),
+      trips: document.getElementById("sim-trips"),
+      tolls: document.getElementById("sim-tolls"),
+      people: document.getElementById("sim-people"),
+      // Results
+      resFuelCost: document.getElementById("sim-res-fuel-cost"),
+      resTolls: document.getElementById("sim-res-tolls"),
+      resTotal: document.getElementById("sim-result-cost"),
+      resPerson: document.getElementById("sim-res-person"),
+    };
+
+    const btnSimOpen = document.getElementById("btn-simulator-open");
+    const btnSimClose = document.getElementById("btn-close-simulator");
+    const btnUseDb = document.getElementById("btn-use-db");
+
+    if (btnSimOpen) {
+      btnSimOpen.addEventListener("click", () => {
+        setSheet("half", "simulator");
+      });
+    }
+
+    if (btnSimClose) {
+      btnSimClose.addEventListener("click", () => {
+        setSheet("compact", "quick");
+      });
+    }
+
+    // Database Button
+    if (btnUseDb) {
+      btnUseDb.addEventListener("click", () => {
+        const data = TripCalculator.getDatabaseAverages();
+        if (simInputs.cons) simInputs.cons.value = data.consumo;
+        if (simInputs.price) simInputs.price.value = data.precoLitro;
+        window.showToast("Média da BD aplicada!", "success");
+        calculateSim();
+      });
+    }
+
+    function calculateSim() {
+      // Gather Data with explicit checks
+      const data = {
+        km: simInputs.dist && simInputs.dist.value ? simInputs.dist.value : 0,
+        consumo:
+          simInputs.cons && simInputs.cons.value ? simInputs.cons.value : 0,
+        precoLitro:
+          simInputs.price && simInputs.price.value ? simInputs.price.value : 0,
+        viagens:
+          simInputs.trips && simInputs.trips.value ? simInputs.trips.value : 1,
+        portagens:
+          simInputs.tolls && simInputs.tolls.value ? simInputs.tolls.value : 0,
+        pessoas:
+          simInputs.people && simInputs.people.value
+            ? simInputs.people.value
+            : 1,
+      };
+
+      // Calculate
+      const res = TripCalculator.calculate(data);
+
+      // Render
+      const setTxt = (el, txt) => {
+        if (el) el.textContent = txt;
+      };
+
+      setTxt(simInputs.resFuelCost, `${res.custoCombustivel.toFixed(2)} €`);
+      setTxt(simInputs.resTolls, `${res.portagensTotais.toFixed(2)} €`);
+      setTxt(simInputs.resTotal, `${res.custoTotal.toFixed(2)} €`);
+      setTxt(simInputs.resPerson, `${res.custoPorPessoa.toFixed(2)} €`);
+    }
+
+    // Bind inputs
+    const allInps = [
+      simInputs.dist,
+      simInputs.cons,
+      simInputs.price,
+      simInputs.trips,
+      simInputs.tolls,
+      simInputs.people,
+    ];
+
+    allInps.forEach((inp) => {
+      if (inp) inp.addEventListener("input", calculateSim);
     });
 
     document.addEventListener("keydown", (e) => {
