@@ -765,7 +765,7 @@ if (window.__L100_MAP_INIT__) {
       dist: document.getElementById("sim-dist"),
       cons: document.getElementById("sim-cons"),
       price: document.getElementById("sim-price"),
-      trips: document.getElementById("sim-trips"),
+      trips: document.getElementById("sim-trips"), // Reverted to trips
       tolls: document.getElementById("sim-tolls"),
       people: document.getElementById("sim-people"),
       // Results
@@ -811,7 +811,7 @@ if (window.__L100_MAP_INIT__) {
         precoLitro:
           simInputs.price && simInputs.price.value ? simInputs.price.value : 0,
         viagens:
-          simInputs.trips && simInputs.trips.value ? simInputs.trips.value : 1,
+          simInputs.trips && simInputs.trips.value ? simInputs.trips.value : 1, // Reverted logic
         portagens:
           simInputs.tolls && simInputs.tolls.value ? simInputs.tolls.value : 0,
         pessoas:
@@ -845,7 +845,10 @@ if (window.__L100_MAP_INIT__) {
     ];
 
     allInps.forEach((inp) => {
-      if (inp) inp.addEventListener("input", calculateSim);
+      if (inp) {
+        // Checkbox event is 'change', others 'input'. Both work, 'input' is fine for checkbox usually but 'change' is safer
+        inp.addEventListener("input", calculateSim);
+      }
     });
 
     document.addEventListener("keydown", (e) => {
