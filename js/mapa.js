@@ -41,6 +41,7 @@ if (window.__L100_MAP_INIT__) {
       inpName: document.getElementById("inp-name"),
       inpAddr: document.getElementById("inp-address"),
       inpCat: document.getElementById("inp-category"),
+      inpNotes: document.getElementById("inp-notes"),
       formHeading: document.getElementById("form-heading"),
     };
 
@@ -393,18 +394,44 @@ if (window.__L100_MAP_INIT__) {
 
     function openForm(fav = null) {
       if (fav) {
-        els.formHeading.textContent = "Editar Favorito";
+        els.formHeading.textContent = "Editar Local";
         els.inpName.value = fav.nome;
         els.inpAddr.value = fav.endereco;
         els.inpCat.value = fav.category || "Outro";
+        els.inpNotes.value = fav.notes || "";
       } else {
-        els.formHeading.textContent = "Novo Favorito";
+        els.formHeading.textContent = "Novo Local";
         els.inpName.value = "";
         els.inpAddr.value = "";
         els.inpCat.value = "Outro";
+        els.inpNotes.value = "";
       }
+      updateChips(els.inpCat.value);
       setSheet("full", "form");
     }
+
+    // Chips Logic
+    function updateChips(selectedVal) {
+      document.querySelectorAll(".type-chip").forEach((chip) => {
+        if (chip.dataset.value === selectedVal) {
+          chip.classList.add("active");
+        } else {
+          chip.classList.remove("active");
+        }
+      });
+    }
+
+    // Bind Chip Clicks (Global or Event Delegation)
+    document
+      .getElementById("type-chips-container")
+      .addEventListener("click", (e) => {
+        const chip = e.target.closest(".type-chip");
+        if (chip) {
+          const val = chip.dataset.value;
+          els.inpCat.value = val;
+          updateChips(val);
+        }
+      });
 
     document.getElementById("btn-cancel-form").addEventListener("click", () => {
       if (state.selected) setSheet("half", "details");
@@ -418,6 +445,8 @@ if (window.__L100_MAP_INIT__) {
         const name = els.inpName.value.trim();
         const addr = els.inpAddr.value.trim();
         const cat = els.inpCat.value;
+        const notes = els.inpNotes.value.trim();
+
         if (!name || !addr)
           return showToast("Preencha todos os campos", "error");
 
@@ -458,6 +487,7 @@ if (window.__L100_MAP_INIT__) {
             nome: name,
             endereco: addr,
             category: cat,
+            notes: notes,
             lat: lat,
             lng: lng,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -541,36 +571,9 @@ if (window.__L100_MAP_INIT__) {
     });
 
     // ============================
-    // USE PLANNER
+    // USE PLANNER (REMOVED)
     // ============================
-    document.getElementById("btn-use-planner").addEventListener("click", () => {
-      if (!state.selected) return;
-
-      // Robust Data Object (Polymorphic for future planner)
-      const data = {
-        // L100 Standard
-        id: state.selected.id,
-        nome: state.selected.nome,
-        name: state.selected.nome, // Alias
-        endereco: state.selected.endereco,
-        address: state.selected.endereco, // Alias
-        category: state.selected.category,
-
-        // Geo
-        lat: state.selected.lat,
-        lng: state.selected.lng,
-
-        // Metadata
-        isFavorite: true,
-        favId: state.selected.id,
-        source: "mapa_l100",
-      };
-
-      localStorage.setItem("selected_destination", JSON.stringify(data));
-
-      // Attempt redirect (if file exists)
-      window.location.href = "planeador.html";
-    });
+    // Logic removed as per user request.
 
     // Utils
     const modal = document.getElementById("modal-confirm");

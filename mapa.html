@@ -10,7 +10,7 @@
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/home.css" />
-    <link rel="stylesheet" href="css/mapa.css" />
+    <link rel="stylesheet" href="css/mapa.css?v=2" />
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
@@ -55,8 +55,7 @@
 
     <!-- MAP LAYER -->
     <div id="map-container">
-      <!-- Pins inject here -->
-      <div id="map-pins-layer"></div>
+      <!-- Leaflet injects here -->
     </div>
 
     <!-- FLOATING CONTROLS -->
@@ -121,12 +120,7 @@
           </div>
 
           <div class="details-actions">
-            <button class="btn-action-primary" id="btn-use-planner">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-map"></use>
-              </svg>
-              Usar no Planeador
-            </button>
+            <!-- Planner Button Removed -->
 
             <div class="u-grid-2">
               <button class="btn-action-secondary" id="btn-edit">Editar</button>
@@ -142,44 +136,110 @@
 
         <!-- VIEW: FORM (Add/Edit) -->
         <div class="sheet-view" id="view-form">
-          <h3 class="form-title" id="form-heading">Novo Favorito</h3>
-
-          <div class="form-group">
-            <label class="form-label">Nome</label>
-            <input
-              type="text"
-              class="form-input"
-              id="inp-name"
-              placeholder="Ex: Casa, Trabalho..."
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Endereço</label>
-            <input
-              type="text"
-              class="form-input"
-              id="inp-address"
-              placeholder="Rua..."
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Categoria</label>
-            <select class="form-select" id="inp-category">
-              <option value="Outro">Outro</option>
-              <option value="Casa">Casa</option>
-              <option value="Trabalho">Trabalho</option>
-              <option value="Lazer">Lazer</option>
-            </select>
-          </div>
-
-          <div class="u-flex-gap">
-            <button class="btn-action-secondary u-flex-1" id="btn-cancel-form">
-              Cancelar
+          <div class="form-header">
+            <button class="map-header-btn" id="btn-cancel-form">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+              </svg>
             </button>
-            <button class="btn-action-primary u-flex-1" id="btn-save-form">
-              Guardar
+            <h3 class="form-title" id="form-heading">Editar Local</h3>
+            <div style="width: 40px"></div>
+            <!-- Spacer for center alignment -->
+          </div>
+
+          <div class="form-content-scroll">
+            <!-- Name -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Nome do Local</span>
+              </label>
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="form-input-clean"
+                  id="inp-name"
+                  placeholder="Ex: Casa, Trabalho..."
+                />
+                <div class="input-icon-right">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-edit"></use>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Endereço</span>
+              </label>
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="form-input-clean"
+                  id="inp-address"
+                  placeholder="Pesquisar morada..."
+                />
+                <div class="input-icon-right">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-location"></use>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map Adjust Tip -->
+            <div class="form-map-tip">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-arrow-up"></use>
+              </svg>
+              <span>Arraste o mapa para ajustar a posição</span>
+            </div>
+
+            <!-- Type Chips -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Tipo de Local</span>
+              </label>
+              <div class="type-chips-row" id="type-chips-container">
+                <button class="type-chip" data-value="Casa">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-home"></use>
+                  </svg>
+                  Casa
+                </button>
+                <button class="type-chip" data-value="Trabalho">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-car"></use>
+                  </svg>
+                  Trabalho
+                </button>
+                <button class="type-chip active" data-value="Outro">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-pin"></use>
+                  </svg>
+                  Outro
+                </button>
+              </div>
+              <input type="hidden" id="inp-category" value="Outro" />
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Observações</span>
+              </label>
+              <textarea
+                class="form-input-area"
+                id="inp-notes"
+                placeholder="Ex: Portão azul, código 1234..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn-action-primary full-width" id="btn-save-form">
+              Guardar Alterações
             </button>
           </div>
         </div>
@@ -241,7 +301,7 @@
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-map"></use>
+          <use href="assets/icons-unified.svg?v=2#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>

@@ -132,13 +132,17 @@ body.map-page-standalone {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: background 0.3s, border-color 0.3s;
+}
+
+.pin-shape-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transform: rotate(45deg);
+    /* Counter-rotate for content */
 }
 
 .pin-rotate-base {
@@ -151,8 +155,6 @@ body.map-page-standalone {
 
 .pin-shape svg {
     color: white;
-    width: 18px;
-    height: 18px;
     width: 18px;
     height: 18px;
 }
@@ -383,7 +385,7 @@ body.map-page-standalone {
     }
 }
 
-/* CHIPS (Styles from Planeador Unified) */
+/* CHIPS (Scrollable Quick List) */
 .chips-row {
     display: flex;
     gap: 10px;
@@ -468,7 +470,7 @@ body.map-page-standalone {
 .btn-action-primary {
     background: var(--color-text-main);
     /* Black/Dark */
-    color: white;
+    color: var(--color-bg);
     padding: 14px;
     border-radius: 16px;
     font-weight: 600;
@@ -486,7 +488,7 @@ body.map-page-standalone {
 }
 
 .btn-action-secondary {
-    background: #f1f5f9;
+    background: var(--border-light);
     color: var(--color-text-main);
     padding: 14px;
     border-radius: 16px;
@@ -495,40 +497,185 @@ body.map-page-standalone {
     cursor: pointer;
 }
 
-/* FORM VIEW */
+/* FORM VIEW UPGRADE */
+.form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
 .form-title {
     font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin: 0;
+    text-align: center;
+    color: var(--color-text-main);
+}
+
+.form-content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    /* Hide Scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 80px;
+    /* Space for footer */
+}
+
+.form-content-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-.form-label {
-    font-size: 0.8rem;
+.form-label-row {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.form-label-text {
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--color-text-muted);
-    margin-bottom: 6px;
-    display: block;
+    color: var(--color-text-main);
 }
 
-.form-input,
-.form-select {
+/* Custom Input with Icon */
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-input-clean {
     width: 100%;
-    padding: 12px;
+    height: 56px;
+    padding: 0 16px;
+    padding-right: 48px;
+    /* Space for icon */
     border-radius: 12px;
     border: 1px solid var(--border-light);
     background: var(--color-bg);
-    font-size: 0.95rem;
-    transition: border 0.2s;
+    /* Or white in light mode? keeps consistent */
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-main);
+    transition: all 0.2s;
 }
 
-.form-input:focus {
+.form-input-clean:focus {
     outline: none;
     border-color: var(--color-primary-start);
-    background: white;
+    background: var(--color-surface);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.input-icon-right {
+    position: absolute;
+    right: 16px;
+    color: var(--color-primary-start);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+/* Textarea */
+.form-input-area {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    background: var(--color-bg);
+    color: var(--color-text-main);
+    font-size: 1rem;
+    font-family: inherit;
+    resize: none;
+    transition: all 0.2s;
+}
+
+.form-input-area:focus {
+    outline: none;
+    border-color: var(--color-primary-start);
+    background: var(--color-surface);
+}
+
+/* Type Chips */
+.type-chips-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.type-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border-light);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.type-chip .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-light);
+}
+
+.type-chip:hover {
+    border-color: var(--color-primary-start);
+}
+
+.type-chip.active {
+    background: var(--color-primary-start);
+    border-color: var(--color-primary-start);
+    color: white;
+}
+
+.type-chip.active .icon {
+    color: white;
+}
+
+/* Map Tip */
+.form-map-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: -10px 0 20px;
+    color: var(--color-primary-start);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.form-map-tip .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Footer */
+.form-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px 24px;
+    background: var(--color-surface);
+    /* Glass? */
+    border-top: 1px solid var(--border-light);
+    display: flex;
+}
+
+.full-width {
+    width: 100%;
 }
 
 /* --------------------------------
