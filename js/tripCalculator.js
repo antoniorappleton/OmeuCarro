@@ -5,72 +5,96 @@
 
 export const TripCalculator = {
   /**
-   * Calcula os custos de uma viagem com base nos inputs.
-   * Todos os inputs são validados/convertidos para float/int.
+   * Calcula os custos de viagem com base em médias e overrides.
    *
-   * @param {Object} data
-   * @param {number|string} data.consumo - L/100km
-   * @param {number|string} data.precoLitro - €/L
-   * @param {number|string} data.km - Km por viagem (ida)
-   * @param {number|string} data.viagens - N.º de viagens (default 1)
-   * @param {number|string} data.portagens - € por viagem (default 0)
-   * @param {number|string} data.pessoas - N.º de pessoas para dividir (default 1)
+   * @param {Object} params
+   * @param {number} params.consumoMedio - Média do veículo (L/100km)
+   * @param {number} params.precoMedioLitro - Média de preço (€/L)
+   * @param {Object} params.overrides - Inputs do utilizador
+   * @param {string|number} [params.overrides.consumo] - Override L/100km
+   * @param {string|number} [params.overrides.precoLitro] - Override €/L
+   * @param {string|number} params.overrides.km - Km por viagem
+   * @param {string|number} params.overrides.viagens - N.º de viagens
+   * @param {string|number} params.overrides.portagens - € Portagens/viagem
+   * @param {string|number} params.overrides.pessoas - N.º Pessoas
    *
-   * @returns {Object} Resultado formatado e valores brutos
+   * @returns {Object} Resultados formatados e valores efetivos
    */
-  calculate(data) {
-    // 1. Normalizar Inputs
-    const consumo = parseFloat(data.consumo) || 0;
-    const precoLitro = parseFloat(data.precoLitro) || 0;
-    const km = parseFloat(data.km) || 0;
-    const viagens = parseInt(data.viagens) || 1;
-    const portagens = parseFloat(data.portagens) || 0;
-    const pessoas = parseInt(data.pessoas) || 1;
+  calculate(params) {
+    const { consumoMedio = 0, precoMedioLitro = 0, overrides = {} } = params;
 
-    // Evitar divisão por zero ou pessoas < 1
-    const nPessoas = pessoas < 1 ? 1 : pessoas;
+    // 1. Normalização e Validação
+    // Parse helper: texto -> número, NaN/Vazio -> 0, Negativos -> 0
+    const parseNonNeg = (val) => Math.max(0, parseFloat(val) || 0);
+    const parseIntNonNeg = (val) => Math.max(0, parseInt(val) || 0);
 
-    // 2. Cálculos
-    const kmTotais = km * viagens;
-    const litrosTotais = (consumo * kmTotais) / 100;
-    const custoCombustivel = litrosTotais * precoLitro;
-    const portagensTotais = portagens * viagens;
-    const custoTotal = custoCombustivel + portagensTotais;
-    const custoPorPessoa = custoTotal / nPessoas;
+    // Inputs overrides
+    // Para consumo e preço, se não definido ou vazio, usamos a média.
+    // MAS a regra diz: "Se presente, substitui".
+    // Vamos assumir: se o utilizador preencheu (string não vazia ou numero), usa-se.
+    // Se for string vazia ou null e undefined, usa média.
 
-    // 3. Output
+    // Função auxiliar para determinar efetivo
+    const getEffective = (userVal, avgVal) => {
+      // Se userVal é inválido (null, undefined, ""), usa média.
+      // Se userVal é numérico (mesmo 0), usa userVal.
+      if (userVal === "" || userVal === null || userVal === undefined)
+        return parseNonNeg(avgVal);
+      return parseNonNeg(userVal);
+    };
+
+    const C = getEffective(overrides.consumo, consumoMedio);
+    const P = getEffective(overrides.precoLitro, precoMedioLitro);
+
+    const K = parseNonNeg(overrides.km);
+    const V = parseIntNonNeg(overrides.viagens);
+    const T = parseNonNeg(overrides.portagens);
+
+    // Pessoas: Inteiro >= 1
+    let rawPessoas = parseInt(overrides.pessoas);
+    const N = !rawPessoas || rawPessoas < 1 ? 1 : rawPessoas;
+
+    // 2. Algoritmos
+    const kmTotais = K * V;
+    const litrosTotais = (C * kmTotais) / 100;
+    const portagensTotais = T * V;
+    const custoCombustivel = litrosTotais * P;
+    const custoTotal = portagensTotais + custoCombustivel;
+    const custoPorPessoa = custoTotal / N;
+
+    // 3. Formatação e Outputs
+    // Helper para formatar n casas decimais (retorna number ou string? O pedido diz "número formatado", mas em JS isso é string fixada ou number arredondado.
+    // "Plain Text: kmTotais // número formatado (1 casa)" sugere string ou float arredondado. Vamos devolver float arredondado para consistência numérica,
+    // mas se o requisito for display, toFixed retorna string.
+    // O pedido mostra chaves: Plain Text{ ... }. Vamos devolver os valores numéricos arredondados para facilitar cálculos futuros se necessário,
+    // mas talvez string seja melhor para display direto. Vamos usar float para manter "Módulo puro de cálculo".
+    // EDIT: "número formatado (1 casa)" usually means string representation. Let's provide both or standard floats.
+    // O JS mapa.js usava toFixed(). Vamos manter números aqui para flexibilidade, ou melhor, seguir o pedido "devolver todos os outputs num objeto".
+
+    const fmt = (val, digits) => parseFloat(val.toFixed(digits)); // Devolve número arredondado
+
     return {
-      kmTotais: parseFloat(kmTotais.toFixed(1)),
-      litrosTotais: parseFloat(litrosTotais.toFixed(1)),
-      portagensTotais: parseFloat(portagensTotais.toFixed(2)),
-      custoCombustivel: parseFloat(custoCombustivel.toFixed(2)),
-      custoTotal: parseFloat(custoTotal.toFixed(2)),
-      custoPorPessoa: parseFloat(custoPorPessoa.toFixed(2)),
+      kmTotais: fmt(kmTotais, 1),
+      litrosTotais: fmt(litrosTotais, 1),
+      portagensTotais: fmt(portagensTotais, 2),
+      custoCombustivel: fmt(custoCombustivel, 2),
+      custoTotal: fmt(custoTotal, 2),
+      custoPorPessoa: fmt(custoPorPessoa, 2),
 
-      // Valores originais usados (para debug se necessário)
-      _inputs: { consumo, precoLitro, km, viagens, portagens, nPessoas },
+      // Efetivos
+      consumoEfetivo: C,
+      precoLitroEfetivo: P,
+      _debug: { C, P, K, V, T, N },
     };
   },
 
   /**
-   * Handler para simular busca na "Base de Dados".
-   * Retorna médias internas.
-   * Em uma app real, isto poderia ler do localStorage ou API.
+   * Mock para médias (será substituído por dados reais em mapa.js)
    */
   getDatabaseAverages() {
-    // Tentar ler do localStorage se existir algo salvo, senão defaults
-    // Exemplo: assumindo que o app salva 'meuCarro_stats'
-    let mediaConsumo = 6.5;
-    let mediaPreco = 1.75;
-
-    // Simples mock para demonstração
-    // Se quiser ler de algo real:
-    // const stats = JSON.parse(localStorage.getItem('stats')) || {};
-    // if(stats.avgConsumption) mediaConsumo = stats.avgConsumption;
-
     return {
-      consumo: mediaConsumo,
-      precoLitro: mediaPreco,
+      consumo: 6.5,
+      precoLitro: 1.75,
     };
   },
 };

@@ -781,6 +781,10 @@ if (window.__L100_MAP_INIT__) {
 
     if (btnSimOpen) {
       btnSimOpen.addEventListener("click", () => {
+        // initSimulator logic is now self-contained or called here if hoisted.
+        // Ideally define initSimulator before this or call explicitly.
+        // Assuming Function Declaration hoisting works for initSimulator:
+        if (typeof initSimulator === "function") initSimulator();
         setSheet("half", "simulator");
       });
     }
@@ -791,37 +795,71 @@ if (window.__L100_MAP_INIT__) {
       });
     }
 
-    // Database Button
+    // State for base averages (fetched on load/button)
+    // In a real scenario, this matches 'Medias' from the vehicle.
+    let currentAverages = {
+      consumoMedio: 6.5,
+      precoMedioLitro: 1.75,
+    };
+
+    // Initialize with averages if possible
+    function initSimulator() {
+      const avg = TripCalculator.getDatabaseAverages();
+      currentAverages.consumoMedio = avg.consumo;
+      currentAverages.precoMedioLitro = avg.precoLitro;
+      // Optionally set placeholders to reflect averages
+      if (simInputs.cons) simInputs.cons.placeholder = avg.consumo;
+      if (simInputs.price) simInputs.price.placeholder = avg.precoLitro;
+      calculateSim();
+    }
+
+    // Call init on load (or when sheet opens)
+    if (btnSimOpen) {
+      btnSimOpen.addEventListener("click", () => {
+        // Maybe refresh averages here
+        initSimulator();
+        setSheet("half", "simulator");
+      });
+    }
+
+    // Database Button - Refresh averages explicitly
     if (btnUseDb) {
       btnUseDb.addEventListener("click", () => {
         const data = TripCalculator.getDatabaseAverages();
+        currentAverages.consumoMedio = data.consumo;
+        currentAverages.precoMedioLitro = data.precoLitro;
+        // Update placeholders or values?
+        // User requested "inputs... se presentes, sobrepõem".
+        // Button usually implies "Fill form". Let's clear overrides and rely on base?
+        // Or let's fill the inputs like before.
         if (simInputs.cons) simInputs.cons.value = data.consumo;
         if (simInputs.price) simInputs.price.value = data.precoLitro;
+
         window.showToast("Média da BD aplicada!", "success");
         calculateSim();
       });
     }
 
     function calculateSim() {
-      // Gather Data with explicit checks
-      const data = {
-        km: simInputs.dist && simInputs.dist.value ? simInputs.dist.value : 0,
-        consumo:
-          simInputs.cons && simInputs.cons.value ? simInputs.cons.value : 0,
-        precoLitro:
-          simInputs.price && simInputs.price.value ? simInputs.price.value : 0,
-        viagens:
-          simInputs.trips && simInputs.trips.value ? simInputs.trips.value : 1, // Reverted logic
-        portagens:
-          simInputs.tolls && simInputs.tolls.value ? simInputs.tolls.value : 0,
-        pessoas:
-          simInputs.people && simInputs.people.value
-            ? simInputs.people.value
-            : 1,
+      // Gather Overrides safely
+      // Empty string => undefined/null for the calculator to use average
+      const getVal = (el) => (el && el.value !== "" ? el.value : undefined);
+
+      const overrides = {
+        km: getVal(simInputs.dist),
+        consumo: getVal(simInputs.cons),
+        precoLitro: getVal(simInputs.price),
+        viagens: getVal(simInputs.trips),
+        portagens: getVal(simInputs.tolls),
+        pessoas: getVal(simInputs.people),
       };
 
-      // Calculate
-      const res = TripCalculator.calculate(data);
+      // Calculate with Base + Overrides
+      const res = TripCalculator.calculate({
+        consumoMedio: currentAverages.consumoMedio,
+        precoMedioLitro: currentAverages.precoMedioLitro,
+        overrides: overrides,
+      });
 
       // Render
       const setTxt = (el, txt) => {
