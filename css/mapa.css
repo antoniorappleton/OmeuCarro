@@ -16,8 +16,8 @@
     --z-toast: 40;
     --z-modal: 50;
 
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-bg: var(--color-surface-glass);
+    --glass-border: var(--color-surface-container);
     --glass-blur: 12px;
 
     --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.12);
@@ -89,7 +89,6 @@ body.map-page-standalone {
     background-color: var(--color-bg);
     /* Leaflet will handle the rest */
     cursor: grab;
-    touch-action: none;
     z-index: 1;
     /* Ensure map is at bottom */
 }
@@ -99,16 +98,7 @@ body.map-page-standalone {
 }
 
 /* The container that actually moves/scales */
-#map-pins-layer {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: center center;
-    transition: transform 0.1s ease-out;
-    /* Smooth drag */
-}
+
 
 /* --------------------------------
    PINS
@@ -145,14 +135,26 @@ body.map-page-standalone {
     display: flex;
     align-items: center;
     justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: background 0.3s, border-color 0.3s;
+}
+
+.pin-rotate-base {
+    transform: rotate(-45deg);
+}
+
+.pin-icon-rotate {
+    transform: rotate(45deg);
 }
 
 .pin-shape svg {
     color: white;
     width: 18px;
     height: 18px;
-    transform: rotate(45deg);
+    width: 18px;
+    height: 18px;
 }
 
 .map-pin.active .pin-shape {
@@ -198,10 +200,10 @@ body.map-page-standalone {
 .control-btn {
     width: 44px;
     height: 44px;
-    background: white;
+    background: var(--color-surface);
     border-radius: 14px;
-    box-shadow: var(--shadow-card);
-    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,16 +220,18 @@ body.map-page-standalone {
 .zoom-group {
     display: flex;
     flex-direction: column;
-    background: white;
+    background: var(--color-surface);
     border-radius: 14px;
-    box-shadow: var(--shadow-card);
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
 .zoom-btn {
     width: 44px;
     height: 44px;
-    background: white;
+    background: var(--color-surface);
     border: none;
     display: flex;
     align-items: center;
@@ -250,15 +254,14 @@ body.map-page-standalone {
 .fab-add {
     position: absolute;
     right: 16px;
-    /* Bottom varies by JS state */
     bottom: calc(var(--map-footer-height) + 16px + 180px);
     width: 56px;
     height: 56px;
     border-radius: 20px;
     background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
     color: white;
-    box-shadow: var(--shadow-float);
-    border: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    border: 2px solid white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -266,6 +269,10 @@ body.map-page-standalone {
     /* Above sheet-container visually but managed by layout? */
     cursor: pointer;
     transition: transform 0.2s, opacity 0.2s, bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fab-add.compact {
+    bottom: calc(var(--map-footer-height) + 16px + 200px);
 }
 
 .fab-add:hover {
@@ -291,7 +298,7 @@ body.map-page-standalone {
     right: 0;
     bottom: var(--map-footer-height);
     /* Sits above footer */
-    background: white;
+    background: var(--color-surface);
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
     box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.12);
@@ -323,7 +330,7 @@ body.map-page-standalone {
     justify-content: center;
     cursor: grab;
     flex-shrink: 0;
-    background: white;
+    background: var(--color-surface);
     /* sticky */
 }
 
@@ -429,6 +436,11 @@ body.map-page-standalone {
     100% {
         opacity: 0.5;
     }
+}
+
+.chip.warning {
+    border: 1px dashed var(--color-warning);
+    color: var(--color-warning);
 }
 
 /* DETAILS VIEW */
@@ -757,3 +769,11 @@ body.map-page-standalone {
 
 .toast.error {
     background: var(--color-danger);
+}
+
+/* Add borders and stronger shadows to controls */
+.btn-modal,
+.search-input-pill {
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}

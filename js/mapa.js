@@ -20,6 +20,7 @@ if (window.__L100_MAP_INIT__) {
       isEdit: false,
       initialZoom: 13,
       initialCenter: [38.722, -9.139], // Lisbon Default
+      userMarker: null,
     };
 
     const els = {
@@ -60,10 +61,8 @@ if (window.__L100_MAP_INIT__) {
       lastGeocodeTime = Date.now();
 
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-        const res = await fetch(url, {
-          headers: { "User-Agent": "L100-App/1.0 (internal-demo)" },
-        });
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&accept-language=pt`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error("API Error");
         const data = await res.json();
 
@@ -84,10 +83,6 @@ if (window.__L100_MAP_INIT__) {
     // MAP INITIALIZATION (Leaflet)
     // ============================
     function initMap() {
-      // Remove the mock pins layer if it exists
-      const oldLayer = document.getElementById("map-pins-layer");
-      if (oldLayer) oldLayer.style.display = "none";
-
       state.map = L.map("map-container", {
         zoomControl: false,
         attributionControl: true, // OSM requires attribution
@@ -124,14 +119,18 @@ if (window.__L100_MAP_INIT__) {
             const { latitude, longitude } = pos.coords;
             state.map.flyTo([latitude, longitude], 16);
 
-            // Show user marker
-            L.circleMarker([latitude, longitude], {
-              radius: 8,
-              fillColor: "#3b82f6",
-              color: "#fff",
-              weight: 3,
-              fillOpacity: 1,
-            }).addTo(state.map);
+            // Show user marker (Single Instance)
+            if (state.userMarker) {
+              state.userMarker.setLatLng([latitude, longitude]);
+            } else {
+              state.userMarker = L.circleMarker([latitude, longitude], {
+                radius: 8,
+                fillColor: "#3b82f6",
+                color: "#fff",
+                weight: 3,
+                fillOpacity: 1,
+              }).addTo(state.map);
+            }
 
             showToast("Localização encontrada!");
           },
@@ -165,8 +164,10 @@ if (window.__L100_MAP_INIT__) {
 
       if (size === "compact" && viewName === "quick") {
         els.fab.classList.remove("hidden");
-        els.fab.style.bottom = "calc(70px + 16px + 200px)"; // Approx
+        // Use class for positioning
+        requestAnimationFrame(() => els.fab.classList.add("compact"));
       } else {
+        els.fab.classList.remove("compact");
         els.fab.classList.add("hidden");
       }
     }
@@ -232,8 +233,8 @@ if (window.__L100_MAP_INIT__) {
 
         // Create Custom DivIcon (L100 Style)
         const iconHtml = `
-                    <div class="pin-shape" style="transform: rotate(-45deg);">
-                       <svg class="icon" style="transform: rotate(45deg);"><use href="assets/icons-unified.svg#${iconName}"></use></svg>
+                    <div class="pin-shape pin-rotate-base">
+                       <svg class="icon pin-icon-rotate"><use href="assets/icons-unified.svg#${iconName}"></use></svg>
                     </div>
                     <div class="pin-label">${fav.nome}</div>
                 `;
@@ -268,6 +269,7 @@ if (window.__L100_MAP_INIT__) {
       state.favorites.slice(0, 5).forEach((fav) => {
         const chip = document.createElement("div");
         chip.className = "chip";
+        if (!fav.lat || !fav.lng) chip.classList.add("warning");
         chip.textContent = fav.nome;
         chip.addEventListener("click", () => {
           if (fav.lat && fav.lng) {
@@ -318,12 +320,21 @@ if (window.__L100_MAP_INIT__) {
     // ============================
     // CRUD & SEARCH
     // ============================
-    document
-      .getElementById("btn-search-open")
-      .addEventListener("click", () => els.overlay.classList.add("visible"));
+    // Search Logic
+    document.getElementById("btn-search-open").addEventListener("click", () => {
+      els.overlay.classList.add("visible");
+      setTimeout(() => els.searchInput.focus(), 100);
+    });
+
+    function closeSearch() {
+      els.overlay.classList.remove("visible");
+      els.searchInput.value = "";
+      els.searchResults.innerHTML = "";
+    }
+
     document
       .getElementById("btn-search-close")
-      .addEventListener("click", () => els.overlay.classList.remove("visible"));
+      .addEventListener("click", closeSearch);
 
     let debounceTimer;
     els.searchInput.addEventListener("input", (e) => {
@@ -469,10 +480,24 @@ if (window.__L100_MAP_INIT__) {
           }
 
           showToast("Guardado com sucesso!");
+
+          // Preserve Selection Context
+          const savedId =
+            state.isEdit && state.selected ? state.selected.id : null; // Logic for new ID requires doc ref returned by add(), simplified here to just reload
+
           await loadFavorites();
 
-          // If new, find the new item in list to select it?
-          // Simplification for now: close to main map
+          if (savedId) {
+            const freshFav = state.favorites.find((f) => f.id === savedId);
+            if (freshFav) {
+              const m = markers[freshFav.id];
+              selectFavorite(freshFav, m);
+              setSheet("half", "details");
+              return;
+            }
+          }
+
+          // If new or lost, reset
           setSheet("compact", "quick");
 
           // Fly to new location
@@ -520,29 +545,45 @@ if (window.__L100_MAP_INIT__) {
     // ============================
     document.getElementById("btn-use-planner").addEventListener("click", () => {
       if (!state.selected) return;
+
+      // Robust Data Object (Polymorphic for future planner)
       const data = {
+        // L100 Standard
         id: state.selected.id,
-        name: state.selected.nome,
-        address: state.selected.endereco,
+        nome: state.selected.nome,
+        name: state.selected.nome, // Alias
+        endereco: state.selected.endereco,
+        address: state.selected.endereco, // Alias
         category: state.selected.category,
-        isFavorite: true,
-        favId: state.selected.id,
-        // Include coords for planner
+
+        // Geo
         lat: state.selected.lat,
         lng: state.selected.lng,
+
+        // Metadata
+        isFavorite: true,
+        favId: state.selected.id,
+        source: "mapa_l100",
       };
+
       localStorage.setItem("selected_destination", JSON.stringify(data));
+
+      // Attempt redirect (if file exists)
       window.location.href = "planeador.html";
     });
 
     // Utils
     const modal = document.getElementById("modal-confirm");
+    const backdrop = document.querySelector(".modal-backdrop"); // Assuming backdrop is the modal container? No, it's modal itself typically.
+    // CSS check: .modal-backdrop is the container. id="modal-confirm" is likely proper.
+
     function showModal() {
       modal.classList.add("visible");
     }
     function hideModal() {
       modal.classList.remove("visible");
     }
+
     document
       .getElementById("btn-modal-cancel")
       .addEventListener("click", hideModal);
@@ -551,6 +592,18 @@ if (window.__L100_MAP_INIT__) {
       .addEventListener("click", () => {
         if (confirmCallback) confirmCallback();
       });
+
+    // UX Premium: Backdrop click + ESC
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) hideModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (modal.classList.contains("visible")) hideModal();
+        if (els.overlay.classList.contains("visible")) closeSearch();
+      }
+    });
 
     function showToast(msg, type = "info") {
       const el = document.createElement("div");

@@ -157,6 +157,11 @@
     <path d="M21 21l-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
 
+  <!-- MAP -->
+  <symbol id="icon-map" viewBox="0 0 24 24">
+    <path d="M1 6v13l7-4 8 4 7-4V2l-7 4-8-4-7 4zM8 2v13M16 6v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
   <!-- LOCATION / NEAR ME -->
   <symbol id="icon-location" viewBox="0 0 24 24">
      <path d="M12 2L2 22l10-4 10 4L12 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
