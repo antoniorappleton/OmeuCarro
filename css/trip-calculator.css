@@ -1,0 +1,217 @@
+/* Trip Calculator Module */
+/* Enhanced for Legibility and Contrast */
+
+.trip-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+/* Ensure the view container allows scrolling */
+#view-simulator {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface); /* Explicit opaque background */
+  padding-bottom: 2rem; /* Extra space at bottom */
+}
+
+/* Header */
+.trip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.trip-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.trip-title h2 {
+  font-size: 1.5rem; /* Larger title */
+  color: var(--color-text-main);
+  font-weight: 700;
+}
+
+.trip-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-primary-start);
+}
+
+/* Form Grid */
+.trip-form-grid {
+  display: grid;
+  grid-template-columns: 1fr; 
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem; /* Safe padding */
+}
+
+@media (min-width: 768px) {
+  .trip-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.trip-input-group label {
+  display: block;
+  font-size: 0.95rem; /* Slightly larger label */
+  font-weight: 600;   /* Bolder label */
+  color: var(--color-text-main); /* Darker than muted for legibility */
+  margin-bottom: 0.5rem;
+}
+
+.trip-input-group input {
+  width: 100%;
+  padding: 0.875rem; /* Larger touch target */
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-bg); /* Slight contrast with surface */
+  color: var(--color-text-main);
+  font-size: 1.1rem; /* Larger input text */
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.trip-input-group input:focus {
+  outline: none;
+  border-color: var(--color-primary-start);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.15);
+}
+
+.trip-input-group input::placeholder {
+  color: var(--color-text-light); /* Lighter placeholder */
+}
+
+/* Results Area */
+.trip-results {
+  background: var(--color-bg); /* Distinct background section */
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border: 1px solid var(--border-light);
+  margin-top: 1rem;
+}
+
+.trip-total-main {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px dashed var(--border-light); /* Clear separation */
+}
+
+.trip-total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.trip-total-value {
+  font-size: 3rem; /* Huge impact */
+  font-weight: 800;
+  color: var(--color-primary-start);
+  line-height: 1.1;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle lift */
+}
+
+/* Secondary KPIs */
+.trip-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 cols better for mobile legibility than 3 */
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 480px) {
+    .trip-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.trip-kpi-card {
+  background: var(--color-surface);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid var(--border-light);
+}
+
+.trip-kpi-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.trip-kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.trip-kpi-highlight .trip-kpi-value {
+  color: var(--color-primary-end);
+}
+
+/* Metrics Line */
+.trip-metrics-line {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-light);
+  background: rgba(0,0,0,0.02); /* Very subtle strip */
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+}
+
+.trip-metric {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Actions */
+.trip-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-trip-action {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  padding: 1rem;
+}
+
+.btn-trip-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Utility */
+.text-danger {
+  color: var(--color-danger);
+}

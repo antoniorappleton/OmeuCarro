@@ -1,100 +1,183 @@
 /**
- * tripCalculator.js
- * Módulo para cálculo de custos de viagem (PWA).
+ * Trip Calculator Module
+ * Handles UI interactions and calculations for the trip cost estimator.
  */
 
-export const TripCalculator = {
-  /**
-   * Calcula os custos de viagem com base em médias e overrides.
-   *
-   * @param {Object} params
-   * @param {number} params.consumoMedio - Média do veículo (L/100km)
-   * @param {number} params.precoMedioLitro - Média de preço (€/L)
-   * @param {Object} params.overrides - Inputs do utilizador
-   * @param {string|number} [params.overrides.consumo] - Override L/100km
-   * @param {string|number} [params.overrides.precoLitro] - Override €/L
-   * @param {string|number} params.overrides.km - Km por viagem
-   * @param {string|number} params.overrides.viagens - N.º de viagens
-   * @param {string|number} params.overrides.portagens - € Portagens/viagem
-   * @param {string|number} params.overrides.pessoas - N.º Pessoas
-   *
-   * @returns {Object} Resultados formatados e valores efetivos
-   */
+// Logic from original Module, adapted for internal use
+const CalculatorLogic = {
   calculate(params) {
-    const { consumoMedio = 0, precoMedioLitro = 0, overrides = {} } = params;
+    const {
+      consumo = 0,
+      precoLitro = 0,
+      distancia = 0,
+      viagens = 1,
+      portagens = 0,
+      pessoas = 1
+    } = params;
 
-    // 1. Normalização e Validação
-    // Parse helper: texto -> número, NaN/Vazio -> 0, Negativos -> 0
-    const parseNonNeg = (val) => Math.max(0, parseFloat(val) || 0);
-    const parseIntNonNeg = (val) => Math.max(0, parseInt(val) || 0);
+    // Validate required inputs
+    if (consumo <= 0 || precoLitro <= 0 || distancia <= 0) {
+      return null;
+    }
 
-    // Inputs overrides
-    // Para consumo e preço, se não definido ou vazio, usamos a média.
-    // MAS a regra diz: "Se presente, substitui".
-    // Vamos assumir: se o utilizador preencheu (string não vazia ou numero), usa-se.
-    // Se for string vazia ou null e undefined, usa média.
-
-    // Função auxiliar para determinar efetivo
-    const getEffective = (userVal, avgVal) => {
-      // Se userVal é inválido (null, undefined, ""), usa média.
-      // Se userVal é numérico (mesmo 0), usa userVal.
-      if (userVal === "" || userVal === null || userVal === undefined)
-        return parseNonNeg(avgVal);
-      return parseNonNeg(userVal);
-    };
-
-    const C = getEffective(overrides.consumo, consumoMedio);
-    const P = getEffective(overrides.precoLitro, precoMedioLitro);
-
-    const K = parseNonNeg(overrides.km);
-    const V = parseIntNonNeg(overrides.viagens);
-    const T = parseNonNeg(overrides.portagens);
-
-    // Pessoas: Inteiro >= 1
-    let rawPessoas = parseInt(overrides.pessoas);
-    const N = !rawPessoas || rawPessoas < 1 ? 1 : rawPessoas;
-
-    // 2. Algoritmos
-    const kmTotais = K * V;
-    const litrosTotais = (C * kmTotais) / 100;
-    const portagensTotais = T * V;
-    const custoCombustivel = litrosTotais * P;
-    const custoTotal = portagensTotais + custoCombustivel;
-    const custoPorPessoa = custoTotal / N;
-
-    // 3. Formatação e Outputs
-    // Helper para formatar n casas decimais (retorna number ou string? O pedido diz "número formatado", mas em JS isso é string fixada ou number arredondado.
-    // "Plain Text: kmTotais // número formatado (1 casa)" sugere string ou float arredondado. Vamos devolver float arredondado para consistência numérica,
-    // mas se o requisito for display, toFixed retorna string.
-    // O pedido mostra chaves: Plain Text{ ... }. Vamos devolver os valores numéricos arredondados para facilitar cálculos futuros se necessário,
-    // mas talvez string seja melhor para display direto. Vamos usar float para manter "Módulo puro de cálculo".
-    // EDIT: "número formatado (1 casa)" usually means string representation. Let's provide both or standard floats.
-    // O JS mapa.js usava toFixed(). Vamos manter números aqui para flexibilidade, ou melhor, seguir o pedido "devolver todos os outputs num objeto".
-
-    const fmt = (val, digits) => parseFloat(val.toFixed(digits)); // Devolve número arredondado
+    const kmTotal = distancia * viagens;
+    const litros = (consumo * kmTotal) / 100;
+    const custoCombustivel = litros * precoLitro;
+    const custoPortagens = portagens * viagens;
+    const custoTotal = custoCombustivel + custoPortagens;
+    const custoPorPessoa = pessoas > 0 ? custoTotal / pessoas : custoTotal;
+    const custoPor100km = kmTotal > 0 ? (custoTotal / kmTotal) * 100 : 0;
 
     return {
-      kmTotais: fmt(kmTotais, 1),
-      litrosTotais: fmt(litrosTotais, 1),
-      portagensTotais: fmt(portagensTotais, 2),
-      custoCombustivel: fmt(custoCombustivel, 2),
-      custoTotal: fmt(custoTotal, 2),
-      custoPorPessoa: fmt(custoPorPessoa, 2),
-
-      // Efetivos
-      consumoEfetivo: C,
-      precoLitroEfetivo: P,
-      _debug: { C, P, K, V, T, N },
+      kmTotal,
+      litros,
+      custoCombustivel,
+      custoPortagens,
+      custoTotal,
+      custoPorPessoa,
+      custoPor100km
     };
   },
 
-  /**
-   * Mock para médias (será substituído por dados reais em mapa.js)
-   */
-  getDatabaseAverages() {
-    return {
-      consumo: 6.5,
-      precoLitro: 1.75,
-    };
+  formatCurrency(val) {
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(val);
   },
+
+  formatNumber(val, decimals = 1) {
+    return val.toLocaleString('pt-PT', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+};
+
+let isInitialized = false;
+
+// UI Controller
+export function initTripCalculator() {
+  if (isInitialized) {
+      console.log("[TripCalculator] Already initialized, skipping.");
+      return;
+  }
+  
+  const consumptionInput = document.getElementById('trip-consumo');
+  if (!consumptionInput) {
+      console.warn("[TripCalculator] UI elements not found. View might not be loaded yet.");
+      return;
+  }
+  
+  console.log("[TripCalculator] Initializing...");
+
+  // Inputs
+  const inputs = {
+    consumo: document.getElementById('trip-consumo'),
+    preco: document.getElementById('trip-preco'),
+    distancia: document.getElementById('trip-distancia'),
+    viagens: document.getElementById('trip-viagens'),
+    portagens: document.getElementById('trip-portagens'),
+    pessoas: document.getElementById('trip-pessoas')
+  };
+
+  // Outputs
+  const outputs = {
+    total: document.getElementById('trip-result-total'),
+    fuel: document.getElementById('trip-result-fuel'),
+    tolls: document.getElementById('trip-result-tolls'),
+    person: document.getElementById('trip-result-person'),
+    km: document.getElementById('trip-metric-km'),
+    liters: document.getElementById('trip-metric-liters'),
+    cost100: document.getElementById('trip-metric-cost100')
+  };
+
+  const btnClear = document.getElementById('btn-trip-clear');
+  const btnMaps = document.getElementById('btn-trip-maps');
+
+  // State
+  const defaults = {
+    viagens: 1,
+    pessoas: 1,
+    portagens: 0
+  };
+
+  function getValues() {
+    return {
+      consumo: parseFloat(inputs.consumo.value) || 0,
+      precoLitro: parseFloat(inputs.preco.value) || 0,
+      distancia: parseFloat(inputs.distancia.value) || 0,
+      viagens: parseInt(inputs.viagens.value) || defaults.viagens,
+      portagens: parseFloat(inputs.portagens.value) || defaults.portagens,
+      pessoas: parseInt(inputs.pessoas.value) || defaults.pessoas
+    };
+  }
+
+  function updateUI() {
+    const values = getValues();
+    const results = CalculatorLogic.calculate(values);
+
+    if (results) {
+      // Valid results
+      outputs.total.textContent = CalculatorLogic.formatCurrency(results.custoTotal);
+      outputs.fuel.textContent = CalculatorLogic.formatCurrency(results.custoCombustivel);
+      outputs.tolls.textContent = CalculatorLogic.formatCurrency(results.custoPortagens);
+      outputs.person.textContent = CalculatorLogic.formatCurrency(results.custoPorPessoa);
+      
+      outputs.km.textContent = `${CalculatorLogic.formatNumber(results.kmTotal, 0)} km`;
+      outputs.liters.textContent = `${CalculatorLogic.formatNumber(results.litros, 1)} L`;
+      outputs.cost100.textContent = `${CalculatorLogic.formatCurrency(results.custoPor100km)}/100km`;
+
+      // Enable Map Button
+      if (btnMaps) {
+        btnMaps.disabled = false;
+        btnMaps.classList.remove('btn-secondary'); 
+        btnMaps.classList.add('btn-primary');
+      }
+    } else {
+      // Invalid or incomplete
+      resetResults();
+      if (btnMaps) btnMaps.disabled = true;
+    }
+  }
+
+  function resetResults() {
+    outputs.total.textContent = '€0,00';
+    outputs.fuel.textContent = '€0,00';
+    outputs.tolls.textContent = '€0,00';
+    outputs.person.textContent = '€0,00';
+    
+    outputs.km.textContent = '-- km';
+    outputs.liters.textContent = '-- L';
+    outputs.cost100.textContent = '--/100km';
+    
+    if (btnMaps) btnMaps.disabled = true;
+  }
+
+  function clearInputs() {
+    inputs.consumo.value = '';
+    inputs.preco.value = '';
+    inputs.distancia.value = '';
+    inputs.viagens.value = defaults.viagens;
+    inputs.portagens.value = ''; 
+    inputs.pessoas.value = defaults.pessoas;
+    resetResults();
+  }
+
+  function openMaps() {
+    window.open('https://www.google.com/maps', '_blank');
+  }
+
+  // Event Listeners
+  Object.values(inputs).forEach(input => {
+    if (input) input.addEventListener('input', updateUI);
+  });
+
+  if (btnClear) btnClear.addEventListener('click', clearInputs);
+  if (btnMaps) btnMaps.addEventListener('click', openMaps);
+
+  // Initial State
+  resetResults();
+  isInitialized = true;
+  console.log("[TripCalculator] Initialized successfully");
 };

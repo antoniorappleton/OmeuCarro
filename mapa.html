@@ -11,6 +11,33 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/home.css" />
     <link rel="stylesheet" href="css/mapa.css?v=2" />
+    <link rel="stylesheet" href="css/trip-calculator.css" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0f4d5c",
+                        "background-light": "#f9fafa",
+                        "background-dark": "#181a1b",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
@@ -37,6 +64,7 @@
     <script defer src="js/firestore.js"></script>
     <script src="js/utils.js"></script>
     <script type="module" src="js/mapa.js"></script>
+
   </head>
   <body class="map-page-standalone">
     <!-- HEADER -->
@@ -143,17 +171,6 @@
                 <use href="assets/icons-unified.svg#icon-navigation"></use>
               </svg>
               Navegar
-            <!-- ViaMichelin Button -->
-             <a
-              class="btn-action-secondary full-width u-mb-sm"
-              id="btn-viamichelin"
-              target="_blank"
-              style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;"
-            >
-              <svg class="icon" style="color: var(--color-primary-start);">
-                <use href="assets/icons-unified.svg#icon-pin"></use>
-              </svg>
-              Calcular Custos (ViaMichelin)
             </a>
 
             <div class="u-grid-2">
@@ -278,139 +295,107 @@
           </div>
         </div>
 
-        <!-- VIEW: SIMULATOR -->
-        <div class="sheet-view" id="view-simulator">
-          <div class="form-header">
+        <!-- VIEW: SIMULATOR (Substituted by Trip Calculator) -->
+        <div class="sheet-view bg-background-light dark:bg-background-dark text-[#0e181a] dark:text-gray-100 font-display transition-colors duration-300" id="view-simulator" style="padding: 0;">
+             <!-- Header adapted to Sheet Style -->
+          <div class="form-header" style="position: sticky; top: 0; z-index: 50; background: var(--color-bg-body); padding: 1rem;">
             <button class="map-header-btn" id="btn-close-simulator">
               <svg class="icon">
                 <use href="assets/icons-unified.svg#icon-arrow-left"></use>
               </svg>
             </button>
-            <h3 class="form-title">Simulador de Viagem</h3>
-            <div style="width: 40px"></div>
+            <h3 class="form-title">Planear Viagem</h3>
+            <!-- Clear Button adapted to header -->
+             <button type="button" id="btn-trip-clear" class="btn btn-ghost" style="padding: 0.5rem; font-size: 0.8rem; margin-left: auto;">
+              Limpar
+            </button>
           </div>
 
-          <div class="form-content-scroll">
-            <!-- Distance -->
-            <div class="form-group">
-              <label class="form-label-row">
-                <span class="form-label-text">Distância (Ida)</span>
-              </label>
-              <div class="input-with-icon">
-                <input
-                  type="number"
-                  class="form-input-clean"
-                  id="sim-dist"
-                  placeholder="0"
-                />
-                <div class="input-icon-right">
-                  <span
-                    style="
-                      font-size: 0.9rem;
-                      font-weight: 600;
-                      color: var(--color-text-muted);
-                    "
-                    >km</span
-                  >
+          <div class="form-content-scroll" style="padding: 0 1rem 5rem 1rem;">
+                <!-- User Provided Calculator Structure -->
+                <!-- Input Section 1: Vehicle Performance -->
+                <div class="mt-2 mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Eficiência do Veículo</h3>
+                <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800">
+                <div class="flex-1 p-4">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Consumo (L/100km)</label>
+                <input id="trip-consumo" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="5.5" step="0.1" type="number"/>
                 </div>
-              </div>
-            </div>
-
-              </div>
-            </div>
-
-            <!-- Consumption & Price Row (Compact) -->
-            <div class="u-grid-2 u-mb-sm">
-                <!-- Consumption -->
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label-row">
-                    <span class="form-label-text">Consumo</span>
-                    <button class="btn-text-action" id="btn-use-db" style="font-size: 0.7rem; color: var(--color-primary-start);" title="Usar Média da BD">
-                       <svg class="icon" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle;">
-                         <use href="assets/icons-unified.svg#icon-server"></use>
-                       </svg>
-                       BD
-                    </button>
-                  </label>
-                  <div class="input-with-icon">
-                    <input type="number" class="form-input-clean" id="sim-cons" placeholder="6.5" />
-                    <div class="input-icon-right">L/100</div>
-                  </div>
-                </div>
-                
-                <!-- Price -->
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label-row">
-                    <span class="form-label-text">Preço/L</span>
-                  </label>
-                  <div class="input-with-icon">
-                    <input type="number" class="form-input-clean" id="sim-price" placeholder="1.75" />
-                    <div class="input-icon-right">€</div>
-                  </div>
-                </div>
-            </div>
-
-            <div class="u-grid-2 u-mb-sm">
-                 <!-- Trips -->
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label-row">
-                    <span class="form-label-text">Viagens</span>
-                  </label>
-                  <div class="input-with-icon">
-                    <input type="number" class="form-input-clean" id="sim-trips" placeholder="1" />
-                    <div class="input-icon-right">x</div>
-                  </div>
-                </div>
-
-                <!-- Tolls -->
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label-row">
-                    <span class="form-label-text">Portagens</span>
-                  </label>
-                  <div class="input-with-icon">
-                    <input type="number" class="form-input-clean" id="sim-tolls" placeholder="0" />
-                    <div class="input-icon-right">€</div>
-                  </div>
-                </div>
-            </div>
-
-            <!-- People -->
-            <div class="form-group">
-                <label class="form-label-row">
-                <span class="form-label-text">Dividir por (Pessoas)</span>
-                </label>
-                <div class="input-with-icon">
-                <input type="number" class="form-input-clean" id="sim-people" placeholder="1" value="1" min="1" />
-                <div class="input-icon-right">
-                    <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-users"></use>
-                    </svg>
+                <div class="flex-1 p-4">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Preço (€/L)</label>
+                <input id="trip-preco" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="1.65" step="0.01" type="number"/>
                 </div>
                 </div>
-            </div>
-
-            <!-- Result Card -->
-            <div class="sim-result-card" style="background: var(--color-bg-card, #2d3748); padding: 20px; border-radius: 16px; text-align: center; margin-top: 10px; border: 1px solid var(--color-border);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
-                     <div style="text-align: left;">
-                         <div style="font-size: 0.8rem; color: var(--color-text-muted);">Combustível</div>
-                         <div style="font-weight: 600; color: var(--color-text-main);" id="sim-res-fuel-cost">0.00 €</div>
-                     </div>
-                     <div style="text-align: right;">
-                         <div style="font-size: 0.8rem; color: var(--color-text-muted);">Portagens</div>
-                         <div style="font-weight: 600; color: var(--color-text-main);" id="sim-res-tolls">0.00 €</div>
-                     </div>
                 </div>
-                
-                <div style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 4px;">Custo Total</div>
-                <div class="sim-total" id="sim-result-cost" style="font-size: 2.2rem; font-weight: 800; color: var(--color-primary-start); line-height: 1;">0.00 €</div>
-                
-                <div id="sim-res-split-container" style="margin-top: 12px; background: rgba(128,128,128,0.1); padding: 8px; border-radius: 8px;">
-                     <span style="font-size: 0.9rem; color: var(--color-text-main);">
-                        <span style="font-weight: 700;" id="sim-res-person">0.00 €</span> / pessoa
-                     </span>
                 </div>
-            </div>
+                <!-- Input Section 2: Trip Logistics -->
+                <div class="mb-4">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Dados da Viagem</h3>
+                <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-gray-800">
+                <div class="p-4 border-t-0 border-l-0">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Km Previstos</label>
+                <input id="trip-distancia" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="100" type="number"/>
+                </div>
+                <div class="p-4 border-t-0">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">N.º de Viagens</label>
+                <input id="trip-viagens" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="1" type="number"/>
+                </div>
+                <div class="p-4 border-l-0">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Portagens (€)</label>
+                <input id="trip-portagens" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="10.00" step="0.01" type="number"/>
+                </div>
+                <div class="p-4">
+                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">N.º de Pessoas</label>
+                <input id="trip-pessoas" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300" placeholder="2" type="number"/>
+                </div>
+                </div>
+                </div>
+                </div>
+                <button id="btn-trip-maps" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-[0.98] mt-2 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">map</span>
+                    Abrir no Maps
+                </button>
+                <!-- Dynamic Results Card -->
+                <div class="mt-8 mb-6">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Estimativa de Gastos</h3>
+                <div class="bg-primary/5 dark:bg-primary/20 rounded-xl p-6 border border-primary/10 dark:border-primary/30">
+                <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
+                <div>
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Km Totais</p>
+                <p id="trip-metric-km" class="text-lg font-bold text-primary dark:text-white">-- km</p>
+                </div>
+                <div>
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Litros Necessários</p>
+                <p id="trip-metric-liters" class="text-lg font-bold text-primary dark:text-white">-- L</p>
+                </div>
+                <div>
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Combustível</p>
+                <p id="trip-result-fuel" class="text-lg font-bold text-primary dark:text-white">-- €</p>
+                </div>
+                <div>
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Portagens</p>
+                <p id="trip-result-tolls" class="text-lg font-bold text-primary dark:text-white">-- €</p>
+                </div>
+                <!-- Hidden metric stored for logic consistency -->
+                <p id="trip-metric-cost100" style="display:none"></p>
+                </div>
+                <div class="pt-6 border-t border-primary/10 dark:border-primary/30 space-y-4">
+                <div class="flex justify-between items-center bg-primary text-white p-4 rounded-xl shadow-md">
+                <span class="font-semibold">Gasto Total</span>
+                <span id="trip-result-total" class="text-2xl font-extrabold tracking-tight">-- €</span>
+                </div>
+                <div class="flex justify-between items-center bg-white/80 dark:bg-gray-800 p-4 rounded-xl border border-primary/20 shadow-sm">
+                <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary dark:text-primary/50">groups</span>
+                <span class="font-semibold text-primary dark:text-gray-200">Por Pessoa</span>
+                </div>
+                <span id="trip-result-person" class="text-xl font-extrabold text-primary dark:text-white">-- €</span>
+                </div>
+                </div>
+                </div>
+                </div>
           </div>
         </div>
       </div>

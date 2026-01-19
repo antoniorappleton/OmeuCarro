@@ -1,7 +1,8 @@
 // js/mapa.js
 // L100 Premium Map Logic
 // Leaflet Integration + Real Geocoding (Nominatim)
-import { TripCalculator } from "./tripCalculator.js";
+// TripCalculator is now loaded as a module
+import { initTripCalculator } from "./tripCalculator.js";
 
 if (window.__L100_MAP_INIT__) {
   console.warn("Map already initialized");
@@ -9,6 +10,7 @@ if (window.__L100_MAP_INIT__) {
   window.__L100_MAP_INIT__ = true;
 
   document.addEventListener("DOMContentLoaded", () => {
+    console.log("Map DOMContentLoaded");
     // ============================
     // STATE & REFS
     // ============================
@@ -182,8 +184,20 @@ if (window.__L100_MAP_INIT__) {
 
       const target = els.views[viewName];
       if (target) {
-        if (viewName === "form") target.classList.add("flex-active");
-        else target.classList.add("active");
+        // Fix for visibility: simulator needs flex layout to work with scroll
+        const needsFlex = viewName === "form" || viewName === "simulator";
+        
+        if (needsFlex) {
+           target.classList.add("flex-active");
+           // Ensure explicit display property is set via style just in case of CSS conflicts
+           target.style.display = 'flex';
+           target.style.flexDirection = 'column';
+           target.style.height = '100%';
+        } else {
+           target.classList.add("active");
+           target.style.display = 'block';
+           target.style.height = 'auto'; // Reset if reused? Not needed if disjoint
+        }
       }
 
       if (size === "compact" && viewName === "quick") {
@@ -759,34 +773,22 @@ if (window.__L100_MAP_INIT__) {
     });
 
     // ============================
-    // SIMULATOR LOGIC
+    // SIMULATOR UI HANDLER
     // ============================
-    const simInputs = {
-      dist: document.getElementById("sim-dist"),
-      cons: document.getElementById("sim-cons"),
-      price: document.getElementById("sim-price"),
-      trips: document.getElementById("sim-trips"), // Reverted to trips
-      tolls: document.getElementById("sim-tolls"),
-      people: document.getElementById("sim-people"),
-      // Results
-      resFuelCost: document.getElementById("sim-res-fuel-cost"),
-      resTolls: document.getElementById("sim-res-tolls"),
-      resTotal: document.getElementById("sim-result-cost"),
-      resPerson: document.getElementById("sim-res-person"),
-    };
+    // The logic is now handled by js/tripCalculator.js which listens to the new DOM elements.
+    // We only need to handle the opening/closing of the sheet view.
 
     const btnSimOpen = document.getElementById("btn-simulator-open");
     const btnSimClose = document.getElementById("btn-close-simulator");
-    const btnUseDb = document.getElementById("btn-use-db");
 
     if (btnSimOpen) {
       btnSimOpen.addEventListener("click", () => {
-        // initSimulator logic is now self-contained or called here if hoisted.
-        // Ideally define initSimulator before this or call explicitly.
-        // Assuming Function Declaration hoisting works for initSimulator:
-        if (typeof initSimulator === "function") initSimulator();
-        setSheet("half", "simulator");
+        console.log("Opening Simulator Sheet (Full)");
+        setSheet("full", "simulator");
+        initTripCalculator(); // Initialize the calculator logic when view is active
       });
+    } else {
+      console.error("Button Simulator Open not found in DOM");
     }
 
     if (btnSimClose) {
@@ -794,100 +796,6 @@ if (window.__L100_MAP_INIT__) {
         setSheet("compact", "quick");
       });
     }
-
-    // State for base averages (fetched on load/button)
-    // In a real scenario, this matches 'Medias' from the vehicle.
-    let currentAverages = {
-      consumoMedio: 6.5,
-      precoMedioLitro: 1.75,
-    };
-
-    // Initialize with averages if possible
-    function initSimulator() {
-      const avg = TripCalculator.getDatabaseAverages();
-      currentAverages.consumoMedio = avg.consumo;
-      currentAverages.precoMedioLitro = avg.precoLitro;
-      // Optionally set placeholders to reflect averages
-      if (simInputs.cons) simInputs.cons.placeholder = avg.consumo;
-      if (simInputs.price) simInputs.price.placeholder = avg.precoLitro;
-      calculateSim();
-    }
-
-    // Call init on load (or when sheet opens)
-    if (btnSimOpen) {
-      btnSimOpen.addEventListener("click", () => {
-        // Maybe refresh averages here
-        initSimulator();
-        setSheet("half", "simulator");
-      });
-    }
-
-    // Database Button - Refresh averages explicitly
-    if (btnUseDb) {
-      btnUseDb.addEventListener("click", () => {
-        const data = TripCalculator.getDatabaseAverages();
-        currentAverages.consumoMedio = data.consumo;
-        currentAverages.precoMedioLitro = data.precoLitro;
-        // Update placeholders or values?
-        // User requested "inputs... se presentes, sobrepõem".
-        // Button usually implies "Fill form". Let's clear overrides and rely on base?
-        // Or let's fill the inputs like before.
-        if (simInputs.cons) simInputs.cons.value = data.consumo;
-        if (simInputs.price) simInputs.price.value = data.precoLitro;
-
-        window.showToast("Média da BD aplicada!", "success");
-        calculateSim();
-      });
-    }
-
-    function calculateSim() {
-      // Gather Overrides safely
-      // Empty string => undefined/null for the calculator to use average
-      const getVal = (el) => (el && el.value !== "" ? el.value : undefined);
-
-      const overrides = {
-        km: getVal(simInputs.dist),
-        consumo: getVal(simInputs.cons),
-        precoLitro: getVal(simInputs.price),
-        viagens: getVal(simInputs.trips),
-        portagens: getVal(simInputs.tolls),
-        pessoas: getVal(simInputs.people),
-      };
-
-      // Calculate with Base + Overrides
-      const res = TripCalculator.calculate({
-        consumoMedio: currentAverages.consumoMedio,
-        precoMedioLitro: currentAverages.precoMedioLitro,
-        overrides: overrides,
-      });
-
-      // Render
-      const setTxt = (el, txt) => {
-        if (el) el.textContent = txt;
-      };
-
-      setTxt(simInputs.resFuelCost, `${res.custoCombustivel.toFixed(2)} €`);
-      setTxt(simInputs.resTolls, `${res.portagensTotais.toFixed(2)} €`);
-      setTxt(simInputs.resTotal, `${res.custoTotal.toFixed(2)} €`);
-      setTxt(simInputs.resPerson, `${res.custoPorPessoa.toFixed(2)} €`);
-    }
-
-    // Bind inputs
-    const allInps = [
-      simInputs.dist,
-      simInputs.cons,
-      simInputs.price,
-      simInputs.trips,
-      simInputs.tolls,
-      simInputs.people,
-    ];
-
-    allInps.forEach((inp) => {
-      if (inp) {
-        // Checkbox event is 'change', others 'input'. Both work, 'input' is fine for checkbox usually but 'change' is safer
-        inp.addEventListener("input", calculateSim);
-      }
-    });
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
