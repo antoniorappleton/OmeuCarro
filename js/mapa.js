@@ -650,12 +650,22 @@ if (window.__L100_MAP_INIT__) {
 
           if (needsGeocoding) {
             window.showToast("A procurar endereço...", "info");
-            const coords = await geocodeAddress(addr);
-            if (!coords) {
-              throw new Error("Endereço não encontrado");
+            try {
+                const coords = await geocodeAddress(addr);
+                if (coords) {
+                    lat = coords.lat;
+                    lng = coords.lng;
+                } else {
+                    throw new Error("AddressNotFound");
+                }
+            } catch (err) {
+                // Fallback: Use Map Center
+                console.warn("Geocoding failed, using map center.");
+                window.showToast("Endereço não exato. Usado o centro do mapa.", "warning");
+                const center = state.map.getCenter();
+                lat = center.lat;
+                lng = center.lng;
             }
-            lat = coords.lat;
-            lng = coords.lng;
           }
 
           const data = {
