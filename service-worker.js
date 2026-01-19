@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v7";
-const RUNTIME_CACHE = "l100-runtime-v7";
+const STATIC_CACHE = "l100-static-v11";
+const RUNTIME_CACHE = "l100-runtime-v11";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -14,9 +14,12 @@ const APP_SHELL = [
   "./abastecimentos.html",
   "./estatisticas.html",
   "./veiculos.html",
+  "./mapa.html",
   "./login.html",
   "./css/style.css",
   "./css/dashboard.css",
+  "./css/mapa.css",
+  "./css/trip-calculator.css",
 
   "./js/firebase-config.js",
   "./js/auth.js",
@@ -25,11 +28,23 @@ const APP_SHELL = [
   "./js/modal-abastecimento.js",
   "./js/estatisticas.js",
   "./js/veiculos.js",
+  "./js/mapa.js",
+  "./js/tripCalculator.js",
   "./js/utils.js",
   "./js/service-worker-register.js",
   "./images/logo-icon192.png",
   "./images/logo-icon512.png",
 ];
+
+// ===============================
+// MESSAGE HANDLER - Force Update
+// ===============================
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    console.log("[SW] Skip Waiting...");
+    self.skipWaiting();
+  }
+});
 
 // ===============================
 // INSTALL – Pré-cache do App Shell
@@ -38,22 +53,17 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(STATIC_CACHE);
-
       const results = await Promise.allSettled(
         APP_SHELL.map((url) => cache.add(url))
       );
-
       const failed = results
         .map((r, i) => (r.status === "rejected" ? APP_SHELL[i] : null))
         .filter(Boolean);
-
-      if (failed.length) {
-        console.warn("[SW] Falharam no cache:", failed);
-      }
+      if (failed.length) console.warn("[SW] Falharam no cache:", failed);
     })()
   );
-
-  self.skipWaiting();
+  // Don't auto-skip waiting here - let the client decide or waiting phase happen
+  // self.skipWaiting(); 
 });
 
 
@@ -61,7 +71,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate");
+  console.log("[SW] Activate v9");
 
   event.waitUntil(
     caches.keys().then((names) =>

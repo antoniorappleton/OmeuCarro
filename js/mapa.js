@@ -2,15 +2,15 @@
 // L100 Premium Map Logic
 // Leaflet Integration + Real Geocoding (Nominatim)
 // TripCalculator is now loaded as a module
-import { initTripCalculator } from "./tripCalculator.js";
 
 if (window.__L100_MAP_INIT__) {
   console.warn("Map already initialized");
 } else {
   window.__L100_MAP_INIT__ = true;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("Map DOMContentLoaded");
+  // DOM is ready because this is a module/defer script
+  console.log("Map Module Start");
+
     // ============================
     // STATE & REFS
     // ============================
@@ -34,7 +34,6 @@ if (window.__L100_MAP_INIT__) {
         quick: document.getElementById("view-quick"),
         details: document.getElementById("view-details"),
         form: document.getElementById("view-form"),
-        simulator: document.getElementById("view-simulator"),
       },
       fab: document.getElementById("fab-add"),
       overlay: document.getElementById("search-overlay"),
@@ -111,6 +110,7 @@ if (window.__L100_MAP_INIT__) {
           (pos) => {
             const { latitude, longitude } = pos.coords;
             state.currentLocation = [latitude, longitude];
+            window.L100_CURRENT_LOC = { lat: latitude, lng: longitude };
 
             // Update user marker
             if (state.userMarker) {
@@ -146,10 +146,10 @@ if (window.__L100_MAP_INIT__) {
     });
 
     document.getElementById("btn-my-loc").addEventListener("click", () => {
-      showToast("A obter localização...");
+      window.showToast("A obter localização...");
       if (state.currentLocation) {
         state.map.flyTo(state.currentLocation, 16);
-        showToast("Localização encontrada!");
+        window.showToast("Localização encontrada!");
       } else {
         if ("geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(
@@ -184,8 +184,8 @@ if (window.__L100_MAP_INIT__) {
 
       const target = els.views[viewName];
       if (target) {
-        // Fix for visibility: simulator needs flex layout to work with scroll
-        const needsFlex = viewName === "form" || viewName === "simulator";
+        // Fix for visibility: form needs flex layout
+        const needsFlex = viewName === "form";
         
         if (needsFlex) {
            target.classList.add("flex-active");
@@ -222,11 +222,11 @@ if (window.__L100_MAP_INIT__) {
     // DATA & RENDERING
     // ============================
     async function loadFavorites() {
-      if (!auth.currentUser) return;
+      if (!window.auth.currentUser) return;
       try {
-        const snap = await db
+        const snap = await window.db
           .collection("users")
-          .doc(auth.currentUser.uid)
+          .doc(window.auth.currentUser.uid)
           .collection("localizacoes")
           .orderBy("createdAt", "desc")
           .get();
@@ -240,7 +240,7 @@ if (window.__L100_MAP_INIT__) {
         renderChips();
       } catch (e) {
         console.error(e);
-        showToast("Erro ao carregar locais", "error");
+        window.showToast("Erro ao carregar locais", "error");
       }
     }
 
@@ -316,15 +316,15 @@ if (window.__L100_MAP_INIT__) {
             selectFavorite(fav, m);
           } else {
             // AUTO-REPAIR: Try to geocode on the fly
-            showToast(`A obter coordenadas para "${fav.nome}"...`, "info");
+            window.showToast(`A obter coordenadas para "${fav.nome}"...`, "info");
 
             try {
               const coords = await geocodeAddress(fav.endereco);
               if (coords) {
                 // Update DB
-                await db
+                await window.db
                   .collection("users")
-                  .doc(auth.currentUser.uid)
+                  .doc(window.auth.currentUser.uid)
                   .collection("localizacoes")
                   .doc(fav.id)
                   .update({
@@ -332,7 +332,7 @@ if (window.__L100_MAP_INIT__) {
                     lng: coords.lng,
                   });
 
-                showToast("Localização corrigida!", "success");
+                window.showToast("Localização corrigida!", "success");
 
                 // Update Local State & Map (Wait for listener or manual update)
                 // We manually update here to be snappy
@@ -352,7 +352,7 @@ if (window.__L100_MAP_INIT__) {
               }
             } catch (err) {
               console.error(err);
-              showToast("Não foi possível encontrar o local. Edite.", "error");
+              window.showToast("Não foi possível encontrar o local. Edite.", "error");
               // Fallback to Edit Mode
               state.selected = fav;
               els.detName.textContent = fav.nome;
@@ -422,6 +422,13 @@ if (window.__L100_MAP_INIT__) {
 
     function selectFavorite(fav, markerInstance) {
       state.selected = fav;
+      window.L100_SELECTED_DEST = {
+          id: fav.id,
+          nome: fav.nome,
+          endereco: fav.endereco,
+          lat: fav.lat,
+          lng: fav.lng
+      };
 
       // Highlight Logic
       document
@@ -446,6 +453,7 @@ if (window.__L100_MAP_INIT__) {
 
     function deselect() {
       state.selected = null;
+      window.L100_SELECTED_DEST = null;
       document
         .querySelectorAll(".map-pin")
         .forEach((p) => p.classList.remove("active"));
@@ -502,20 +510,20 @@ if (window.__L100_MAP_INIT__) {
             selectFavorite(fav, m);
           } else if (!fav.lat || !fav.lng) {
             // AUTO-REPAIR Logic (Search Context)
-            showToast("A recuperar coordenadas...", "info");
+            window.showToast("A recuperar coordenadas...", "info");
             try {
               const coords = await geocodeAddress(fav.endereco);
               if (coords) {
-                await db
+                await window.db
                   .collection("users")
-                  .doc(auth.currentUser.uid)
+                  .doc(window.auth.currentUser.uid)
                   .collection("localizacoes")
                   .doc(fav.id)
                   .update({
                     lat: coords.lat,
                     lng: coords.lng,
                   });
-                showToast("Localizado!", "success");
+                window.showToast("Localizado!", "success");
                 // Update local & visual
                 fav.lat = coords.lat;
                 fav.lng = coords.lng;
@@ -527,7 +535,7 @@ if (window.__L100_MAP_INIT__) {
                 throw new Error("No coords");
               }
             } catch (e) {
-              showToast("Morada desconhecida. Edite.", "error");
+              window.showToast("Morada desconhecida. Edite.", "error");
               state.selected = fav;
               els.detName.textContent = fav.nome;
               els.detAddr.textContent = fav.endereco;
@@ -615,7 +623,7 @@ if (window.__L100_MAP_INIT__) {
         const notes = els.inpNotes.value.trim();
 
         if (!name || !addr)
-          return showToast("Preencha todos os campos", "error");
+          return window.showToast("Preencha todos os campos", "error");
 
         let lat = null;
         let lng = null;
@@ -641,7 +649,7 @@ if (window.__L100_MAP_INIT__) {
           }
 
           if (needsGeocoding) {
-            showToast("A procurar endereço...", "info");
+            window.showToast("A procurar endereço...", "info");
             const coords = await geocodeAddress(addr);
             if (!coords) {
               throw new Error("Endereço não encontrado");
@@ -657,26 +665,26 @@ if (window.__L100_MAP_INIT__) {
             notes: notes,
             lat: lat,
             lng: lng,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
           };
 
           if (state.isEdit && state.selected) {
-            await db
+            await window.db
               .collection("users")
-              .doc(auth.currentUser.uid)
+              .doc(window.auth.currentUser.uid)
               .collection("localizacoes")
               .doc(state.selected.id)
               .update(data);
           } else {
-            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db
+            data.createdAt = window.firebase.firestore.FieldValue.serverTimestamp();
+            await window.db
               .collection("users")
-              .doc(auth.currentUser.uid)
+              .doc(window.auth.currentUser.uid)
               .collection("localizacoes")
               .add(data);
           }
 
-          showToast("Guardado com sucesso!");
+          window.showToast("Guardado com sucesso!");
 
           // Preserve Selection Context
           const savedId =
@@ -702,12 +710,12 @@ if (window.__L100_MAP_INIT__) {
         } catch (e) {
           console.error(e);
           if (e.message === "Endereço não encontrado") {
-            showToast(
+            window.showToast(
               "Endereço desconhecido. Tente ser mais específico.",
               "error",
             );
           } else {
-            showToast("Erro ao guardar. Tente novamente.", "error");
+            window.showToast("Erro ao guardar. Tente novamente.", "error");
           }
         } finally {
           btn.textContent = oldText;
@@ -719,18 +727,18 @@ if (window.__L100_MAP_INIT__) {
       if (!state.selected) return;
       confirmCallback = async () => {
         try {
-          await db
+          await window.db
             .collection("users")
-            .doc(auth.currentUser.uid)
+            .doc(window.auth.currentUser.uid)
             .collection("localizacoes")
             .doc(state.selected.id)
             .delete();
-          showToast("Apagado");
+          window.showToast("Apagado");
           loadFavorites();
           hideModal();
           deselect();
         } catch (e) {
-          showToast("Erro", "error");
+          window.showToast("Erro", "error");
           hideModal();
         }
       };
@@ -773,34 +781,58 @@ if (window.__L100_MAP_INIT__) {
     });
 
     // ============================
-    // SIMULATOR UI HANDLER
     // ============================
-    // The logic is now handled by js/tripCalculator.js which listens to the new DOM elements.
-    // We only need to handle the opening/closing of the sheet view.
+    // TRIP CALCULATOR MODAL HANDLERS
+    // ============================
+    const tripModal = document.getElementById("modal-trip-calculator");
+    const btnTripClose = document.getElementById("trip-modal-close");
 
-    const btnSimOpen = document.getElementById("btn-simulator-open");
-    const btnSimClose = document.getElementById("btn-close-simulator");
-
-    if (btnSimOpen) {
-      btnSimOpen.addEventListener("click", () => {
-        console.log("Opening Simulator Sheet (Full)");
-        setSheet("full", "simulator");
-        initTripCalculator(); // Initialize the calculator logic when view is active
-      });
-    } else {
-      console.error("Button Simulator Open not found in DOM");
+    function openTripModal() {
+        if (!tripModal) return;
+        tripModal.classList.remove("hidden");
+        tripModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("no-scroll");
+        
+        // Lazy init logic via Window Global
+        if (typeof window.initTripCalculator === "function") {
+             window.initTripCalculator();
+        } else {
+             console.warn("TripCalculator not loaded.");
+        }
     }
 
-    if (btnSimClose) {
-      btnSimClose.addEventListener("click", () => {
-        setSheet("compact", "quick");
-      });
+    function closeTripModal() {
+        if (!tripModal) return;
+        tripModal.classList.add("hidden");
+        tripModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("no-scroll");
+    }
+
+    const btnSimOpen = document.getElementById("btn-simulator-open");
+    if (btnSimOpen) {
+        btnSimOpen.addEventListener("click", openTripModal);
+    }
+
+    if (btnTripClose) {
+        btnTripClose.addEventListener("click", closeTripModal);
+    }
+    
+    // Overlay Click
+    if (tripModal) {
+        tripModal.addEventListener("click", (e) => {
+             if(e.target === tripModal) closeTripModal();
+        });
     }
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (modal.classList.contains("visible")) hideModal();
-        if (els.overlay.classList.contains("visible")) closeSearch();
+         if (tripModal && !tripModal.classList.contains("hidden")) {
+             closeTripModal();
+             return; // Stop propagation / processing
+         }
+         
+         if (modal.classList.contains("visible")) hideModal();
+         if (els.overlay.classList.contains("visible")) closeSearch();
       }
     });
 
@@ -808,8 +840,7 @@ if (window.__L100_MAP_INIT__) {
 
     // Init
     initMap();
-    auth.onAuthStateChanged((user) => {
+    window.auth.onAuthStateChanged((user) => {
       if (user) loadFavorites();
     });
-  });
 }
