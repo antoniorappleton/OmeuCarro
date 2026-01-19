@@ -1,4 +1,4 @@
-// public/js/firestore.js
+ï»¿// public/js/firestore.js
 // ======================================================================
 //  Este ficheiro assume que firebase-config.js jÃ¡ correu e definiu:
 //    const auth = firebase.auth();
@@ -56,7 +56,7 @@ async function saveUserSettings(settings) {
       ...settings,
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     },
-    { merge: true }
+    { merge: true },
   );
 }
 
@@ -93,7 +93,6 @@ async function getUserSettings() {
 
   return snap.exists ? { ...defaults, ...snap.data() } : defaults;
 }
-
 
 // lÃª o perfil do utilizador autenticado
 async function getCurrentUserProfile() {
@@ -138,7 +137,7 @@ async function createVeiculo(data) {
     iuc: data.iuc || {}, // NOVO
 
     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-    
+
     // Foto
     fotoUrl: data.fotoUrl || null,
     fotoPath: data.fotoPath || null,
@@ -164,22 +163,22 @@ async function getVeiculosDoUtilizador() {
 async function uploadVehiclePhoto(file, vehicleId) {
   const user = auth.currentUser;
   if (!user) throw new Error("User not authenticated");
-  
+
   // Create unique filename or fixed name per vehicle?
-  // Using fixed name "photo.jpg" allows easy overwrite. 
+  // Using fixed name "photo.jpg" allows easy overwrite.
   // But browser caching issues. Better unique or metadata check.
-  // Let's use "photo_{timestamp}.jpg" and clean up old if needed, 
+  // Let's use "photo_{timestamp}.jpg" and clean up old if needed,
   // or just overwrite "photo.jpg" and rely on getDownloadURL refreshing?
   // Safest for simple app: "photo_<timestamp>.jpg"
-  
-  const ext = file.name.split('.').pop();
+
+  const ext = file.name.split(".").pop();
   const filename = `photo_${Date.now()}.${ext}`;
   const path = `veiculos/${vehicleId}/${filename}`;
   const storageRef = firebase.storage().ref().child(path);
-  
+
   const snapshot = await storageRef.put(file);
   const downloadURL = await snapshot.ref.getDownloadURL();
-  
+
   return { downloadURL, path };
 }
 
@@ -221,7 +220,9 @@ async function updateVeiculo(id, data) {
   // Remove nulls/undefined from payload to avoid overwriting existing photo if not provided?
   // No, the caller should pass existing if not changing.
   // We'll clean undefined keys.
-  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+  Object.keys(payload).forEach(
+    (key) => payload[key] === undefined && delete payload[key],
+  );
 
   return db.collection("veiculos").doc(id).update(payload);
 }
@@ -270,7 +271,7 @@ async function createAbastecimento(veiculoId, data) {
     const ultimo = ultimoSnap.docs[0].data();
     if (Number(data.odometro) < Number(ultimo.odometro)) {
       throw new Error(
-        `O odÃ³metro (${data.odometro}) nÃ£o pode ser inferior ao Ãºltimo registo (${ultimo.odometro}).`
+        `O odÃ³metro (${data.odometro}) nÃ£o pode ser inferior ao Ãºltimo registo (${ultimo.odometro}).`,
       );
     }
   }
@@ -508,15 +509,30 @@ async function getDocumentosDoVeiculo(veiculoId, limite = 50) {
   if (!user) return [];
   if (!veiculoId) return [];
 
-  const snap = await db
-    .collection("veiculos")
-    .doc(veiculoId)
-    .collection("documentos")
-    .orderBy("criadoEm", "desc")
-    .limit(limite)
-    .get();
-
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  // Tenta ordenar por criadoEm (ideal)
+  try {
+    const snap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("documentos")
+      .orderBy("criadoEm", "desc")
+      .limit(limite)
+      .get();
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.warn(
+      "getDocumentosDoVeiculo: erro com orderBy criadoEm. A tentar sem ordem.",
+      e,
+    );
+    // Fallback para documentos antigos sem campo criadoEm
+    const snap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("documentos")
+      .limit(limite)
+      .get();
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  }
 }
 
 async function deleteDocumentoDoVeiculo(veiculoId, documentoId) {
@@ -570,7 +586,7 @@ async function updateDocumentoDoVeiculo(veiculoId, docId, data = {}) {
   };
 
   Object.keys(payload).forEach(
-    (k) => payload[k] === undefined && delete payload[k]
+    (k) => payload[k] === undefined && delete payload[k],
   );
 
   await ref.update(payload);
@@ -641,19 +657,17 @@ async function addReparacaoAoVeiculo(veiculoId, data) {
 }
 
 // ======================================================================
-// MANUTENÇÕES PLANEADAS
+// MANUTENï¿½ï¿½ES PLANEADAS
 // ======================================================================
 
 async function getManutencoesPlaneadas(veiculoId) {
   const user = auth.currentUser;
-  if (!user) throw new Error('Utilizador não autenticado');
+  if (!user) throw new Error("Utilizador nï¿½o autenticado");
 
   const snap = await db
-    .collection('users')
-    .doc(user.uid)
-    .collection('veiculos')
+    .collection("veiculos")
     .doc(veiculoId)
-    .collection('manutencoesPlaneadas')
+    .collection("manutencoesPlaneadas")
     .get();
 
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -661,14 +675,12 @@ async function getManutencoesPlaneadas(veiculoId) {
 
 async function addManutencaoPlaneada(veiculoId, data) {
   const user = auth.currentUser;
-  if (!user) throw new Error('Utilizador não autenticado');
+  if (!user) throw new Error("Utilizador nï¿½o autenticado");
 
   await db
-    .collection('users')
-    .doc(user.uid)
-    .collection('veiculos')
+    .collection("veiculos")
     .doc(veiculoId)
-    .collection('manutencoesPlaneadas')
+    .collection("manutencoesPlaneadas")
     .add({
       ...data,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
@@ -677,14 +689,12 @@ async function addManutencaoPlaneada(veiculoId, data) {
 
 async function updateManutencaoPlaneada(veiculoId, docId, data) {
   const user = auth.currentUser;
-  if (!user) throw new Error('Utilizador não autenticado');
+  if (!user) throw new Error("Utilizador nï¿½o autenticado");
 
   await db
-    .collection('users')
-    .doc(user.uid)
-    .collection('veiculos')
+    .collection("veiculos")
     .doc(veiculoId)
-    .collection('manutencoesPlaneadas')
+    .collection("manutencoesPlaneadas")
     .doc(docId)
     .update({
       ...data,
@@ -694,15 +704,12 @@ async function updateManutencaoPlaneada(veiculoId, docId, data) {
 
 async function deleteManutencaoPlaneada(veiculoId, docId) {
   const user = auth.currentUser;
-  if (!user) throw new Error('Utilizador não autenticado');
+  if (!user) throw new Error("Utilizador nï¿½o autenticado");
 
   await db
-    .collection('users')
-    .doc(user.uid)
-    .collection('veiculos')
+    .collection("veiculos")
     .doc(veiculoId)
-    .collection('manutencoesPlaneadas')
+    .collection("manutencoesPlaneadas")
     .doc(docId)
     .delete();
 }
-

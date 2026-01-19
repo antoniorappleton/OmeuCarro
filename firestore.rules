@@ -58,14 +58,19 @@ service cloud.firestore {
       }
 
       match /documentos/{docId} {
-        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-        allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+        allow read, write: if request.auth != null && 
+          get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
       }
 
       match /reparacoes/{repId} {
          // Your code for repairs currently might NOT be saving userId explicitly?
          // Let's check the code... 
          // Assuming consistent pattern or parent check:
+         allow read, write: if request.auth != null && 
+            get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
+      }
+
+      match /manutencoesPlaneadas/{planId} {
          allow read, write: if request.auth != null && 
             get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
       }

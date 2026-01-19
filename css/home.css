@@ -1346,3 +1346,8 @@ body {
   font-size: 0.9rem;
   opacity: 0.9;
 }
+/* TABS COLLAPSE SUPPORT */
+main.tabs-collapsed .section-tabs,
+main.tabs-collapsed .tab-content {
+  display: none !important;
+}
