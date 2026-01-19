@@ -74,9 +74,8 @@
         if (!window.auth?.currentUser || !window.db) return;
         
         try {
-            const snap = await window.db.collection("users")
-                .doc(window.auth.currentUser.uid)
-                .collection("veiculos")
+            const snap = await window.db.collection("veiculos")
+                .where("userId", "==", window.auth.currentUser.uid)
                 .get();
                 
             const select = document.getElementById("trip-vehicle-select");
