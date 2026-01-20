@@ -1015,6 +1015,88 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  async function renderMaintenanceAlerts(veiculoId, v) {
+      const container = document.getElementById("alerts-maintenance-list");
+      if (!container) return; 
+
+      try {
+          const planos = await getManutencoesPlaneadas(veiculoId);
+          if (!planos || !planos.length) {
+              container.innerHTML = '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
+              return;
+          }
+
+          const currentOdo = v.odometroAtual || v.odometroInicial || 0;
+          
+          const alerts = planos.map(p => {
+              // USAR A MESMA LÓGICA DA TABELA
+              const status = calculateMaintenanceStatus(
+                  currentOdo,
+                  p.ultimoKm,
+                  p.intervaloKm,
+                  p.ultimaData,
+                  p.intervaloMeses
+              );
+
+              let urgency = 999999;
+              let badgeClass = "badge-success";
+              let label = "OK";
+
+              // Calcular urgência para ordenação (menor diffKm ou menor diffDays)
+              // Vamos priorizar Km para sorting se existir, senão dias.
+              if (status.nextKm) {
+                  urgency = status.diffKm; 
+              } else if (status.nextDate) {
+                  urgency = status.diffDays * 100; // Peso para misturar?
+              }
+
+              if (status.status === "delayed") {
+                  badgeClass = "badge-danger";
+                  label = "ATRASADA";
+              } else if (status.status === "warning") {
+                  badgeClass = "badge-warning";
+                  label = "PRÓXIMA";
+              }
+
+              // Override label com detalhe se possível
+              if (status.status !== "ok") {
+                   if (status.diffKm < 0) label = `Passou ${Math.abs(status.diffKm)} km`;
+                   else if (status.diffKm < 2000 && status.nextKm) label = `Faltam ${status.diffKm} km`;
+                   else if (status.diffDays < 0) label = `Passou data`;
+                   else if (status.diffDays < 30 && status.nextDate) label = `Faltam ${status.diffDays} dias`;
+              }
+
+              return { p, urgency, status: status.status, label, badgeClass };
+          })
+          .filter(x => x.status !== "ok") 
+          .sort((a,b) => a.urgency - b.urgency)
+          .slice(0, 3);
+
+          if (alerts.length === 0) {
+              container.innerHTML = '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
+              return; 
+          }
+
+          container.innerHTML = alerts.map(item => `
+              <div class="alert-item" style="cursor:pointer;" onclick="openPlanModalForEdit('${veiculoId}', '${safeJsonEnc(item.p)}')">
+                 <div class="alert-status-indicator ${item.status === 'delayed' ? 'bg-danger' : 'bg-warning'}" 
+                      style="background-color: var(--color-${item.status === 'delayed' ? 'danger' : 'warning'});">
+                 </div>
+                 <div class="alert-info">
+                    <span class="alert-label">${escapeHtml(item.p.titulo)}</span>
+                    <span class="alert-value">
+                        <span class="badge ${item.badgeClass}" style="font-size:0.75rem; padding: 2px 6px;">${item.label}</span>
+                    </span>
+                 </div>
+              </div>
+          `).join("");
+
+      } catch (err) {
+          console.error("Erro renderMaintenanceAlerts", err);
+          container.innerHTML = '<div class="muted">Erro ao carregar</div>';
+      }
+  }
+
   // =========================
   // MANUTENÇÕES PLANEADAS
   // =========================
@@ -1328,13 +1410,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // REPARAÇÕES
     renderReparacoes(veiculoId, settings);
     initReparacoesModal(veiculoId);
-    initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId, settings);
 
     // MANUTENÇÕES PLANEADAS (Passando Current Odo explicitamente se necessário, ou v)
     // Vamos garantir que v tem a propriedade que o renderPlanos espera
-    v.odometroAtual = currentOdo; 
+    v.odometroAtual = currentOdo;
     renderPlanos(veiculoId, v, settings);
+    renderMaintenanceAlerts(veiculoId, v); // <-- NEW: Render alerts summary
     initPlanModal(veiculoId);
 
     // RESPONSABILIDADES (ALARMES)
@@ -1354,6 +1436,26 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         window.location.href = "veiculos.html";
       };
+    }
+
+    // NEW: Quick Plan Button Listener
+    const btnQuickPlan = document.getElementById("btn-add-plan-quick");
+    if (btnQuickPlan) {
+        btnQuickPlan.onclick = () => {
+            // Open modal in "add new" mode
+            // We need to ensure initPlanModal is ready or expose an open function
+            // Fortunately initPlanModal exposes generic binding on "btn-add-plan".
+            // Since we have a new button ID, we can just manually trigger the modal open logic
+            // providing we can access it within this scope?
+            // "initPlanModal" binds "btn-add-plan" inside it.
+            // Let's manually click the existing hidden/visible button inside the tab?
+            // Or better, let's just trigger the open logic.
+            // Since initPlanModal scope is closed, we can simulate click on the tab button if present,
+            // OR we can make initPlanModal bind to multiple buttons?
+            // Let's find "btn-add-plan" (the one in the tab) and click it.
+            const tabBtn = document.getElementById("btn-add-plan");
+            if(tabBtn) tabBtn.click();
+        };
     }
 
     // =========================

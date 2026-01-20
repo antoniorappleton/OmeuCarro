@@ -116,6 +116,14 @@
         </div>
         <span>Reparação</span>
       </button>
+      <button id="btn-add-plan-quick" class="btn btn-secondary action-card-btn">
+        <div class="icon-box-sm plan">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-clipboard"></use>
+          </svg>
+        </div>
+        <span>Planeamento</span>
+      </button>
     </section>
 
     <!-- 3. COMPACT KPIs -->
@@ -145,7 +153,7 @@
           <svg class="icon">
             <use href="assets/icons-unified.svg#icon-bell"></use>
           </svg>
-          Alertas Próximos
+          Alertas e Prazos
         </h2>
         <button id="btn-edit-dates" class="btn btn-ghost btn-sm">
           Editar Datas
@@ -153,8 +161,12 @@
       </header>
 
       <div class="card-body">
-        <!-- SUMMARY LIST -->
-        <div class="vehicle-alerts-summary">
+
+        <!-- SECTION: PRAZOS LEGAIS DO VEÍCULO -->
+        <h4 class="muted"
+          style="margin-bottom: 8px; font-size: 0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Documentos
+        </h4>
+        <div class="vehicle-alerts-summary" style="margin-bottom: 20px;">
           <!-- Seguro -->
           <div class="alert-item">
             <div class="alert-status-indicator" id="status-seguro"></div>
@@ -183,6 +195,14 @@
                 <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-inspecao"></span></span>
             </div>
           </div>
+        </div>
+
+        <!-- SECTION: MANUTENÇÃO (DYNAMIC) -->
+        <h4 class="muted"
+          style="margin-bottom: 8px; font-size: 0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Manutenção
+          Próxima</h4>
+        <div id="alerts-maintenance-list" class="vehicle-alerts-summary">
+          <div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>
         </div>
 
         <!-- COLLAPSIBLE CONFIG -->
