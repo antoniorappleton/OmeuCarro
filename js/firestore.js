@@ -237,6 +237,11 @@ async function updateVeiculo(id, data) {
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
+  // 🔹 Se odómetro atual for atualizado, atualizar timestamp
+  if (data.odometroAtual !== undefined) {
+      payload.odometroAtualizadoEm = firebase.firestore.FieldValue.serverTimestamp();
+  }
+
   // Remove nulls/undefined from payload to avoid overwriting existing photo if not provided?
   // No, the caller should pass existing if not changing.
   // We'll clean undefined keys.

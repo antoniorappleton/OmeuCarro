@@ -216,10 +216,34 @@ async function carregarVeiculos() {
 
             <p class="vehicle-subtitle">${v.marca || ""} ${v.modelo || ""}</p>
             
-            <!-- ODÓMETRO (Read-Only) -->
+            <!-- ODÓMETRO (Read-Only) + Warning -->
             <div class="vehicle-odometer-box">
               <span class="odo-val font-mono">${(v.odometroAtual || v.odometroInicial || 0).toLocaleString()} km</span>
             </div>
+            
+            ${
+               (() => {
+                 // 5.1 UX POLISH: Check for stale odometer (> 30 days)
+                 const lastUpdate = v.odometroAtualizadoEm 
+                    ? (v.odometroAtualizadoEm.toDate ? v.odometroAtualizadoEm.toDate() : new Date(v.odometroAtualizadoEm))
+                    : (v.criadoEm ? (v.criadoEm.toDate ? v.criadoEm.toDate() : new Date(v.criadoEm)) : new Date());
+                    
+                 const diffTime = new Date() - lastUpdate;
+                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                 
+                 if (diffDays > 30) {
+                     return `
+                       <div style="margin-top:4px;">
+                         <button class="btn-xs btn-outline-warning full-width" style="justify-content:center; gap:4px;" type="button" data-edit="${v.id}">
+                            <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-alert-triangle"></use></svg>
+                            Atualizar km
+                         </button>
+                       </div>
+                     `;
+                 }
+                 return "";
+               })()
+            }
 
             <div class="vehicle-badges">
               <span class="badge badge-outline">${matricula}</span>
