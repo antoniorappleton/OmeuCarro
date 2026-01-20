@@ -102,7 +102,7 @@
         }
     }
 
-    function handleVehicleChange(e) {
+    async function handleVehicleChange(e) {
         const vid = e.target.value;
         const inpConsumo = document.getElementById("trip-consumo");
         const inpPreco = document.getElementById("trip-preco");
@@ -110,16 +110,73 @@
         if (!vid) return; // Manual mode
         
         const v = userVehicles.find(x => x.id === vid);
-        if (v) {
-             let estPrice = 0;
-             // Basic heuristic for price defaults
-             if (v.combustivelPadrao?.includes("Gasolina")) estPrice = 1.75;
-             else if (v.combustivelPadrao?.includes("Diesel") || v.combustivelPadrao?.includes("Gasóleo")) estPrice = 1.65;
-             else if (v.combustivelPadrao?.includes("GPL")) estPrice = 0.95;
-             
-             if (estPrice > 0 && inpPreco) inpPreco.value = estPrice;
-             if (v.consumoMedio && inpConsumo) inpConsumo.value = v.consumoMedio;
-             
+        if (!v) return;
+
+        // Visual Feedback (Loading)
+        if (inpConsumo) inpConsumo.parentNode.classList.add("opacity-50");
+        
+        try {
+            let avgConsumption = null;
+            let lastPrice = null;
+
+            // 1. Try to Calculate from History (Real Data)
+            if (window.getAbastecimentosDoVeiculo) {
+                 const records = await window.getAbastecimentosDoVeiculo(vid, 20); // Last 20 is enough for trend
+                 
+                 if (records && records.length > 1) {
+                     // Sort by Odometer ASC
+                     records.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
+
+                     let totalKm = 0;
+                     let totalLiters = 0;
+
+                     for (let i = 1; i < records.length; i++) {
+                        const prev = records[i-1];
+                        const curr = records[i];
+                        const d = (curr.odometro || 0) - (prev.odometro || 0);
+                        
+                        // Valid segment check
+                        if (d > 0) {
+                             totalKm += d;
+                             totalLiters += Number(curr.litros) || 0;
+                        }
+                     }
+
+                     if (totalKm > 0 && totalLiters > 0) {
+                         // Simple L/100km Calc
+                         avgConsumption = (totalLiters / totalKm) * 100;
+                     }
+                     
+                     // Get most recent price
+                     const lastRec = records[records.length - 1];
+                     if (lastRec.precoPorLitro) lastPrice = lastRec.precoPorLitro;
+                 }
+            }
+
+            // 2. Fallback to Manual Field or Default
+            if (!avgConsumption) {
+                 if (v.consumoMedio) avgConsumption = v.consumoMedio;
+                 else avgConsumption = 0; // Or leave empty? Better 0 or prompt
+            }
+
+            // 3. Fallback Price
+            if (!lastPrice) {
+                 if (v.combustivelPadrao?.toLowerCase().includes("gasolina")) lastPrice = 1.75;
+                 else if (v.combustivelPadrao?.toLowerCase().includes("diesel") || v.combustivelPadrao?.toLowerCase().includes("gasóleo")) lastPrice = 1.65;
+                 else if (v.combustivelPadrao?.toLowerCase().includes("gpl")) lastPrice = 0.95;
+                 else lastPrice = 0;
+            }
+
+            // 4. Update UI
+            if (avgConsumption > 0 && inpConsumo) inpConsumo.value = avgConsumption.toFixed(1);
+            if (lastPrice > 0 && inpPreco) inpPreco.value = lastPrice;
+
+        } catch (err) {
+            console.error("[TripCalc] Error calculating stats", err);
+            // Default Fallback
+            if (v.consumoMedio && inpConsumo) inpConsumo.value = v.consumoMedio;
+        } finally {
+             if (inpConsumo) inpConsumo.parentNode.classList.remove("opacity-50");
              calculate();
         }
     }

@@ -47,6 +47,10 @@ function openModal(editing = false, data = null) {
   inputFuel.value = data.combustivelPadrao || "";
   inputOdometer.value = data.odometroInicial || "";
 
+  // 🔹 NOVO: Consumo Médio
+  document.getElementById("vehicle-avg-consumption").value =
+    data.consumoMedio ?? "";
+
   // ===== NOVOS CAMPOS TÉCNICOS =====
   document.getElementById("vehicle-year").value = data.ano ?? "";
 
@@ -353,6 +357,8 @@ modalForm.addEventListener("submit", async (e) => {
     matricula: inputPlate.value.trim(),
     combustivelPadrao: inputFuel.value,
     odometroInicial: Number(inputOdometer.value) || 0,
+    consumoMedio:
+      Number(document.getElementById("vehicle-avg-consumption").value) || null,
 
     // 🔹 NOVOS DADOS TÉCNICOS
     ano: Number(document.getElementById("vehicle-year")?.value) || null,
