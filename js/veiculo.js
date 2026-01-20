@@ -55,6 +55,95 @@ document.addEventListener("DOMContentLoaded", () => {
     setActive("fuel");
   }
 
+  async function renderReparacoes(veiculoId, settings) {
+    const list = document.getElementById("maint-list");
+    const empty = document.getElementById("maint-empty");
+    if (!list) return;
+
+    list.innerHTML = '<div class="spinner"></div>';
+
+    try {
+      const reps = await getReparacoesDoVeiculo(veiculoId);
+      list.innerHTML = "";
+
+      if (!reps || !reps.length) {
+        if (empty) empty.classList.remove("hidden");
+        return;
+      }
+      if (empty) empty.classList.add("hidden");
+
+      reps.forEach((r) => {
+        const el = document.createElement("article");
+        el.className = "record-card";
+
+        const custoFormatted = r.custo
+          ? formatCurrency(r.custo, settings?.moeda || "EUR")
+          : "—";
+        const dateFormatted = new Date(r.data).toLocaleDateString();
+
+        el.innerHTML = `
+                <div class="record-icon-box maint">
+                    <svg class="icon"><use href="assets/icons-unified.svg#icon-wrench"></use></svg>
+                </div>
+                <div class="record-content">
+                    <div class="record-header-row">
+                        <strong class="record-title">${escapeHtml(
+                          r.descricao
+                        )}</strong>
+                        <span class="badge badge-outline">${custoFormatted}</span>
+                    </div>
+                    <div class="record-meta-row">
+                        <div class="record-meta-item">
+                            ${
+                              r.km
+                                ? `<span>${Number(r.km).toLocaleString()} km</span>`
+                                : ""
+                            }
+                            <span>${dateFormatted}</span>
+                        </div>
+                        ${
+                          r.oficina
+                            ? `<div class="record-meta-item"><small>${escapeHtml(
+                                r.oficina
+                              )}</small></div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+                <div class="record-actions">
+                     ${
+                       r.linkDocumento
+                         ? `<a href="${r.linkDocumento}" target="_blank" class="icon-btn-sm" title="Ver documento"><svg class="icon"><use href="assets/icons-unified.svg#icon-file"></use></svg></a>`
+                         : ""
+                     }
+                     <button class="icon-btn-sm" data-edit-rep="${
+                       r.id
+                     }"><svg class="icon"><use href="assets/icons-unified.svg#icon-edit"></use></svg></button>
+                     <button class="icon-btn-sm danger" data-del-rep="${
+                       r.id
+                     }"><svg class="icon"><use href="assets/icons-unified.svg#icon-trash"></use></svg></button>
+                </div>
+            `;
+
+        el.querySelector("[data-edit-rep]").onclick = () =>
+          window.openReparacaoForEdit(veiculoId, r.id);
+        el.querySelector("[data-del-rep]").onclick = async () => {
+          if (confirm("Apagar registo?")) {
+            await deleteReparacaoDoVeiculo(veiculoId, r.id);
+            renderReparacoes(veiculoId, settings);
+          }
+        };
+
+        list.appendChild(el);
+      });
+    } catch (err) {
+      console.error(err);
+      list.textContent = "Erro ao carregar reparações.";
+    }
+
+
+  }
+
   function initReparacoesModal(veiculoId) {
     let editingId = null;
     const modal = document.getElementById("maint-modal");
@@ -1450,5 +1539,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     init();
+    // Verificar se há parametros na URL para abrir modal de plano
+    // ou apenas carregar normal
   });
 });
+
+

@@ -381,6 +381,27 @@ async function updateAbastecimento(veiculoId, id, data) {
   };
 
   await ref.update(payload);
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Edit Abastecimento)
+  if (payload.odometro) {
+      try {
+          const veiculoRef = db.collection("veiculos").doc(veiculoId);
+          const vSnap = await veiculoRef.get();
+          if (vSnap.exists) {
+              const vData = vSnap.data();
+              const current = vData.odometroAtual || vData.odometroInicial || 0;
+              if (payload.odometro > current) {
+                  await veiculoRef.update({
+                      odometroAtual: payload.odometro,
+                      odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+              }
+          }
+      } catch (err) {
+          console.error("Erro ao atualizar odómetro (edit abastecimento):", err);
+      }
+  }
+
   return ref;
 }
 
@@ -650,8 +671,9 @@ async function getReparacaoById(veiculoId, reparacaoId) {
 }
 
 // ✏️ atualizar reparação
+// ✏️ atualizar reparação
 async function updateReparacaoDoVeiculo(veiculoId, reparacaoId, data) {
-  return db
+  const prom = db
     .collection("veiculos")
     .doc(veiculoId)
     .collection("reparacoes")
@@ -660,6 +682,31 @@ async function updateReparacaoDoVeiculo(veiculoId, reparacaoId, data) {
       ...data,
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+  await prom;
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Edit Reparacao)
+  if (data.km) {
+      const repKm = Number(data.km);
+      try {
+          const veiculoRef = db.collection("veiculos").doc(veiculoId);
+          const vSnap = await veiculoRef.get();
+          if (vSnap.exists) {
+              const vData = vSnap.data();
+              const current = vData.odometroAtual || vData.odometroInicial || 0;
+              if (repKm > current) {
+                  await veiculoRef.update({
+                      odometroAtual: repKm,
+                      odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+              }
+          }
+      } catch (err) {
+          console.error("Erro ao atualizar odómetro (edit reparacao):", err);
+      }
+  }
+
+  return prom;
 }
 
 // 🗑️ apagar reparação
@@ -739,7 +786,7 @@ async function getManutencoesPlaneadas(veiculoId) {
 
 async function addManutencaoPlaneada(veiculoId, data) {
   const user = auth.currentUser;
-  if (!user) throw new Error("Utilizador n�o autenticado");
+  if (!user) throw new Error("Utilizador não autenticado");
 
   await db
     .collection("veiculos")
@@ -749,11 +796,33 @@ async function addManutencaoPlaneada(veiculoId, data) {
       ...data,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Add Plano)
+  // Se indicarem "ultimoKm" superior ao atual
+  if (data.ultimoKm) {
+      const planKm = Number(data.ultimoKm);
+      try {
+          const veiculoRef = db.collection("veiculos").doc(veiculoId);
+          const vSnap = await veiculoRef.get();
+          if (vSnap.exists) {
+              const vData = vSnap.data();
+              const current = vData.odometroAtual || vData.odometroInicial || 0;
+              if (planKm > current) {
+                  await veiculoRef.update({
+                      odometroAtual: planKm,
+                      odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+              }
+          }
+      } catch (err) {
+          console.error("Erro ao atualizar odómetro (add plano):", err);
+      }
+  }
 }
 
 async function updateManutencaoPlaneada(veiculoId, docId, data) {
   const user = auth.currentUser;
-  if (!user) throw new Error("Utilizador n�o autenticado");
+  if (!user) throw new Error("Utilizador não autenticado");
 
   await db
     .collection("veiculos")
@@ -764,6 +833,27 @@ async function updateManutencaoPlaneada(veiculoId, docId, data) {
       ...data,
       atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Edit Plano)
+  if (data.ultimoKm) {
+      const planKm = Number(data.ultimoKm);
+      try {
+          const veiculoRef = db.collection("veiculos").doc(veiculoId);
+          const vSnap = await veiculoRef.get();
+          if (vSnap.exists) {
+              const vData = vSnap.data();
+              const current = vData.odometroAtual || vData.odometroInicial || 0;
+              if (planKm > current) {
+                  await veiculoRef.update({
+                      odometroAtual: planKm,
+                      odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+              }
+          }
+      } catch (err) {
+          console.error("Erro ao atualizar odómetro (edit plano):", err);
+      }
+  }
 }
 
 async function deleteManutencaoPlaneada(veiculoId, docId) {
