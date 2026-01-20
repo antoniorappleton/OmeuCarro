@@ -141,6 +141,10 @@ async function createVeiculo(data) {
     // Foto
     fotoUrl: data.fotoUrl || null,
     fotoPath: data.fotoPath || null,
+
+    // 🔹 ODÓMETRO ATUAL (Inicialmente igual ao inicial)
+    odometroAtual: Number(data.odometroInicial) || 0,
+    odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
 
   return db.collection("veiculos").add(veiculo);
@@ -156,7 +160,19 @@ async function getVeiculosDoUtilizador() {
     .where("ativo", "==", true)
     .get();
 
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snap.docs.map((doc) => {
+    const d = doc.data();
+    // 🔹 Runtime Migration: Se não tiver odometroAtual, assume odometroInicial
+    if (d.odometroAtual === undefined) {
+       d.odometroAtual = d.odometroInicial || 0;
+       // Opcional: Persistir a migração (fire-and-forget)
+       doc.ref.update({
+         odometroAtual: d.odometroAtual,
+         odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+       }).catch(console.error);
+    }
+    return { id: doc.id, ...d };
+  });
 }
 
 // Upload foto do veículo
@@ -192,27 +208,31 @@ async function updateVeiculo(id, data) {
     nome: data.nome,
     marca: data.marca,
     modelo: data.modelo,
-    matricula: data.matricula || "",
-    combustivelPadrao: data.combustivelPadrao || "",
-    odometroInicial: Number(data.odometroInicial) || 0,
-    ativo: data.ativo !== false,
+    matricula: data.matricula,
+    combustivelPadrao: data.combustivelPadrao,
+    odometroInicial: data.odometroInicial !== undefined ? Number(data.odometroInicial) : undefined,
+    
+    // Permite atualização direta do odometroAtual (mas deve ser >= inicial em tese, deixamos flexível para correções)
+    odometroAtual: data.odometroAtual !== undefined ? Number(data.odometroAtual) : undefined,
+    
+    ativo: data.ativo,
 
     // Foto
-    fotoUrl: data.fotoUrl || null,
-    fotoPath: data.fotoPath || null,
+    fotoUrl: data.fotoUrl,
+    fotoPath: data.fotoPath,
 
     // técnicos
-    ano: data.ano ?? null,
-    vin: data.vin || "",
-    cilindradaCc: data.cilindradaCc ?? null,
-    potenciaCv: data.potenciaCv ?? null,
-    capacidadeDepositoLitros: data.capacidadeDepositoLitros ?? null,
-    dataAquisicao: data.dataAquisicao || null,
+    ano: data.ano,
+    vin: data.vin,
+    cilindradaCc: data.cilindradaCc,
+    potenciaCv: data.potenciaCv,
+    capacidadeDepositoLitros: data.capacidadeDepositoLitros,
+    dataAquisicao: data.dataAquisicao,
 
     // seguro / inspeção
-    seguro: data.seguro || {},
-    inspecao: data.inspecao || {},
-    iuc: data.iuc || {}, // NOVO
+    seguro: data.seguro,
+    inspecao: data.inspecao,
+    iuc: data.iuc,
 
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -294,6 +314,26 @@ async function createAbastecimento(veiculoId, data) {
     .doc(veiculoId)
     .collection("abastecimentos")
     .add(abastecimento);
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Se km for maior)
+  // Fazemos fire-and-forget ou await? Await é mais seguro para consistência.
+  try {
+      const veiculoRef = db.collection("veiculos").doc(veiculoId);
+      const vSnap = await veiculoRef.get();
+      if (vSnap.exists) {
+          const vData = vSnap.data();
+          const current = vData.odometroAtual || vData.odometroInicial || 0;
+          if (abastecimento.odometro > current) {
+              await veiculoRef.update({
+                  odometroAtual: abastecimento.odometro,
+                  odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+              });
+          }
+      }
+  } catch (err) {
+      console.error("Erro ao atualizar odómetro do veículo (auto):", err);
+      // Não bloqueia o retorno do abastecimento
+  }
 
   return ref;
 }
@@ -654,6 +694,30 @@ async function addReparacaoAoVeiculo(veiculoId, data) {
       ...data,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+  // 🔹 AUTO-UPDATE VEÍCULO (Repair Logic)
+  // Se o km da reparação for superior ao atual, atualiza.
+  if (data.km) {
+    try {
+        const repKm = Number(data.km);
+        const veiculoRef = db.collection("veiculos").doc(veiculoId);
+        const vSnap = await veiculoRef.get();
+        if (vSnap.exists) {
+            const vData = vSnap.data();
+            const current = vData.odometroAtual || vData.odometroInicial || 0;
+            if (repKm > current) {
+                await veiculoRef.update({
+                    odometroAtual: repKm,
+                    odometroAtualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao atualizar odómetro via reparação:", err);
+    }
+  }
+
+  return ref;
 }
 
 // ======================================================================

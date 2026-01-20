@@ -947,7 +947,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .map((p) => {
         // Calcular status
         const status = calculateMaintenanceStatus(
-          veiculo.odometro,
+          veiculo.odometroAtual || veiculo.odometroInicial || 0,
           p.ultimoKm,
           p.intervaloKm,
           p.ultimaData,
@@ -1142,9 +1142,95 @@ document.addEventListener("DOMContentLoaded", () => {
     el.subtitle.textContent = `${v.marca} ${v.modelo}`;
     el.plate.textContent = v.matricula || "Sem matrícula";
     el.fuel.textContent = v.combustivelPadrao || "—";
-    el.odo.textContent = `${v.odometroInicial} ${
-      settings?.unidadeDistancia || "km"
-    }`;
+    
+    el.fuel.textContent = v.combustivelPadrao || "—";
+    
+    // 🔹 USAR ODÓMETRO ATUAL COM UI DE EDIÇÃO (Igual ao Card)
+    const currentOdo = v.odometroAtual || v.odometroInicial || 0;
+    
+    // Injetar HTML complexo em vez de texto simples
+    const odoContainer = document.getElementById("vehicle-odometer"); // É um span.badge na veiculo.html
+    // Vamos substituir o span por div ou limpar classes? O span.badge tem estilo visual.
+    // Melhor: manter o span.badge como container? Não, o badge tem padding fixo.
+    // Vamos substituir o conteudo do span, mas talvez o layout quebre.
+    // O ideal é substituir o span por uma estrutura custom, mas ele está numa lista flex.
+    
+    if (odoContainer) {
+        // Remover classes de badge para assumir o estilo do componente
+        odoContainer.className = "vehicle-odometer-box-detail"; 
+        // Estilo inline para ajustar no hero (quick fix)
+        odoContainer.style.display = "inline-flex";
+        odoContainer.style.alignItems = "center";
+        odoContainer.style.gap = "8px";
+
+        odoContainer.innerHTML = `
+          <div class="odo-display flex items-center gap-2">
+            <span class="odo-val font-mono text-lg">${currentOdo.toLocaleString()} ${settings?.unidadeDistancia || "km"}</span>
+            <button class="icon-btn-xs" id="btn-edit-odo-detail" aria-label="Atualizar Km">
+               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
+            </button>
+          </div>
+          <div class="odo-edit hidden flex items-center gap-2">
+             <input type="number" class="input-xs w-24" id="odo-input-detail" value="${currentOdo}">
+             <button class="icon-btn-xs success" id="btn-save-odo-detail">
+               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-check"></use></svg>
+             </button>
+             <button class="icon-btn-xs danger" id="btn-cancel-odo-detail">
+               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-close"></use></svg>
+             </button>
+          </div>
+        `;
+
+        // Bind Events (Inline)
+        setTimeout(() => {
+             const btnEdit = document.getElementById("btn-edit-odo-detail");
+             const btnSave = document.getElementById("btn-save-odo-detail");
+             const btnCancel = document.getElementById("btn-cancel-odo-detail");
+             const boxDisplay = odoContainer.querySelector(".odo-display");
+             const boxEdit = odoContainer.querySelector(".odo-edit");
+             const inputHtml = document.getElementById("odo-input-detail");
+
+             btnEdit?.addEventListener("click", () => {
+                 boxDisplay.classList.add("hidden");
+                 boxEdit.classList.remove("hidden");
+             });
+
+             btnCancel?.addEventListener("click", () => {
+                 boxEdit.classList.add("hidden");
+                 boxDisplay.classList.remove("hidden");
+             });
+
+             btnSave?.addEventListener("click", async () => {
+                 const val = Number(inputHtml.value);
+                 const initial = v.odometroInicial || 0;
+                 const current = v.odometroAtual || initial;
+
+                 if (val < initial) {
+                     alert(`Erro: O odómetro não pode ser inferior ao valor inicial (${initial.toLocaleString()} km).`);
+                     return;
+                 }
+                 
+                 // Regra: Não permitir regressão (val < current)
+                 // NOTA: Se o user quiser corrigir um erro de digitação (ex: meteu 200000 em vez de 20000), 
+                 // esta regra bloqueia. Mas o requisito diz: "Não permitir regressão".
+                 // Vamos bloquear. Se for erro, terá de contactar suporte ou editar no DB direto (ou futura feature de admin).
+                 if (val < current) {
+                      alert(`Erro: O novo valor (${val}) não pode ser inferior ao atual (${current}). Não é permitida regressão.`);
+                      return;
+                 }
+                 
+                 btnSave.disabled = true;
+                 try {
+                     await updateVeiculo(veiculoId, { odometroAtual: val });
+                     location.reload(); 
+                 } catch(err) {
+                     console.error(err);
+                     alert("Erro ao guardar");
+                     btnSave.disabled = false;
+                 }
+             });
+        }, 0);
+    }
 
     // DOCUMENTOS
     initDocumentosModal(veiculoId);
@@ -1156,7 +1242,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initReparacoesModal(veiculoId);
     initAbastecimentoModal(veiculoId, settings);
 
-    // MANUTENÇÕES PLANEADAS
+    // MANUTENÇÕES PLANEADAS (Passando Current Odo explicitamente se necessário, ou v)
+    // Vamos garantir que v tem a propriedade que o renderPlanos espera
+    v.odometroAtual = currentOdo; 
     renderPlanos(veiculoId, v, settings);
     initPlanModal(veiculoId);
 

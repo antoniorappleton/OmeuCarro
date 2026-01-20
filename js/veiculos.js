@@ -213,7 +213,13 @@ async function carregarVeiculos() {
 
           <div class="vehicle-text">
             <h3 class="vehicle-title">${v.nome || "Veículo"}</h3>
+
             <p class="vehicle-subtitle">${v.marca || ""} ${v.modelo || ""}</p>
+            
+            <!-- ODÓMETRO (Read-Only) -->
+            <div class="vehicle-odometer-box">
+              <span class="odo-val font-mono">${(v.odometroAtual || v.odometroInicial || 0).toLocaleString()} km</span>
+            </div>
 
             <div class="vehicle-badges">
               <span class="badge badge-outline">${matricula}</span>
@@ -344,6 +350,15 @@ listEl.addEventListener("click", async (e) => {
       "veiculo.html?id=" + encodeURIComponent(id) + "#docs";
     return;
   }
+  if (docsBtn) {
+    e.stopPropagation();
+    const id = docsBtn.getAttribute("data-docs");
+    window.location.href =
+      "veiculo.html?id=" + encodeURIComponent(id) + "#docs";
+    return;
+  }
+
+  // (Código de edição inline removido a pedido)
 });
 
 // ================ SUBMETER MODAL ================

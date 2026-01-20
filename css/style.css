@@ -766,6 +766,62 @@ footer a .icon {
   fill: none;
 }
 
+.icon-sm {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+}
+
+.icon-xs {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none; 
+}
+
+/* Extra Small Icon Button */
+.icon-btn-xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--color-text-muted);
+  padding: 0; 
+}
+
+.icon-btn-xs:hover {
+  background: var(--color-bg);
+  color: var(--color-primary-start);
+  border-color: var(--color-primary-start);
+}
+
+.icon-btn-xs.success {
+    color: var(--color-success);
+    border-color: var(--color-success);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.icon-btn-xs.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Small Inputs */
+.input-xs {
+    height: 24px;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
 /* =========================================
    GENERIC MODAL STYLES (Supports veiculo.html)
    ========================================= */
