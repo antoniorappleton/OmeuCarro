@@ -68,35 +68,19 @@
         <div class="hero-bg-accent"></div>
 
         <div class="hero-content">
-          <div class="hero-top-row">
-            <div class="vehicle-identity">
-              <div class="vehicle-icon-large">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-car"></use>
-                </svg>
-              </div>
-              <div class="vehicle-badges-hero">
-                <span id="vehicle-plate" class="badge-glass">--</span>
-                <span id="vehicle-fuel" class="badge-glass">--</span>
-              </div>
-            </div>
-
-            <!-- Quick Actions (Alerts) -->
-            <button
-              id="btn-alerts-quick"
-              class="icon-btn-glass"
-              aria-label="Alertas"
-            >
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-bell"></use>
-              </svg>
-            </button>
-          </div>
-
-          <div class="hero-odometer-section">
+          <!-- Center: Odometer -->
+          <div
+            class="hero-odometer-section"
+            style="
+              margin-top: 0;
+              border: none;
+              background: transparent;
+              box-shadow: none;
+              padding: 0;
+            "
+          >
             <span class="hero-label">Quilometragem Atual</span>
             <div class="odometer-display-wrapper" id="vehicle-odometer-wrapper">
-              <!-- JS will inject here, but let's provide a skeleton -->
               <div class="odometer-value-box">
                 <span id="vehicle-odometer-val" class="odometer-number"
                   >--</span
@@ -114,7 +98,7 @@
               </button>
             </div>
 
-            <!-- Odometer Edit Inline Form (Hidden by default) -->
+            <!-- Hidden Edit Form -->
             <div
               id="vehicle-odometer-edit-form"
               class="odometer-edit-form hidden"
@@ -138,6 +122,12 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- Bottom: Badges Side by Side -->
+          <div class="vehicle-badges-hero centered-row">
+            <span id="vehicle-plate" class="badge-glass">--</span>
+            <span id="vehicle-fuel" class="badge-glass">--</span>
           </div>
 
           <p id="vehicle-message" class="form-message glass-message"></p>
