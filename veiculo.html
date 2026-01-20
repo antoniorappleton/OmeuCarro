@@ -1,721 +1,948 @@
 <!doctype html>
 <html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Veículo – L100</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veículo – L100</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <script src="js/theme.js"></script>
 
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/home.css" />
-  <script src="js/theme.js"></script>
+    <!-- Firebase v9 (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- Firebase v9 (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script defer src="js/firebase-config.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/firestore.js"></script>
+    <script defer src="js/utils.js"></script>
+    <!-- depois os ficheiros específicos da página -->
+    <script defer src="js/veiculo.js"></script>
+  </head>
 
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/auth.js"></script>
-  <script defer src="js/firestore.js"></script>
-  <script defer src="js/utils.js"></script>
-  <!-- depois os ficheiros específicos da página -->
-  <script defer src="js/veiculo.js"></script>
-</head>
-
-<body class="app-page" data-page="vehicle-detail">
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="app-header-left">
-      <a href="dashboard.html" class="app-logo" aria-label="Voltar à dashboard">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-car"></use>
-        </svg>
-        <div class="app-logo-text">
-          <span class="app-logo-title">L100</span>
-          <span class="app-logo-subtitle">Detalhe do veículo</span>
+  <body class="app-page" data-page="vehicle-detail">
+    <!-- HEADER PREMIUM -->
+    <header class="app-header glass-header">
+      <div class="app-header-left">
+        <a
+          href="dashboard.html"
+          class="icon-btn-sm"
+          aria-label="Voltar à dashboard"
+        >
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+          </svg>
+        </a>
+        <div class="app-header-title">
+          <h1 class="header-title-text" id="vehicle-name">Veículo</h1>
+          <span class="header-subtitle-text" id="vehicle-subtitle"
+            >Detalhes</span
+          >
         </div>
-      </a>
-    </div>
+      </div>
 
-    <div class="app-header-actions">
-      <a href="estatisticas.html" class="icon-btn" aria-label="Estatísticas">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-dashboard"></use>
-        </svg>
-      </a>
+      <div class="app-header-actions">
+        <a
+          href="estatisticas.html"
+          class="icon-btn-sm"
+          aria-label="Estatísticas"
+        >
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-dashboard"></use>
+          </svg>
+        </a>
+        <a href="perfil.html" class="icon-btn-sm" aria-label="Perfil">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-user"></use>
+          </svg>
+        </a>
+      </div>
+    </header>
 
-      <a href="perfil.html" class="icon-btn" aria-label="Perfil">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-user"></use>
-        </svg>
-      </a>
+    <main class="home-main has-header-offset">
+      <!-- 1. HERO PREMIUM (Odometer Focus) -->
+      <section class="vehicle-hero-premium">
+        <div class="hero-bg-accent"></div>
 
-      <button id="btn-logout" class="icon-btn" aria-label="Sair">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-logout"></use>
-        </svg>
-      </button>
-    </div>
-  </header>
+        <div class="hero-content">
+          <div class="hero-top-row">
+            <div class="vehicle-identity">
+              <div class="vehicle-icon-large">
+                <svg class="icon">
+                  <use href="assets/icons-unified.svg#icon-car"></use>
+                </svg>
+              </div>
+              <div class="vehicle-badges-hero">
+                <span id="vehicle-plate" class="badge-glass">--</span>
+                <span id="vehicle-fuel" class="badge-glass">--</span>
+              </div>
+            </div>
 
-  <main class="home-main">
-    <!-- 1. HERO (Compact) -->
-    <section class="card vehicle-hero">
-      <div class="vehicle-hero-header">
-        <div class="vehicle-hero-info">
-          <h1 id="vehicle-name" class="page-title">Veículo</h1>
-          <p id="vehicle-subtitle" class="muted">Detalhe</p>
+            <!-- Quick Actions (Alerts) -->
+            <button
+              id="btn-alerts-quick"
+              class="icon-btn-glass"
+              aria-label="Alertas"
+            >
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-bell"></use>
+              </svg>
+            </button>
+          </div>
+
+          <div class="hero-odometer-section">
+            <span class="hero-label">Quilometragem Atual</span>
+            <div class="odometer-display-wrapper" id="vehicle-odometer-wrapper">
+              <!-- JS will inject here, but let's provide a skeleton -->
+              <div class="odometer-value-box">
+                <span id="vehicle-odometer-val" class="odometer-number"
+                  >--</span
+                >
+                <span class="odometer-unit">km</span>
+              </div>
+              <button
+                id="btn-edit-odo-hero"
+                class="btn-edit-odo"
+                aria-label="Editar Km"
+              >
+                <svg class="icon">
+                  <use href="assets/icons-unified.svg#icon-edit"></use>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Odometer Edit Inline Form (Hidden by default) -->
+            <div
+              id="vehicle-odometer-edit-form"
+              class="odometer-edit-form hidden"
+            >
+              <input
+                type="number"
+                id="odo-input-hero"
+                class="odo-input-glass"
+                placeholder="Novos Km..."
+              />
+              <div class="odo-edit-actions">
+                <button id="btn-save-odo-hero" class="btn-glass-success">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-check"></use>
+                  </svg>
+                </button>
+                <button id="btn-cancel-odo-hero" class="btn-glass-danger">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-close"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p id="vehicle-message" class="form-message glass-message"></p>
         </div>
-        <div class="vehicle-hero-actions">
-          <button id="btn-edit-vehicle" class="icon-btn" aria-label="Editar Veículo">
+      </section>
+
+      <!-- 2. PRIMARY ACTIONS (Premium Grid) -->
+      <section class="action-grid-premium">
+        <button id="btn-add-fuel" class="action-card-premium gradient-1">
+          <div class="action-icon">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-edit"></use>
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
             </svg>
-          </button>
-          <button id="btn-alerts-quick" class="icon-btn" aria-label="Alertas">
+          </div>
+          <span class="action-label">Abastecer</span>
+        </button>
+
+        <button id="btn-add-doc" class="action-card-premium glass">
+          <div class="action-icon">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-file"></use>
+            </svg>
+          </div>
+          <span class="action-label">Documento</span>
+        </button>
+
+        <button id="btn-add-maint" class="action-card-premium glass">
+          <div class="action-icon">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-wrench"></use>
+            </svg>
+          </div>
+          <span class="action-label">Reparação</span>
+        </button>
+
+        <button id="btn-add-plan-quick" class="action-card-premium glass">
+          <div class="action-icon">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-clipboard"></use>
+            </svg>
+          </div>
+          <span class="action-label">Plano de Manutenção</span>
+        </button>
+      </section>
+
+      <!-- 3. COMPACT KPIs -->
+      <section class="stats-grid vehicle-kpis-compact">
+        <article class="stats-card compact">
+          <span class="muted">Gasto Total</span>
+          <strong id="kpi-gasto">€0</strong>
+        </article>
+        <article class="stats-card compact">
+          <span class="muted">Litros</span>
+          <strong id="kpi-litros">0 L</strong>
+        </article>
+        <article class="stats-card compact">
+          <span class="muted">Média</span>
+          <strong id="kpi-consumo">--</strong>
+        </article>
+        <article class="stats-card compact">
+          <span class="muted">Custo/Km</span>
+          <strong id="kpi-custo-km">--</strong>
+        </article>
+      </section>
+
+      <!-- 4. ALERTS SUMMARY (Expandable Config) -->
+      <section id="section-alerts" class="card" style="margin-bottom: 24px">
+        <header class="card-header" style="padding-bottom: 12px">
+          <h2 class="vehicle-section-title">
             <svg class="icon">
               <use href="assets/icons-unified.svg#icon-bell"></use>
             </svg>
+            Alertas e Prazos
+          </h2>
+          <button id="btn-edit-dates" class="btn btn-ghost btn-sm">
+            Editar Datas
           </button>
+        </header>
+
+        <div class="card-body">
+          <!-- SECTION: PRAZOS LEGAIS DO VEÍCULO -->
+          <h4
+            class="muted"
+            style="
+              margin-bottom: 8px;
+              font-size: 0.85rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            Documentos
+          </h4>
+          <div class="vehicle-alerts-summary" style="margin-bottom: 20px">
+            <!-- Seguro -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-seguro"></div>
+              <!-- Class gets added by JS (status-green/etc) -->
+              <div class="alert-info">
+                <span class="alert-label">Seguro</span>
+                <span class="alert-value"
+                  ><span id="val-seguro">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-seguro"
+                  ></span
+                ></span>
+              </div>
+            </div>
+            <!-- IUC -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-iuc"></div>
+              <div class="alert-info">
+                <span class="alert-label">IUC</span>
+                <span class="alert-value"
+                  ><span id="val-iuc">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-iuc"
+                  ></span
+                ></span>
+              </div>
+            </div>
+            <!-- INSPEÇÃO -->
+            <div class="alert-item">
+              <div class="alert-status-indicator" id="status-inspecao"></div>
+              <div class="alert-info">
+                <span class="alert-label">Inspeção</span>
+                <span class="alert-value"
+                  ><span id="val-inspecao">--</span>
+                  <span
+                    class="muted"
+                    style="font-weight: 400; font-size: 0.85em"
+                    id="txt-inspecao"
+                  ></span
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: MANUTENÇÃO (DYNAMIC) -->
+          <h4
+            class="muted"
+            style="
+              margin-bottom: 8px;
+              font-size: 0.85rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            Manutenção Próxima
+          </h4>
+          <div id="alerts-maintenance-list" class="vehicle-alerts-summary">
+            <div class="muted" style="font-size: 0.9rem; padding: 4px 0">
+              Tudo em dia.
+            </div>
+          </div>
+
+          <!-- COLLAPSIBLE CONFIG -->
+          <details id="alerts-config-details" class="alerts-config-details">
+            <summary
+              class="btn btn-secondary btn-sm full-width"
+              style="margin-top: 12px"
+            >
+              Configurar Alertas
+            </summary>
+
+            <div
+              id="alerts-config-panel"
+              class="alerts-config-panel"
+              style="margin-top: 16px"
+            >
+              <div class="vehicle-divider"></div>
+              <h4 class="muted" style="margin: 12px 0 8px">
+                Notificações Ativas
+              </h4>
+
+              <div class="config-row">
+                <span>Seguro</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-seguro" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+              <div class="config-row">
+                <span>IUC</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-iuc" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+              <div class="config-row">
+                <span>Inspeção</span>
+                <label class="switch"
+                  ><input type="checkbox" id="toggle-alert-inspecao" /><span
+                    class="slider"
+                  ></span
+                ></label>
+              </div>
+
+              <label class="config-select-row">
+                <span>Avisar com antecedência:</span>
+                <select id="select-alert-antecedencia">
+                  <option value="7">7 dias</option>
+                  <option value="15">15 dias</option>
+                  <option value="30">30 dias</option>
+                </select>
+              </label>
+
+              <div class="config-actions">
+                <button
+                  id="btn-save-alert-settings"
+                  class="btn btn-primary btn-sm full-width"
+                >
+                  Guardar Preferências
+                </button>
+              </div>
+            </div>
+          </details>
         </div>
-      </div>
+      </section>
 
-      <div class="vehicle-detail-badges">
-        <span id="vehicle-plate" class="badge badge-outline">--</span>
-        <span id="vehicle-fuel" class="badge badge-secondary">--</span>
-        <span id="vehicle-odometer" class="badge badge-outline">-- km</span>
+      <!-- 5. TABS (History) -->
+      <div class="tabs-header-row">
+        <h3 class="vehicle-section-title">Histórico</h3>
+        <button
+          id="btn-toggle-tabs"
+          class="icon-btn-sm"
+          aria-label="Recolher histórico"
+          aria-expanded="true"
+        >
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+          </svg>
+        </button>
       </div>
-      <p id="vehicle-message" class="form-message"></p>
-    </section>
-
-    <!-- 2. PRIMARY ACTIONS (Command Center) -->
-    <section class="vehicle-actions-row">
-      <button id="btn-add-fuel" class="btn btn-primary btn-gradient action-card-btn">
-        <div class="icon-box-sm">
+      <nav class="section-tabs" aria-label="Histórico">
+        <button
+          class="tab-btn is-active"
+          type="button"
+          data-tab="fuel"
+          aria-controls="tab-fuel"
+        >
           <svg class="icon">
             <use href="assets/icons-unified.svg#icon-fuel"></use>
           </svg>
-        </div>
-        <span>Abastecer</span>
-      </button>
-      <button id="btn-add-doc" class="btn btn-secondary action-card-btn">
-        <div class="icon-box-sm doc">
+          <span>Abastecimentos</span>
+        </button>
+        <button
+          class="tab-btn"
+          type="button"
+          data-tab="docs"
+          aria-controls="tab-docs"
+        >
           <svg class="icon">
             <use href="assets/icons-unified.svg#icon-file"></use>
           </svg>
-        </div>
-        <span>Documento</span>
-      </button>
-      <button id="btn-add-maint" class="btn btn-secondary action-card-btn">
-        <div class="icon-box-sm maint">
+          <span>Documentos</span>
+        </button>
+        <button
+          class="tab-btn"
+          type="button"
+          data-tab="maint"
+          aria-controls="tab-maint"
+        >
           <svg class="icon">
             <use href="assets/icons-unified.svg#icon-wrench"></use>
           </svg>
-        </div>
-        <span>Reparação</span>
-      </button>
-      <button id="btn-add-plan-quick" class="btn btn-secondary action-card-btn">
-        <div class="icon-box-sm plan">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-clipboard"></use>
-          </svg>
-        </div>
-        <span>Planeamento</span>
-      </button>
-    </section>
-
-    <!-- 3. COMPACT KPIs -->
-    <section class="stats-grid vehicle-kpis-compact">
-      <article class="stats-card compact">
-        <span class="muted">Gasto Total</span>
-        <strong id="kpi-gasto">€0</strong>
-      </article>
-      <article class="stats-card compact">
-        <span class="muted">Litros</span>
-        <strong id="kpi-litros">0 L</strong>
-      </article>
-      <article class="stats-card compact">
-        <span class="muted">Média</span>
-        <strong id="kpi-consumo">--</strong>
-      </article>
-      <article class="stats-card compact">
-        <span class="muted">Custo/Km</span>
-        <strong id="kpi-custo-km">--</strong>
-      </article>
-    </section>
-
-    <!-- 4. ALERTS SUMMARY (Expandable Config) -->
-    <section id="section-alerts" class="card" style="margin-bottom: 24px">
-      <header class="card-header" style="padding-bottom: 12px">
-        <h2 class="vehicle-section-title">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-bell"></use>
-          </svg>
-          Alertas e Prazos
-        </h2>
-        <button id="btn-edit-dates" class="btn btn-ghost btn-sm">
-          Editar Datas
+          <span>Reparações</span>
         </button>
-      </header>
+      </nav>
 
-      <div class="card-body">
-
-        <!-- SECTION: PRAZOS LEGAIS DO VEÍCULO -->
-        <h4 class="muted"
-          style="margin-bottom: 8px; font-size: 0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Documentos
-        </h4>
-        <div class="vehicle-alerts-summary" style="margin-bottom: 20px;">
-          <!-- Seguro -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-seguro"></div>
-            <!-- Class gets added by JS (status-green/etc) -->
-            <div class="alert-info">
-              <span class="alert-label">Seguro</span>
-              <span class="alert-value"><span id="val-seguro">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-seguro"></span></span>
-            </div>
+      <!-- TAB: FUEL -->
+      <section id="tab-fuel" class="tab-content" style="margin-bottom: 32px">
+        <div id="fuel-empty" class="vehicles-empty hidden">
+          <div class="vehicles-empty-icon">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
+            </svg>
           </div>
-          <!-- IUC -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-iuc"></div>
-            <div class="alert-info">
-              <span class="alert-label">IUC</span>
-              <span class="alert-value"><span id="val-iuc">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-iuc"></span></span>
-            </div>
-          </div>
-          <!-- INSPEÇÃO -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-inspecao"></div>
-            <div class="alert-info">
-              <span class="alert-label">Inspeção</span>
-              <span class="alert-value"><span id="val-inspecao">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-inspecao"></span></span>
-            </div>
-          </div>
+          <h3>Nenhum abastecimento</h3>
+          <p>Registe o primeiro abastecimento deste veículo.</p>
         </div>
+        <div id="fuel-list" class="fuel-list"></div>
+      </section>
 
-        <!-- SECTION: MANUTENÇÃO (DYNAMIC) -->
-        <h4 class="muted"
-          style="margin-bottom: 8px; font-size: 0.85rem; text-transform:uppercase; letter-spacing:0.5px;">Manutenção
-          Próxima</h4>
-        <div id="alerts-maintenance-list" class="vehicle-alerts-summary">
-          <div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>
-        </div>
-
-        <!-- COLLAPSIBLE CONFIG -->
-        <details id="alerts-config-details" class="alerts-config-details">
-          <summary class="btn btn-secondary btn-sm full-width" style="margin-top: 12px">
-            Configurar Alertas
-          </summary>
-
-          <div id="alerts-config-panel" class="alerts-config-panel" style="margin-top: 16px">
-            <div class="vehicle-divider"></div>
-            <h4 class="muted" style="margin: 12px 0 8px">
-              Notificações Ativas
-            </h4>
-
-            <div class="config-row">
-              <span>Seguro</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-seguro" /><span
-                  class="slider"></span></label>
-            </div>
-            <div class="config-row">
-              <span>IUC</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-iuc" /><span class="slider"></span></label>
-            </div>
-            <div class="config-row">
-              <span>Inspeção</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-inspecao" /><span
-                  class="slider"></span></label>
-            </div>
-
-            <label class="config-select-row">
-              <span>Avisar com antecedência:</span>
-              <select id="select-alert-antecedencia">
-                <option value="7">7 dias</option>
-                <option value="15">15 dias</option>
-                <option value="30">30 dias</option>
-              </select>
-            </label>
-
-            <div class="config-actions">
-              <button id="btn-save-alert-settings" class="btn btn-primary btn-sm full-width">
-                Guardar Preferências
-              </button>
-            </div>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <!-- 5. TABS (History) -->
-    <div class="tabs-header-row">
-      <h3 class="vehicle-section-title">Histórico</h3>
-      <button id="btn-toggle-tabs" class="icon-btn-sm" aria-label="Recolher histórico" aria-expanded="true">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-chevron-up"></use>
-        </svg>
-      </button>
-    </div>
-    <nav class="section-tabs" aria-label="Histórico">
-      <button class="tab-btn is-active" type="button" data-tab="fuel" aria-controls="tab-fuel">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-fuel"></use>
-        </svg>
-        <span>Abastecimentos</span>
-      </button>
-      <button class="tab-btn" type="button" data-tab="docs" aria-controls="tab-docs">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-file"></use>
-        </svg>
-        <span>Documentos</span>
-      </button>
-      <button class="tab-btn" type="button" data-tab="maint" aria-controls="tab-maint">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-wrench"></use>
-        </svg>
-        <span>Reparações</span>
-      </button>
-    </nav>
-
-    <!-- TAB: FUEL -->
-    <section id="tab-fuel" class="tab-content" style="margin-bottom: 32px">
-      <div id="fuel-empty" class="vehicles-empty hidden">
-        <div class="vehicles-empty-icon">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
-          </svg>
-        </div>
-        <h3>Nenhum abastecimento</h3>
-        <p>Registe o primeiro abastecimento deste veículo.</p>
-      </div>
-      <div id="fuel-list" class="fuel-list"></div>
-    </section>
-
-    <!-- TAB: DOCS -->
-    <section id="tab-docs" class="tab-content hidden" style="margin-bottom: 80px">
-      <div class="card">
-        <div class="card-body">
-          <div class="list-filters" style="
+      <!-- TAB: DOCS -->
+      <section
+        id="tab-docs"
+        class="tab-content hidden"
+        style="margin-bottom: 80px"
+      >
+        <div class="card">
+          <div class="card-body">
+            <div
+              class="list-filters"
+              style="
                 margin-bottom: 12px;
                 display: flex;
                 justify-content: flex-end;
-              ">
-            <select id="docs-filter" style="
+              "
+            >
+              <select
+                id="docs-filter"
+                style="
                   padding: 6px;
                   border-radius: 8px;
                   border: 1px solid var(--border-light);
                   background: var(--color-bg);
                   color: var(--color-text-main);
-                ">
-              <option value="Todos">Todos</option>
-              <option value="Carro">Documentos do carro</option>
-              <option value="Outros">Outros</option>
-            </select>
+                "
+              >
+                <option value="Todos">Todos</option>
+                <option value="Carro">Documentos do carro</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+            <div id="docs-list" style="display: grid; gap: 12px"></div>
           </div>
-          <div id="docs-list" style="display: grid; gap: 12px"></div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- TAB: MAINT (+ Planning) -->
-    <section id="tab-maint" class="tab-content hidden" style="margin-bottom: 80px">
-      <!-- Planeamento (Integrated) -->
-      <div class="card" style="margin-bottom: 16px">
-        <header class="card-header">
-          <h3 class="vehicle-section-title">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-clipboard"></use>
-            </svg>
-            Próxima Manutenção
-          </h3>
-          <button id="btn-add-plan" class="icon-btn-sm" aria-label="Novo Plano">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
-            </svg>
-          </button>
-        </header>
-        <div class="card-body">
-          <div id="plan-list" style="
+      <!-- TAB: MAINT (+ Planning) -->
+      <section
+        id="tab-maint"
+        class="tab-content hidden"
+        style="margin-bottom: 80px"
+      >
+        <!-- Planeamento (Integrated) -->
+        <div class="card" style="margin-bottom: 16px">
+          <header class="card-header">
+            <h3 class="vehicle-section-title">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-clipboard"></use>
+              </svg>
+              Próxima Manutenção
+            </h3>
+            <button
+              id="btn-add-plan"
+              class="icon-btn-sm"
+              aria-label="Novo Plano"
+            >
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+            </button>
+          </header>
+          <div class="card-body">
+            <div
+              id="plan-list"
+              style="
                 display: grid;
                 gap: 12px;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-              "></div>
-          <div id="plan-empty" class="vehicles-empty" style="display: none; margin: 0; padding: 12px">
-            <p style="font-size: 0.9rem">Nenhum plano definido.</p>
+              "
+            ></div>
+            <div
+              id="plan-empty"
+              class="vehicles-empty"
+              style="display: none; margin: 0; padding: 12px"
+            >
+              <p style="font-size: 0.9rem">Nenhum plano definido.</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Histórico -->
-      <div class="card">
-        <header class="card-header">
-          <h3 class="vehicle-section-title">
+        <!-- Histórico -->
+        <div class="card">
+          <header class="card-header">
+            <h3 class="vehicle-section-title">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-wrench"></use>
+              </svg>
+              Histórico
+            </h3>
+          </header>
+          <div class="card-body">
+            <div
+              id="maint-empty"
+              class="vehicles-empty hidden"
+              style="margin: 0; padding: 20px"
+            >
+              <p>Nenhuma reparação registada.</p>
+            </div>
+            <div id="maint-list" style="display: grid; gap: 12px"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <a href="dashboard.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="veiculos.html" class="active">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-map"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="perfil.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
+
+    <!-- MODAL: NOVA REPARAÇÃO -->
+    <div id="maint-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>
             <svg class="icon">
               <use href="assets/icons-unified.svg#icon-wrench"></use>
             </svg>
-            Histórico
-          </h3>
+            Nova reparação
+          </h2>
+          <button id="maint-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
         </header>
-        <div class="card-body">
-          <div id="maint-empty" class="vehicles-empty hidden" style="margin: 0; padding: 20px">
-            <p>Nenhuma reparação registada.</p>
+
+        <div class="modal-body">
+          <div class="form-grid">
+            <label>
+              <span class="muted">Descrição</span>
+              <input
+                id="rep-desc"
+                type="text"
+                placeholder="Ex.: Troca de óleo"
+              />
+            </label>
+
+            <label>
+              <span class="muted">Data</span>
+              <input id="rep-date" type="date" />
+            </label>
+
+            <label>
+              <span class="muted">Quilómetros</span>
+              <input id="rep-km" type="number" placeholder="123456" />
+            </label>
+
+            <label>
+              <span class="muted">Custo (€)</span>
+              <input
+                id="rep-cost"
+                type="number"
+                step="0.01"
+                placeholder="89.90"
+              />
+            </label>
+
+            <label style="grid-column: 1/-1">
+              <span class="muted">Oficina</span>
+              <input
+                id="rep-shop"
+                type="text"
+                placeholder="Nome da oficina (opcional)"
+              />
+            </label>
+
+            <label style="grid-column: 1/-1">
+              <span class="muted">Link do documento (opcional)</span>
+              <input
+                id="rep-link"
+                type="url"
+                placeholder="https://drive.google.com/... ou https://..."
+                inputmode="url"
+              />
+            </label>
           </div>
-          <div id="maint-list" style="display: grid; gap: 12px"></div>
-        </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- FOOTER -->
-  <footer>
-    <a href="dashboard.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-home"></use>
-      </svg>
-      <span>Home</span>
-    </a>
-    <a href="veiculos.html" class="active">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-car"></use>
-      </svg>
-      <span>Veículos</span>
-    </a>
-    <a href="mapa.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-map"></use>
-      </svg>
-      <span>Mapa</span>
-    </a>
-    <a href="perfil.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-user"></use>
-      </svg>
-      <span>Perfil</span>
-    </a>
-  </footer>
-
-  <!-- MODAL: NOVA REPARAÇÃO -->
-  <div id="maint-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
-
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-wrench"></use>
-          </svg>
-          Nova reparação
-        </h2>
-        <button id="maint-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
-
-      <div class="modal-body">
-        <div class="form-grid">
-          <label>
-            <span class="muted">Descrição</span>
-            <input id="rep-desc" type="text" placeholder="Ex.: Troca de óleo" />
-          </label>
-
-          <label>
-            <span class="muted">Data</span>
-            <input id="rep-date" type="date" />
-          </label>
-
-          <label>
-            <span class="muted">Quilómetros</span>
-            <input id="rep-km" type="number" placeholder="123456" />
-          </label>
-
-          <label>
-            <span class="muted">Custo (€)</span>
-            <input id="rep-cost" type="number" step="0.01" placeholder="89.90" />
-          </label>
-
-          <label style="grid-column: 1/-1">
-            <span class="muted">Oficina</span>
-            <input id="rep-shop" type="text" placeholder="Nome da oficina (opcional)" />
-          </label>
-
-          <label style="grid-column: 1/-1">
-            <span class="muted">Link do documento (opcional)</span>
-            <input id="rep-link" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
-          </label>
+          <p id="rep-msg" class="muted"></p>
         </div>
 
-        <p id="rep-msg" class="muted"></p>
+        <footer class="modal-footer">
+          <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="rep-save" class="btn btn-primary btn-gradient">
+            Guardar reparação
+          </button>
+        </footer>
       </div>
-
-      <footer class="modal-footer">
-        <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="rep-save" class="btn btn-primary btn-gradient">
-          Guardar reparação
-        </button>
-      </footer>
     </div>
-  </div>
 
-  <!-- MODAL: NOVO DOCUMENTO -->
-  <div id="doc-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
+    <!-- MODAL: NOVO DOCUMENTO -->
+    <div id="doc-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
 
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-file"></use>
-          </svg>
-          Novo documento
-        </h2>
-        <button id="doc-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-file"></use>
+            </svg>
+            Novo documento
+          </h2>
+          <button id="doc-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
 
-      <div class="modal-body">
-        <div class="form-grid">
-          <label>
-            <span class="muted">Tipo</span>
-            <select id="doc-tipo">
-              <option value="DUA">DUA</option>
-              <option value="Seguro">Seguro</option>
-              <option value="Inspeção">Inspeção</option>
-              <option value="IUC">IUC</option>
-              <option value="Fatura">Fatura</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </label>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label>
+              <span class="muted">Tipo</span>
+              <select id="doc-tipo">
+                <option value="DUA">DUA</option>
+                <option value="Seguro">Seguro</option>
+                <option value="Inspeção">Inspeção</option>
+                <option value="IUC">IUC</option>
+                <option value="Fatura">Fatura</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </label>
 
-          <label>
-            <span class="muted">Nome do documento</span>
-            <input id="doc-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
-          </label>
+            <label>
+              <span class="muted">Nome do documento</span>
+              <input
+                id="doc-titulo"
+                type="text"
+                placeholder="Ex.: Apólice Seguro 2025"
+              />
+            </label>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Link do documento</span>
-            <input id="doc-url" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted">Link do documento</span>
+              <input
+                id="doc-url"
+                type="url"
+                placeholder="https://drive.google.com/... ou https://..."
+                inputmode="url"
+              />
+            </label>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Nota (opcional)</span>
-            <input id="doc-nota" type="text" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted">Nota (opcional)</span>
+              <input id="doc-nota" type="text" />
+            </label>
+          </div>
+
+          <p id="doc-msg" class="muted"></p>
         </div>
 
-        <p id="doc-msg" class="muted"></p>
+        <footer class="modal-footer">
+          <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="doc-save" class="btn btn-primary btn-gradient">
+            Guardar documento
+          </button>
+        </footer>
       </div>
-
-      <footer class="modal-footer">
-        <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="doc-save" class="btn btn-primary btn-gradient">
-          Guardar documento
-        </button>
-      </footer>
     </div>
-  </div>
 
-  <!-- MODAL: NOVO ABASTECIMENTO -->
-  <div id="fuel-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
+    <!-- MODAL: NOVO ABASTECIMENTO -->
+    <div id="fuel-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
 
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
-          </svg>
-          Novo abastecimento
-        </h2>
-        <button id="fuel-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
+            </svg>
+            Novo abastecimento
+          </h2>
+          <button id="fuel-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
 
-      <div class="modal-body">
-        <div class="form-grid">
-          <label>
-            <span class="muted">Data</span>
-            <input id="fuel-date" type="date" />
-          </label>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label>
+              <span class="muted">Data</span>
+              <input id="fuel-date" type="date" />
+            </label>
 
-          <label>
-            <span class="muted">Tipo de combustível</span>
-            <select id="fuel-type">
-              <option value="Gasolina">Gasolina</option>
-              <option value="Gasóleo">Gasóleo</option>
-              <option value="GPL">GPL</option>
-              <option value="Elétrico">Elétrico</option>
-            </select>
-          </label>
+            <label>
+              <span class="muted">Tipo de combustível</span>
+              <select id="fuel-type">
+                <option value="Gasolina">Gasolina</option>
+                <option value="Gasóleo">Gasóleo</option>
+                <option value="GPL">GPL</option>
+                <option value="Elétrico">Elétrico</option>
+              </select>
+            </label>
 
-          <label>
-            <span class="muted">Litros</span>
-            <input id="fuel-liters" type="number" step="0.01" />
-          </label>
+            <label>
+              <span class="muted">Litros</span>
+              <input id="fuel-liters" type="number" step="0.01" />
+            </label>
 
-          <label>
-            <span class="muted">Preço por litro (€)</span>
-            <input id="fuel-price" type="number" step="0.001" />
-          </label>
+            <label>
+              <span class="muted">Preço por litro (€)</span>
+              <input id="fuel-price" type="number" step="0.001" />
+            </label>
 
-          <label>
-            <span class="muted">Quilómetros</span>
-            <input id="fuel-km" type="number" />
-          </label>
+            <label>
+              <span class="muted">Quilómetros</span>
+              <input id="fuel-km" type="number" />
+            </label>
 
-          <label>
-            <span class="muted">Posto</span>
-            <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
-          </label>
+            <label>
+              <span class="muted">Posto</span>
+              <input
+                id="fuel-station"
+                type="text"
+                placeholder="Ex.: Galp, BP…"
+              />
+            </label>
 
-          <!-- CHECKBOX CHEIO -->
-          <label class="checkbox-label" style="
+            <!-- CHECKBOX CHEIO -->
+            <label
+              class="checkbox-label"
+              style="
                 grid-column: 1/-1;
                 display: flex;
                 align-items: center;
                 gap: 10px;
                 cursor: pointer;
-              ">
-            <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer" />
-            <span>Depósito Cheio (para cálculo exato de médias)</span>
-          </label>
+              "
+            >
+              <input
+                type="checkbox"
+                id="fuel-full"
+                style="width: auto; margin: 0; cursor: pointer"
+              />
+              <span>Depósito Cheio (para cálculo exato de médias)</span>
+            </label>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Observações</span>
-            <input id="fuel-notes" type="text" placeholder="Opcional" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted">Observações</span>
+              <input id="fuel-notes" type="text" placeholder="Opcional" />
+            </label>
+          </div>
+
+          <p id="fuel-msg" class="muted"></p>
         </div>
 
-        <p id="fuel-msg" class="muted"></p>
+        <footer class="modal-footer">
+          <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="fuel-save" class="btn btn-primary btn-gradient">
+            Guardar abastecimento
+          </button>
+        </footer>
       </div>
-
-      <footer class="modal-footer">
-        <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="fuel-save" class="btn btn-primary btn-gradient">
-          Guardar abastecimento
-        </button>
-      </footer>
     </div>
-  </div>
 
-  <!-- MODAL: PLANO MANUTENÇÃO -->
-  <div id="plan-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>Plano de Manutenção</h2>
-        <button id="plan-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
-      <div class="modal-body">
-        <div class="form-grid">
-          <label>
-            <span class="muted">Serviço</span>
-            <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
-          </label>
-          <label>
-            <span class="muted">Intervalo (Km)</span>
-            <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
-          </label>
-          <label>
-            <span class="muted">Intervalo (Meses)</span>
-            <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
-          </label>
+    <!-- MODAL: PLANO MANUTENÇÃO -->
+    <div id="plan-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>Plano de Manutenção</h2>
+          <button id="plan-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label>
+              <span class="muted">Serviço</span>
+              <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
+            </label>
+            <label>
+              <span class="muted">Intervalo (Km)</span>
+              <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
+            </label>
+            <label>
+              <span class="muted">Intervalo (Meses)</span>
+              <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
+            </label>
 
-          <div class="vehicle-divider" style="grid-column: 1/-1; margin: 8px 0"></div>
+            <div
+              class="vehicle-divider"
+              style="grid-column: 1/-1; margin: 8px 0"
+            ></div>
 
-          <label>
-            <span class="muted">Último Registo (Km)</span>
-            <input id="plan-last-km" type="number" placeholder="Km atuais..." />
-          </label>
-          <label>
-            <span class="muted">Última Data</span>
-            <input id="plan-last-date" type="date" />
-          </label>
+            <label>
+              <span class="muted">Último Registo (Km)</span>
+              <input
+                id="plan-last-km"
+                type="number"
+                placeholder="Km atuais..."
+              />
+            </label>
+            <label>
+              <span class="muted">Última Data</span>
+              <input id="plan-last-date" type="date" />
+            </label>
+          </div>
+          <p id="plan-msg" class="form-message"></p>
         </div>
-        <p id="plan-msg" class="form-message"></p>
+        <footer class="modal-footer">
+          <button
+            id="plan-delete"
+            class="btn btn-ghost danger hidden"
+            style="margin-right: auto"
+          >
+            Apagar
+          </button>
+          <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="plan-save" class="btn btn-primary btn-gradient">
+            Guardar
+          </button>
+        </footer>
       </div>
-      <footer class="modal-footer">
-        <button id="plan-delete" class="btn btn-ghost danger hidden" style="margin-right: auto">
-          Apagar
-        </button>
-        <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="plan-save" class="btn btn-primary btn-gradient">
-          Guardar
-        </button>
-      </footer>
     </div>
-  </div>
-  <!-- MODAL: NOVO PLANO DE MANUTENÇÃO -->
-  <div id="plan-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-clipboard"></use>
-          </svg>
-          Agendar Manutenção
-        </h2>
-        <button id="plan-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
+    <!-- MODAL: NOVO PLANO DE MANUTENÇÃO -->
+    <div id="plan-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-clipboard"></use>
+            </svg>
+            Agendar Manutenção
+          </h2>
+          <button id="plan-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
 
-      <div class="modal-body">
-        <div class="form-grid">
-          <label style="grid-column: 1/-1">
-            <span class="muted">Descrição</span>
-            <input id="plan-titulo" type="text" placeholder="Ex: Mudar Óleo, Inspeção..." />
-          </label>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label style="grid-column: 1/-1">
+              <span class="muted">Descrição</span>
+              <input
+                id="plan-titulo"
+                type="text"
+                placeholder="Ex: Mudar Óleo, Inspeção..."
+              />
+            </label>
 
-          <label>
-            <span class="muted">Data Prevista</span>
-            <input id="plan-data" type="date" />
-          </label>
+            <label>
+              <span class="muted">Data Prevista</span>
+              <input id="plan-data" type="date" />
+            </label>
 
-          <label>
-            <span class="muted">Km Previstos (Target)</span>
-            <input id="plan-km" type="number" placeholder="Ex: 150000" />
-          </label>
+            <label>
+              <span class="muted">Km Previstos (Target)</span>
+              <input id="plan-km" type="number" placeholder="Ex: 150000" />
+            </label>
 
-          <div style="grid-column: 1/-1; border-top: 1px solid var(--border-light); margin: 8px 0;"></div>
+            <div
+              style="
+                grid-column: 1/-1;
+                border-top: 1px solid var(--border-light);
+                margin: 8px 0;
+              "
+            ></div>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Último Registo (Opcional - Atualiza Odómetro)</span>
-            <input id="plan-ultimo-km" type="number" placeholder="Se já fez, indique os Km atuais" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted"
+                >Último Registo (Opcional - Atualiza Odómetro)</span
+              >
+              <input
+                id="plan-ultimo-km"
+                type="number"
+                placeholder="Se já fez, indique os Km atuais"
+              />
+            </label>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Notas</span>
-            <input id="plan-obs" type="text" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted">Notas</span>
+              <input id="plan-obs" type="text" />
+            </label>
+          </div>
+          <p id="plan-msg" class="muted"></p>
         </div>
-        <p id="plan-msg" class="muted"></p>
+
+        <footer class="modal-footer">
+          <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="plan-save" class="btn btn-primary btn-gradient">
+            Guardar Plano
+          </button>
+        </footer>
       </div>
-
-      <footer class="modal-footer">
-        <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="plan-save" class="btn btn-primary btn-gradient">Guardar Plano</button>
-      </footer>
     </div>
-  </div>
-</body>
-
+  </body>
 </html>

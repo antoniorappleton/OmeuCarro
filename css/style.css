@@ -1589,3 +1589,306 @@ input:checked+.slider:before {
   background: #3b82f6;
   /* Blue-500 */
 }
+
+/* ----------- PAGE: VEÍCULO PREMIUM ----------- */
+
+/* Sticky Header with Glass Effect */
+.glass-header {
+  background: rgba(15, 23, 42, 0.85); /* Darker for better contrast on text */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .glass-header {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.header-title-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.header-subtitle-text {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.has-header-offset {
+  padding-top: calc(var(--header-height) + 16px);
+}
+
+/* Hero Section */
+.vehicle-hero-premium {
+  position: relative;
+  background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  margin: 0 1rem 1.5rem 1rem;
+  color: white;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.5);
+}
+
+.hero-bg-accent {
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: white;
+  opacity: 0.1;
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.vehicle-identity {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.vehicle-icon-large {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.vehicle-icon-large .icon {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.vehicle-badges-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.badge-glass {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  width: fit-content;
+}
+
+.icon-btn-glass {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-glass:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Odometer Section */
+.hero-odometer-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hero-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.odometer-display-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.odometer-value-box {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.odometer-number {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Monaco', 'Courier New', monospace; /* Tech feel */
+  letter-spacing: -0.03em;
+}
+
+.odometer-unit {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.btn-edit-odo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-edit-odo:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Odo Edit Form */
+.odometer-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideDown 0.2s ease-out;
+}
+
+.odo-input-glass {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 1.1rem;
+}
+
+.odo-input-glass::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.odo-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-glass-success, .btn-glass-danger {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+}
+
+.btn-glass-success { background: var(--color-success); }
+.btn-glass-danger { background: var(--color-danger); }
+
+.glass-message {
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 8px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Action Grid Premium */
+.action-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 0 1rem 1.5rem 1rem;
+}
+
+.action-card-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.75rem;
+}
+
+.action-card-premium.glass {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+}
+
+.action-card-premium.gradient-1 {
+  background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+}
+
+.action-card-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-card-premium .action-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-bg);
+  color: var(--color-primary-start);
+}
+
+.action-card-premium.gradient-1 .action-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.action-card-premium .action-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}

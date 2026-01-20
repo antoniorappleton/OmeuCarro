@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setActive(key) {
       tabs.forEach((b) =>
-        b.classList.toggle("is-active", b.dataset.tab === key)
+        b.classList.toggle("is-active", b.dataset.tab === key),
       );
       Object.entries(panels).forEach(([k, el]) => {
         if (!el) return;
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     tabs.forEach((b) =>
-      b.addEventListener("click", () => setActive(b.dataset.tab))
+      b.addEventListener("click", () => setActive(b.dataset.tab)),
     );
     setActive("fuel");
   }
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="record-content">
                     <div class="record-header-row">
                         <strong class="record-title">${escapeHtml(
-                          r.descricao
+                          r.descricao,
                         )}</strong>
                         <span class="badge badge-outline">${custoFormatted}</span>
                     </div>
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${
                           r.oficina
                             ? `<div class="record-meta-item"><small>${escapeHtml(
-                                r.oficina
+                                r.oficina,
                               )}</small></div>`
                             : ""
                         }
@@ -140,8 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(err);
       list.textContent = "Erro ao carregar reparações.";
     }
-
-
   }
 
   function initReparacoesModal(veiculoId) {
@@ -345,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ">": "&gt;",
           '"': "&quot;",
           "'": "&#039;",
-        }[m])
+        })[m],
     );
   }
 
@@ -449,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Reset hours for fair comp
       now.setHours(0, 0, 0, 0);
       const tgt = new Date(
-        targetDate.toDate ? targetDate.toDate() : targetDate
+        targetDate.toDate ? targetDate.toDate() : targetDate,
       );
       tgt.setHours(0, 0, 0, 0);
 
@@ -534,7 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (valEl)
         valEl.textContent += ` (${formatCurrency(
           v.iuc.valor,
-          settings?.moeda
+          settings?.moeda,
         )})`;
     }
 
@@ -602,7 +600,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return `
           <article class="record-card doc-card clickable-card" data-open-url="${enc(
-            openUrl
+            openUrl,
           )}" data-doc-id="${d.id}" style="cursor: pointer;">
             
             ${preview}
@@ -610,13 +608,13 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="record-content">
               <div class="record-header-row">
                 <span class="record-title">${escapeHtml(
-                  titulo || tipo || "Documento"
+                  titulo || tipo || "Documento",
                 )}</span>
                 <span class="badge badge-secondary">${escapeHtml(
-                  categoria
+                  categoria,
                 )}</span>
                 <span class="badge badge-outline">${escapeHtml(
-                  badgeKind
+                  badgeKind,
                 )}</span>
               </div>
               
@@ -719,7 +717,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // preencher campos
         editor.querySelector("[data-ed-cat]").value = normalizeCategoria(
-          data.categoria || "Outros"
+          data.categoria || "Outros",
         );
         editor.querySelector("[data-ed-tipo]").value = data.tipo || "Documento";
         editor.querySelector("[data-ed-titulo]").value = data.titulo || "";
@@ -755,7 +753,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const msgEl = editor.querySelector("[data-ed-msg]");
 
         const categoria = normalizeCategoria(
-          editor.querySelector("[data-ed-cat]").value
+          editor.querySelector("[data-ed-cat]").value,
         );
         const tipo =
           (editor.querySelector("[data-ed-tipo]").value || "").trim() ||
@@ -830,10 +828,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="record-content">
           <div class="record-header-row">
             <span class="record-title">${escapeHtml(
-              r.descricao || "Reparação"
+              r.descricao || "Reparação",
             )}</span>
             <span class="badge badge-secondary">Oficina: ${escapeHtml(
-              r.oficina || "—"
+              r.oficina || "—",
             )}</span>
           </div>
           
@@ -858,7 +856,7 @@ document.addEventListener("DOMContentLoaded", () => {
                <span class="record-grid-label">Custo</span>
                <span class="record-grid-value">${formatCurrency(
                  r.custo || 0,
-                 settings?.moeda
+                 settings?.moeda,
                )}</span>
              </div>
              ${
@@ -1016,71 +1014,79 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function renderMaintenanceAlerts(veiculoId, v) {
-      const container = document.getElementById("alerts-maintenance-list");
-      if (!container) return; 
+    const container = document.getElementById("alerts-maintenance-list");
+    if (!container) return;
 
-      try {
-          const planos = await getManutencoesPlaneadas(veiculoId);
-          if (!planos || !planos.length) {
-              container.innerHTML = '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
-              return;
+    try {
+      const planos = await getManutencoesPlaneadas(veiculoId);
+      if (!planos || !planos.length) {
+        container.innerHTML =
+          '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
+        return;
+      }
+
+      const currentOdo = v.odometroAtual || v.odometroInicial || 0;
+
+      const alerts = planos
+        .map((p) => {
+          // USAR A MESMA LÓGICA DA TABELA
+          const status = calculateMaintenanceStatus(
+            currentOdo,
+            p.ultimoKm,
+            p.intervaloKm,
+            p.ultimaData,
+            p.intervaloMeses,
+          );
+
+          let urgency = 999999;
+          let badgeClass = "badge-success";
+          let label = "OK";
+
+          // Calcular urgência para ordenação (menor diffKm ou menor diffDays)
+          // Vamos priorizar Km para sorting se existir, senão dias.
+          if (status.nextKm) {
+            urgency = status.diffKm;
+          } else if (status.nextDate) {
+            urgency = status.diffDays * 100; // Peso para misturar?
           }
 
-          const currentOdo = v.odometroAtual || v.odometroInicial || 0;
-          
-          const alerts = planos.map(p => {
-              // USAR A MESMA LÓGICA DA TABELA
-              const status = calculateMaintenanceStatus(
-                  currentOdo,
-                  p.ultimoKm,
-                  p.intervaloKm,
-                  p.ultimaData,
-                  p.intervaloMeses
-              );
-
-              let urgency = 999999;
-              let badgeClass = "badge-success";
-              let label = "OK";
-
-              // Calcular urgência para ordenação (menor diffKm ou menor diffDays)
-              // Vamos priorizar Km para sorting se existir, senão dias.
-              if (status.nextKm) {
-                  urgency = status.diffKm; 
-              } else if (status.nextDate) {
-                  urgency = status.diffDays * 100; // Peso para misturar?
-              }
-
-              if (status.status === "delayed") {
-                  badgeClass = "badge-danger";
-                  label = "ATRASADA";
-              } else if (status.status === "warning") {
-                  badgeClass = "badge-warning";
-                  label = "PRÓXIMA";
-              }
-
-              // Override label com detalhe se possível
-              if (status.status !== "ok") {
-                   if (status.diffKm < 0) label = `Passou ${Math.abs(status.diffKm)} km`;
-                   else if (status.diffKm < 2000 && status.nextKm) label = `Faltam ${status.diffKm} km`;
-                   else if (status.diffDays < 0) label = `Passou data`;
-                   else if (status.diffDays < 30 && status.nextDate) label = `Faltam ${status.diffDays} dias`;
-              }
-
-              return { p, urgency, status: status.status, label, badgeClass };
-          })
-          .filter(x => x.status !== "ok") 
-          .sort((a,b) => a.urgency - b.urgency)
-          .slice(0, 3);
-
-          if (alerts.length === 0) {
-              container.innerHTML = '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
-              return; 
+          if (status.status === "delayed") {
+            badgeClass = "badge-danger";
+            label = "ATRASADA";
+          } else if (status.status === "warning") {
+            badgeClass = "badge-warning";
+            label = "PRÓXIMA";
           }
 
-          container.innerHTML = alerts.map(item => `
+          // Override label com detalhe se possível
+          if (status.status !== "ok") {
+            if (status.diffKm < 0)
+              label = `Passou ${Math.abs(status.diffKm)} km`;
+            else if (status.diffKm < 2000 && status.nextKm)
+              label = `Faltam ${status.diffKm} km`;
+            else if (status.diffDays < 0) label = `Passou data`;
+            else if (status.diffDays < 30 && status.nextDate)
+              label = `Faltam ${status.diffDays} dias`;
+          }
+
+          return { p, urgency, status: status.status, label, badgeClass };
+        })
+        .filter((x) => x.status !== "ok")
+        .sort((a, b) => a.urgency - b.urgency)
+        .slice(0, 3);
+
+      if (alerts.length === 0) {
+        container.innerHTML =
+          '<div class="muted" style="font-size:0.9rem; padding: 4px 0;">Tudo em dia.</div>';
+        return;
+      }
+
+      container.innerHTML = alerts
+        .map(
+          (item) => `
               <div class="alert-item" style="cursor:pointer;" onclick="openPlanModalForEdit('${veiculoId}', '${safeJsonEnc(item.p)}')">
-                 <div class="alert-status-indicator ${item.status === 'delayed' ? 'bg-danger' : 'bg-warning'}" 
-                      style="background-color: var(--color-${item.status === 'delayed' ? 'danger' : 'warning'});">
+                 <div class="alert-status-indicator ${item.status === "delayed" ? "bg-danger" : "bg-warning"}" 
+                      style="background-color: var(--color-${item.status === "delayed" ? "danger" : "warning"});">
                  </div>
                  <div class="alert-info">
                     <span class="alert-label">${escapeHtml(item.p.titulo)}</span>
@@ -1089,12 +1095,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     </span>
                  </div>
               </div>
-          `).join("");
-
-      } catch (err) {
-          console.error("Erro renderMaintenanceAlerts", err);
-          container.innerHTML = '<div class="muted">Erro ao carregar</div>';
-      }
+          `,
+        )
+        .join("");
+    } catch (err) {
+      console.error("Erro renderMaintenanceAlerts", err);
+      container.innerHTML = '<div class="muted">Erro ao carregar</div>';
+    }
   }
 
   // =========================
@@ -1122,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", () => {
           p.ultimoKm,
           p.intervaloKm,
           p.ultimaData,
-          p.intervaloMeses
+          p.intervaloMeses,
         );
 
         let badgeClass = "badge-secondary"; // ok
@@ -1155,8 +1162,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             <span class="record-value ${
                               status.status !== "ok" ? "is-primary" : ""
                             }">${status.nextKm} ${
-                                settings?.unidadeDistancia || "km"
-                              }</span>
+                              settings?.unidadeDistancia || "km"
+                            }</span>
                             <span class="muted">(${
                               status.diffKm > 0 ? "falta" : "passou"
                             } ${Math.abs(status.diffKm)})</span>
@@ -1313,94 +1320,81 @@ document.addEventListener("DOMContentLoaded", () => {
     el.subtitle.textContent = `${v.marca} ${v.modelo}`;
     el.plate.textContent = v.matricula || "Sem matrícula";
     el.fuel.textContent = v.combustivelPadrao || "—";
-    
+
     el.fuel.textContent = v.combustivelPadrao || "—";
-    
-    // 🔹 USAR ODÓMETRO ATUAL COM UI DE EDIÇÃO (Igual ao Card)
+
+    // 🔹 ODÓMETRO
     const currentOdo = v.odometroAtual || v.odometroInicial || 0;
-    
-    // Injetar HTML complexo em vez de texto simples
-    const odoContainer = document.getElementById("vehicle-odometer"); // É um span.badge na veiculo.html
-    // Vamos substituir o span por div ou limpar classes? O span.badge tem estilo visual.
-    // Melhor: manter o span.badge como container? Não, o badge tem padding fixo.
-    // Vamos substituir o conteudo do span, mas talvez o layout quebre.
-    // O ideal é substituir o span por uma estrutura custom, mas ele está numa lista flex.
-    
-    if (odoContainer) {
-        // Remover classes de badge para assumir o estilo do componente
-        odoContainer.className = "vehicle-odometer-box-detail"; 
-        // Estilo inline para ajustar no hero (quick fix)
-        odoContainer.style.display = "inline-flex";
-        odoContainer.style.alignItems = "center";
-        odoContainer.style.gap = "8px";
 
-        odoContainer.innerHTML = `
-          <div class="odo-display flex items-center gap-2">
-            <span class="odo-val font-mono text-lg">${currentOdo.toLocaleString()} ${settings?.unidadeDistancia || "km"}</span>
-            <button class="icon-btn-xs" id="btn-edit-odo-detail" aria-label="Atualizar Km">
-               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-edit"></use></svg>
-            </button>
-          </div>
-          <div class="odo-edit hidden flex items-center gap-2">
-             <input type="number" class="input-xs w-24" id="odo-input-detail" value="${currentOdo}">
-             <button class="icon-btn-xs success" id="btn-save-odo-detail">
-               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-check"></use></svg>
-             </button>
-             <button class="icon-btn-xs danger" id="btn-cancel-odo-detail">
-               <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-close"></use></svg>
-             </button>
-          </div>
-        `;
+    // 1. Set Display Value
+    const odoValEl = document.getElementById("vehicle-odometer-val");
+    if (odoValEl) {
+      odoValEl.textContent = currentOdo.toLocaleString();
+    }
 
-        // Bind Events (Inline)
-        setTimeout(() => {
-             const btnEdit = document.getElementById("btn-edit-odo-detail");
-             const btnSave = document.getElementById("btn-save-odo-detail");
-             const btnCancel = document.getElementById("btn-cancel-odo-detail");
-             const boxDisplay = odoContainer.querySelector(".odo-display");
-             const boxEdit = odoContainer.querySelector(".odo-edit");
-             const inputHtml = document.getElementById("odo-input-detail");
+    // 2. Bind Edit Events
+    const btnEditOdo = document.getElementById("btn-edit-odo-hero");
+    const wrapperOdo = document.getElementById("vehicle-odometer-wrapper");
+    const formOdo = document.getElementById("vehicle-odometer-edit-form");
+    const inputOdo = document.getElementById("odo-input-hero");
+    const btnSaveOdo = document.getElementById("btn-save-odo-hero");
+    const btnCancelOdo = document.getElementById("btn-cancel-odo-hero");
 
-             btnEdit?.addEventListener("click", () => {
-                 boxDisplay.classList.add("hidden");
-                 boxEdit.classList.remove("hidden");
-             });
+    if (btnEditOdo && wrapperOdo && formOdo && inputOdo) {
+      // Open
+      btnEditOdo.onclick = () => {
+        wrapperOdo.classList.add("hidden");
+        formOdo.classList.remove("hidden");
+        inputOdo.value = currentOdo;
+        inputOdo.focus();
+      };
 
-             btnCancel?.addEventListener("click", () => {
-                 boxEdit.classList.add("hidden");
-                 boxDisplay.classList.remove("hidden");
-             });
+      // Cancel
+      btnCancelOdo.onclick = () => {
+        formOdo.classList.add("hidden");
+        wrapperOdo.classList.remove("hidden");
+      };
 
-             btnSave?.addEventListener("click", async () => {
-                 const val = Number(inputHtml.value);
-                 const initial = v.odometroInicial || 0;
-                 const current = v.odometroAtual || initial;
+      // Save
+      btnSaveOdo.onclick = async () => {
+        const newVal = Number(inputOdo.value);
+        const initial = v.odometroInicial || 0;
 
-                 if (val < initial) {
-                     alert(`Erro: O odómetro não pode ser inferior ao valor inicial (${initial.toLocaleString()} km).`);
-                     return;
-                 }
-                 
-                 // Regra: Não permitir regressão (val < current)
-                 // NOTA: Se o user quiser corrigir um erro de digitação (ex: meteu 200000 em vez de 20000), 
-                 // esta regra bloqueia. Mas o requisito diz: "Não permitir regressão".
-                 // Vamos bloquear. Se for erro, terá de contactar suporte ou editar no DB direto (ou futura feature de admin).
-                 if (val < current) {
-                      alert(`Erro: O novo valor (${val}) não pode ser inferior ao atual (${current}). Não é permitida regressão.`);
-                      return;
-                 }
-                 
-                 btnSave.disabled = true;
-                 try {
-                     await updateVeiculo(veiculoId, { odometroAtual: val });
-                     location.reload(); 
-                 } catch(err) {
-                     console.error(err);
-                     alert("Erro ao guardar");
-                     btnSave.disabled = false;
-                 }
-             });
-        }, 0);
+        if (!newVal || newVal < 0) {
+          alert("Valor inválido.");
+          return;
+        }
+
+        if (newVal < initial) {
+          alert(
+            `Erro: O odómetro não pode ser inferior ao valor inicial (${initial.toLocaleString()} km).`,
+          );
+          return;
+        }
+
+        // Allow updates at any time, but warn/block regression if critical?
+        // User requested "at any moment, must be editable".
+        // I'll keep the regression check for safety but basic.
+        if (newVal < currentOdo) {
+          if (
+            !confirm(
+              `O novo valor (${newVal}) é inferior ao atual (${currentOdo}). Tem a certeza?`,
+            )
+          ) {
+            return;
+          }
+        }
+
+        btnSaveOdo.disabled = true;
+        try {
+          await updateVeiculo(veiculoId, { odometroAtual: newVal });
+          location.reload();
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao guardar odómetro.");
+          btnSaveOdo.disabled = false;
+        }
+      };
     }
 
     // DOCUMENTOS
@@ -1432,7 +1426,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // ou simplesmente informar. Vamos tentar ser prestáveis:
         // "Por favor edite os dados na lista de veículos."
         alert(
-          "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos."
+          "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos.",
         );
         window.location.href = "veiculos.html";
       };
@@ -1441,21 +1435,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // NEW: Quick Plan Button Listener
     const btnQuickPlan = document.getElementById("btn-add-plan-quick");
     if (btnQuickPlan) {
-        btnQuickPlan.onclick = () => {
-            // Open modal in "add new" mode
-            // We need to ensure initPlanModal is ready or expose an open function
-            // Fortunately initPlanModal exposes generic binding on "btn-add-plan".
-            // Since we have a new button ID, we can just manually trigger the modal open logic
-            // providing we can access it within this scope?
-            // "initPlanModal" binds "btn-add-plan" inside it.
-            // Let's manually click the existing hidden/visible button inside the tab?
-            // Or better, let's just trigger the open logic.
-            // Since initPlanModal scope is closed, we can simulate click on the tab button if present,
-            // OR we can make initPlanModal bind to multiple buttons?
-            // Let's find "btn-add-plan" (the one in the tab) and click it.
-            const tabBtn = document.getElementById("btn-add-plan");
-            if(tabBtn) tabBtn.click();
-        };
+      btnQuickPlan.onclick = () => {
+        // Open modal in "add new" mode
+        // We need to ensure initPlanModal is ready or expose an open function
+        // Fortunately initPlanModal exposes generic binding on "btn-add-plan".
+        // Since we have a new button ID, we can just manually trigger the modal open logic
+        // providing we can access it within this scope?
+        // "initPlanModal" binds "btn-add-plan" inside it.
+        // Let's manually click the existing hidden/visible button inside the tab?
+        // Or better, let's just trigger the open logic.
+        // Since initPlanModal scope is closed, we can simulate click on the tab button if present,
+        // OR we can make initPlanModal bind to multiple buttons?
+        // Let's find "btn-add-plan" (the one in the tab) and click it.
+        const tabBtn = document.getElementById("btn-add-plan");
+        if (tabBtn) tabBtn.click();
+      };
     }
 
     // =========================
@@ -1549,7 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="record-header-row">
             <span class="record-title">Abastecimento ${fullTankIcon}</span>
             <span class="badge badge-secondary">${escapeHtml(
-              a.tipoCombustivel || "—"
+              a.tipoCombustivel || "—",
             )}</span>
           </div>
 
@@ -1565,7 +1559,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="record-grid-label">Total</span>
               <span class="record-grid-value is-primary">${formatCurrency(
                 custo,
-                settings.moeda
+                settings.moeda,
               )}</span>
             </div>
             
@@ -1578,7 +1572,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="record-grid-label">Preço/L</span>
               <span class="record-grid-value">${formatCurrency(
                 ppl,
-                settings.moeda
+                settings.moeda,
               )}</span>
             </div>
 
@@ -1645,5 +1639,3 @@ document.addEventListener("DOMContentLoaded", () => {
     // ou apenas carregar normal
   });
 });
-
-
