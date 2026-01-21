@@ -1621,7 +1621,97 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    async function renderAnalyticsCard(veiculoId) {
+        const section = document.getElementById("section-analytics");
+        if (!section) return;
+
+        try {
+            // 1. Fetch Data
+            const analytics = await getVehicleAnalytics(veiculoId);
+            
+            // If absolutely no analytics yet, we can hide or show empty state.
+            // But we want to show "A aprender..." if exists but empty.
+            // If null, it means never calculated.
+            
+            // Show section
+            section.classList.remove("hidden");
+
+            // Elements
+            const elL100 = document.getElementById("an-l100");
+            const elConf = document.getElementById("an-confidence");
+            const elRangeKm = document.getElementById("an-range-km");
+            const elRangeDays = document.getElementById("an-range-days");
+            const elBadge = document.getElementById("analytics-badge");
+            const elWarnCap = document.getElementById("an-warning-capacity");
+            const elAlertBox = document.getElementById("an-alert-box");
+
+            if (!analytics) {
+                // Initial state
+                return;
+            }
+
+            // Consumption
+            if (analytics.consumoMedioL100) {
+                elL100.textContent = analytics.consumoMedioL100.toFixed(1);
+                
+                // Confidence styling
+                const confMap = {
+                    "alta": { text: "Confiança Alta", class: "status-green" },
+                    "media": { text: "Confiança Média", class: "status-yellow" },
+                    "baixa": { text: "Estimat. Baixa", class: "status-neutral" }
+                };
+                const confData = confMap[analytics.consumoConfianca] || confMap["baixa"];
+                elConf.className = confData.class;
+                elConf.innerHTML = `<span>${confData.text}</span>`;
+                
+                elBadge.textContent = "Ativo";
+                elBadge.className = "badge badge-success badge-outline";
+            } else {
+                elL100.textContent = "--";
+                elConf.textContent = "A recolher dados...";
+                elBadge.textContent = "A aprender...";
+            }
+
+            // Range
+            if (analytics.reasonUnavailable === "missing_tank_capacity") {
+                elWarnCap.classList.remove("hidden");
+                elRangeKm.textContent = "--";
+                elRangeDays.textContent = "-- dias";
+            } else {
+                elWarnCap.classList.add("hidden");
+                if (analytics.kmAteReservaEstimado !== null) {
+                    elRangeKm.textContent = analytics.kmAteReservaEstimado;
+                    
+                    if (analytics.diasAteReservaEstimado !== null) {
+                        elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
+                    } else {
+                        elRangeDays.textContent = "-- dias";
+                    }
+                } else {
+                    elRangeKm.textContent = "--";
+                }
+            }
+
+            // Alerts
+            if (analytics.alertaFuelNivel && analytics.alertaFuelNivel !== "none") {
+                elAlertBox.classList.remove("hidden");
+                const isCrit = analytics.alertaFuelNivel === "critical";
+                
+                elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
+                elAlertBox.textContent = isCrit 
+                    ? `⚠️ Reserva atingida! Abasteça urgentemente.` 
+                    : `⚠️ Combustível baixo. Planeie abastecer.`;
+            } else {
+                elAlertBox.classList.add("hidden");
+            }
+
+        } catch (err) {
+            console.error("Error rendering analytics:", err);
+        }
+    }
+
     // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
+    await renderAnalyticsCard(veiculoId);
     initTabs();
     setupTabsToggle(veiculoId);
   }
