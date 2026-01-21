@@ -31,6 +31,22 @@ document.addEventListener("DOMContentLoaded", () => {
         getTodosAbastecimentosDoUtilizador(500),
         getUserSettings()
       ]);
+
+      // 🔹 FETCH ANALYTICS (Parallel)
+      // We need to fetch analytics for each vehicle to determine alert status
+      let analyticsMap = {};
+      if (window.getVehicleAnalytics && veiculos.length > 0) {
+          try {
+              const analyticsResults = await Promise.all(
+                  veiculos.map(v => window.getVehicleAnalytics(v.id))
+              );
+              veiculos.forEach((v, index) => {
+                  analyticsMap[v.id] = analyticsResults[index];
+              });
+          } catch (err) {
+              console.warn("Could not fetch analytics for cards:", err);
+          }
+      }
       
       const moeda = settings?.moeda || "EUR";
       const moedaSymbol = moeda === "USD" ? "$" : moeda === "BRL" ? "R$" : "€";
@@ -59,14 +75,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
       veiculos.forEach((v) => {
         const stats = statsPorVeiculo[v.id] || { count: 0, total: 0 };
+        const analytics = analyticsMap[v.id];
+
+        // Status Logic
+        let statusClass = "";
+        let statusIcon = "";
+        let statusBadge = "";
+        
+        if (analytics) {
+            const level = analytics.alertaFuelNivel; // warning | critical | none
+            if (level === "critical") {
+                statusClass = "border-status-critical"; // We will need to define this CSS or use inline style
+                statusBadge = `<span class="badge" style="background:var(--color-error); color:white; border:none;">⚠️ Reserva</span>`;
+            } else if (level === "warning") {
+                statusClass = "border-status-warning";
+                statusBadge = `<span class="badge" style="background:var(--color-warning); color:var(--text-on-warning, #000); border:none;">Combustível Baixo</span>`;
+            }
+        }
+        
+        // Use styled border if active
+        // Inline style for border if CSS class not exists, but cleaner to use class. 
+        // I'll assume CSS allows custom styles or I add specific style attribute.
+        const borderStyle = statusClass === "border-status-critical" ? "border: 2px solid var(--color-error);" : 
+                            statusClass === "border-status-warning" ? "border: 2px solid var(--color-warning);" : "";
 
         const card = document.createElement("article");
         card.className = "vehicle-card vehicle-card-modern";
         card.dataset.veiculoId = v.id;
+        if (borderStyle) card.setAttribute("style", borderStyle);
 
         const matricula = v.matricula || "Sem matrícula";
         const combustivel = v.combustivelPadrao || "N/D";
         const ano = v.ano || "";
+        
+        // Additional info from analytics (optional: Range)
+        let rangeInfo = "";
+        if (analytics && analytics.kmAteReservaEstimado !== null && analytics.alertaFuelNivel !== 'none') {
+             rangeInfo = `<div style="font-size:0.75rem; color:var(--color-text-secondary); margin-top:4px;">
+                ~${analytics.kmAteReservaEstimado} km até reserva
+             </div>`;
+        }
 
         card.innerHTML = `
           <div class="vehicle-card-top">
@@ -81,8 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="vehicle-badges">
                   <span class="badge badge-outline">${matricula}</span>
-                  ${ano ? `<span class="badge badge-year">${ano}</span>` : ""}
+                  ${statusBadge}
                 </div>
+                ${rangeInfo}
               </div>
             </div>
 

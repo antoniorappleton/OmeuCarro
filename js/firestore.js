@@ -383,9 +383,7 @@ async function createAbastecimento(veiculoId, data) {
   if (!user) throw new Error("Utilizador não autenticado");
   if (!veiculoId) throw new Error("veiculoId é obrigatório");
 
-  // validar odómetro (não pode voltar atrás) - VERIFICAR ÚLTIMO REGISTO
-  // Nota: A validação aqui compara com o último *abastecimento*.
-  // A validação de UI deve comparar com o odómetro atual do veículo, que pode ter vindo de reparação.
+  // validar odómetro (não pode voltar atrás) - EXCETO se for histórico
   const ultimoSnap = await db
     .collection("veiculos")
     .doc(veiculoId)
@@ -396,10 +394,15 @@ async function createAbastecimento(veiculoId, data) {
 
   if (!ultimoSnap.empty) {
     const ultimo = ultimoSnap.docs[0].data();
+    // Se o novo odómetro for menor que o maior registado...
     if (Number(data.odometro) < Number(ultimo.odometro)) {
-      throw new Error(
-        `O odómetro (${data.odometro}) não pode ser inferior ao último registo (${ultimo.odometro}).`,
-      );
+        // ... verificamos se a DATA também é anterior (histórico)
+        // Se a data for >= à do último registo, então é um erro de regressão.
+        if (data.data >= ultimo.data) {
+             throw new Error(
+                `O odómetro (${data.odometro}) não pode ser inferior ao último registo (${ultimo.odometro}) para uma data igual ou posterior (${ultimo.data}).`,
+             );
+        }
     }
   }
 
@@ -485,22 +488,16 @@ async function updateAbastecimento(veiculoId, id, data) {
       if (!ultimoSnap.empty) {
         const ultimoDoc = ultimoSnap.docs[0];
         // Se o último for o próprio documento que estamos a editar, ignoramos a comparação com ele próprio
-        // Mas teríamos de comparar com o penúltimo? 
-        // Simplificação: Se estamos a editar o odómetro, validamos se não é inferior ao 'máximo' da frota?
-        // Se o user aceita a lógica do create (apenas inserção sequencial), então:
         if (ultimoDoc.id !== id) {
              const ultimo = ultimoDoc.data();
              if (Number(data.odometro) < Number(ultimo.odometro)) {
                  // Permitimos se for uma edição de histórico? 
-                 // O user pediu para "replicar validação". Vou replicar conservadoramente.
-                 // Mas se estou a editar um antigo, isto bloqueia.
-                 // Vou assumir que o user quer bloquear inconsistências óbvias no Topo.
-                 // Mas vou permitir se o doc sendo editado já era antigo? Não sei.
-                 // Vou aplicar a regra: New Odo cannot be less than Max Odo (excluding self).
-                 // This effectively enforces "append-only" semantics for odometer growth.
-                  throw new Error(
-                    `O odómetro (${data.odometro}) não pode ser inferior ao último registo (${ultimo.odometro}).`,
-                  );
+                 // Se a data for ANTERIOR à do último registo, permitimos (assumimos backfilling/correção histórica).
+                 if (data.data >= ultimo.data) {
+                      throw new Error(
+                        `O odómetro (${data.odometro}) não pode ser inferior ao último registo (${ultimo.odometro}) para uma data igual ou posterior (${ultimo.data}).`,
+                      );
+                 }
              }
         }
       }
