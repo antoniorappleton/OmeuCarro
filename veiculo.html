@@ -151,56 +151,65 @@
     <!-- 2.5 ANALYTICS CARD (SMART) -->
     <section id="section-analytics" class="card hidden" style="margin-bottom: 24px;">
       <div class="card-body" style="padding: 16px;">
-        <div class="analytics-header"
-          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <h3 class="vehicle-section-title" style="margin:0; font-size: 1.1rem;">
-            <svg class="icon" style="color: var(--color-primary); margin-right: 8px;">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
+        <div class="analytics-header" id="btn-toggle-analytics"
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer;">
+          <div style="display:flex; align-items:center; gap: 10px;">
+            <h3 class="vehicle-section-title" style="margin:0; font-size: 1.1rem;">
+              <svg class="icon" style="color: var(--color-primary); margin-right: 8px;">
+                <use href="assets/icons-unified.svg#icon-fuel"></use>
+              </svg>
+              Combustível & Autonomia
+            </h3>
+            <span id="analytics-badge" class="badge badge-outline">A aprender...</span>
+          </div>
+          <button type="button" class="icon-btn-sm">
+            <svg class="icon" id="icon-analytics-toggle" style="transition: transform 0.3s ease;">
+              <use href="assets/icons-unified.svg#icon-chevron-up"></use> <!-- Default Open -->
             </svg>
-            Combustível & Autonomia
-          </h3>
-          <span id="analytics-badge" class="badge badge-outline">A aprender...</span>
+          </button>
         </div>
 
-        <!-- Main Grid -->
-        <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <!-- Consumption -->
-          <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
-            <div class="muted" style="font-size: 0.85rem;">Consumo Médio</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
-              <span id="an-l100">--</span> <small class="muted" style="font-size: 0.9rem;">L/100</small>
+        <div id="analytics-content" class="analytics-content-wrapper">
+          <!-- CONTENT STARTS -->
+          <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <!-- Consumption -->
+            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
+              <div class="muted" style="font-size: 0.85rem;">Consumo Médio</div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
+                <span id="an-l100">--</span> <small class="muted" style="font-size: 0.9rem;">L/100</small>
+              </div>
+              <div class="analytics-meta" style="font-size: 0.8rem;">
+                <span id="an-confidence" class="status-neutral"
+                  style="display: inline-flex; align-items: center; gap: 4px;">
+                  Calculando...
+                </span>
+              </div>
             </div>
-            <div class="analytics-meta" style="font-size: 0.8rem;">
-              <span id="an-confidence" class="status-neutral"
-                style="display: inline-flex; align-items: center; gap: 4px;">
-                Calculando...
-              </span>
+
+            <!-- Range -->
+            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
+              <div class="muted" style="font-size: 0.85rem;">Autonomia Est.</div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
+                <span id="an-range-km">--</span> <small class="muted" style="font-size: 0.9rem;">km</small>
+              </div>
+              <div class="analytics-meta" style="font-size: 0.8rem; color: var(--color-text-secondary);">
+                <span id="an-range-days">-- dias</span>
+              </div>
             </div>
           </div>
 
-          <!-- Range -->
-          <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
-            <div class="muted" style="font-size: 0.85rem;">Autonomia Est.</div>
-            <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
-              <span id="an-range-km">--</span> <small class="muted" style="font-size: 0.9rem;">km</small>
-            </div>
-            <div class="analytics-meta" style="font-size: 0.8rem; color: var(--color-text-secondary);">
-              <span id="an-range-days">-- dias</span>
-            </div>
+          <!-- Capacity Warning (Hidden by default) -->
+          <div id="an-warning-capacity" class="form-message form-message--warning hidden"
+            style="margin-top: 12px; font-size: 0.9rem;">
+            ⚠️ Defina a capacidade do depósito nas definições do veículo para ver a autonomia.
           </div>
-        </div>
 
-        <!-- Capacity Warning (Hidden by default) -->
-        <div id="an-warning-capacity" class="form-message form-message--warning hidden"
-          style="margin-top: 12px; font-size: 0.9rem;">
-          ⚠️ Defina a capacidade do depósito nas definições do veículo para ver a autonomia.
-        </div>
-
-        <!-- Fuel Alert (Hidden by default) -->
-        <div id="an-alert-box" class="form-message hidden"
-          style="margin-top: 12px; font-size: 0.9rem; font-weight: 600;">
-          <!-- Filled via JS -->
-        </div>
+          <!-- Fuel Alert (Hidden by default) -->
+          <div id="an-alert-box" class="form-message hidden"
+            style="margin-top: 12px; font-size: 0.9rem; font-weight: 600;">
+            <!-- Filled via JS -->
+          </div>
+        </div> <!-- End analytics-content -->
       </div>
     </section>
 

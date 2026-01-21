@@ -1705,6 +1705,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 elAlertBox.classList.add("hidden");
             }
 
+            // Toggle Logic (Idempotent: Re-assigning onclick is safe)
+            const headerBtn = document.getElementById("btn-toggle-analytics");
+            const contentDiv = document.getElementById("analytics-content");
+            const iconToggle = document.getElementById("icon-analytics-toggle");
+
+            if (headerBtn && contentDiv && iconToggle) {
+                headerBtn.onclick = () => {
+                    const isHidden = contentDiv.classList.toggle("hidden");
+                    // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
+                    iconToggle.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+                };
+            }
+
         } catch (err) {
             console.error("Error rendering analytics:", err);
         }
