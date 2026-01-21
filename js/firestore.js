@@ -104,6 +104,35 @@ async function getCurrentUserProfile() {
 }
 
 // ======================================================================
+//  DEFINIÇÕES DE MAPA (CATEGORIAS)
+// ======================================================================
+async function getMapCategories() {
+    const user = auth.currentUser;
+    if (!user) return ["Casa", "Trabalho", "Outro"];
+
+    const snap = await db.collection("users").doc(user.uid).collection("settings").doc("mapa").get();
+    if (snap.exists && snap.data().categories) {
+        return snap.data().categories;
+    }
+    return ["Casa", "Trabalho", "Outro"];
+}
+window.getMapCategories = getMapCategories;
+
+async function addMapCategory(newCategory) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not auth");
+
+    const ref = db.collection("users").doc(user.uid).collection("settings").doc("mapa");
+    // Use arrayUnion to add unique
+    await ref.set({
+        categories: firebase.firestore.FieldValue.arrayUnion(newCategory),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+}
+window.addMapCategory = addMapCategory;
+
+
+// ======================================================================
 //  VEÍCULOS
 // ======================================================================
 

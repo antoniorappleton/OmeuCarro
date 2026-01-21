@@ -14,6 +14,9 @@ if (window.__L100_MAP_INIT__) {
   // ============================
   // STATE & REFS
   // ============================
+  // ============================
+  // STATE & REFS
+  // ============================
   const state = {
     map: null,
     sheet: "compact", // compact, half, full
@@ -25,6 +28,9 @@ if (window.__L100_MAP_INIT__) {
     initialCenter: [38.722, -9.139], // Lisbon Default
     userMarker: null,
     currentLocation: null, // [lat, lng]
+    // Filter & Categories
+    filterCategory: "Todos",
+    availableCategories: [],
   };
 
   const els = {
@@ -40,6 +46,7 @@ if (window.__L100_MAP_INIT__) {
     searchInput: document.getElementById("search-input"),
     searchResults: document.getElementById("search-results"),
     chips: document.getElementById("quick-chips"),
+    filters: document.getElementById("category-filters"), // New
     detName: document.getElementById("det-name"),
     detAddr: document.getElementById("det-address"),
     inpName: document.getElementById("inp-name"),
@@ -47,6 +54,7 @@ if (window.__L100_MAP_INIT__) {
     inpCat: document.getElementById("inp-category"),
     inpNotes: document.getElementById("inp-notes"),
     formHeading: document.getElementById("form-heading"),
+    typeChipsContainer: document.getElementById("type-chips-container"),
   };
 
   let confirmCallback = null;
@@ -234,7 +242,15 @@ if (window.__L100_MAP_INIT__) {
         state.favorites.push({ id: doc.id, ...doc.data() }),
       );
 
+      // Load Categories
+      if (window.getMapCategories) {
+        state.availableCategories = await window.getMapCategories();
+      } else {
+        state.availableCategories = ["Casa", "Trabalho", "Outro"];
+      }
+
       renderPins();
+      renderFilters();
       renderChips();
     } catch (e) {
       console.error(e);
@@ -248,15 +264,7 @@ if (window.__L100_MAP_INIT__) {
     markers = {};
 
     state.favorites.forEach((fav) => {
-      // Determine Coordinates
-      // If we have lat/lng, use them.
-      // If not, we skip rendering it on map OR render in center?
-      // Let's skip and maybe show in list only, or default to center.
-      // For a premium feel, skipping "broken" pins is better than cluttering the center.
-
       if (!fav.lat || !fav.lng) {
-        // Try to self-repair next time it's edited or opened?
-        // For now, simple logic: ignore
         return;
       }
 
@@ -295,18 +303,46 @@ if (window.__L100_MAP_INIT__) {
     });
   }
 
+  function renderFilters() {
+    if (!els.filters) return;
+    els.filters.innerHTML = "";
+
+    const cats = ["Todos", ...(Array.isArray(state.availableCategories) ? state.availableCategories : ["Casa", "Trabalho", "Outro"])];
+    
+    cats.forEach(cat => {
+        const pill = document.createElement("div");
+        pill.className = "filter-pill";
+        if (state.filterCategory === cat) pill.classList.add("active");
+        pill.textContent = cat;
+        pill.onclick = () => {
+             state.filterCategory = cat;
+             renderFilters(); 
+             renderChips();
+        };
+        els.filters.appendChild(pill);
+    });
+  }
+
   function renderChips() {
     els.chips.innerHTML = "";
-    if (state.favorites.length === 0) {
+    
+    // Filter
+    let list = state.favorites;
+    if (state.filterCategory && state.filterCategory !== "Todos") {
+        list = list.filter(f => f.category === state.filterCategory);
+    }
+
+    if (list.length === 0) {
       els.chips.innerHTML =
-        '<span class="u-empty-state">Sem favoritos ainda.</span>';
+        '<span class="u-empty-state" style="padding: 10px; color: #888;">Sem favoritos nesta categoria.</span>';
       return;
     }
-    state.favorites.slice(0, 5).forEach((fav) => {
+    
+    // Allow more items since we wrap
+    list.slice(0, 50).forEach((fav) => {
       const chip = document.createElement("div");
       chip.className = "chip";
       if (!fav.lat || !fav.lng) chip.classList.add("warning");
-      chip.textContent = fav.nome;
       chip.textContent = fav.nome;
       chip.addEventListener("click", async () => {
         if (fav.lat && fav.lng) {
@@ -341,8 +377,6 @@ if (window.__L100_MAP_INIT__) {
               renderPins();
 
               /* Select it */
-              // We need to find the new marker.
-              // renderPins is sync but might need a moment? No, it's instant.
               const m = markers[fav.id];
               if (m) selectFavorite(fav, m);
             } else {
@@ -398,11 +432,6 @@ if (window.__L100_MAP_INIT__) {
     // 2. ViaMichelin Route Planner
     if (btnVia) {
       if (fav && fav.lat && fav.lng) {
-        // Base: Destination
-        // Format: https://www.viamichelin.pt/web/Itinerarios?arrival={lat},{lng}&arrivalTid=gps
-        // Note: ViaMichelin uses comma separated lat,lng but URL encoded often safer -> actually they use {lat},{lng} in query params usually
-        // but constructing valid query params:
-
         let vmUrl = `https://www.viamichelin.pt/web/Itinerarios?arrival=${fav.lat},${fav.lng}&arrivalTid=gps`;
 
         if (state.currentLocation) {
@@ -605,6 +634,92 @@ if (window.__L100_MAP_INIT__) {
     }
   });
 
+  function renderFormCategoryChips() {
+    if (!els.typeChipsContainer) return;
+    els.typeChipsContainer.innerHTML = "";
+
+    state.availableCategories.forEach((cat) => {
+       const btn = document.createElement("button");
+       btn.className = "type-chip";
+       btn.setAttribute("data-value", cat);
+
+       let icon = "icon-pin";
+       if (cat === "Casa") icon = "icon-home";
+       else if (cat === "Trabalho") icon = "icon-car";
+
+       btn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#${icon}"></use></svg> ${cat}`;
+       els.typeChipsContainer.appendChild(btn);
+    });
+
+    // Add "+" Button
+    const addBtn = document.createElement("button");
+    addBtn.className = "type-chip";
+    addBtn.id = "btn-add-cat-ui"; // ID for easy ref
+    addBtn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#icon-plus"></use></svg> Novo`;
+    
+    addBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation(); 
+
+        // 1. Replace content with Input
+        addBtn.classList.add("input-mode");
+        addBtn.innerHTML = `
+            <input type="text" id="new-cat-input" class="chip-input" placeholder="Nome" />
+            <div class="chip-actions">
+                <button id="btn-confirm-cat" class="icon-btn-xs"><svg class="icon"><use href="assets/icons-unified.svg#icon-check"></use></svg></button>
+                <button id="btn-cancel-cat" class="icon-btn-xs"><svg class="icon"><use href="assets/icons-unified.svg#icon-close"></use></svg></button>
+            </div>
+        `;
+        
+        // 2. Focus
+        const input = addBtn.querySelector("input");
+        input.focus();
+
+        // 3. Bind Actions
+        const confirm = async () => {
+            const val = input.value.trim();
+            if (val) {
+                 if (!state.availableCategories.includes(val)) {
+                    // Save to DB
+                    await window.addMapCategory(val);
+                    state.availableCategories.push(val);
+                    renderFilters(); // Update main filters
+                }
+                // Re-render form chips (restores UI)
+                renderFormCategoryChips();
+                // Select it
+                els.inpCat.value = val;
+                updateChips(val);
+            }
+        };
+
+        const cancel = () => {
+            renderFormCategoryChips(); // Reset
+        };
+
+        addBtn.querySelector("#btn-confirm-cat").onclick = (ev) => {
+            ev.stopPropagation();
+            confirm();
+        };
+
+        addBtn.querySelector("#btn-cancel-cat").onclick = (ev) => {
+            ev.stopPropagation();
+            cancel();
+        };
+        
+        input.onkeydown = (ev) => {
+            if(ev.key === "Enter") {
+                ev.preventDefault(); // Prevent form submit
+                confirm();
+            }
+            if(ev.key === "Escape") cancel();
+        };
+        
+        input.onclick = (ev) => ev.stopPropagation(); // Prevent chip select
+    };
+    els.typeChipsContainer.appendChild(addBtn);
+  }
+
   function openForm(fav = null) {
     if (fav) {
       els.formHeading.textContent = "Editar Local";
@@ -619,6 +734,10 @@ if (window.__L100_MAP_INIT__) {
       els.inpCat.value = "Outro";
       els.inpNotes.value = "";
     }
+    
+    // Render Chips Dynamic
+    renderFormCategoryChips();
+    
     updateChips(els.inpCat.value);
     setSheet("full", "form");
   }
@@ -639,7 +758,8 @@ if (window.__L100_MAP_INIT__) {
     .getElementById("type-chips-container")
     .addEventListener("click", (e) => {
       const chip = e.target.closest(".type-chip");
-      if (chip) {
+      // Ignora se for o botão "+ Novo" que já tem handler próprio
+      if (chip && chip.hasAttribute("data-value")) {
         const val = chip.dataset.value;
         els.inpCat.value = val;
         updateChips(val);

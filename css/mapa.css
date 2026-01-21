@@ -386,17 +386,49 @@ body.map-page-standalone {
     }
 }
 
-/* CHIPS (Scrollable Quick List) */
+/* CHIPS (Quick List wrapped) */
 .chips-row {
     display: flex;
     gap: 10px;
     padding: 4px 0 12px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-wrap: wrap;
 }
 
-.chips-row::-webkit-scrollbar {
+.category-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0 12px;
+    scrollbar-width: none;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.category-filters::-webkit-scrollbar {
     display: none;
+}
+
+.filter-pill {
+    padding: 6px 14px;
+    border-radius: 99px;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-pill:hover {
+    border-color: var(--color-text-main);
+}
+
+.filter-pill.active {
+    background: var(--color-text-main);
+    color: var(--color-bg);
+    border-color: var(--color-text-main);
 }
 
 .chip {
@@ -643,6 +675,50 @@ body.map-page-standalone {
 
 .type-chip.active .icon {
     color: white;
+}
+
+/* Category Input Mode */
+.type-chip.input-mode {
+    background: var(--color-surface);
+    border-color: var(--color-primary-start);
+    padding: 0; 
+    overflow: hidden;
+    cursor: default;
+    width: auto;
+    min-width: 140px;
+}
+
+.chip-input {
+    border: none;
+    background: transparent;
+    padding: 8px 12px;
+    width: 100px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-main);
+    outline: none;
+}
+
+.chip-actions {
+    display: flex;
+    border-left: 1px solid var(--border-light);
+}
+
+.icon-btn-xs {
+    width: 32px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.icon-btn-xs:hover {
+    color: var(--color-primary-start);
+    background: rgba(var(--color-primary-rgb), 0.05);
 }
 
 /* Map Tip */
