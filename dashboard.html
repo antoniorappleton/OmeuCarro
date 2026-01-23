@@ -177,9 +177,17 @@
     </section>
 
     <!-- AÇÕES RÁPIDAS -->
-    <section class="quick-actions">
-      <h3>Ações rápidas</h3>
-      <div class="quick-actions-row">
+    <section class="quick-actions" id="section-quick-actions">
+      <header id="header-quick-actions"
+        style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+        <h3>Ações rápidas</h3>
+        <button class="icon-btn-sm" style="background:transparent; border:none;">
+          <svg class="icon" id="icon-quick-toggle" style="transition: transform 0.3s">
+            <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+          </svg>
+        </button>
+      </header>
+      <div class="quick-actions-row" id="quick-actions-content" style="transition: all 0.3s ease; overflow: hidden;">
         <!-- Alterado para abrir modal diretamente -->
         <a href="#" id="btn-quick-refuel" class="btn btn-outline">
           <svg class="icon icon-left">
@@ -198,6 +206,12 @@
             <use href="assets/icons-unified.svg#icon-car"></use>
           </svg>
           <span>Gerir veículos</span>
+        </a>
+        <a href="https://www.maisgasolina.com" target="_blank" class="btn btn-outline" rel="noopener noreferrer">
+          <svg class="icon icon-left" aria-hidden="true">
+            <use href="assets/icons-unified.svg#icon-station"></use>
+          </svg>
+          <span>MaisGasolina</span>
         </a>
       </div>
     </section>

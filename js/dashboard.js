@@ -680,6 +680,44 @@ function initDashboardRefuelModal() {
       msg.textContent = e.message || "Erro ao guardar.";
     }
   });
+
+}
+
+// ======================================================================
+// TOGGLE AÇÕES RÁPIDAS
+// ======================================================================
+function initDashboardQuickActions() {
+    const header = document.getElementById("header-quick-actions");
+    const content = document.getElementById("quick-actions-content");
+    const icon = document.getElementById("icon-quick-toggle");
+
+    if (!header || !content || !icon) return;
+
+    header.addEventListener("click", () => {
+        // Toggle Hidden/Visible
+        // If maxHeight is empty (default) OR not "0px", it is considered OPEN.
+        const currentHeight = content.style.maxHeight;
+        const isOpen = !currentHeight || currentHeight !== "0px";
+        
+        if (isOpen) {
+            // Collapse
+            content.style.maxHeight = "0px";
+            content.style.opacity = "0";
+            content.style.padding = "0";
+            icon.style.transform = "rotate(180deg)"; // Chevron down
+        } else {
+            // Expand
+            content.style.maxHeight = content.scrollHeight + "px";
+            content.style.opacity = "1";
+            content.style.padding = ""; // Reset padding if needed
+            icon.style.transform = "rotate(0deg)"; // Chevron up
+        }
+    });
+
+    // Initialize as expanded (optional, or match HTML state)
+    // HTML has standard div. Let's set initial state to expanded explicitly if needed or rely on CSS.
+    // To animate correctly from start, we might need to set standard height.
+    content.style.maxHeight = content.scrollHeight + "px";
 }
 
 window.addEventListener("load", () => {
@@ -689,6 +727,7 @@ window.addEventListener("load", () => {
     configurarEventosFiltro();
     carregarDashboard();
     initDashboardRefuelModal(); // Initialize Modal
+    initDashboardQuickActions(); // Initialize Quick Actions Toggle
     unsub();
   });
 });
