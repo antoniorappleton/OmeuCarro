@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v11";
-const RUNTIME_CACHE = "l100-runtime-v11";
+const STATIC_CACHE = "l100-static-v12";
+const RUNTIME_CACHE = "l100-runtime-v12";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -54,18 +54,17 @@ self.addEventListener("install", (event) => {
     (async () => {
       const cache = await caches.open(STATIC_CACHE);
       const results = await Promise.allSettled(
-        APP_SHELL.map((url) => cache.add(url))
+        APP_SHELL.map((url) => cache.add(url)),
       );
       const failed = results
         .map((r, i) => (r.status === "rejected" ? APP_SHELL[i] : null))
         .filter(Boolean);
       if (failed.length) console.warn("[SW] Falharam no cache:", failed);
-    })()
+    })(),
   );
   // Don't auto-skip waiting here - let the client decide or waiting phase happen
-  // self.skipWaiting(); 
+  // self.skipWaiting();
 });
-
 
 // ===============================
 // ACTIVATE – Limpa caches antigas
@@ -81,9 +80,9 @@ self.addEventListener("activate", (event) => {
             console.log("[SW] A eliminar cache antiga:", key);
             return caches.delete(key);
           }
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   self.clients.claim();
@@ -119,7 +118,7 @@ self.addEventListener("fetch", (event) => {
 
           // Página offline
           return caches.match("./index.html");
-        })
+        }),
     );
     return;
   }
@@ -139,7 +138,7 @@ self.addEventListener("fetch", (event) => {
           .catch(() => null);
 
         return cached || network;
-      })
+      }),
     );
     return;
   }
@@ -160,7 +159,7 @@ self.addEventListener("fetch", (event) => {
         } catch {
           return caches.match("./images/logo-icon192.png");
         }
-      })
+      }),
     );
     return;
   }

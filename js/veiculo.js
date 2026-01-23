@@ -1450,17 +1450,29 @@ document.addEventListener("DOMContentLoaded", () => {
     // Calc metrics (async but don't block)
     updateFloatingMetrics(veiculoId, v, settings);
 
-  // =========================
-  // FLOATING METRICS LOGIC
-  // =========================
-  function setupFloatingMetrics(veiculoId) {
-    const pairs = [
-        { btnId: "btn-float-toggle", cardId: "floating-metrics-card", closeId: "btn-close-float" },
-        { btnId: "btn-float-analytics", cardId: "section-analytics", closeId: "btn-close-analytics" },
-        { btnId: "btn-float-alerts", cardId: "section-alerts", closeId: "btn-close-alerts" }
-    ];
+    // =========================
+    // FLOATING METRICS LOGIC
+    // =========================
+    function setupFloatingMetrics(veiculoId) {
+      const pairs = [
+        {
+          btnId: "btn-float-toggle",
+          cardId: "floating-metrics-card",
+          closeId: "btn-close-float",
+        },
+        {
+          btnId: "btn-float-analytics",
+          cardId: "section-analytics",
+          closeId: "btn-close-analytics",
+        },
+        {
+          btnId: "btn-float-alerts",
+          cardId: "section-alerts",
+          closeId: "btn-close-alerts",
+        },
+      ];
 
-    pairs.forEach(p => {
+      pairs.forEach((p) => {
         const btn = document.getElementById(p.btnId);
         const card = document.getElementById(p.cardId);
         const close = document.getElementById(p.closeId);
@@ -1468,50 +1480,50 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!btn || !card) return;
 
         btn.addEventListener("click", () => {
-             // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
-             // Usually exclusive is cleaner for popups on same side.
-             pairs.forEach(other => {
-                 if(other !== p) {
-                     const c = document.getElementById(other.cardId);
-                     if(c) c.classList.add("hidden");
-                 }
-             });
-             card.classList.toggle("hidden");
+          // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
+          // Usually exclusive is cleaner for popups on same side.
+          pairs.forEach((other) => {
+            if (other !== p) {
+              const c = document.getElementById(other.cardId);
+              if (c) c.classList.add("hidden");
+            }
+          });
+          card.classList.toggle("hidden");
         });
 
         if (close) {
-            close.addEventListener("click", () => {
-                card.classList.add("hidden");
-            });
+          close.addEventListener("click", () => {
+            card.classList.add("hidden");
+          });
         }
-    });
-  }
+      });
+    }
 
-  async function updateFloatingMetrics(veiculoId, v, settings) {
-    const elCostKm = document.getElementById("float-cost-km");
-    const elTotalCost = document.getElementById("float-total-cost");
-    const elTotalKm = document.getElementById("float-total-km");
+    async function updateFloatingMetrics(veiculoId, v, settings) {
+      const elCostKm = document.getElementById("float-cost-km");
+      const elTotalCost = document.getElementById("float-total-cost");
+      const elTotalKm = document.getElementById("float-total-km");
 
-    if (!elCostKm || !elTotalCost) return;
+      if (!elCostKm || !elTotalCost) return;
 
-    try {
+      try {
         // 1. Fetch all data (parallel for speed)
         const [abs, reps] = await Promise.all([
-           getAbastecimentosDoVeiculo(veiculoId, 1000), // get all likely
-           getReparacoesDoVeiculo(veiculoId)
+          getAbastecimentosDoVeiculo(veiculoId, 1000), // get all likely
+          getReparacoesDoVeiculo(veiculoId),
         ]);
 
         // 2. Sum Costs
         let totalFuel = 0;
-        abs.forEach(a => {
-            const l = Number(a.litros) || 0;
-            const p = Number(a.precoPorLitro) || 0;
-            totalFuel += (l * p);
+        abs.forEach((a) => {
+          const l = Number(a.litros) || 0;
+          const p = Number(a.precoPorLitro) || 0;
+          totalFuel += l * p;
         });
 
         let totalMaint = 0;
-        reps.forEach(r => {
-            totalMaint += (Number(r.custo) || 0);
+        reps.forEach((r) => {
+          totalMaint += Number(r.custo) || 0;
         });
 
         const totalSpent = totalFuel + totalMaint;
@@ -1526,31 +1538,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 4. Update UI
         if (elTotalCost) {
-            elTotalCost.textContent = formatCurrency(totalSpent, settings?.moeda || "EUR");
+          elTotalCost.textContent = formatCurrency(
+            totalSpent,
+            settings?.moeda || "EUR",
+          );
         }
-        
+
         if (elTotalKm) {
-             elTotalKm.textContent = totalDist.toLocaleString() + " km";
+          elTotalKm.textContent = totalDist.toLocaleString() + " km";
         }
 
         if (elCostKm) {
-            if (totalDist > 0) {
-                const cpk = totalSpent / totalDist;
-                // e.g. 0.123 €/km
-                elCostKm.textContent = `${cpk.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
-            } else {
-                elCostKm.textContent = "—";
-            }
+          if (totalDist > 0) {
+            const cpk = totalSpent / totalDist;
+            // e.g. 0.123 €/km
+            elCostKm.textContent = `${cpk.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+          } else {
+            elCostKm.textContent = "—";
+          }
         }
-
-    } catch(e) {
+      } catch (e) {
         console.error("Error calculating floating metrics", e);
+      }
     }
-  }
 
-  // =========================
-  // ABASTECIMENTOS
-  // =========================
+    // =========================
+    // ABASTECIMENTOS
+    // =========================
     const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
 
     if (!abs.length) {
@@ -1718,119 +1732,190 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function renderAnalyticsCard(veiculoId) {
-        const section = document.getElementById("section-analytics");
-        if (!section) return;
+      const section = document.getElementById("section-analytics");
+      if (!section) return;
 
-        try {
-            // 1. Fetch Data
-            const analytics = await getVehicleAnalytics(veiculoId);
-            
-            // If absolutely no analytics yet, we can hide or show empty state.
-            // But we want to show "A aprender..." if exists but empty.
-            // If null, it means never calculated.
-            
-            // Show FAB Button (Floating Mode)
-            const btnFloat = document.getElementById("btn-float-analytics");
-            if (btnFloat) btnFloat.classList.remove("hidden");
-            
-            // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
+      try {
+        // 1. Fetch Data
+        const analytics = await getVehicleAnalytics(veiculoId);
 
-            // Elements
-            const elL100 = document.getElementById("an-l100");
-            const elConf = document.getElementById("an-confidence");
-            const elRangeKm = document.getElementById("an-range-km");
-            const elRangeDays = document.getElementById("an-range-days");
-            const elBadge = document.getElementById("analytics-badge");
-            const elWarnCap = document.getElementById("an-warning-capacity");
-            const elAlertBox = document.getElementById("an-alert-box");
+        // If absolutely no analytics yet, we can hide or show empty state.
+        // But we want to show "A aprender..." if exists but empty.
+        // If null, it means never calculated.
 
-            if (!analytics) {
-                // Initial state
-                return;
-            }
+        // Show FAB Button (Floating Mode)
+        const btnFloat = document.getElementById("btn-float-analytics");
+        if (btnFloat) btnFloat.classList.remove("hidden");
 
-            // Consumption
-            if (analytics.consumoMedioL100) {
-                elL100.textContent = analytics.consumoMedioL100.toFixed(1);
-                
-                // Confidence styling
-                const confMap = {
-                    "alta": { text: "Confiança Alta", class: "status-green" },
-                    "media": { text: "Confiança Média", class: "status-yellow" },
-                    "baixa": { text: "Estimat. Baixa", class: "status-neutral" }
-                };
-                const confData = confMap[analytics.consumoConfianca] || confMap["baixa"];
-                elConf.className = confData.class;
-                elConf.innerHTML = `<span>${confData.text}</span>`;
-                
-                elBadge.textContent = "Ativo";
-                elBadge.className = "badge badge-success badge-outline";
-            } else {
-                elL100.textContent = "--";
-                elConf.textContent = "A recolher dados...";
-                elBadge.textContent = "A aprender...";
-            }
+        // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
 
-            // Range
-            if (analytics.reasonUnavailable === "missing_tank_capacity") {
-                elWarnCap.classList.remove("hidden");
-                elRangeKm.textContent = "--";
-                elRangeDays.textContent = "-- dias";
-            } else {
-                elWarnCap.classList.add("hidden");
-                if (analytics.kmAteReservaEstimado !== null) {
-                    elRangeKm.textContent = analytics.kmAteReservaEstimado;
-                    
-                    if (analytics.diasAteReservaEstimado !== null) {
-                        elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
-                    } else {
-                        elRangeDays.textContent = "-- dias";
-                    }
-                } else {
-                    elRangeKm.textContent = "--";
-                }
-            }
+        // Elements
+        const elL100 = document.getElementById("an-l100");
+        const elConf = document.getElementById("an-confidence");
+        const elRangeKm = document.getElementById("an-range-km");
+        const elRangeDays = document.getElementById("an-range-days");
+        const elBadge = document.getElementById("analytics-badge");
+        const elWarnCap = document.getElementById("an-warning-capacity");
+        const elAlertBox = document.getElementById("an-alert-box");
 
-            // Alerts
-            if (analytics.alertaFuelNivel && analytics.alertaFuelNivel !== "none") {
-                elAlertBox.classList.remove("hidden");
-                const isCrit = analytics.alertaFuelNivel === "critical";
-                
-                elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
-                elAlertBox.textContent = isCrit 
-                    ? `⚠️ Reserva atingida! Abasteça urgentemente.` 
-                    : `⚠️ Combustível baixo. Planeie abastecer.`;
-            } else {
-                elAlertBox.classList.add("hidden");
-            }
-
-            // Toggle Logic (Idempotent: Re-assigning onclick is safe)
-            const headerBtn = document.getElementById("btn-toggle-analytics");
-            const contentDiv = document.getElementById("analytics-content");
-            const iconToggle = document.getElementById("icon-analytics-toggle");
-
-            if (headerBtn && contentDiv && iconToggle) {
-                headerBtn.onclick = () => {
-                    const isHidden = contentDiv.classList.toggle("hidden");
-                    // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
-                    iconToggle.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-                };
-            }
-
-        } catch (err) {
-            console.error("Error rendering analytics:", err);
+        if (!analytics) {
+          // Initial state
+          return;
         }
+
+        // Consumption
+        if (analytics.consumoMedioL100) {
+          elL100.textContent = analytics.consumoMedioL100.toFixed(1);
+
+          // Confidence styling
+          const confMap = {
+            alta: { text: "Confiança Alta", class: "status-green" },
+            media: { text: "Confiança Média", class: "status-yellow" },
+            baixa: { text: "Estimat. Baixa", class: "status-neutral" },
+          };
+          const confData =
+            confMap[analytics.consumoConfianca] || confMap["baixa"];
+          elConf.className = confData.class;
+          elConf.innerHTML = `<span>${confData.text}</span>`;
+
+          elBadge.textContent = "Ativo";
+          elBadge.className = "badge badge-success badge-outline";
+        } else {
+          elL100.textContent = "--";
+          elConf.textContent = "A recolher dados...";
+          elBadge.textContent = "A aprender...";
+        }
+
+        // Range
+        if (analytics.reasonUnavailable === "missing_tank_capacity") {
+          elWarnCap.classList.remove("hidden");
+          elRangeKm.textContent = "--";
+          elRangeDays.textContent = "-- dias";
+        } else {
+          elWarnCap.classList.add("hidden");
+          if (analytics.kmAteReservaEstimado !== null) {
+            elRangeKm.textContent = analytics.kmAteReservaEstimado;
+
+            if (analytics.diasAteReservaEstimado !== null) {
+              elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
+            } else {
+              elRangeDays.textContent = "-- dias";
+            }
+          } else {
+            elRangeKm.textContent = "--";
+          }
+        }
+
+        // Alerts
+        if (analytics.alertaFuelNivel && analytics.alertaFuelNivel !== "none") {
+          elAlertBox.classList.remove("hidden");
+          const isCrit = analytics.alertaFuelNivel === "critical";
+
+          elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
+          elAlertBox.textContent = isCrit
+            ? `⚠️ Reserva atingida! Abasteça urgentemente.`
+            : `⚠️ Combustível baixo. Planeie abastecer.`;
+        } else {
+          elAlertBox.classList.add("hidden");
+        }
+
+        // Toggle Logic (Idempotent: Re-assigning onclick is safe)
+        const headerBtn = document.getElementById("btn-toggle-analytics");
+        const contentDiv = document.getElementById("analytics-content");
+        const iconToggle = document.getElementById("icon-analytics-toggle");
+
+        if (headerBtn && contentDiv && iconToggle) {
+          headerBtn.onclick = () => {
+            const isHidden = contentDiv.classList.toggle("hidden");
+            // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
+            iconToggle.style.transform = isHidden
+              ? "rotate(180deg)"
+              : "rotate(0deg)";
+          };
+        }
+      } catch (err) {
+        console.error("Error rendering analytics:", err);
+      }
     }
 
     // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
     await renderAnalyticsCard(veiculoId);
+    // 🛡️ DATA REPAIR
+    await checkAndFixCorruptedData(veiculoId, v);
+
     initTabs();
     setupTabsToggle(veiculoId);
-  }
+
+    // --- INTERNAL HELPER (Moved inside init to access renderAnalyticsCard) ---
+    async function checkAndFixCorruptedData(veiculoId, v) {
+      let fixed = false;
+
+      // 1. Fix Abastecimentos Types (String -> Number, String -> Boolean)
+      const records = await getAbastecimentosDoVeiculo(veiculoId, 100);
+      let badCount = 0;
+
+      for (const r of records) {
+        let needsUpdate = false;
+        let update = {};
+
+        // Fix Odometro
+        if (typeof r.odometro === "string") {
+          const clean = Number(r.odometro.replace(/\s+/g, ""));
+          if (!isNaN(clean) && clean > 0) {
+            update.odometro = clean;
+            needsUpdate = true;
+          }
+        }
+
+        // Fix Completo
+        if (typeof r.completo === "string") {
+          if (r.completo === "true") update.completo = true;
+          else if (r.completo === "false") update.completo = false;
+          needsUpdate = true;
+        }
+        if (r.completo === 1) {
+          update.completo = true;
+          needsUpdate = true;
+        }
+        if (r.completo === 0) {
+          update.completo = false;
+          needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+          console.log("Fixing record:", r.id, update);
+          await updateAbastecimento(veiculoId, r.id, update);
+          badCount++;
+          fixed = true;
+        }
+      }
+
+      // FORCE ANALYTICS REFRESH (Self-Heal Stale Data)
+      console.log("Forcing Analytics Refresh...");
+      if (typeof refreshVehicleAnalytics === "function") {
+        await refreshVehicleAnalytics(veiculoId);
+      } else {
+        console.warn(
+          "refreshVehicleAnalytics function not available globally.",
+        );
+      }
+
+      if (fixed) {
+        alert(
+          `Corrigidos ${badCount} registos de dados. A página vai recarregar.`,
+        );
+        location.reload();
+      } else {
+        // Now we can safe access renderAnalyticsCard
+        await renderAnalyticsCard(veiculoId);
+      }
+    }
+  } // End init scope
 
   // =========================
   // AUTH / START
   // =========================
+
   auth.onAuthStateChanged((user) => {
     if (!user) {
       showMessage("Sessão terminada.", "error");
