@@ -109,6 +109,8 @@
         confidence: fullToFullSamples.length >= 3 ? "alta" : "media",
         method: "cheio-cheio-ponderada", // Updated method name
         samples: fullToFullSamples.length,
+        totalDist: totalDist,
+        totalLiters: totalLiters,
       };
     }
 
@@ -118,6 +120,9 @@
     // Much less accurate, but gives *something*.
 
     const segmentSamples = [];
+    let methodBDist = 0;
+    let methodBLiters = 0;
+
     for (let i = 1; i < validSequence.length; i++) {
       const prev = validSequence[i - 1];
       const curr = validSequence[i];
@@ -128,6 +133,8 @@
         // Tighter outlier filter for this messy method
         if (l100 > 3 && l100 < 25) {
           segmentSamples.push(l100);
+          methodBDist += dist;
+          methodBLiters += curr.litros;
         }
       }
     }
@@ -142,10 +149,19 @@
         confidence: "baixa",
         method: "segmentos",
         samples: segmentSamples.length,
+        totalDist: methodBDist,
+        totalLiters: methodBLiters,
       };
     }
 
-    return { averageL100: null, confidence: null, method: null, samples: 0 };
+    return {
+      averageL100: null,
+      confidence: null,
+      method: null,
+      samples: 0,
+      totalDist: 0,
+      totalLiters: 0,
+    };
   }
 
   /**

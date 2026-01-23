@@ -167,3 +167,28 @@ canvas {
   width: 18px;
   height: 18px;
 }
+
+/* ======== INSIGHT BANNER ======== */
+.insight-banner {
+    background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.1));
+    border: 1px solid rgba(14, 116, 144, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(4px);
+}
+
+.insight-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.insight-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-text-main);
+    line-height: 1.4;
+}

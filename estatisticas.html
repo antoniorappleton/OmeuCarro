@@ -24,6 +24,7 @@
     <script defer src="js/auth.js"></script>
     <script defer src="js/firestore.js"></script>
     <script defer src="js/utils.js"></script>
+    <script defer src="js/analytics.js"></script>
     <!-- depois os ficheiros específicos da página -->
     <script defer src="./js/estatisticas.js"></script>
   </head>
@@ -68,6 +69,12 @@
     </header>
 
     <main class="dashboard-container">
+      <!-- INSIGHT BANNER -->
+      <section class="insight-banner" id="insight-banner" style="display: none">
+        <div class="insight-icon">💡</div>
+        <div class="insight-text" id="insight-text">A analisar dados...</div>
+      </section>
+
       <!-- KPIs -->
       <section class="kpi-grid">
         <!-- Total gasto -->
@@ -77,10 +84,18 @@
             <span>€</span>
           </div>
           <h2 id="kpi-total-gasto">€0.00</h2>
-          <p class="kpi-sub">Últimos 6 meses</p>
-          <p class="kpi-trend kpi-trend-down" id="kpi-total-gasto-trend">
-            0% vs mês anterior
-          </p>
+          <p class="kpi-sub" id="kpi-total-gasto-context">--</p>
+          <p class="kpi-trend kpi-trend-down" id="kpi-total-gasto-trend">--</p>
+        </article>
+
+        <!-- Custo por Km (NOVO) -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Custo por Km</span>
+            <span>€/km</span>
+          </div>
+          <h2 id="kpi-custo-km">0.00 €/km</h2>
+          <p class="kpi-sub">Custo real de rodagem</p>
         </article>
 
         <!-- Litros consumidos -->
@@ -94,10 +109,8 @@
             </span>
           </div>
           <h2 id="kpi-total-litros">0L</h2>
-          <p class="kpi-sub">Últimos 6 meses</p>
-          <p class="kpi-trend kpi-trend-down" id="kpi-total-litros-trend">
-            0% vs mês anterior
-          </p>
+          <p class="kpi-sub" id="kpi-total-litros-context">--</p>
+          <p class="kpi-trend kpi-trend-down" id="kpi-total-litros-trend">--</p>
         </article>
 
         <!-- Preço médio -->
@@ -111,10 +124,8 @@
             </span>
           </div>
           <h2 id="kpi-preco-medio">€0.000</h2>
-          <p class="kpi-sub">Por litro</p>
-          <p class="kpi-trend kpi-trend-up" id="kpi-preco-medio-trend">
-            0% vs mês anterior
-          </p>
+          <p class="kpi-sub" id="kpi-preco-medio-context">--</p>
+          <p class="kpi-trend kpi-trend-up" id="kpi-preco-medio-trend">--</p>
         </article>
 
         <!-- Eficiência média -->
@@ -128,60 +139,64 @@
             </span>
           </div>
           <h2 id="kpi-eficiencia">0 km/L</h2>
-          <p class="kpi-sub">Consumo médio</p>
-          <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">
-            0% vs mês anterior
-          </p>
+          <p class="kpi-sub" id="kpi-eficiencia-context">--</p>
+          <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">--</p>
         </article>
       </section>
 
       <!-- GRID DE GRÁFICOS -->
       <section class="charts-grid">
-        <!-- Gastos mensais -->
-        <article class="chart-card">
+        <!-- 1. Gastos mensais (PRINCIPAL - WIDE) -->
+        <article class="chart-card chart-card-wide">
           <h3>Gastos Mensais</h3>
           <canvas id="chart-gastos-mensais"></canvas>
         </article>
 
-        <!-- Evolução do preço -->
+        <!-- 2. Consumo Mensal (Litros) -->
         <article class="chart-card">
-          <h3>Evolução do Preço</h3>
-          <canvas id="chart-preco"></canvas>
-        </article>
-
-        <!-- Distribuição por tipo -->
-        <article class="chart-card">
-          <h3>Distribuição por Tipo</h3>
-          <canvas id="chart-tipos"></canvas>
-        </article>
-
-        <!-- Postos mais visitados -->
-        <article class="chart-card">
-          <h3>Postos Mais Visitados</h3>
-          <canvas id="chart-postos"></canvas>
-        </article>
-
-        <!-- Consumo mensal (litros) -->
-        <article class="chart-card">
-          <h3>Consumo Mensal (Litros)</h3>
+          <h3>Consumo (Litros)</h3>
           <canvas id="chart-litros-mensais"></canvas>
         </article>
 
-        <!-- Distância Mensal -->
+        <!-- 3. Distância Mensal -->
         <article class="chart-card">
-          <h3>Distância Percorrida (km)</h3>
+          <h3>Distância (km)</h3>
           <canvas id="chart-km-mensais"></canvas>
         </article>
 
-        <!-- Custo por 100km -->
+        <!-- 4a. Eficiência Mensal (L/100km) -->
+        <article class="chart-card">
+          <h3>Consumo Médio (L/100km)</h3>
+          <canvas id="chart-eficiencia-mensal"></canvas>
+        </article>
+
+        <!-- 4b. Custo por 100km (NOVO LADO A LADO) -->
         <article class="chart-card">
           <h3>Custo por 100km (€)</h3>
           <canvas id="chart-custo-100km"></canvas>
         </article>
 
-        <!-- Postos mais Baratos -->
+        <!-- 5. Evolução do preço -->
         <article class="chart-card">
-          <h3>Postos Mais Baratos (Média €/L)</h3>
+          <h3>Evolução do Preço</h3>
+          <canvas id="chart-preco"></canvas>
+        </article>
+
+        <!-- 6. Distribuição por tipo -->
+        <article class="chart-card">
+          <h3>Distribuição por Tipo</h3>
+          <canvas id="chart-tipos"></canvas>
+        </article>
+
+        <!-- 7. Postos Mais Visitados -->
+        <article class="chart-card">
+          <h3>Postos Mais Visitados</h3>
+          <canvas id="chart-postos"></canvas>
+        </article>
+
+        <!-- 8. Postos Mais Baratos -->
+        <article class="chart-card">
+          <h3>Postos Mais Baratos</h3>
           <canvas id="chart-postos-baratos"></canvas>
         </article>
       </section>
