@@ -1,493 +1,683 @@
 <!doctype html>
 <html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Mapa – L100</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mapa – L100</title>
-
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/home.css" />
-  <link rel="stylesheet" href="css/mapa.css" />
-  <link rel="stylesheet" href="css/trip-calculator.css" />
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
-    rel="stylesheet" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-    rel="stylesheet" />
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: ["class", '[data-theme="dark"]'],
-      theme: {
-        extend: {
-          colors: {
-            primary: "#0e7490",
-            "background-light": "#f9fafa",
-            "background-dark": "#181a1b",
-          },
-          fontFamily: {
-            display: ["Manrope", "sans-serif"],
-          },
-          borderRadius: {
-            DEFAULT: "0.5rem",
-            lg: "1rem",
-            xl: "1.5rem",
-            full: "9999px",
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/mapa.css" />
+    <link rel="stylesheet" href="css/trip-calculator.css" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: ["class", '[data-theme="dark"]'],
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0e7490",
+              "background-light": "#f9fafa",
+              "background-dark": "#181a1b",
+            },
+            fontFamily: {
+              display: ["Manrope", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.5rem",
+              lg: "1rem",
+              xl: "1.5rem",
+              full: "9999px",
+            },
           },
         },
-      },
-    };
-  </script>
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+      };
+    </script>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
 
-  <script src="js/theme.js"></script>
+    <script src="js/theme.js"></script>
 
-  <!-- Firebase v9 (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase v9 (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/auth.js"></script>
-  <script defer src="js/firestore.js"></script>
-  <script defer src="js/utils.js"></script>
-  <script defer src="js/tripCalculator.js"></script>
-  <script type="module" src="js/mapa.js"></script>
-</head>
+    <script defer src="js/firebase-config.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/firestore.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/tripCalculator.js"></script>
+    <script type="module" src="js/mapa.js"></script>
+  </head>
 
-<body class="map-page-standalone">
-  <!-- HEADER -->
-  <header class="map-header">
-    <div class="map-header-title">Mapa</div>
-    <div style="display: flex; align-items: center; gap: 8px">
-      <button class="map-header-btn" id="btn-simulator-open" aria-label="Simulador de Custos">
-        <svg class="icon" style="width: 24px; height: 24px; fill: currentColor" viewBox="0 0 24 24">
-          <path
-            d="M7 2H17C18.1046 2 19 2.89543 19 4V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V4C5 2.89543 5.89543 2 7 2ZM7 4V20H17V4H7ZM9 6H15V8H9V6ZM9 10H11V12H9V10ZM13 10H15V12H13V10ZM9 14H11V16H9V14ZM13 14H15V16H13V14ZM9 18H15V20H9V18Z" />
-        </svg>
-      </button>
-      <button class="map-header-btn" id="btn-search-open" aria-label="Pesquisar">
-        <svg class="icon" style="width: 24px; height: 24px; fill: currentColor" viewBox="0 0 24 24">
-          <path
-            d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C11.8487 18 13.5505 17.3729 14.9063 16.3204L20.2929 21.7071L21.7071 20.2929L16.3204 14.9063C17.3729 13.5505 18 11.8487 18 10C18 5.58172 14.4183 2 10 2ZM10 4C13.3137 4 16 6.68629 16 10C16 13.3137 13.3137 16 10 16C6.68629 16 4 13.3137 4 10C4 6.68629 6.68629 4 10 4Z" />
-        </svg>
-      </button>
+  <body class="map-page-standalone">
+    <!-- HEADER -->
+    <header class="map-header">
+      <div class="map-header-title">Mapa</div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button
+          class="map-header-btn"
+          id="btn-simulator-open"
+          aria-label="Simulador de Custos"
+        >
+          <svg
+            class="icon"
+            style="width: 24px; height: 24px; fill: currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M7 2H17C18.1046 2 19 2.89543 19 4V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V4C5 2.89543 5.89543 2 7 2ZM7 4V20H17V4H7ZM9 6H15V8H9V6ZM9 10H11V12H9V10ZM13 10H15V12H13V10ZM9 14H11V16H9V14ZM13 14H15V16H13V14ZM9 18H15V20H9V18Z"
+            />
+          </svg>
+        </button>
+        <button
+          class="map-header-btn"
+          id="btn-search-open"
+          aria-label="Pesquisar"
+        >
+          <svg
+            class="icon"
+            style="width: 24px; height: 24px; fill: currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18C11.8487 18 13.5505 17.3729 14.9063 16.3204L20.2929 21.7071L21.7071 20.2929L16.3204 14.9063C17.3729 13.5505 18 11.8487 18 10C18 5.58172 14.4183 2 10 2ZM10 4C13.3137 4 16 6.68629 16 10C16 13.3137 13.3137 16 10 16C6.68629 16 4 13.3137 4 10C4 6.68629 6.68629 4 10 4Z"
+            />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAP LAYER -->
+    <div id="map-container">
+      <!-- Leaflet injects here -->
     </div>
-  </header>
 
-  <!-- MAP LAYER -->
-  <div id="map-container">
-    <!-- Leaflet injects here -->
-  </div>
+    <!-- FLOATING CONTROLS -->
+    <div class="map-controls-group">
+      <button
+        class="control-btn"
+        id="btn-my-loc"
+        aria-label="Minha Localização"
+      >
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-location"></use>
+        </svg>
+      </button>
 
-  <!-- FLOATING CONTROLS -->
-  <div class="map-controls-group">
-    <button class="control-btn" id="btn-my-loc" aria-label="Minha Localização">
+      <div class="zoom-group">
+        <button class="zoom-btn" id="btn-zoom-in" aria-label="Aumentar Zoom">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-plus"></use>
+          </svg>
+        </button>
+        <div class="zoom-divider"></div>
+        <button class="zoom-btn" id="btn-zoom-out" aria-label="Diminuir Zoom">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-minus"></use>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- FAB ADD -->
+    <button class="fab-add" id="fab-add" aria-label="Adicionar Favorito">
       <svg class="icon">
-        <use href="assets/icons-unified.svg#icon-location"></use>
+        <use href="assets/icons-unified.svg#icon-plus"></use>
       </svg>
     </button>
 
-    <div class="zoom-group">
-      <button class="zoom-btn" id="btn-zoom-in" aria-label="Aumentar Zoom">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-plus"></use>
-        </svg>
-      </button>
-      <div class="zoom-divider"></div>
-      <button class="zoom-btn" id="btn-zoom-out" aria-label="Diminuir Zoom">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-minus"></use>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- FAB ADD -->
-  <button class="fab-add" id="fab-add" aria-label="Adicionar Favorito">
-    <svg class="icon">
-      <use href="assets/icons-unified.svg#icon-plus"></use>
-    </svg>
-  </button>
-
-  <!-- BOTTOM SHEET -->
-  <div class="sheet-container" id="sheet" data-state="compact">
-    <div class="sheet-handle-area">
-      <div class="sheet-handle-bar"></div>
-    </div>
-    <div class="sheet-content">
-      <!-- VIEW: QUICK (Chips) -->
-      <div class="sheet-view active" id="view-quick">
-        <div class="details-header u-mb-sm" style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="details-title u-text-base">Favoritos Rápidos</div>
-          <a href="https://www.maisgasolina.com" target="_blank" class="icon-btn-sm" title="MaisGasolina"
-            style="color: inherit; text-decoration: none; border:none; background:transparent;">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-station"></use>
-            </svg>
-          </a>
-        </div>
-        <div class="category-filters" id="category-filters"></div>
-        <div class="chips-row" id="quick-chips">
-          <div class="chip-skeleton"></div>
-          <div class="chip-skeleton"></div>
-          <div class="chip-skeleton"></div>
-        </div>
+    <!-- BOTTOM SHEET -->
+    <div class="sheet-container" id="sheet" data-state="compact">
+      <div class="sheet-handle-area">
+        <div class="sheet-handle-bar"></div>
       </div>
-
-      <!-- VIEW: DETAILS (Selected) -->
-      <div class="sheet-view" id="view-details">
-        <div class="details-header">
-          <h2 class="details-title" id="det-name">Nome do Local</h2>
-          <p class="details-subtitle" id="det-address">
-            Endereço completo...
-          </p>
+      <div class="sheet-content">
+        <!-- VIEW: QUICK (Chips) -->
+        <div class="sheet-view active" id="view-quick">
+          <div
+            class="details-header u-mb-sm"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <div class="details-title u-text-base">Favoritos Rápidos</div>
+            <a
+              href="https://www.maisgasolina.com"
+              target="_blank"
+              class="icon-btn-sm"
+              title="MaisGasolina"
+              style="
+                background: var(--color-primary-start);
+                color: #fff;
+                border: none;
+                text-decoration: none;
+                box-shadow: 0 4px 10px rgba(14, 116, 144, 0.3);
+              "
+            >
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-station"></use>
+              </svg>
+            </a>
+          </div>
+          <div class="category-filters" id="category-filters"></div>
+          <div class="chips-row" id="quick-chips">
+            <div class="chip-skeleton"></div>
+            <div class="chip-skeleton"></div>
+            <div class="chip-skeleton"></div>
+          </div>
         </div>
 
-        <div class="details-actions">
-          <!-- Planner Button Removed -->
+        <!-- VIEW: DETAILS (Selected) -->
+        <div class="sheet-view" id="view-details">
+          <div class="details-header">
+            <h2 class="details-title" id="det-name">Nome do Local</h2>
+            <p class="details-subtitle" id="det-address">
+              Endereço completo...
+            </p>
+          </div>
 
-          <!-- Navigation Button -->
-          <a class="btn-action-primary full-width u-mb-sm" id="btn-navigate" target="_blank"
-            style="text-decoration: none">
-            <svg class="icon u-mr-xs">
-              <use href="assets/icons-unified.svg#icon-navigation"></use>
-            </svg>
-            Navegar
-          </a>
+          <div class="details-actions">
+            <!-- Planner Button Removed -->
 
-          <div class="u-grid-2">
-            <button class="btn-action-secondary" id="btn-edit">Editar</button>
-            <button class="btn-action-secondary u-text-danger" id="btn-delete">
-              Apagar
+            <!-- Navigation Button -->
+            <a
+              class="btn-action-primary full-width u-mb-sm"
+              id="btn-navigate"
+              target="_blank"
+              style="text-decoration: none"
+            >
+              <svg class="icon u-mr-xs">
+                <use href="assets/icons-unified.svg#icon-navigation"></use>
+              </svg>
+              Navegar
+            </a>
+
+            <div class="u-grid-2">
+              <button class="btn-action-secondary" id="btn-edit">Editar</button>
+              <button
+                class="btn-action-secondary u-text-danger"
+                id="btn-delete"
+              >
+                Apagar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW: FORM (Add/Edit) -->
+        <div class="sheet-view" id="view-form">
+          <div class="form-header">
+            <button class="map-header-btn" id="btn-cancel-form">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+              </svg>
+            </button>
+            <h3 class="form-title" id="form-heading">Editar Local</h3>
+            <div style="width: 40px"></div>
+            <!-- Spacer for center alignment -->
+          </div>
+
+          <div class="form-content-scroll">
+            <!-- Name -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Nome do Local</span>
+              </label>
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="form-input-clean"
+                  id="inp-name"
+                  placeholder="Ex: Casa, Trabalho..."
+                />
+                <div class="input-icon-right">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-edit"></use>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Address -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Endereço</span>
+              </label>
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="form-input-clean"
+                  id="inp-address"
+                  placeholder="Pesquisar morada..."
+                />
+                <div class="input-icon-right">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-location"></use>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map Adjust Tip -->
+            <div class="form-map-tip">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-arrow-up"></use>
+              </svg>
+              <span>Arraste o mapa para ajustar a posição</span>
+            </div>
+
+            <!-- Type Chips -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Tipo de Local</span>
+              </label>
+              <div class="type-chips-row" id="type-chips-container">
+                <button class="type-chip" data-value="Casa">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-home"></use>
+                  </svg>
+                  Casa
+                </button>
+                <button class="type-chip" data-value="Trabalho">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-car"></use>
+                  </svg>
+                  Trabalho
+                </button>
+                <button class="type-chip active" data-value="Outro">
+                  <svg class="icon">
+                    <use href="assets/icons-unified.svg#icon-pin"></use>
+                  </svg>
+                  Outro
+                </button>
+              </div>
+              <input type="hidden" id="inp-category" value="Outro" />
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+              <label class="form-label-row">
+                <span class="form-label-text">Observações</span>
+              </label>
+              <textarea
+                class="form-input-area"
+                id="inp-notes"
+                placeholder="Ex: Portão azul, código 1234..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn-action-primary full-width" id="btn-save-form">
+              Guardar Alterações
             </button>
           </div>
         </div>
+
+        <!-- VIEW: SIMULATOR (Removed) -->
       </div>
-
-      <!-- VIEW: FORM (Add/Edit) -->
-      <div class="sheet-view" id="view-form">
-        <div class="form-header">
-          <button class="map-header-btn" id="btn-cancel-form">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-arrow-left"></use>
-            </svg>
-          </button>
-          <h3 class="form-title" id="form-heading">Editar Local</h3>
-          <div style="width: 40px"></div>
-          <!-- Spacer for center alignment -->
-        </div>
-
-        <div class="form-content-scroll">
-          <!-- Name -->
-          <div class="form-group">
-            <label class="form-label-row">
-              <span class="form-label-text">Nome do Local</span>
-            </label>
-            <div class="input-with-icon">
-              <input type="text" class="form-input-clean" id="inp-name" placeholder="Ex: Casa, Trabalho..." />
-              <div class="input-icon-right">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-edit"></use>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Address -->
-          <div class="form-group">
-            <label class="form-label-row">
-              <span class="form-label-text">Endereço</span>
-            </label>
-            <div class="input-with-icon">
-              <input type="text" class="form-input-clean" id="inp-address" placeholder="Pesquisar morada..." />
-              <div class="input-icon-right">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-location"></use>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Map Adjust Tip -->
-          <div class="form-map-tip">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-arrow-up"></use>
-            </svg>
-            <span>Arraste o mapa para ajustar a posição</span>
-          </div>
-
-          <!-- Type Chips -->
-          <div class="form-group">
-            <label class="form-label-row">
-              <span class="form-label-text">Tipo de Local</span>
-            </label>
-            <div class="type-chips-row" id="type-chips-container">
-              <button class="type-chip" data-value="Casa">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-home"></use>
-                </svg>
-                Casa
-              </button>
-              <button class="type-chip" data-value="Trabalho">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-car"></use>
-                </svg>
-                Trabalho
-              </button>
-              <button class="type-chip active" data-value="Outro">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-pin"></use>
-                </svg>
-                Outro
-              </button>
-            </div>
-            <input type="hidden" id="inp-category" value="Outro" />
-          </div>
-
-          <!-- Notes -->
-          <div class="form-group">
-            <label class="form-label-row">
-              <span class="form-label-text">Observações</span>
-            </label>
-            <textarea class="form-input-area" id="inp-notes" placeholder="Ex: Portão azul, código 1234..."></textarea>
-          </div>
-        </div>
-
-        <div class="form-footer">
-          <button class="btn-action-primary full-width" id="btn-save-form">
-            Guardar Alterações
-          </button>
-        </div>
-      </div>
-
-      <!-- VIEW: SIMULATOR (Removed) -->
     </div>
-  </div>
 
-  <!-- TRIP CALCULATOR MODAL -->
-  <div id="modal-trip-calculator" class="trip-modal-overlay hidden" aria-hidden="true" role="dialog">
-    <div id="trip-modal-card" class="trip-modal-card">
-      <div class="trip-modal-header" style="padding: 1.5rem; border-bottom: 1px solid var(--border-light)">
-        <h2 style="
+    <!-- TRIP CALCULATOR MODAL -->
+    <div
+      id="modal-trip-calculator"
+      class="trip-modal-overlay hidden"
+      aria-hidden="true"
+      role="dialog"
+    >
+      <div id="trip-modal-card" class="trip-modal-card">
+        <div
+          class="trip-modal-header"
+          style="padding: 1.5rem; border-bottom: 1px solid var(--border-light)"
+        >
+          <h2
+            style="
               margin: 0;
               font-size: 1.5rem;
               font-weight: 700;
               color: var(--color-text-main);
-            ">
-          Planear Viagem
-        </h2>
-        <button id="trip-modal-close" class="icon-btn-sm" aria-label="Fechar"
-          style="background: transparent; border: none; cursor: pointer">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </div>
+            "
+          >
+            Planear Viagem
+          </h2>
+          <button
+            id="trip-modal-close"
+            class="icon-btn-sm"
+            aria-label="Fechar"
+            style="background: transparent; border: none; cursor: pointer"
+          >
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </div>
 
-      <div id="trip-modal-body" class="trip-modal-body" style="padding: 1.5rem">
-        <!-- VEHICLE SELECTOR INJECTION POINT -->
+        <div
+          id="trip-modal-body"
+          class="trip-modal-body"
+          style="padding: 1.5rem"
+        >
+          <!-- VEHICLE SELECTOR INJECTION POINT -->
 
-        <!-- Input Section 1: Vehicle Performance -->
-        <div class="mt-2 mb-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">
-            Eficiência do Veículo
-          </h3>
-          <div
-            class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-            <div class="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800">
-              <div class="flex-1 p-4">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Consumo
-                  (L/100km)</label>
-                <input id="trip-consumo"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="5.5" step="0.1" type="number" />
-              </div>
-              <div class="flex-1 p-4">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Preço (€/L)</label>
-                <input id="trip-preco"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="1.65" step="0.01" type="number" />
+          <!-- Input Section 1: Vehicle Performance -->
+          <div class="mt-2 mb-4">
+            <h3
+              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
+            >
+              Eficiência do Veículo
+            </h3>
+            <div
+              class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
+            >
+              <div
+                class="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800"
+              >
+                <div class="flex-1 p-4">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >Consumo (L/100km)</label
+                  >
+                  <input
+                    id="trip-consumo"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="5.5"
+                    step="0.1"
+                    type="number"
+                  />
+                </div>
+                <div class="flex-1 p-4">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >Preço (€/L)</label
+                  >
+                  <input
+                    id="trip-preco"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="1.65"
+                    step="0.01"
+                    type="number"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <!-- Input Section 2: Trip Logistics -->
-        <div class="mb-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">
-            Dados da Viagem
-          </h3>
-          <div
-            class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-            <div class="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-gray-800">
-              <div class="p-4 border-t-0 border-l-0">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Km Previstos</label>
-                <input id="trip-distancia"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="100" type="number" />
-              </div>
-              <div class="p-4 border-t-0">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">N.º de
-                  Viagens</label>
-                <input id="trip-viagens"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="1" type="number" />
-              </div>
-              <div class="p-4 border-l-0">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">Portagens (€)</label>
-                <input id="trip-portagens"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="10.00" step="0.01" type="number" />
-              </div>
-              <div class="p-4">
-                <label class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300">N.º de
-                  Pessoas</label>
-                <input id="trip-pessoas"
-                  class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                  placeholder="2" type="number" />
+          <!-- Input Section 2: Trip Logistics -->
+          <div class="mb-4">
+            <h3
+              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
+            >
+              Dados da Viagem
+            </h3>
+            <div
+              class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
+            >
+              <div
+                class="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-gray-800"
+              >
+                <div class="p-4 border-t-0 border-l-0">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >Km Previstos</label
+                  >
+                  <input
+                    id="trip-distancia"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="100"
+                    type="number"
+                  />
+                </div>
+                <div class="p-4 border-t-0">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >N.º de Viagens</label
+                  >
+                  <input
+                    id="trip-viagens"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="1"
+                    type="number"
+                  />
+                </div>
+                <div class="p-4 border-l-0">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >Portagens (€)</label
+                  >
+                  <input
+                    id="trip-portagens"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="10.00"
+                    step="0.01"
+                    type="number"
+                  />
+                </div>
+                <div class="p-4">
+                  <label
+                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
+                    >N.º de Pessoas</label
+                  >
+                  <input
+                    id="trip-pessoas"
+                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
+                    placeholder="2"
+                    type="number"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <!-- Footer Actions -->
-        <div class="flex gap-3 mt-4 mb-2">
-          <button type="button" id="btn-trip-clear" class="btn btn-ghost flex-1">
-            Limpar
-          </button>
-          <button id="btn-trip-maps" class="btn btn-primary flex-1 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-sm">map</span> Abrir
-            Maps
-          </button>
-        </div>
-        <!-- Dynamic Results Card -->
-        <div class="mt-8 mb-6">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">
-            Estimativa de Gastos
-          </h3>
-          <div class="bg-primary/5 dark:bg-primary/20 rounded-xl p-6 border border-primary/10 dark:border-primary/30">
-            <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
-              <div>
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Km Totais
-                </p>
-                <p id="trip-metric-km" class="text-lg font-bold text-primary dark:text-white">
-                  -- km
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Litros Necessários
-                </p>
-                <p id="trip-metric-liters" class="text-lg font-bold text-primary dark:text-white">
-                  -- L
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Combustível
-                </p>
-                <p id="trip-result-fuel" class="text-lg font-bold text-primary dark:text-white">
-                  -- €
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Total Portagens
-                </p>
-                <p id="trip-result-tolls" class="text-lg font-bold text-primary dark:text-white">
-                  -- €
-                </p>
-              </div>
-              <!-- Hidden metric stored for logic consistency -->
-              <p id="trip-metric-cost100" style="display: none"></p>
-            </div>
-            <div class="pt-6 border-t border-primary/10 dark:border-primary/30 space-y-4">
-              <div class="flex justify-between items-center bg-primary text-white p-4 rounded-xl shadow-md">
-                <span class="font-semibold">Gasto Total</span>
-                <span id="trip-result-total" class="text-2xl font-extrabold tracking-tight">-- €</span>
+          <!-- Footer Actions -->
+          <div class="flex gap-3 mt-4 mb-2">
+            <button
+              type="button"
+              id="btn-trip-clear"
+              class="btn btn-ghost flex-1"
+            >
+              Limpar
+            </button>
+            <button
+              id="btn-trip-maps"
+              class="btn btn-primary flex-1 flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-sm">map</span> Abrir
+              Maps
+            </button>
+          </div>
+          <!-- Dynamic Results Card -->
+          <div class="mt-8 mb-6">
+            <h3
+              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
+            >
+              Estimativa de Gastos
+            </h3>
+            <div
+              class="bg-primary/5 dark:bg-primary/20 rounded-xl p-6 border border-primary/10 dark:border-primary/30"
+            >
+              <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
+                <div>
+                  <p
+                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                  >
+                    Km Totais
+                  </p>
+                  <p
+                    id="trip-metric-km"
+                    class="text-lg font-bold text-primary dark:text-white"
+                  >
+                    -- km
+                  </p>
+                </div>
+                <div>
+                  <p
+                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                  >
+                    Litros Necessários
+                  </p>
+                  <p
+                    id="trip-metric-liters"
+                    class="text-lg font-bold text-primary dark:text-white"
+                  >
+                    -- L
+                  </p>
+                </div>
+                <div>
+                  <p
+                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                  >
+                    Combustível
+                  </p>
+                  <p
+                    id="trip-result-fuel"
+                    class="text-lg font-bold text-primary dark:text-white"
+                  >
+                    -- €
+                  </p>
+                </div>
+                <div>
+                  <p
+                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                  >
+                    Total Portagens
+                  </p>
+                  <p
+                    id="trip-result-tolls"
+                    class="text-lg font-bold text-primary dark:text-white"
+                  >
+                    -- €
+                  </p>
+                </div>
+                <!-- Hidden metric stored for logic consistency -->
+                <p id="trip-metric-cost100" style="display: none"></p>
               </div>
               <div
-                class="flex justify-between items-center bg-white/80 dark:bg-gray-800 p-4 rounded-xl border border-primary/20 shadow-sm">
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-primary dark:text-primary/50">groups</span>
-                  <span class="font-semibold text-primary dark:text-gray-200">Por Pessoa</span>
+                class="pt-6 border-t border-primary/10 dark:border-primary/30 space-y-4"
+              >
+                <div
+                  class="flex justify-between items-center bg-primary text-white p-4 rounded-xl shadow-md"
+                >
+                  <span class="font-semibold">Gasto Total</span>
+                  <span
+                    id="trip-result-total"
+                    class="text-2xl font-extrabold tracking-tight"
+                    >-- €</span
+                  >
                 </div>
-                <span id="trip-result-person" class="text-xl font-extrabold text-primary dark:text-white">-- €</span>
+                <div
+                  class="flex justify-between items-center bg-white/80 dark:bg-gray-800 p-4 rounded-xl border border-primary/20 shadow-sm"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="material-symbols-outlined text-primary dark:text-primary/50"
+                      >groups</span
+                    >
+                    <span class="font-semibold text-primary dark:text-gray-200"
+                      >Por Pessoa</span
+                    >
+                  </div>
+                  <span
+                    id="trip-result-person"
+                    class="text-xl font-extrabold text-primary dark:text-white"
+                    >-- €</span
+                  >
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- SEARCH OVERLAY -->
-  <div class="search-overlay" id="search-overlay">
-    <div class="search-header">
-      <button class="map-header-btn" id="btn-search-close">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-arrow-left"></use>
-        </svg>
-      </button>
-      <input type="text" class="search-input-pill" id="search-input" placeholder="Pesquisar favoritos..." />
-    </div>
-    <div class="search-results" id="search-results">
-      <!-- Items injected here -->
-    </div>
-  </div>
-
-  <!-- TOAST CONTAINER -->
-  <div class="toast-container" id="toast-container"></div>
-
-  <!-- MODAL CONFIRM -->
-  <div class="modal-backdrop" id="modal-confirm">
-    <div class="modal-card">
-      <div class="modal-title">Apagar Favorito?</div>
-      <div class="modal-text">Esta ação não pode ser desfeita.</div>
-      <div class="modal-actions">
-        <button class="btn-modal cancel" id="btn-modal-cancel">
-          Cancelar
+    <!-- SEARCH OVERLAY -->
+    <div class="search-overlay" id="search-overlay">
+      <div class="search-header">
+        <button class="map-header-btn" id="btn-search-close">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+          </svg>
         </button>
-        <button class="btn-modal confirm" id="btn-modal-confirm">
-          Apagar
-        </button>
+        <input
+          type="text"
+          class="search-input-pill"
+          id="search-input"
+          placeholder="Pesquisar favoritos..."
+        />
+      </div>
+      <div class="search-results" id="search-results">
+        <!-- Items injected here -->
       </div>
     </div>
-  </div>
 
-  <!-- FOOTER NAV -->
-  <footer>
-    <a href="dashboard.html">
-      <svg class="icon">
-        <use href="assets/icons-unified.svg#icon-home"></use>
-      </svg>
-      <span>Home</span>
-    </a>
-    <a href="veiculos.html">
-      <svg class="icon">
-        <use href="assets/icons-unified.svg#icon-car"></use>
-      </svg>
-      <span>Veículos</span>
-    </a>
-    <a href="mapa.html" class="active">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg?v=2#icon-map"></use>
-      </svg>
-      <span>Mapa</span>
-    </a>
-    <a href="perfil.html">
-      <svg class="icon">
-        <use href="assets/icons-unified.svg#icon-user"></use>
-      </svg>
-      <span>Perfil</span>
-    </a>
-  </footer>
-</body>
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toast-container"></div>
 
+    <!-- MODAL CONFIRM -->
+    <div class="modal-backdrop" id="modal-confirm">
+      <div class="modal-card">
+        <div class="modal-title">Apagar Favorito?</div>
+        <div class="modal-text">Esta ação não pode ser desfeita.</div>
+        <div class="modal-actions">
+          <button class="btn-modal cancel" id="btn-modal-cancel">
+            Cancelar
+          </button>
+          <button class="btn-modal confirm" id="btn-modal-confirm">
+            Apagar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER NAV -->
+    <footer>
+      <a href="dashboard.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="veiculos.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html" class="active">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg?v=2#icon-map"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="perfil.html">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
+  </body>
 </html>
