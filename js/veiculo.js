@@ -440,6 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateResponsibilities(v, settings) {
+    // Show FAB Button (Floating Mode)
+    const btnFloat = document.getElementById("btn-float-alerts");
+    if (btnFloat) btnFloat.classList.remove("hidden");
+
     // Helpers
     function getDaysDiff(targetDate) {
       if (!targetDate) return null;
@@ -1436,25 +1440,117 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnQuickPlan = document.getElementById("btn-add-plan-quick");
     if (btnQuickPlan) {
       btnQuickPlan.onclick = () => {
-        // Open modal in "add new" mode
-        // We need to ensure initPlanModal is ready or expose an open function
-        // Fortunately initPlanModal exposes generic binding on "btn-add-plan".
-        // Since we have a new button ID, we can just manually trigger the modal open logic
-        // providing we can access it within this scope?
-        // "initPlanModal" binds "btn-add-plan" inside it.
-        // Let's manually click the existing hidden/visible button inside the tab?
-        // Or better, let's just trigger the open logic.
-        // Since initPlanModal scope is closed, we can simulate click on the tab button if present,
-        // OR we can make initPlanModal bind to multiple buttons?
-        // Let's find "btn-add-plan" (the one in the tab) and click it.
         const tabBtn = document.getElementById("btn-add-plan");
         if (tabBtn) tabBtn.click();
       };
     }
 
-    // =========================
-    // ABASTECIMENTOS
-    // =========================
+    // NEW: Floating Metrics Setup
+    setupFloatingMetrics(veiculoId);
+    // Calc metrics (async but don't block)
+    updateFloatingMetrics(veiculoId, v, settings);
+
+  // =========================
+  // FLOATING METRICS LOGIC
+  // =========================
+  function setupFloatingMetrics(veiculoId) {
+    const pairs = [
+        { btnId: "btn-float-toggle", cardId: "floating-metrics-card", closeId: "btn-close-float" },
+        { btnId: "btn-float-analytics", cardId: "section-analytics", closeId: "btn-close-analytics" },
+        { btnId: "btn-float-alerts", cardId: "section-alerts", closeId: "btn-close-alerts" }
+    ];
+
+    pairs.forEach(p => {
+        const btn = document.getElementById(p.btnId);
+        const card = document.getElementById(p.cardId);
+        const close = document.getElementById(p.closeId);
+
+        if (!btn || !card) return;
+
+        btn.addEventListener("click", () => {
+             // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
+             // Usually exclusive is cleaner for popups on same side.
+             pairs.forEach(other => {
+                 if(other !== p) {
+                     const c = document.getElementById(other.cardId);
+                     if(c) c.classList.add("hidden");
+                 }
+             });
+             card.classList.toggle("hidden");
+        });
+
+        if (close) {
+            close.addEventListener("click", () => {
+                card.classList.add("hidden");
+            });
+        }
+    });
+  }
+
+  async function updateFloatingMetrics(veiculoId, v, settings) {
+    const elCostKm = document.getElementById("float-cost-km");
+    const elTotalCost = document.getElementById("float-total-cost");
+    const elTotalKm = document.getElementById("float-total-km");
+
+    if (!elCostKm || !elTotalCost) return;
+
+    try {
+        // 1. Fetch all data (parallel for speed)
+        const [abs, reps] = await Promise.all([
+           getAbastecimentosDoVeiculo(veiculoId, 1000), // get all likely
+           getReparacoesDoVeiculo(veiculoId)
+        ]);
+
+        // 2. Sum Costs
+        let totalFuel = 0;
+        abs.forEach(a => {
+            const l = Number(a.litros) || 0;
+            const p = Number(a.precoPorLitro) || 0;
+            totalFuel += (l * p);
+        });
+
+        let totalMaint = 0;
+        reps.forEach(r => {
+            totalMaint += (Number(r.custo) || 0);
+        });
+
+        const totalSpent = totalFuel + totalMaint;
+
+        // 3. Calc Distance
+        // Use Odometer difference
+        const currentOdo = v.odometroAtual || 0;
+        const initialOdo = v.odometroInicial || 0;
+        let totalDist = currentOdo - initialOdo;
+
+        if (totalDist < 0) totalDist = 0;
+
+        // 4. Update UI
+        if (elTotalCost) {
+            elTotalCost.textContent = formatCurrency(totalSpent, settings?.moeda || "EUR");
+        }
+        
+        if (elTotalKm) {
+             elTotalKm.textContent = totalDist.toLocaleString() + " km";
+        }
+
+        if (elCostKm) {
+            if (totalDist > 0) {
+                const cpk = totalSpent / totalDist;
+                // e.g. 0.123 €/km
+                elCostKm.textContent = `${cpk.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+            } else {
+                elCostKm.textContent = "—";
+            }
+        }
+
+    } catch(e) {
+        console.error("Error calculating floating metrics", e);
+    }
+  }
+
+  // =========================
+  // ABASTECIMENTOS
+  // =========================
     const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
 
     if (!abs.length) {
@@ -1633,8 +1729,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // But we want to show "A aprender..." if exists but empty.
             // If null, it means never calculated.
             
-            // Show section
-            section.classList.remove("hidden");
+            // Show FAB Button (Floating Mode)
+            const btnFloat = document.getElementById("btn-float-analytics");
+            if (btnFloat) btnFloat.classList.remove("hidden");
+            
+            // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
 
             // Elements
             const elL100 = document.getElementById("an-l100");

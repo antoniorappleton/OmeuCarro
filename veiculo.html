@@ -148,70 +148,8 @@
       </button>
     </section>
 
-    <!-- 2.5 ANALYTICS CARD (SMART) -->
-    <section id="section-analytics" class="card hidden" style="margin-bottom: 24px;">
-      <div class="card-body" style="padding: 16px;">
-        <div class="analytics-header" id="btn-toggle-analytics"
-          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer;">
-          <div style="display:flex; align-items:center; gap: 10px;">
-            <h3 class="vehicle-section-title" style="margin:0; font-size: 1.1rem;">
-              <svg class="icon" style="color: var(--color-primary); margin-right: 8px;">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
-              </svg>
-              Combustível & Autonomia
-            </h3>
-            <span id="analytics-badge" class="badge badge-outline">A aprender...</span>
-          </div>
-          <button type="button" class="icon-btn-sm">
-            <svg class="icon" id="icon-analytics-toggle" style="transition: transform 0.3s ease;">
-              <use href="assets/icons-unified.svg#icon-chevron-up"></use> <!-- Default Open -->
-            </svg>
-          </button>
-        </div>
-
-        <div id="analytics-content" class="analytics-content-wrapper">
-          <!-- CONTENT STARTS -->
-          <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <!-- Consumption -->
-            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
-              <div class="muted" style="font-size: 0.85rem;">Consumo Médio</div>
-              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
-                <span id="an-l100">--</span> <small class="muted" style="font-size: 0.9rem;">L/100</small>
-              </div>
-              <div class="analytics-meta" style="font-size: 0.8rem;">
-                <span id="an-confidence" class="status-neutral"
-                  style="display: inline-flex; align-items: center; gap: 4px;">
-                  Calculando...
-                </span>
-              </div>
-            </div>
-
-            <!-- Range -->
-            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
-              <div class="muted" style="font-size: 0.85rem;">Autonomia Est.</div>
-              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
-                <span id="an-range-km">--</span> <small class="muted" style="font-size: 0.9rem;">km</small>
-              </div>
-              <div class="analytics-meta" style="font-size: 0.8rem; color: var(--color-text-secondary);">
-                <span id="an-range-days">-- dias</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Capacity Warning (Hidden by default) -->
-          <div id="an-warning-capacity" class="form-message form-message--warning hidden"
-            style="margin-top: 12px; font-size: 0.9rem;">
-            ⚠️ Defina a capacidade do depósito nas definições do veículo para ver a autonomia.
-          </div>
-
-          <!-- Fuel Alert (Hidden by default) -->
-          <div id="an-alert-box" class="form-message hidden"
-            style="margin-top: 12px; font-size: 0.9rem; font-weight: 600;">
-            <!-- Filled via JS -->
-          </div>
-        </div> <!-- End analytics-content -->
-      </div>
-    </section>
+    <!-- 2.5 ANALYTICS (MOVED TO FAB) -->
+    <!-- Content moved to floating-fab-container -->
 
     <!-- 3. COMPACT KPIs -->
     <section class="stats-grid vehicle-kpis-compact">
@@ -233,121 +171,8 @@
       </article>
     </section>
 
-    <!-- 4. ALERTS SUMMARY (Expandable Config) -->
-    <section id="section-alerts" class="card" style="margin-bottom: 24px">
-      <header class="card-header" style="padding-bottom: 12px">
-        <h2 class="vehicle-section-title">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-bell"></use>
-          </svg>
-          Alertas e Prazos
-        </h2>
-        <button id="btn-edit-dates" class="btn btn-ghost btn-sm">
-          Editar Datas
-        </button>
-      </header>
-
-      <div class="card-body">
-        <!-- SECTION: PRAZOS LEGAIS DO VEÍCULO -->
-        <h4 class="muted" style="
-              margin-bottom: 8px;
-              font-size: 0.85rem;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            ">
-          Documentos
-        </h4>
-        <div class="vehicle-alerts-summary" style="margin-bottom: 20px">
-          <!-- Seguro -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-seguro"></div>
-            <!-- Class gets added by JS (status-green/etc) -->
-            <div class="alert-info">
-              <span class="alert-label">Seguro</span>
-              <span class="alert-value"><span id="val-seguro">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-seguro"></span></span>
-            </div>
-          </div>
-          <!-- IUC -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-iuc"></div>
-            <div class="alert-info">
-              <span class="alert-label">IUC</span>
-              <span class="alert-value"><span id="val-iuc">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-iuc"></span></span>
-            </div>
-          </div>
-          <!-- INSPEÇÃO -->
-          <div class="alert-item">
-            <div class="alert-status-indicator" id="status-inspecao"></div>
-            <div class="alert-info">
-              <span class="alert-label">Inspeção</span>
-              <span class="alert-value"><span id="val-inspecao">--</span>
-                <span class="muted" style="font-weight: 400; font-size: 0.85em" id="txt-inspecao"></span></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION: MANUTENÇÃO (DYNAMIC) -->
-        <h4 class="muted" style="
-              margin-bottom: 8px;
-              font-size: 0.85rem;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            ">
-          Manutenção Próxima
-        </h4>
-        <div id="alerts-maintenance-list" class="vehicle-alerts-summary">
-          <div class="muted" style="font-size: 0.9rem; padding: 4px 0">
-            Tudo em dia.
-          </div>
-        </div>
-
-        <!-- COLLAPSIBLE CONFIG -->
-        <details id="alerts-config-details" class="alerts-config-details">
-          <summary class="btn btn-secondary btn-sm full-width" style="margin-top: 12px">
-            Configurar Alertas
-          </summary>
-
-          <div id="alerts-config-panel" class="alerts-config-panel" style="margin-top: 16px">
-            <div class="vehicle-divider"></div>
-            <h4 class="muted" style="margin: 12px 0 8px">
-              Notificações Ativas
-            </h4>
-
-            <div class="config-row">
-              <span>Seguro</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-seguro" /><span
-                  class="slider"></span></label>
-            </div>
-            <div class="config-row">
-              <span>IUC</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-iuc" /><span class="slider"></span></label>
-            </div>
-            <div class="config-row">
-              <span>Inspeção</span>
-              <label class="switch"><input type="checkbox" id="toggle-alert-inspecao" /><span
-                  class="slider"></span></label>
-            </div>
-
-            <label class="config-select-row">
-              <span>Avisar com antecedência:</span>
-              <select id="select-alert-antecedencia">
-                <option value="7">7 dias</option>
-                <option value="15">15 dias</option>
-                <option value="30">30 dias</option>
-              </select>
-            </label>
-
-            <div class="config-actions">
-              <button id="btn-save-alert-settings" class="btn btn-primary btn-sm full-width">
-                Guardar Preferências
-              </button>
-            </div>
-          </div>
-        </details>
-      </div>
-    </section>
+    <!-- 4. ALERTS (MOVED TO FAB) -->
+    <!-- Content moved to floating-fab-container -->
 
     <!-- 5. TABS (History) -->
     <div class="tabs-header-row">
@@ -495,6 +320,159 @@
       <span>Perfil</span>
     </a>
   </footer>
+
+  <!-- FLOATING METRICS (SIDEBAR/FAB) -->
+  <div class="floating-fab-container">
+    <!-- 1. METRICS CARD -->
+    <div id="floating-metrics-card" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Métricas Globais</span>
+        <button id="btn-close-float" class="icon-btn-xs" style="border:none; bg:transparent;">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="floating-card-content">
+        <div class="metric-float-item">
+          <span class="label">Custo Total / km</span>
+          <strong id="float-cost-km" class="value-highlight">--</strong>
+        </div>
+        <div class="metric-float-item">
+          <span class="label">Total Gasto</span>
+          <strong id="float-total-cost">--</strong>
+        </div>
+        <div class="metric-float-item">
+          <span class="label">Km Percorridos</span>
+          <strong id="float-total-km">--</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ANALYTICS CARD (MOVED) -->
+    <div id="section-analytics" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Combustível & Autonomia</span>
+        <button id="btn-close-analytics" class="icon-btn-xs" style="border:none; bg:transparent;">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body" style="padding: 0; margin-top: 12px;">
+        <!-- Header removed/simplified since it's now a popup header -->
+        <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 8px;">
+          <span id="analytics-badge" class="badge badge-outline">A aprender...</span>
+        </div>
+
+        <div id="analytics-content" class="analytics-content-wrapper">
+          <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <!-- Consumption -->
+            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
+              <div class="muted" style="font-size: 0.85rem;">Consumo Médio</div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
+                <span id="an-l100">--</span> <small class="muted" style="font-size: 0.9rem;">L/100</small>
+              </div>
+              <div class="analytics-meta" style="font-size: 0.8rem;">
+                <span id="an-confidence" class="status-neutral"
+                  style="display: inline-flex; align-items: center; gap: 4px;">
+                  Calculando...
+                </span>
+              </div>
+            </div>
+            <!-- Range -->
+            <div class="analytics-box" style="background: var(--bg-hover); padding: 12px; border-radius: 12px;">
+              <div class="muted" style="font-size: 0.85rem;">Autonomia Est.</div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--color-text-main); margin: 4px 0;">
+                <span id="an-range-km">--</span> <small class="muted" style="font-size: 0.9rem;">km</small>
+              </div>
+              <div class="analytics-meta" style="font-size: 0.8rem; color: var(--color-text-secondary);">
+                <span id="an-range-days">-- dias</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="an-warning-capacity" class="form-message form-message--warning hidden"
+            style="margin-top: 12px; font-size: 0.9rem;">
+            ⚠️ Defina a capacidade do depósito nas definições.
+          </div>
+          <div id="an-alert-box" class="form-message hidden"
+            style="margin-top: 12px; font-size: 0.9rem; font-weight: 600;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ALERTS CARD (MOVED) -->
+    <div id="section-alerts" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Alertas e Prazos</span>
+        <button id="btn-close-alerts" class="icon-btn-xs" style="border:none; bg:transparent;">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body" style="padding: 0; margin-top: 12px;">
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Documentos</h4>
+        <div class="vehicle-alerts-summary" style="margin-bottom: 12px; display:flex; flex-direction:column; gap:8px;">
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-seguro"></div>
+            <div class="alert-info">
+              <span class="alert-label">Seguro</span>
+              <span class="alert-value"><span id="val-seguro">--</span></span>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-iuc"></div>
+            <div class="alert-info">
+              <span class="alert-label">IUC</span>
+              <span class="alert-value"><span id="val-iuc">--</span></span>
+            </div>
+          </div>
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-inspecao"></div>
+            <div class="alert-info">
+              <span class="alert-label">Inspeção</span>
+              <span class="alert-value"><span id="val-inspecao">--</span></span>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Manutenção</h4>
+        <div id="alerts-maintenance-list" class="vehicle-alerts-summary" style="margin-bottom: 12px;">
+          <div class="muted" style="font-size: 0.9rem;">Tudo em dia.</div>
+        </div>
+
+        <!-- Edit button shortcut -->
+        <button id="btn-edit-dates-float" class="btn btn-secondary btn-sm full-width">
+          Configurar
+        </button>
+      </div>
+    </div>
+
+    <!-- BUTTONS STACK -->
+    <div class="floating-buttons-stack" style="display: flex; flex-direction: column; gap: 12px;">
+      <button id="btn-float-analytics" class="fab-right hidden" aria-label="Analytics"
+        style="background: var(--color-surface); color: var(--color-primary-start);">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-fuel"></use>
+        </svg>
+      </button>
+
+      <button id="btn-float-alerts" class="fab-right hidden" aria-label="Alertas"
+        style="background: var(--color-surface); color: var(--color-warning);">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-bell"></use>
+        </svg>
+      </button>
+
+      <button id="btn-float-toggle" class="fab-right" aria-label="Ver métricas">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-dashboard"></use>
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <!-- MODAL: NOVA REPARAÇÃO -->
   <div id="maint-modal" class="modal hidden">
