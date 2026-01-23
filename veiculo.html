@@ -175,8 +175,13 @@
     <!-- Content moved to floating-fab-container -->
 
     <!-- 5. TABS (History) -->
-    <div class="tabs-header-row">
-      <h3 class="vehicle-section-title">Histórico</h3>
+    <div class="tabs-header-row" style="justify-content: flex-start; gap: 12px; align-items: center;">
+      <h3 class="vehicle-section-title">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-list"></use>
+        </svg>
+        Histórico
+      </h3>
       <button id="btn-toggle-tabs" class="icon-btn-sm" aria-label="Recolher histórico" aria-expanded="true">
         <svg class="icon">
           <use href="assets/icons-unified.svg#icon-chevron-up"></use>
@@ -444,9 +449,56 @@
         </div>
 
         <!-- Edit button shortcut -->
-        <button id="btn-edit-dates-float" class="btn btn-secondary btn-sm full-width">
-          Configurar
-        </button>
+        <!-- Config (Restored) -->
+        <details id="alerts-config-details" class="alerts-config-details" style="width: 100%; margin-top: 12px;">
+          <summary class="btn btn-secondary btn-sm full-width" style="list-style: none;">
+            <span style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg class="icon-sm" style="width:16px; height:16px;">
+                <use href="assets/icons-unified.svg#icon-settings"></use>
+              </svg>
+              Configurar
+            </span>
+          </summary>
+
+          <div id="alerts-config-panel" class="alerts-config-panel"
+            style="margin-top: 16px; border-top: 1px solid var(--border-light); padding-top: 12px;">
+            <h4 class="muted" style="margin: 0 0 12px; font-size: 0.8rem;">Notificações Ativas</h4>
+
+            <div class="config-row"
+              style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+              <span>Seguro</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-seguro" /><span
+                  class="slider"></span></label>
+            </div>
+            <div class="config-row"
+              style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+              <span>IUC</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-iuc" /><span class="slider"></span></label>
+            </div>
+            <div class="config-row"
+              style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem;">
+              <span>Inspeção</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-inspecao" /><span
+                  class="slider"></span></label>
+            </div>
+
+            <label class="config-select-row" style="display: block; margin-bottom: 12px; font-size: 0.9rem;">
+              <span style="display:block; margin-bottom:4px">Avisar com antecedência:</span>
+              <select id="select-alert-antecedencia"
+                style="width: 100%; padding: 6px; border-radius: 6px; background: var(--color-bg); border: 1px solid var(--border-light);">
+                <option value="7">7 dias</option>
+                <option value="15">15 dias</option>
+                <option value="30">30 dias</option>
+              </select>
+            </label>
+
+            <div class="config-actions">
+              <button id="btn-save-alert-settings" class="btn btn-primary btn-sm full-width">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
 
