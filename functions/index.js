@@ -14,98 +14,146 @@ exports.checkVehicleAlerts = functions.pubsub
   .timeZone("Europe/Lisbon")
   .onRun(async (context) => {
     console.log("A iniciar verificação diária de alertas...");
-    const hoje = new Date();
-    const avisos = [];
 
-    // Definição de prazos para aviso (ex: avisar com 30 dias e com 3 dias de antecedência)
+    const hoje = new Date();
+    // Default: 30 dias, 7 dias, 3 dias, 1 dia (amanhã), 0 dias (hoje)
     const prazosAviso = [30, 7, 3, 1];
 
     try {
-        // 1. Obter todos os veículos (idealmente, isto seria otimizado para não ler tudo, 
-        // mas para uma app pessoal/pequena escala, ler tudo é aceitável e mais simples)
-        // Se a escala crescer, deve-se usar "Collection Group Queries" ou guardar datas num documento separado.
-        
-        // Como 'veiculos' é uma subcoleção de 'users', usamos collectionGroup para apanhar todos
-        const veiculosSnapshot = await db.collectionGroup('veiculos').get();
+      // 1. Obter todos os veículos (Coleção Raiz)
+      const veiculosSnapshot = await db.collection("veiculos").get();
 
-        if (veiculosSnapshot.empty) {
-            console.log("Nenhum veículo encontrado.");
-            return null;
-        }
+      if (veiculosSnapshot.empty) {
+        console.log("Nenhum veículo encontrado.");
+        return null;
+      }
 
-        const promises = veiculosSnapshot.docs.map(async (doc) => {
-            const veiculo = doc.data();
-            const parentUserRef = doc.ref.parent.parent; // user reference
-            if (!parentUserRef) return;
+      for (const doc of veiculosSnapshot.docs) {
+        const veiculo = doc.data();
 
-            const alertas = [];
+        // Obter User ID do campo
+        const userId = veiculo.userId;
+        if (!userId) continue; // Ignora veículos órfãos
 
-            // Helper para verificar datas
-            const verificarData = (dataStr, nomeCampo, nomeAmigavel) => {
-                if (!dataStr) return;
-                
-                const dataAlvo = new Date(dataStr);
-                const diffTime = dataAlvo - hoje;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        const userRef = db.collection("users").doc(userId);
 
-                if (prazosAviso.includes(diffDays)) {
-                    alertas.push({
-                        titulo: `⚠️ ${nomeAmigavel} a expirar!`,
-                        corpo: `O ${nomeAmigavel} do ${veiculo.nome || 'veículo'} vence em ${diffDays} dias (${dataStr}).`,
-                        docId: doc.id
-                    });
-                } else if (diffDays === 0) {
-                     alertas.push({
-                        titulo: `🚨 ${nomeAmigavel} vence HOJE!`,
-                        corpo: `Regulariza o ${nomeAmigavel} do ${veiculo.nome} hoje!`,
-                        docId: doc.id
-                    });
+        const alertas = [];
+        const check = (val, name) => {
+          if (!val) return;
+
+          let d;
+          try {
+            // Suporte para Timestamps do Firestore e Strings/Dates JS
+            d = val.toDate ? val.toDate() : new Date(val);
+          } catch (e) {
+            return;
+          }
+
+          if (isNaN(d.getTime())) return;
+
+          const diffTime = d - hoje;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (prazosAviso.includes(diffDays)) {
+            alertas.push({
+              titulo: `⚠️ ${name} a expirar!`,
+              corpo: `O ${name} vence em ${diffDays} dias (${d.toLocaleDateString("pt-PT")}).`,
+            });
+          } else if (diffDays === 0) {
+            alertas.push({
+              titulo: `🚨 ${name} vence HOJE!`,
+              corpo: `Regulariza o ${name} do ${veiculo.nome || "veículo"} hoje!`,
+            });
+          }
+          // Opcional: Avisar se já expirou? (diffDays < 0). Por defeito não faz spam.
+        };
+
+        // Verificar datas (estrutura aninhada correta)
+        check(veiculo.seguro ? veiculo.seguro.validade : null, "Seguro");
+        check(veiculo.iuc ? veiculo.iuc.dataLimite : null, "IUC");
+        check(
+          veiculo.inspecao ? veiculo.inspecao.proximaData : null,
+          "Inspeção",
+        );
+
+        if (alertas.length > 0) {
+          const tokensSnap = await userRef.collection("fcmTokens").get();
+
+          if (tokensSnap.empty) {
+            console.log(
+              `User ${userId} tem alertas mas sem tokens de notificação.`,
+            );
+          } else {
+            const tokens = tokensSnap.docs.map((t) => t.data().token);
+
+            // Enviar uma mensagem combinada ou múltiplas?
+            // Vamos enviar cada alerta individualmente para ser claro
+            for (const alerta of alertas) {
+              const message = {
+                tokens: tokens, // V1 pode usar array of tokens se usar sendEachForMulticast? Sim.
+                notification: {
+                  title: alerta.titulo,
+                  body: alerta.corpo,
+                },
+                data: {
+                  url: "/veiculos.html", // Deep link (pode precisar de tratamento no client)
+                  veiculoId: doc.id,
+                },
+                webpush: {
+                  notification: {
+                    icon: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
+                    click_action:
+                      "https://omeucarro-d3889.web.app/veiculos.html",
+                  },
+                },
+              };
+
+              try {
+                const response = await admin
+                  .messaging()
+                  .sendEachForMulticast(message);
+                console.log(
+                  `Alert enviado para ${userId} (${alerta.titulo}): Success=${response.successCount}`,
+                );
+
+                // Limpar tokens inválidos
+                if (response.failureCount > 0) {
+                  const failedTokens = [];
+                  response.responses.forEach((resp, idx) => {
+                    if (!resp.success) {
+                      const errorInfo = resp.error;
+                      if (
+                        errorInfo.code ===
+                          "messaging/registration-token-not-registered" ||
+                        errorInfo.code === "messaging/invalid-argument"
+                      ) {
+                        failedTokens.push(tokens[idx]);
+                        // Opcional: remover do DB
+                        userRef
+                          .collection("fcmTokens")
+                          .doc(tokens[idx])
+                          .delete()
+                          .catch(() => {});
+                      }
+                    }
+                  });
+                  console.log(
+                    "Tokens removidos/inválidos:",
+                    failedTokens.length,
+                  );
                 }
-            };
-
-            // Verificar os 3 campos principais
-            verificarData(veiculo.seguroValidade, 'Seguro', 'Seguro');
-            verificarData(veiculo.iucValidade, 'IUC', 'IUC');
-            verificarData(veiculo.inspecaoValidade, 'Inspeção', 'Inspeção');
-
-            // Se houver alertas, enviar notificação ao dono
-            if (alertas.length > 0) {
-                // Obter tokens do utilizador
-                const tokensSnap = await parentUserRef.collection('fcmTokens').get();
-                if (tokensSnap.empty) {
-                    console.log(`Sem tokens para o user ${parentUserRef.id}`);
-                    return;
-                }
-
-                const tokens = tokensSnap.docs.map(t => t.data().token);
-
-                for (const alerta of alertas) {
-                    const payload = {
-                        notification: {
-                            title: alerta.titulo,
-                            body: alerta.corpo,
-                            icon: 'https://omeucarro-d3889.web.app/images/logo-icon192.png' // URL absoluta é melhor
-                        },
-                        data: {
-                            url: '/veiculos.html',
-                            veiculoId: doc.id
-                        }
-                    };
-
-                    console.log(`A enviar para ${parentUserRef.id}:`, alerta.titulo);
-                    
-                    // Enviar para todos os tokens do user
-                    await admin.messaging().sendToDevice(tokens, payload);
-                }
+              } catch (e) {
+                console.error("Erro envio FCM:", e);
+              }
             }
-        });
+          }
+        }
+      }
 
-        await Promise.all(promises);
-        console.log("Verificação concluída.");
-        return null;
-
+      console.log("Verificação concluída.");
+      return null;
     } catch (error) {
-        console.error("Erro na verificação de alertas:", error);
-        return null;
+      console.error("Erro CRITICO na verificação:", error);
+      return null;
     }
   });

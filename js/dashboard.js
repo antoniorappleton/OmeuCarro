@@ -72,7 +72,7 @@ async function obterAbastecimentosFiltrados() {
   if (intervalo) {
     const { inicio, fim } = intervalo;
     abastecimentos = abastecimentos.filter(
-      (ab) => ab.data >= inicio && ab.data <= fim
+      (ab) => ab.data >= inicio && ab.data <= fim,
     );
   }
 
@@ -171,7 +171,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
   const eficiencia = calculateEfficiency(
     distTotalEficiencia,
     litrosTotalEficiencia,
-    settings.unidadeConsumo
+    settings.unidadeConsumo,
   );
 
   const custoPorKm =
@@ -200,7 +200,7 @@ function gerarGraficoConsumo(abastecimentos, settings) {
   destroyChartIfExists("consumo");
 
   const ordenados = [...abastecimentos].sort(
-    (a, b) => (a.odometro || 0) - (b.odometro || 0)
+    (a, b) => (a.odometro || 0) - (b.odometro || 0),
   );
 
   const labels = [];
@@ -258,7 +258,7 @@ function gerarGraficoPreco(abastecimentos, settings) {
       datasets: [
         {
           label: `Preço por Litro (${getCurrencySymbol(
-            settings?.moeda || "EUR"
+            settings?.moeda || "EUR",
           )})`,
           data: valores,
           tension: 0.3,
@@ -405,7 +405,7 @@ function gerarRankingPostos(abastecimentos, settings) {
         </div>
         <span class="ranking-total">${formatCurrency(
           r.total,
-          settings?.moeda
+          settings?.moeda,
         )} gastos</span>
       </div>`;
     container.appendChild(row);
@@ -455,7 +455,7 @@ async function carregarDashboard() {
     const { totalLitros, totalCusto, eficiencia } = calcularKPIs(
       abastecimentos,
       null,
-      settings
+      settings,
     );
 
     litrosEl.textContent = `${totalLitros.toFixed(1)} L`;
@@ -680,44 +680,43 @@ function initDashboardRefuelModal() {
       msg.textContent = e.message || "Erro ao guardar.";
     }
   });
-
 }
 
 // ======================================================================
 // TOGGLE AÇÕES RÁPIDAS
 // ======================================================================
 function initDashboardQuickActions() {
-    const header = document.getElementById("header-quick-actions");
-    const content = document.getElementById("quick-actions-content");
-    const icon = document.getElementById("icon-quick-toggle");
+  const header = document.getElementById("header-quick-actions");
+  const content = document.getElementById("quick-actions-content");
+  const icon = document.getElementById("icon-quick-toggle");
 
-    if (!header || !content || !icon) return;
+  if (!header || !content || !icon) return;
 
-    header.addEventListener("click", () => {
-        // Toggle Hidden/Visible
-        // If maxHeight is empty (default) OR not "0px", it is considered OPEN.
-        const currentHeight = content.style.maxHeight;
-        const isOpen = !currentHeight || currentHeight !== "0px";
-        
-        if (isOpen) {
-            // Collapse
-            content.style.maxHeight = "0px";
-            content.style.opacity = "0";
-            content.style.padding = "0";
-            icon.style.transform = "rotate(180deg)"; // Chevron down
-        } else {
-            // Expand
-            content.style.maxHeight = content.scrollHeight + "px";
-            content.style.opacity = "1";
-            content.style.padding = ""; // Reset padding if needed
-            icon.style.transform = "rotate(0deg)"; // Chevron up
-        }
-    });
+  header.addEventListener("click", () => {
+    // Toggle Hidden/Visible
+    // If maxHeight is empty (default) OR not "0px", it is considered OPEN.
+    const currentHeight = content.style.maxHeight;
+    const isOpen = !currentHeight || currentHeight !== "0px";
 
-    // Initialize as expanded (optional, or match HTML state)
-    // HTML has standard div. Let's set initial state to expanded explicitly if needed or rely on CSS.
-    // To animate correctly from start, we might need to set standard height.
-    content.style.maxHeight = content.scrollHeight + "px";
+    if (isOpen) {
+      // Collapse
+      content.style.maxHeight = "0px";
+      content.style.opacity = "0";
+      content.style.padding = "0";
+      icon.style.transform = "rotate(180deg)"; // Chevron down
+    } else {
+      // Expand
+      content.style.maxHeight = content.scrollHeight + "px";
+      content.style.opacity = "1";
+      content.style.padding = ""; // Reset padding if needed
+      icon.style.transform = "rotate(0deg)"; // Chevron up
+    }
+  });
+
+  // Initialize as expanded (optional, or match HTML state)
+  // HTML has standard div. Let's set initial state to expanded explicitly if needed or rely on CSS.
+  // To animate correctly from start, we might need to set standard height.
+  content.style.maxHeight = content.scrollHeight + "px";
 }
 
 window.addEventListener("load", () => {
@@ -731,37 +730,68 @@ window.addEventListener("load", () => {
     // === NOTIFICAÇÕES (FCM) ===
     // 1. Ouvir mensagens em foreground (já configurado no notifications.js)
     if (window.listenToForegroundMessages) {
-        window.listenToForegroundMessages();
+      window.listenToForegroundMessages();
     }
 
-    // 2. Configurar Botão de Ativar Notificações (se existir na UI, ou criar um)
-    // Vamos adicionar um botão "sino" no cabeçalho se não existir
-    const headerActions = document.querySelector('.app-header-actions');
-    if (headerActions && !document.getElementById('btn-notifs')) {
-        const btnNotifs = document.createElement('button');
-        btnNotifs.id = 'btn-notifs';
-        btnNotifs.className = 'icon-btn';
-        btnNotifs.title = 'Ativar Notificações';
-        btnNotifs.innerHTML = `
+    // === NOTIFICAÇÕES (FCM) ===
+    // 1. Ouvir mensagens em foreground
+    if (window.listenToForegroundMessages) {
+      window.listenToForegroundMessages();
+    }
+
+    // 2. Lógica de Permissão e Token
+    const headerActions = document.querySelector(".app-header-actions");
+    let btnNotifs = document.getElementById("btn-notifs");
+
+    // Se o botão não existir, cria-o
+    if (headerActions && !btnNotifs) {
+      btnNotifs = document.createElement("button");
+      btnNotifs.id = "btn-notifs";
+      btnNotifs.className = "icon-btn";
+      btnNotifs.title = "Ativar Notificações";
+      btnNotifs.innerHTML = `
             <svg class="icon" aria-hidden="true">
                 <use href="assets/icons-unified.svg#icon-bell"></use>
             </svg>
         `;
-        
-        // Inserir antes do logout
-        const btnLogout = document.getElementById('btn-logout');
-        headerActions.insertBefore(btnNotifs, btnLogout);
+      // Inserir antes do logout
+      const btnLogout = document.getElementById("btn-logout");
+      headerActions.insertBefore(btnNotifs, btnLogout);
 
-        btnNotifs.addEventListener('click', async () => {
-            try {
-                // Tenta pedir permissão
-                const token = await window.requestNotificationPermissionAndSaveToken();
-                alert(`Notificações ativadas com sucesso!\nToken: ${token.slice(0, 10)}...`);
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao ativar notificações: " + err.message);
-            }
-        });
+      btnNotifs.addEventListener("click", async () => {
+        try {
+          const token =
+            await window.requestNotificationPermissionAndSaveToken();
+          alert(
+            "Notificações ativadas! Agora irá receber alertas sobre seguros, IUC e inspeções.",
+          );
+          // Atualizar visual do botão (pode ficar 'ativo' ou escondido)
+          btnNotifs.style.opacity = "0.5";
+          btnNotifs.title = "Notificações Ativas";
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao ativar: " + err.message);
+        }
+      });
+    }
+
+    // 3. Verificação Automática (Melhoria UX)
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        // Se já deu permissão, garante que temos o token atualizado
+        console.log("Permissão já concedida. A atualizar token...");
+        window.requestNotificationPermissionAndSaveToken().catch(console.error);
+        if (btnNotifs) {
+          btnNotifs.style.opacity = "0.5";
+          btnNotifs.title = "Notificações Ativas";
+        }
+      } else if (Notification.permission === "default") {
+        // Se ainda não decidiu, podemos destacar o botão ou mostrar um aviso
+        // Por enquanto, apenas mantemos o botão visível e clicável
+        if (btnNotifs) {
+          btnNotifs.classList.add("animate-pulse"); // Sugestão visual (se existir classe, senão ignora)
+        }
+      }
     }
 
     unsub();

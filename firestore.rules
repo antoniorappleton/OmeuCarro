@@ -23,6 +23,11 @@ service cloud.firestore {
       match /localizacoes/{document=**} {
         allow read, write: if isOwner(userId);
       }
+
+      // Allow access to fcmTokens (Notifications)
+      match /fcmTokens/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // =========================================================
