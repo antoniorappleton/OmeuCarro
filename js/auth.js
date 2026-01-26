@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Qualquer página privada requer utilizador autenticado
     if (!user) {
-      window.location.href = "./index.html";
+      window.location.href = "./auth.html";
     }
   });
 
@@ -44,7 +44,7 @@ if (logoutBtn) {
       console.log("[auth] signed out");
 
       // força reload “limpo”
-      window.location.replace("./index.html");
+      window.location.replace("./auth.html");
     } catch (err) {
       console.error("[auth] erro no logout:", err);
       alert(err?.message || "Erro ao sair da aplicação.");

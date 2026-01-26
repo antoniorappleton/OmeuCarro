@@ -464,7 +464,7 @@ modalForm.addEventListener("submit", async (e) => {
 // ================ BOOTSTRAP ================
 auth.onAuthStateChanged((user) => {
   if (!user) {
-    window.location.href = "index.html";
+    window.location.href = "auth.html";
     return;
   }
   carregarVeiculos();

@@ -68,7 +68,7 @@ if (themeToggle && window.AppTheme) {
 // ===================================
 auth.onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = "index.html";
+    window.location.href = "auth.html";
     return;
   }
 
@@ -358,13 +358,13 @@ if (btnDeleteAccount) {
             try {
                 await user.delete();
                 alert("Conta eliminada.");
-                window.location.href = "index.html";
+                window.location.href = "auth.html";
             } catch(err) {
                 console.error(err);
                 if (err.code === 'auth/requires-recent-login') {
                     alert("Por motivos de segurança, faça login novamente e tente apagar a conta.");
                     await auth.signOut();
-                    window.location.href = "index.html";
+                    window.location.href = "auth.html";
                 } else {
                     alert("Erro ao eliminar conta: " + err.message);
                 }

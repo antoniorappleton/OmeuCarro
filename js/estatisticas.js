@@ -6,7 +6,7 @@ const chartInstances = {};
 document.addEventListener("DOMContentLoaded", () => {
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
-      window.location.href = "index.html";
+      window.location.href = "auth.html";
       return;
     }
     await initFilter();

@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v12";
-const RUNTIME_CACHE = "l100-runtime-v12";
+const STATIC_CACHE = "l100-static-v11";
+const RUNTIME_CACHE = "l100-runtime-v11";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -15,7 +15,7 @@ const APP_SHELL = [
   "./estatisticas.html",
   "./veiculos.html",
   "./mapa.html",
-  "./login.html",
+  "./auth.html",
   "./css/style.css",
   "./css/dashboard.css",
   "./css/mapa.css",
@@ -70,7 +70,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v9");
+  console.log("[SW] Activate v12");
 
   event.waitUntil(
     caches.keys().then((names) =>
@@ -116,7 +116,7 @@ self.addEventListener("fetch", (event) => {
           const cached = await caches.match(request);
           if (cached) return cached;
 
-          // Página offline
+          // Página offline (Splash Screen)
           return caches.match("./index.html");
         }),
     );

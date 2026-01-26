@@ -13,7 +13,7 @@ let selectedVehicle = null;
 // INIT
 firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "auth.html";
     return;
   }
   
@@ -109,7 +109,7 @@ btnSave.onclick = async () => {
      });
      
      // Success
-     window.location.href = "index.html"; 
+     window.location.href = "dashboard.html"; 
      
   } catch (error) {
     console.error(error);
