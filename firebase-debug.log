@@ -1,0 +1,21 @@
+[debug] [2026-01-26T15:47:56.444Z] ----------------------------------------------------------------------
+[debug] [2026-01-26T15:47:56.448Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Antonio.Appleton\AppData\Local\npm-cache\_npx\56ff672e197247c7\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-01-26T15:47:56.450Z] CLI Version:   13.20.0
+[debug] [2026-01-26T15:47:56.450Z] Platform:      win32
+[debug] [2026-01-26T15:47:56.450Z] Node Version:  v18.12.1
+[debug] [2026-01-26T15:47:56.461Z] Time:          Mon Jan 26 2026 15:47:56 GMT+0000 (Hora padrão da Europa Ocidental)
+[debug] [2026-01-26T15:47:56.462Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-26T15:47:56.468Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2026-01-26T15:47:56.997Z] Error: EBUSY: resource busy or locked, unlink 'C:\Users\Antonio.Appleton\Documents\ProgramingCourse\GitProjectos\OmeuCarro\firebase-debug.log'
+    at Object.unlinkSync (node:fs:1780:3)
+    at process.<anonymous> (C:\Users\Antonio.Appleton\AppData\Local\npm-cache\_npx\56ff672e197247c7\node_modules\firebase-tools\lib\bin\firebase.js:82:12)
+    at process.emit (node:events:525:35)
+    at process.exit (node:internal/process/per_thread:190:15)
+    at Timeout._onTimeout (C:\Users\Antonio.Appleton\AppData\Local\npm-cache\_npx\56ff672e197247c7\node_modules\firebase-tools\lib\errorOut.js:20:17)
+    at listOnTimeout (node:internal/timers:564:17)
+    at process.processTimers (node:internal/timers:507:7)
+[error] 
+[error] Error: An unexpected error has occurred.
