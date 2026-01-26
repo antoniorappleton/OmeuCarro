@@ -1,427 +1,531 @@
 <!doctype html>
 <html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L100 – Painel</title>
+    <meta
+      name="author"
+      content="Antonio Appleton - antonioappleton@gmail.com"
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>L100 – Painel</title>
-  <meta name="author" content="Antonio Appleton - antonioappleton@gmail.com">
+    <!-- Tema global -->
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- CSS específico desta página -->
+    <link rel="stylesheet" href="css/home.css" />
+    <script src="js/theme.js"></script>
+    <script src="js/pwa-install.js" defer></script>
 
-  <!-- Tema global -->
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- CSS específico desta página -->
-  <link rel="stylesheet" href="css/home.css" />
-  <script src="js/theme.js"></script>
-  <script src="js/pwa-install.js" defer></script>
+    <!-- Firebase v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- Firebase v9 -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script defer src="./js/firebase-config.js"></script>
+    <script defer src="./js/auth.js"></script>
+    <script defer src="js/analytics.js"></script>
+    <script defer src="./js/firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+    <!-- FCM -->
+    <script defer src="./js/notifications.js"></script>
+    <!-- Lógica Push -->
+    <script defer src="js/utils.js"></script>
+    <!-- depois os ficheiros específicos da página -->
+    <script defer src="./js/home.js"></script>
+    <script defer src="./js/dashboard.js"></script>
+  </head>
 
-  <script defer src="./js/firebase-config.js"></script>
-  <script defer src="./js/auth.js"></script>
-  <script defer src="js/analytics.js"></script>
-  <script defer src="./js/firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script> <!-- FCM -->
-  <script defer src="./js/notifications.js"></script> <!-- Lógica Push -->
-  <script defer src="js/utils.js"></script>
-  <!-- depois os ficheiros específicos da página -->
-  <script defer src="./js/home.js"></script>
-  <script defer src="./js/dashboard.js"></script>
-</head>
-
-<body class="app-page" data-page="home">
-  <!-- HEADER / NAVBAR -->
-  <header class="app-header">
-    <div class="app-header-left">
-      <div class="app-logo">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-fuel"></use>
-        </svg>
-      </div>
-      <div class="app-logo-text">
-        <span class="app-logo-title">L100</span>
-        <span class="app-logo-subtitle"></span>
-      </div>
-    </div>
-
-    <div class="app-header-actions">
-      <!-- Estatísticas (pode mais tarde ir para outra página de gráficos) -->
-      <a href="estatisticas.html" class="icon-btn" title="Estatísticas">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-dashboard"></use>
-        </svg>
-      </a>
-
-      <!-- Definições (placeholder – podes ligar para perfil / settings) -->
-      <a href="perfil.html" class="icon-btn" title="Perfil / Definições">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-user"></use>
-        </svg>
-      </a>
-
-      <!-- Logout -->
-      <button type="button" id="btn-logout" class="icon-btn" title="Sair">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-logout"></use>
-        </svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <p class="hero-subtitle">
-        Gere os seus veículos e acompanhe os gastos com combustível num único
-        lugar.
-      </p>
-    </div>
-  </section>
-
-  <main class="home-main">
-    <!-- QUICK STATS - estilo React -->
-    <section class="stats-grid">
-      <!-- Total Gasto -->
-      <article class="stats-card">
-        <div class="stats-card-header">
-          <span class="stats-card-icon">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-wallet"></use>
-            </svg>
-          </span>
-          <h2>Total Gasto</h2>
-        </div>
-        <p class="stats-card-value" id="stat-gasto-value">€0,00</p>
-        <p class="stats-card-desc">Todos os abastecimentos</p>
-      </article>
-
-      <!-- Litros Consumidos -->
-      <article class="stats-card">
-        <div class="stats-card-header">
-          <span class="stats-card-icon">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
-            </svg>
-          </span>
-          <h2>Litros Consumidos</h2>
-        </div>
-        <p class="stats-card-value" id="stat-litros-value">0,0 L</p>
-        <p class="stats-card-desc">Total acumulado</p>
-      </article>
-
-      <!-- Preço Médio -->
-      <article class="stats-card">
-        <div class="stats-card-header">
-          <span class="stats-card-icon">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-trend-up"></use>
-            </svg>
-          </span>
-          <h2>Preço Médio</h2>
-        </div>
-        <p class="stats-card-value" id="stat-preco-medio-value">€0,000</p>
-        <p class="stats-card-desc">Por litro</p>
-      </article>
-
-      <!-- Eficiência -->
-      <article class="stats-card">
-        <div class="stats-card-header">
-          <span class="stats-card-icon">
-            <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-dashboard"></use>
-            </svg>
-          </span>
-          <h2>Eficiência</h2>
-        </div>
-        <p class="stats-card-value" id="stat-eficiencia-value">-- km/L</p>
-        <p class="stats-card-desc">Baseado nos últimos registos</p>
-      </article>
-    </section>
-
-    <!-- VEÍCULOS -->
-    <section class="vehicles-section">
-      <div class="vehicles-header">
-        <div>
-          <h2>Meus veículos</h2>
-          <p>Selecione um veículo para ver os abastecimentos.</p>
-        </div>
-        <button type="button" id="btn-add-vehicle" class="btn btn-primary">
-          <svg class="icon icon-left" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-plus"></use>
-          </svg>
-          <span>Adicionar veículo</span>
-        </button>
-      </div>
-
-      <div id="vehicles-list" class="vehicles-grid">
-        <!-- cards de veículos criados via JS -->
-      </div>
-
-      <!-- Estado vazio -->
-      <div id="vehicles-empty" class="vehicles-empty hidden">
-        <div class="vehicles-empty-icon">
+  <body class="app-page" data-page="home">
+    <!-- HEADER / NAVBAR -->
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="app-logo">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-car"></use>
-          </svg>
-        </div>
-        <h3>Nenhum veículo registado</h3>
-        <p>Comece por adicionar o seu primeiro veículo.</p>
-        <button type="button" id="btn-add-first-vehicle" class="btn btn-primary">
-          <svg class="icon icon-left" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-plus"></use>
-          </svg>
-          <span>Adicionar primeiro veículo</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- AÇÕES RÁPIDAS -->
-    <section class="quick-actions" id="section-quick-actions">
-      <header id="header-quick-actions"
-        style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-        <h3>Ações rápidas</h3>
-        <button class="icon-btn-sm" style="background:transparent; border:none;">
-          <svg class="icon" id="icon-quick-toggle" style="transition: transform 0.3s">
-            <use href="assets/icons-unified.svg#icon-chevron-up"></use>
-          </svg>
-        </button>
-      </header>
-      <div class="quick-actions-row" id="quick-actions-content" style="transition: all 0.3s ease; overflow: hidden;">
-        <!-- Alterado para abrir modal diretamente -->
-        <a href="#" id="btn-quick-refuel" class="btn btn-outline">
-          <svg class="icon icon-left">
             <use href="assets/icons-unified.svg#icon-fuel"></use>
           </svg>
-          <span>Novo abastecimento</span>
-        </a>
-        <a href="estatisticas.html" class="btn btn-outline">
-          <svg class="icon icon-left" aria-hidden="true">
+        </div>
+        <div class="app-logo-text">
+          <span class="app-logo-title">L100</span>
+          <span class="app-logo-subtitle"></span>
+        </div>
+      </div>
+
+      <div class="app-header-actions">
+        <!-- Estatísticas (pode mais tarde ir para outra página de gráficos) -->
+        <a href="estatisticas.html" class="icon-btn" title="Estatísticas">
+          <svg class="icon" aria-hidden="true">
             <use href="assets/icons-unified.svg#icon-dashboard"></use>
           </svg>
-          <span>Ver estatísticas</span>
         </a>
-        <a href="veiculos.html" class="btn btn-outline">
-          <svg class="icon icon-left" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-car"></use>
-          </svg>
-          <span>Gerir veículos</span>
-        </a>
-        <a href="https://www.maisgasolina.com" target="_blank" class="btn btn-outline" rel="noopener noreferrer">
-          <svg class="icon icon-left" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-station"></use>
-          </svg>
-          <span>MaisGasolina</span>
-        </a>
-      </div>
-    </section>
-  </main>
 
-  <!-- MODAL: Adicionar veículo -->
-  <div id="vehicle-modal-overlay" class="fuel-modal-overlay" aria-hidden="true">
-    <div class="fuel-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
-      <!-- Cabeçalho do modal -->
-      <div class="fuel-modal-header">
-        <div class="fuel-modal-title-wrap">
-          <svg class="icon icon-title" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-car"></use>
-          </svg>
-          <div>
-            <h2 id="vehicle-modal-title">Adicionar veículo</h2>
-            <p class="fuel-modal-description">
-              Preencha os dados do veículo que pretende registar.
-            </p>
-          </div>
-        </div>
-
-        <button type="button" class="icon-button" id="btn-close-vehicle-modal" aria-label="Fechar">
+        <!-- Definições (placeholder – podes ligar para perfil / settings) -->
+        <a href="perfil.html" class="icon-btn" title="Perfil / Definições">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="assets/icons-unified.svg#icon-user"></use>
+          </svg>
+        </a>
+
+        <!-- Logout -->
+        <button type="button" id="btn-logout" class="icon-btn" title="Sair">
+          <svg class="icon" aria-hidden="true">
+            <use href="assets/icons-unified.svg#icon-logout"></use>
           </svg>
         </button>
       </div>
+    </header>
 
-      <!-- Formulário do modal -->
-      <form id="vehicle-modal-form" class="fuel-modal-form">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="modal-vehicle-name">Nome *</label>
-            <input id="modal-vehicle-name" type="text" required placeholder="Carro Principal" />
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="hero-subtitle">
+          Gere os seus veículos e acompanhe os gastos com combustível num único
+          lugar.
+        </p>
+      </div>
+    </section>
+
+    <main class="home-main">
+      <!-- QUICK STATS - estilo React -->
+      <section class="stats-grid">
+        <!-- Total Gasto -->
+        <article class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-icon">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-wallet"></use>
+              </svg>
+            </span>
+            <h2>Total Gasto</h2>
           </div>
+          <p class="stats-card-value" id="stat-gasto-value">€0,00</p>
+          <p class="stats-card-desc">Todos os abastecimentos</p>
+        </article>
 
-          <div class="form-field">
-            <label for="modal-vehicle-brand">Marca *</label>
-            <input id="modal-vehicle-brand" type="text" required placeholder="ex: Toyota" />
+        <!-- Litros Consumidos -->
+        <article class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-icon">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-fuel"></use>
+              </svg>
+            </span>
+            <h2>Litros Consumidos</h2>
           </div>
+          <p class="stats-card-value" id="stat-litros-value">0,0 L</p>
+          <p class="stats-card-desc">Total acumulado</p>
+        </article>
 
-          <div class="form-field">
-            <label for="modal-vehicle-model">Modelo *</label>
-            <input id="modal-vehicle-model" type="text" required placeholder="ex: Corolla" />
+        <!-- Preço Médio -->
+        <article class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-icon">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-trend-up"></use>
+              </svg>
+            </span>
+            <h2>Preço Médio</h2>
           </div>
+          <p class="stats-card-value" id="stat-preco-medio-value">€0,000</p>
+          <p class="stats-card-desc">Por litro</p>
+        </article>
 
-          <div class="form-field">
-            <label for="modal-vehicle-plate">Matrícula (opcional)</label>
-            <input id="modal-vehicle-plate" type="text" placeholder="AA-00-BB" />
+        <!-- Eficiência -->
+        <article class="stats-card">
+          <div class="stats-card-header">
+            <span class="stats-card-icon">
+              <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-dashboard"></use>
+              </svg>
+            </span>
+            <h2>Eficiência</h2>
           </div>
+          <p class="stats-card-value" id="stat-eficiencia-value">-- km/L</p>
+          <p class="stats-card-desc">Baseado nos últimos registos</p>
+        </article>
+      </section>
 
-          <div class="form-field">
-            <label for="modal-vehicle-fuel">Combustível padrão</label>
-            <select id="modal-vehicle-fuel">
-              <option value="">Selecionar</option>
-              <option value="gasolina">Gasolina</option>
-              <option value="diesel">Diesel</option>
-              <option value="etanol">Etanol</option>
-              <option value="gnv">GNV</option>
-              <option value="eletrico">Elétrico</option>
-            </select>
+      <!-- VEÍCULOS -->
+      <section class="vehicles-section">
+        <div class="vehicles-header">
+          <div>
+            <h2>Meus veículos</h2>
+            <p>Selecione um veículo para ver os abastecimentos.</p>
           </div>
-
-          <div class="form-field">
-            <label for="modal-vehicle-odometer">Odómetro inicial</label>
-            <input id="modal-vehicle-odometer" type="number" placeholder="ex: 120000" />
-          </div>
-        </div>
-
-        <p id="vehicle-modal-message" class="form-message"></p>
-
-        <div class="fuel-modal-footer">
-          <button type="button" class="btn btn-ghost" id="btn-cancel-vehicle-modal">
-            Cancelar
-          </button>
-
-          <button type="submit" class="btn btn-primary btn-gradient">
+          <button type="button" id="btn-add-vehicle" class="btn btn-primary">
             <svg class="icon icon-left" aria-hidden="true">
               <use href="assets/icons-unified.svg#icon-plus"></use>
             </svg>
-            <span>Guardar veículo</span>
+            <span>Adicionar veículo</span>
           </button>
         </div>
-      </form>
+
+        <div id="vehicles-list" class="vehicles-grid">
+          <!-- cards de veículos criados via JS -->
+        </div>
+
+        <!-- Estado vazio -->
+        <div id="vehicles-empty" class="vehicles-empty hidden">
+          <div class="vehicles-empty-icon">
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-car"></use>
+            </svg>
+          </div>
+          <h3>Nenhum veículo registado</h3>
+          <p>Comece por adicionar o seu primeiro veículo.</p>
+          <button
+            type="button"
+            id="btn-add-first-vehicle"
+            class="btn btn-primary"
+          >
+            <svg class="icon icon-left" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-plus"></use>
+            </svg>
+            <span>Adicionar primeiro veículo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- AÇÕES RÁPIDAS -->
+      <section class="quick-actions" id="section-quick-actions">
+        <header
+          id="header-quick-actions"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+          "
+        >
+          <h3>Ações rápidas</h3>
+          <button
+            class="icon-btn-sm"
+            style="background: transparent; border: none"
+          >
+            <svg
+              class="icon"
+              id="icon-quick-toggle"
+              style="transition: transform 0.3s"
+            >
+              <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+            </svg>
+          </button>
+        </header>
+        <div
+          class="quick-actions-row"
+          id="quick-actions-content"
+          style="transition: all 0.3s ease; overflow: hidden"
+        >
+          <!-- Alterado para abrir modal diretamente -->
+          <a href="#" id="btn-quick-refuel" class="btn btn-outline">
+            <svg class="icon icon-left">
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
+            </svg>
+            <span>Novo abastecimento</span>
+          </a>
+          <a href="estatisticas.html" class="btn btn-outline">
+            <svg class="icon icon-left" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-dashboard"></use>
+            </svg>
+            <span>Ver estatísticas</span>
+          </a>
+          <a href="veiculos.html" class="btn btn-outline">
+            <svg class="icon icon-left" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-car"></use>
+            </svg>
+            <span>Gerir veículos</span>
+          </a>
+          <a
+            href="https://www.maisgasolina.com"
+            target="_blank"
+            class="btn btn-outline"
+            rel="noopener noreferrer"
+          >
+            <svg class="icon icon-left" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-station"></use>
+            </svg>
+            <span>MaisGasolina</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- MODAL: Adicionar veículo -->
+    <div
+      id="vehicle-modal-overlay"
+      class="fuel-modal-overlay"
+      aria-hidden="true"
+    >
+      <div
+        class="fuel-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="vehicle-modal-title"
+      >
+        <!-- Cabeçalho do modal -->
+        <div class="fuel-modal-header">
+          <div class="fuel-modal-title-wrap">
+            <svg class="icon icon-title" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-car"></use>
+            </svg>
+            <div>
+              <h2 id="vehicle-modal-title">Adicionar veículo</h2>
+              <p class="fuel-modal-description">
+                Preencha os dados do veículo que pretende registar.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="icon-button"
+            id="btn-close-vehicle-modal"
+            aria-label="Fechar"
+          >
+            <svg class="icon" aria-hidden="true">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Formulário do modal -->
+        <form id="vehicle-modal-form" class="fuel-modal-form">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="modal-vehicle-name">Nome *</label>
+              <input
+                id="modal-vehicle-name"
+                type="text"
+                required
+                placeholder="Carro Principal"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="modal-vehicle-brand">Marca *</label>
+              <input
+                id="modal-vehicle-brand"
+                type="text"
+                required
+                placeholder="ex: Toyota"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="modal-vehicle-model">Modelo *</label>
+              <input
+                id="modal-vehicle-model"
+                type="text"
+                required
+                placeholder="ex: Corolla"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="modal-vehicle-plate">Matrícula (opcional)</label>
+              <input
+                id="modal-vehicle-plate"
+                type="text"
+                placeholder="AA-00-BB"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="modal-vehicle-fuel">Combustível padrão</label>
+              <select id="modal-vehicle-fuel">
+                <option value="">Selecionar</option>
+                <option value="gasolina">Gasolina</option>
+                <option value="diesel">Diesel</option>
+                <option value="etanol">Etanol</option>
+                <option value="gnv">GNV</option>
+                <option value="eletrico">Elétrico</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="modal-vehicle-odometer">Odómetro inicial</label>
+              <input
+                id="modal-vehicle-odometer"
+                type="number"
+                placeholder="ex: 120000"
+              />
+            </div>
+          </div>
+
+          <p id="vehicle-modal-message" class="form-message"></p>
+
+          <div class="fuel-modal-footer">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              id="btn-cancel-vehicle-modal"
+            >
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary btn-gradient">
+              <svg class="icon icon-left" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              <span>Guardar veículo</span>
+            </button>
+          </div>
+          <div
+            style="
+              text-align: center;
+              font-size: 0.75rem;
+              opacity: 0.3;
+              margin-top: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            antonioappleton
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-  <!-- MODAL: NOVO ABASTECIMENTO (DASHBOARD) -->
-  <div id="fuel-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
+    <!-- MODAL: NOVO ABASTECIMENTO (DASHBOARD) -->
+    <div id="fuel-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
 
-    <div class="modal-card">
-      <header class="modal-header">
-        <h2>
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
-          </svg>
-          Novo abastecimento
-        </h2>
-        <button id="fuel-close" class="icon-btn">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
-          </svg>
-        </button>
-      </header>
+      <div class="modal-card">
+        <header class="modal-header">
+          <h2>
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-fuel"></use>
+            </svg>
+            Novo abastecimento
+          </h2>
+          <button id="fuel-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
 
-      <div class="modal-body">
-        <div class="form-grid">
-          <!-- SELEÇÃO DE VEÍCULO (Novo na Dashboard) -->
-          <label style="grid-column: 1/-1">
-            <span class="muted">Veículo *</span>
-            <select id="fuel-vehicle-select">
-              <option value="">A carregar...</option>
-            </select>
-          </label>
+        <div class="modal-body">
+          <div class="form-grid">
+            <!-- SELEÇÃO DE VEÍCULO (Novo na Dashboard) -->
+            <label style="grid-column: 1/-1">
+              <span class="muted">Veículo *</span>
+              <select id="fuel-vehicle-select">
+                <option value="">A carregar...</option>
+              </select>
+            </label>
 
-          <label>
-            <span class="muted">Data</span>
-            <input id="fuel-date" type="date" />
-          </label>
+            <label>
+              <span class="muted">Data</span>
+              <input id="fuel-date" type="date" />
+            </label>
 
-          <label>
-            <span class="muted">Tipo de combustível</span>
-            <select id="fuel-type">
-              <option value="Gasolina">Gasolina</option>
-              <option value="Gasóleo">Gasóleo</option>
-              <option value="GPL">GPL</option>
-              <option value="Elétrico">Elétrico</option>
-            </select>
-          </label>
+            <label>
+              <span class="muted">Tipo de combustível</span>
+              <select id="fuel-type">
+                <option value="Gasolina">Gasolina</option>
+                <option value="Gasóleo">Gasóleo</option>
+                <option value="GPL">GPL</option>
+                <option value="Elétrico">Elétrico</option>
+              </select>
+            </label>
 
-          <label>
-            <span class="muted">Litros</span>
-            <input id="fuel-liters" type="number" step="0.01" />
-          </label>
+            <label>
+              <span class="muted">Litros</span>
+              <input id="fuel-liters" type="number" step="0.01" />
+            </label>
 
-          <label>
-            <span class="muted">Preço por litro (€)</span>
-            <input id="fuel-price" type="number" step="0.001" />
-          </label>
+            <label>
+              <span class="muted">Preço por litro (€)</span>
+              <input id="fuel-price" type="number" step="0.001" />
+            </label>
 
-          <label>
-            <span class="muted">Quilómetros</span>
-            <input id="fuel-km" type="number" />
-          </label>
+            <label>
+              <span class="muted">Quilómetros</span>
+              <input id="fuel-km" type="number" />
+            </label>
 
-          <label>
-            <span class="muted">Posto</span>
-            <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
-          </label>
+            <label>
+              <span class="muted">Posto</span>
+              <input
+                id="fuel-station"
+                type="text"
+                placeholder="Ex.: Galp, BP…"
+              />
+            </label>
 
-          <!-- CHECKBOX CHEIO -->
-          <label class="checkbox-label" style="
+            <!-- CHECKBOX CHEIO -->
+            <label
+              class="checkbox-label"
+              style="
                 grid-column: 1/-1;
                 display: flex;
                 align-items: center;
                 gap: 10px;
                 cursor: pointer;
-              ">
-            <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer" />
-            <span>Depósito Cheio (para cálculo exato de médias)</span>
-          </label>
+              "
+            >
+              <input
+                type="checkbox"
+                id="fuel-full"
+                style="width: auto; margin: 0; cursor: pointer"
+              />
+              <span>Depósito Cheio (para cálculo exato de médias)</span>
+            </label>
 
-          <label style="grid-column: 1/-1">
-            <span class="muted">Observações</span>
-            <input id="fuel-notes" type="text" placeholder="Opcional" />
-          </label>
+            <label style="grid-column: 1/-1">
+              <span class="muted">Observações</span>
+              <input id="fuel-notes" type="text" placeholder="Opcional" />
+            </label>
+          </div>
+
+          <p id="fuel-msg" class="muted"></p>
         </div>
 
-        <p id="fuel-msg" class="muted"></p>
+        <footer class="modal-footer">
+          <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="fuel-save" class="btn btn-primary btn-gradient">
+            Guardar abastecimento
+          </button>
+        </footer>
+        <div
+          style="
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.3;
+            margin-top: 8px;
+            margin-bottom: 8px;
+          "
+        >
+          antonioappleton
+        </div>
       </div>
-
-      <footer class="modal-footer">
-        <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
-        <button id="fuel-save" class="btn btn-primary btn-gradient">
-          Guardar abastecimento
-        </button>
-      </footer>
     </div>
-  </div>
-  <!-- FOOTER -->
-  <footer>
-    <a href="dashboard.html" class="active">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-home"></use>
-      </svg>
-      <span>Home</span>
-    </a>
-    <a href="veiculos.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-car"></use>
-      </svg>
-      <span>Veículos</span>
-    </a>
-    <a href="mapa.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-pin"></use>
-      </svg>
-      <span>Mapa</span>
-    </a>
-    <a href="perfil.html">
-      <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-user"></use>
-      </svg>
-      <span>Perfil</span>
-    </a>
-  </footer>
-</body>
-
+    <!-- FOOTER -->
+    <footer>
+      <a href="dashboard.html" class="active">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="veiculos.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-pin"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="perfil.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="assets/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
+  </body>
 </html>

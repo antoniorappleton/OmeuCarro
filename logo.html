@@ -1,184 +1,175 @@
-<!DOCTYPE html>
+<!doctype html>
 <html class="dark" lang="pt">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <meta name="author" content="Antonio Appleton - antonioappleton@gmail.com">
+    <meta
+      name="author"
+      content="Antonio Appleton - antonioappleton@gmail.com"
+    />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&amp;display=swap"
-        rel="stylesheet" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
     <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#0de3f2",
-                        "petroleum": "#102123",
-                        "background-light": "#f5f8f8",
-                        "background-dark": "#102122",
-                    },
-                    fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                },
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0de3f2",
+              petroleum: "#102123",
+              "background-light": "#f5f8f8",
+              "background-dark": "#102122",
             },
-        }
+            fontFamily: {
+              display: ["Manrope", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
     </script>
     <style>
-        .glass-overlay {
-            background: rgba(16, 33, 34, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+      .glass-overlay {
+        background: rgba(16, 33, 34, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .logo-glow {
+        filter: drop-shadow(0 0 15px rgba(13, 227, 242, 0.4));
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #316468 0%, #0de3f2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      body {
+        min-height: max(884px, 100dvh);
+      }
+
+      /* Animation keyframes for the logo stroke */
+      @keyframes draw {
+        from {
+          stroke-dashoffset: 350;
         }
 
-        .logo-glow {
-            filter: drop-shadow(0 0 15px rgba(13, 227, 242, 0.4));
+        to {
+          stroke-dashoffset: 0;
         }
+      }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #316468 0%, #0de3f2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        body {
-            min-height: max(884px, 100dvh);
-        }
-
-        /* Animation keyframes for the logo stroke */
-        @keyframes draw {
-            from {
-                stroke-dashoffset: 350;
-            }
-
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        .animate-draw {
-            stroke-dasharray: 350;
-            stroke-dashoffset: 350;
-            animation: draw 2s ease-out forwards;
-        }
+      .animate-draw {
+        stroke-dasharray: 350;
+        stroke-dashoffset: 350;
+        animation: draw 2s ease-out forwards;
+      }
     </style>
-</head>
+  </head>
 
-<body class="font-display bg-background-light dark:bg-background-dark text-white overflow-hidden">
-    <div class="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden">
-        <!-- Background Image -->
-        <div class="absolute inset-0 z-0">
-            <div class="w-full h-full bg-center bg-no-repeat bg-cover"
-                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBCYvjtlMX8k717ccTs_1gnDTlz_rN3Emo5Bg5XgEp17Q-zK8FHOtQr2K-UHYAxQbaaNKi-BBdGybXHYfTCtP1mwB_h_zNebMHPrqtqC6nlJjwjCwvQFLyE_dxQe5jtuR66RCNlgOsDP_LjwHfF2ZX0dhEeHIX0LGCPNJohBR093fAWb8sNpRUUKpkK2Bk8KzVdd8ciCLwURELRu7W4Zz02B057_uEZbdGadG5_cj_8TyqnQe5EhBV0IFfS8iQ0OS0HiDaDC82W7ws");'>
-            </div>
-            <div class="absolute inset-0 glass-overlay"></div>
-        </div>
-        <!-- Main Branding -->
-        <div class="relative z-10 flex flex-col items-center justify-center px-4 w-full max-w-md text-center">
-            <!-- Logo Icon (Simplified L) -->
-            <div class="relative mb-8 logo-glow">
-                <div
-                    class="flex items-center justify-center w-32 h-32 rounded-xl border-2 border-primary/30 bg-background-dark/50 shadow-2xl">
-                    <svg fill="none" height="80" viewbox="0 0 100 100" width="80" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Simplified L shape path -->
-                        <path class="animate-draw" d="M35 25 V75 H80" stroke="url(#logo_grad)" stroke-linecap="round"
-                            stroke-linejoin="round" stroke-width="14"></path>
-                        <defs>
-                            <lineargradient gradientunits="userSpaceOnUse" id="logo_grad" x1="35" x2="80" y1="25"
-                                y2="75">
-                                <stop offset="0" stop-color="#316468"></stop>
-                                <stop offset="1" stop-color="#0de3f2"></stop>
-                            </lineargradient>
-                        </defs>
-                    </svg>
-                </div>
-            </div>
-            <!-- Brand Name -->
-            <div class="flex items-baseline gap-1">
-                <h1 class="text-white text-5xl font-light tracking-tight">Log</h1>
-                <h1 class="gradient-text text-5xl font-extrabold tracking-tight">100</h1>
-            </div>
-            <p class="text-[#90c7cb] text-lg font-medium leading-normal mt-4 opacity-80">
-                Gestão de Veículos de Alta Precisão
-            </p>
-            <!-- Loading Area -->
-            <div class="absolute bottom-20 flex flex-col items-center gap-6 w-full px-12">
-                <div class="w-full max-w-xs space-y-3">
-                    <div class="flex justify-between items-end">
-                        <span id="loading-text" class="text-primary/70 text-xs font-bold tracking-widest uppercase">A
-                            carregar sistema</span>
-                        <span id="loading-percent" class="text-primary text-xs font-bold">0%</span>
-                    </div>
-                    <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                        <!-- Added ID and transition for JS animation -->
-                        <div id="loading-bar" class="h-full bg-primary rounded-full shadow-[0_0_10px_#0de3f2]"
-                            style="width: 0%; transition: width 0.1s linear;"></div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined animate-spin text-primary"
-                        style="font-variation-settings: 'wght' 300;">progress_activity</span>
-                    <span id="loading-status" class="text-[#90c7cb] text-sm font-normal">Iniciar...</span>
-                </div>
-            </div>
-            <!-- Footer Meta -->
-            <div class="absolute bottom-8">
-                <p class="text-white/30 text-xs font-medium tracking-widest uppercase">
-                    Dev by Antonio Appleton • antonioappleton@gmail.com
-                </p>
-            </div>
-        </div>
-        <!-- Decoration -->
+  <body
+    class="font-display bg-background-light dark:bg-background-dark text-white overflow-hidden"
+  >
+    <div
+      class="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden"
+    >
+      <!-- Background Image -->
+      <div class="absolute inset-0 z-0">
         <div
-            class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none">
+          class="w-full h-full bg-center bg-no-repeat bg-cover"
+          style="
+            background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBCYvjtlMX8k717ccTs_1gnDTlz_rN3Emo5Bg5XgEp17Q-zK8FHOtQr2K-UHYAxQbaaNKi-BBdGybXHYfTCtP1mwB_h_zNebMHPrqtqC6nlJjwjCwvQFLyE_dxQe5jtuR66RCNlgOsDP_LjwHfF2ZX0dhEeHIX0LGCPNJohBR093fAWb8sNpRUUKpkK2Bk8KzVdd8ciCLwURELRu7W4Zz02B057_uEZbdGadG5_cj_8TyqnQe5EhBV0IFfS8iQ0OS0HiDaDC82W7ws&quot;);
+          "
+        ></div>
+        <div class="absolute inset-0 glass-overlay"></div>
+      </div>
+        <!-- Main Branding -->
+        <div class="relative z-10 flex flex-col items-center justify-center px-4 w-full max-w-md text-center gap-8">
+            <!-- Square Container with L100 -->
+            <div class="logo-glow">
+                <div
+                    class="flex flex-col items-center justify-center w-48 h-48 rounded-2xl border-2 border-primary/30 bg-background-dark/50 shadow-2xl backdrop-blur-sm">
+                    <div class="flex items-baseline gap-1">
+                        <h1 class="text-white text-6xl font-light tracking-tight">L</h1>
+                        <h1 class="gradient-text text-6xl font-extrabold tracking-tight">100</h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Area (Now relative and in flow) -->
+            <div class="w-full max-w-[200px] flex flex-col gap-3">
+                <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div id="loading-bar" class="h-full bg-primary rounded-full shadow-[0_0_10px_#0de3f2]"
+                        style="width: 0%; transition: width 0.1s linear;"></div>
+                </div>
+                <div class="flex justify-between items-center px-1">
+                    <span id="loading-status" class="text-[#90c7cb] text-xs font-normal">Iniciar...</span>
+                    <!-- Hidden percentage or keep it subtle if desired, user asked for "barra de loading por baixo" -->
+                    <!-- Keeping percentage hidden for cleaner look as per "so a barra de loading" request implication, 
+                         but removing it completely might obscure progress. Let's keep it very subtle or remove if "so a barra" was literal. 
+                         User said "so a barra de loading" in first request. Let's stick to status text and bar. -->
+                </div>
+            </div>
+
+            <!-- Tagline -->
+            <p class="text-[#90c7cb] text-sm font-medium leading-normal opacity-70 uppercase tracking-widest">
+                Gestão de Veículos de Alta precisão
+            </p>
         </div>
+      </div>
+      <!-- Decoration -->
+      <div
+        class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"
+      ></div>
     </div>
     <!-- Animation Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const bar = document.getElementById('loading-bar');
-            const percent = document.getElementById('loading-percent');
-            const status = document.getElementById('loading-status');
-            let progress = 0;
-            const interval = setInterval(() => {
-                // Randomize progress increment for a more realistic feel
-                progress += Math.random() * 2;
-                if (progress > 100) progress = 100;
-                // Update UI
-                bar.style.width = `${progress}%`;
-                percent.innerText = `${Math.floor(progress)}%`;
-                // Update status text based on progress
-                if (progress < 30) {
-                    status.innerText = "Sincronizando dados...";
-                } else if (progress < 60) {
-                    status.innerText = "Carregando definições...";
-                } else if (progress < 90) {
-                    status.innerText = "A preparar interface...";
-                } else {
-                    status.innerText = "Pronto!";
-                }
-                // Check completion
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        // Here you would redirect to dashboard
-                        console.log("Loading complete");
-                    }, 500);
-                }
-            }, 50); // Speed of updates
-        });
+      document.addEventListener("DOMContentLoaded", () => {
+        const bar = document.getElementById("loading-bar");
+        const status = document.getElementById("loading-status");
+        let progress = 0;
+        const interval = setInterval(() => {
+          // Randomize progress increment for a more realistic feel
+          progress += Math.random() * 2;
+          if (progress > 100) progress = 100;
+          // Update UI
+          if (bar) bar.style.width = `${progress}%`;
+          
+          // Update status text based on progress
+          if (status) {
+            if (progress < 30) {
+                status.innerText = "Sincronizando dados...";
+            } else if (progress < 60) {
+                status.innerText = "Carregando definições...";
+            } else if (progress < 90) {
+                status.innerText = "A preparar interface...";
+            } else {
+                status.innerText = "Pronto!";
+            }
+          }
+          // Check completion
+          if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              // Here you would redirect to dashboard
+              console.log("Loading complete");
+            }, 500);
+          }
+        }, 50); // Speed of updates
+      });
     </script>
-</body>
-
+  </body>
 </html>
