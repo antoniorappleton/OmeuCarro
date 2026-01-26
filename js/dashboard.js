@@ -728,6 +728,42 @@ window.addEventListener("load", () => {
     carregarDashboard();
     initDashboardRefuelModal(); // Initialize Modal
     initDashboardQuickActions(); // Initialize Quick Actions Toggle
+    // === NOTIFICAÇÕES (FCM) ===
+    // 1. Ouvir mensagens em foreground (já configurado no notifications.js)
+    if (window.listenToForegroundMessages) {
+        window.listenToForegroundMessages();
+    }
+
+    // 2. Configurar Botão de Ativar Notificações (se existir na UI, ou criar um)
+    // Vamos adicionar um botão "sino" no cabeçalho se não existir
+    const headerActions = document.querySelector('.app-header-actions');
+    if (headerActions && !document.getElementById('btn-notifs')) {
+        const btnNotifs = document.createElement('button');
+        btnNotifs.id = 'btn-notifs';
+        btnNotifs.className = 'icon-btn';
+        btnNotifs.title = 'Ativar Notificações';
+        btnNotifs.innerHTML = `
+            <svg class="icon" aria-hidden="true">
+                <use href="assets/icons-unified.svg#icon-bell"></use>
+            </svg>
+        `;
+        
+        // Inserir antes do logout
+        const btnLogout = document.getElementById('btn-logout');
+        headerActions.insertBefore(btnNotifs, btnLogout);
+
+        btnNotifs.addEventListener('click', async () => {
+            try {
+                // Tenta pedir permissão
+                const token = await window.requestNotificationPermissionAndSaveToken();
+                alert(`Notificações ativadas com sucesso!\nToken: ${token.slice(0, 10)}...`);
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao ativar notificações: " + err.message);
+            }
+        });
+    }
+
     unsub();
   });
 });

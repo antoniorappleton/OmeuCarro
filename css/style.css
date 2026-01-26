@@ -183,7 +183,7 @@ a {
 .btn-secondary {
   /* Renamed from outline for clarity, using subtle fill */
   background-color: rgba(148, 163, 184, 0.1);
-  color: var(--color-text-main);
+  color: #0f172a; /* Force dark text for contrast, overriding potential light global text */
 }
 
 .btn-secondary:hover {
@@ -467,7 +467,7 @@ footer a .icon {
 
 .auth-tab--active {
   background: white;
-  color: var(--color-text-main);
+  color: #0f172a; /* Force dark text for contrast on white bg */
   box-shadow: var(--shadow-sm);
 }
 
@@ -1357,10 +1357,10 @@ footer a .icon {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--color-text-muted);
+  background-color: #475569; /* Darker grey for better contrast */
   transition: .4s;
   border-radius: 24px;
-  opacity: 0.3;
+  opacity: 1; /* Removing opacity for better visibility */
 }
 
 .slider:before {
