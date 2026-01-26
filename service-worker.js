@@ -164,8 +164,53 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // -------------------------------------
-  // RESTANTE → NETWORK FIRST com fallback cache
-  // -------------------------------------
   event.respondWith(fetch(request).catch(() => caches.match(request)));
+});
+
+// -------------------------------------
+// FIREBASE MESSAGING (FCM) INTEGRATION
+// -------------------------------------
+importScripts(
+  "https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js",
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js",
+);
+
+firebase.initializeApp({
+  apiKey: "AIzaSyAiKOykeoazkqCXMhy-mpX2Ho8liuUas-E",
+  authDomain: "omeucarro-d3889.firebaseapp.com",
+  projectId: "omeucarro-d3889",
+  storageBucket: "omeucarro-d3889.appspot.com",
+  messagingSenderId: "387296122464",
+  appId: "1:387296122464:web:1c3c3c390dc26050f99505",
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  console.log("[SW-Messaging] Background message received:", payload);
+  const notificationTitle = payload.notification?.title || "L100";
+  const notificationOptions = {
+    body: payload.notification?.body,
+    icon: "/images/logo-icon192.png",
+    data: payload.data || {},
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || "/dashboard.html";
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(urlToOpen) && "focus" in client)
+            return client.focus();
+        }
+        if (clients.openWindow) return clients.openWindow(urlToOpen);
+      }),
+  );
 });
