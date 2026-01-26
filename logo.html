@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html class="dark" lang="pt">
+
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="author" content="Antonio Appleton - antonioappleton@gmail.com">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -39,26 +41,32 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+
         .logo-glow {
             filter: drop-shadow(0 0 15px rgba(13, 227, 242, 0.4));
         }
+
         .gradient-text {
             background: linear-gradient(135deg, #316468 0%, #0de3f2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         body {
             min-height: max(884px, 100dvh);
         }
+
         /* Animation keyframes for the logo stroke */
         @keyframes draw {
             from {
                 stroke-dashoffset: 350;
             }
+
             to {
                 stroke-dashoffset: 0;
             }
         }
+
         .animate-draw {
             stroke-dasharray: 350;
             stroke-dashoffset: 350;
@@ -66,6 +74,7 @@
         }
     </style>
 </head>
+
 <body class="font-display bg-background-light dark:bg-background-dark text-white overflow-hidden">
     <div class="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden">
         <!-- Background Image -->
@@ -125,7 +134,8 @@
             </div>
             <!-- Footer Meta -->
             <div class="absolute bottom-8">
-                <p class="text-white/30 text-xs font-medium tracking-widest uppercase">Version 2.4.0 • Premium Edition
+                <p class="text-white/30 text-xs font-medium tracking-widest uppercase">
+                    Dev by Antonio Appleton • antonioappleton@gmail.com
                 </p>
             </div>
         </div>
@@ -170,4 +180,5 @@
         });
     </script>
 </body>
+
 </html>
