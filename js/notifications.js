@@ -115,7 +115,50 @@ function listenToForegroundMessages() {
   }
 }
 
+/**
+ * Diagnóstico: Mostra uma notificação de teste local.
+ */
+async function testLocalNotification() {
+  console.log("🧪 A disparar notificação de teste local...");
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification("Teste de Notificação L100", {
+      body: "Se estás a ver isto, as notificações locais funcionam! ✅",
+      icon: "./images/logo-icon192.png",
+      tag: "test-notification",
+    });
+    if (window.showToast) {
+      window.showToast(
+        "Deverás ver uma notificação de sistema agora.",
+        "success",
+      );
+    }
+  } catch (err) {
+    console.error("Erro no teste local:", err);
+    alert("Erro no teste: " + err.message);
+  }
+}
+
 // Expor globalmente para ser usado nos botões
 window.requestNotificationPermissionAndSaveToken =
   requestNotificationPermissionAndSaveToken;
 window.listenToForegroundMessages = listenToForegroundMessages;
+window.testLocalNotification = testLocalNotification;
+
+// Auto-log do estado inicial
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.ready.then((reg) => {
+    console.log(
+      "📡 [Diagnostics] Service Worker Ready:",
+      reg.active?.scriptURL,
+    );
+    if (Notification.permission === "granted") {
+      console.log("📡 [Diagnostics] Notificações permitidas no browser.");
+    } else {
+      console.warn(
+        "📡 [Diagnostics] Permissão de notificações:",
+        Notification.permission,
+      );
+    }
+  });
+}
