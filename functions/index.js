@@ -8,7 +8,7 @@ const db = admin.firestore();
  * Função agendada para correr todos os dias às 09:00 AM.
  * Verifica Seguros, IUCs e Inspeções a expirar.
  */
-exports.checkVehicleAlerts = onSchedule(
+exports.checkVehicleAlertsV2 = onSchedule(
   {
     schedule: "every day 09:00",
     timeZone: "Europe/Lisbon",
@@ -18,6 +18,13 @@ exports.checkVehicleAlerts = onSchedule(
     console.log("A iniciar verificação diária de alertas (v2)...");
 
     const hoje = new Date();
+    // Normalizar hoje para o início do dia (00:00:00) na timezone de execução
+    const hojeNormalizado = new Date(
+      hoje.getFullYear(),
+      hoje.getMonth(),
+      hoje.getDate(),
+    );
+
     const prazosAviso = [30, 7, 3, 1];
 
     try {
@@ -31,6 +38,8 @@ exports.checkVehicleAlerts = onSchedule(
       for (const doc of veiculosSnapshot.docs) {
         const veiculo = doc.data();
         const userId = veiculo.userId;
+        const veiculoNome = veiculo.nome || veiculo.marca || "veículo";
+
         if (!userId) continue;
 
         const userRef = db.collection("users").doc(userId);
@@ -42,23 +51,39 @@ exports.checkVehicleAlerts = onSchedule(
           try {
             d = val.toDate ? val.toDate() : new Date(val);
           } catch (e) {
+            console.warn(
+              `Erro ao converter data para ${name} no veículo ${doc.id}:`,
+              e,
+            );
             return;
           }
 
           if (isNaN(d.getTime())) return;
 
-          const diffTime = d - hoje;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          // Normalizar a data de expiração para o início do dia
+          const dataNormalizada = new Date(
+            d.getFullYear(),
+            d.getMonth(),
+            d.getDate(),
+          );
+
+          const diffTime =
+            dataNormalizada.getTime() - hojeNormalizado.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+          console.log(
+            `[DEBUG] Veículo: ${veiculoNome} | Campo: ${name} | Data: ${d.toISOString()} | DiffDays: ${diffDays}`,
+          );
 
           if (prazosAviso.includes(diffDays)) {
             alertas.push({
               titulo: `⚠️ ${name} a expirar!`,
-              corpo: `O ${name} vence em ${diffDays} dias (${d.toLocaleDateString("pt-PT")}).`,
+              corpo: `O ${name} de ${veiculoNome} vence em ${diffDays} dias (${d.toLocaleDateString("pt-PT")}).`,
             });
           } else if (diffDays === 0) {
             alertas.push({
               titulo: `🚨 ${name} vence HOJE!`,
-              corpo: `Regulariza o ${name} do ${veiculo.nome || "veículo"} hoje!`,
+              corpo: `Regulariza o ${name} do ${veiculoNome} hoje!`,
             });
           }
         };
@@ -71,13 +96,21 @@ exports.checkVehicleAlerts = onSchedule(
         );
 
         if (alertas.length > 0) {
+          console.log(
+            `User ${userId} tem ${alertas.length} alertas pendentes.`,
+          );
           const tokensSnap = await userRef.collection("fcmTokens").get();
           if (tokensSnap.empty) {
-            console.log(`User ${userId} tem alertas mas sem tokens.`);
+            console.log(
+              `User ${userId} tem alertas mas sem tokens registados.`,
+            );
             continue;
           }
 
           const tokens = tokensSnap.docs.map((t) => t.data().token);
+          console.log(
+            `Enviando para ${tokens.length} tokens do utilizador ${userId}`,
+          );
 
           for (const alerta of alertas) {
             const message = {
@@ -98,19 +131,22 @@ exports.checkVehicleAlerts = onSchedule(
             };
 
             try {
-              // multicasting in v2 admin
               const response = await admin.messaging().sendEachForMulticast({
                 ...message,
                 tokens,
               });
               console.log(
-                `Alert enviado para ${userId} (${alerta.titulo}): Success=${response.successCount}`,
+                `Alert enviado para ${userId} (${alerta.titulo}): Sucesso=${response.successCount}, Falhas=${response.failureCount}`,
               );
 
               if (response.failureCount > 0) {
                 response.responses.forEach((resp, idx) => {
                   if (!resp.success) {
                     const errorInfo = resp.error;
+                    console.warn(
+                      `Falha no token ${tokens[idx]}:`,
+                      errorInfo.code,
+                    );
                     if (
                       errorInfo.code ===
                         "messaging/registration-token-not-registered" ||
@@ -120,7 +156,9 @@ exports.checkVehicleAlerts = onSchedule(
                         .collection("fcmTokens")
                         .doc(tokens[idx])
                         .delete()
-                        .catch(() => {});
+                        .catch((err) =>
+                          console.error("Erro ao apagar token inválido:", err),
+                        );
                     }
                   }
                 });
@@ -131,9 +169,9 @@ exports.checkVehicleAlerts = onSchedule(
           }
         }
       }
-      console.log("Verificação concluída.");
+      console.log("Verificação concluída com sucesso.");
     } catch (error) {
-      console.error("Erro CRÍTICO:", error);
+      console.error("Erro CRÍTICO na execução do checkVehicleAlerts:", error);
     }
   },
 );
