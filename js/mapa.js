@@ -307,29 +307,34 @@ if (window.__L100_MAP_INIT__) {
     if (!els.filters) return;
     els.filters.innerHTML = "";
 
-    const cats = ["Todos", ...(Array.isArray(state.availableCategories) ? state.availableCategories : ["Casa", "Trabalho", "Outro"])];
-    
-    cats.forEach(cat => {
-        const pill = document.createElement("div");
-        pill.className = "filter-pill";
-        if (state.filterCategory === cat) pill.classList.add("active");
-        pill.textContent = cat;
-        pill.onclick = () => {
-             state.filterCategory = cat;
-             renderFilters(); 
-             renderChips();
-        };
-        els.filters.appendChild(pill);
+    const cats = [
+      "Todos",
+      ...(Array.isArray(state.availableCategories)
+        ? state.availableCategories
+        : ["Casa", "Trabalho", "Outro"]),
+    ];
+
+    cats.forEach((cat) => {
+      const pill = document.createElement("div");
+      pill.className = "filter-pill";
+      if (state.filterCategory === cat) pill.classList.add("active");
+      pill.textContent = cat;
+      pill.onclick = () => {
+        state.filterCategory = cat;
+        renderFilters();
+        renderChips();
+      };
+      els.filters.appendChild(pill);
     });
   }
 
   function renderChips() {
     els.chips.innerHTML = "";
-    
+
     // Filter
     let list = state.favorites;
     if (state.filterCategory && state.filterCategory !== "Todos") {
-        list = list.filter(f => f.category === state.filterCategory);
+      list = list.filter((f) => f.category === state.filterCategory);
     }
 
     if (list.length === 0) {
@@ -337,7 +342,7 @@ if (window.__L100_MAP_INIT__) {
         '<span class="u-empty-state" style="padding: 10px; color: #888;">Sem favoritos nesta categoria.</span>';
       return;
     }
-    
+
     // Allow more items since we wrap
     list.slice(0, 50).forEach((fav) => {
       const chip = document.createElement("div");
@@ -639,16 +644,16 @@ if (window.__L100_MAP_INIT__) {
     els.typeChipsContainer.innerHTML = "";
 
     state.availableCategories.forEach((cat) => {
-       const btn = document.createElement("button");
-       btn.className = "type-chip";
-       btn.setAttribute("data-value", cat);
+      const btn = document.createElement("button");
+      btn.className = "type-chip";
+      btn.setAttribute("data-value", cat);
 
-       let icon = "icon-pin";
-       if (cat === "Casa") icon = "icon-home";
-       else if (cat === "Trabalho") icon = "icon-car";
+      let icon = "icon-pin";
+      if (cat === "Casa") icon = "icon-home";
+      else if (cat === "Trabalho") icon = "icon-car";
 
-       btn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#${icon}"></use></svg> ${cat}`;
-       els.typeChipsContainer.appendChild(btn);
+      btn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#${icon}"></use></svg> ${cat}`;
+      els.typeChipsContainer.appendChild(btn);
     });
 
     // Add "+" Button
@@ -656,66 +661,66 @@ if (window.__L100_MAP_INIT__) {
     addBtn.className = "type-chip";
     addBtn.id = "btn-add-cat-ui"; // ID for easy ref
     addBtn.innerHTML = `<svg class="icon"><use href="assets/icons-unified.svg#icon-plus"></use></svg> Novo`;
-    
-    addBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation(); 
 
-        // 1. Replace content with Input
-        addBtn.classList.add("input-mode");
-        addBtn.innerHTML = `
+    addBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 1. Replace content with Input
+      addBtn.classList.add("input-mode");
+      addBtn.innerHTML = `
             <input type="text" id="new-cat-input" class="chip-input" placeholder="Nome" />
             <div class="chip-actions">
                 <button id="btn-confirm-cat" class="icon-btn-xs"><svg class="icon"><use href="assets/icons-unified.svg#icon-check"></use></svg></button>
                 <button id="btn-cancel-cat" class="icon-btn-xs"><svg class="icon"><use href="assets/icons-unified.svg#icon-close"></use></svg></button>
             </div>
         `;
-        
-        // 2. Focus
-        const input = addBtn.querySelector("input");
-        input.focus();
 
-        // 3. Bind Actions
-        const confirm = async () => {
-            const val = input.value.trim();
-            if (val) {
-                 if (!state.availableCategories.includes(val)) {
-                    // Save to DB
-                    await window.addMapCategory(val);
-                    state.availableCategories.push(val);
-                    renderFilters(); // Update main filters
-                }
-                // Re-render form chips (restores UI)
-                renderFormCategoryChips();
-                // Select it
-                els.inpCat.value = val;
-                updateChips(val);
-            }
-        };
+      // 2. Focus
+      const input = addBtn.querySelector("input");
+      input.focus();
 
-        const cancel = () => {
-            renderFormCategoryChips(); // Reset
-        };
+      // 3. Bind Actions
+      const confirm = async () => {
+        const val = input.value.trim();
+        if (val) {
+          if (!state.availableCategories.includes(val)) {
+            // Save to DB
+            await window.addMapCategory(val);
+            state.availableCategories.push(val);
+            renderFilters(); // Update main filters
+          }
+          // Re-render form chips (restores UI)
+          renderFormCategoryChips();
+          // Select it
+          els.inpCat.value = val;
+          updateChips(val);
+        }
+      };
 
-        addBtn.querySelector("#btn-confirm-cat").onclick = (ev) => {
-            ev.stopPropagation();
-            confirm();
-        };
+      const cancel = () => {
+        renderFormCategoryChips(); // Reset
+      };
 
-        addBtn.querySelector("#btn-cancel-cat").onclick = (ev) => {
-            ev.stopPropagation();
-            cancel();
-        };
-        
-        input.onkeydown = (ev) => {
-            if(ev.key === "Enter") {
-                ev.preventDefault(); // Prevent form submit
-                confirm();
-            }
-            if(ev.key === "Escape") cancel();
-        };
-        
-        input.onclick = (ev) => ev.stopPropagation(); // Prevent chip select
+      addBtn.querySelector("#btn-confirm-cat").onclick = (ev) => {
+        ev.stopPropagation();
+        confirm();
+      };
+
+      addBtn.querySelector("#btn-cancel-cat").onclick = (ev) => {
+        ev.stopPropagation();
+        cancel();
+      };
+
+      input.onkeydown = (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault(); // Prevent form submit
+          confirm();
+        }
+        if (ev.key === "Escape") cancel();
+      };
+
+      input.onclick = (ev) => ev.stopPropagation(); // Prevent chip select
     };
     els.typeChipsContainer.appendChild(addBtn);
   }
@@ -734,10 +739,10 @@ if (window.__L100_MAP_INIT__) {
       els.inpCat.value = "Outro";
       els.inpNotes.value = "";
     }
-    
+
     // Render Chips Dynamic
     renderFormCategoryChips();
-    
+
     updateChips(els.inpCat.value);
     setSheet("full", "form");
   }
@@ -990,6 +995,24 @@ if (window.__L100_MAP_INIT__) {
   // Init
   initMap();
   window.auth.onAuthStateChanged((user) => {
-    if (user) loadFavorites();
+    if (user) {
+      loadFavorites();
+
+      // --- NOVO: Listener de mensagens e refresh automático do token ---
+      if (typeof window.listenToForegroundMessages === "function") {
+        window.listenToForegroundMessages();
+      }
+      if ("Notification" in window && Notification.permission === "granted") {
+        getUserSettings().then((settings) => {
+          if (settings && settings.notificacoesAtivas !== false) {
+            console.log("[Mapa] A atualizar token FCM...");
+            window
+              .requestNotificationPermissionAndSaveToken()
+              .catch(console.error);
+          }
+        });
+      }
+      // -----------------------------------------------------------------
+    }
   });
 }

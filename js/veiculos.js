@@ -170,7 +170,7 @@ async function carregarVeiculos() {
 
       const diffTime = date - now;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       let statusClass = "badge-status-success";
       let icon = "icon-check";
       let text = "Válido";
@@ -181,7 +181,7 @@ async function carregarVeiculos() {
         text = "Expirou";
       } else if (diffDays <= 30) {
         statusClass = "badge-status-warning";
-        icon = "icon-alert-triangle"; 
+        icon = "icon-alert-triangle";
         text = `Expira em ${diffDays}d`;
       }
 
@@ -205,9 +205,9 @@ async function carregarVeiculos() {
         <div class="vehicle-left">
           <div class="vehicle-avatar">
             ${
-              v.fotoUrl 
-              ? `<img src="${v.fotoUrl}" alt="${v.nome}">`
-              : `<svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-car"></use></svg>`
+              v.fotoUrl
+                ? `<img src="${v.fotoUrl}" alt="${v.nome}">`
+                : `<svg class="icon" aria-hidden="true"><use href="assets/icons-unified.svg#icon-car"></use></svg>`
             }
           </div>
 
@@ -221,18 +221,23 @@ async function carregarVeiculos() {
               <span class="odo-val font-mono">${(v.odometroAtual || v.odometroInicial || 0).toLocaleString()} km</span>
             </div>
             
-            ${
-               (() => {
-                 // 5.1 UX POLISH: Check for stale odometer (> 30 days)
-                 const lastUpdate = v.odometroAtualizadoEm 
-                    ? (v.odometroAtualizadoEm.toDate ? v.odometroAtualizadoEm.toDate() : new Date(v.odometroAtualizadoEm))
-                    : (v.criadoEm ? (v.criadoEm.toDate ? v.criadoEm.toDate() : new Date(v.criadoEm)) : new Date());
-                    
-                 const diffTime = new Date() - lastUpdate;
-                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                 
-                 if (diffDays > 30) {
-                     return `
+            ${(() => {
+              // 5.1 UX POLISH: Check for stale odometer (> 30 days)
+              const lastUpdate = v.odometroAtualizadoEm
+                ? v.odometroAtualizadoEm.toDate
+                  ? v.odometroAtualizadoEm.toDate()
+                  : new Date(v.odometroAtualizadoEm)
+                : v.criadoEm
+                  ? v.criadoEm.toDate
+                    ? v.criadoEm.toDate()
+                    : new Date(v.criadoEm)
+                  : new Date();
+
+              const diffTime = new Date() - lastUpdate;
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+              if (diffDays > 30) {
+                return `
                        <div style="margin-top:4px;">
                          <button class="btn-xs btn-outline-warning full-width" style="justify-content:center; gap:4px;" type="button" data-edit="${v.id}">
                             <svg class="icon-xs"><use href="assets/icons-unified.svg#icon-alert-triangle"></use></svg>
@@ -240,10 +245,9 @@ async function carregarVeiculos() {
                          </button>
                        </div>
                      `;
-                 }
-                 return "";
-               })()
-            }
+              }
+              return "";
+            })()}
 
             <div class="vehicle-badges">
               <span class="badge badge-outline">${matricula}</span>
@@ -261,9 +265,10 @@ async function carregarVeiculos() {
             </div>
 
             <!-- STATUS GRID -->
-            ${ (seguroBadge || ipoBadge || iucBadge) 
-               ? `<div class="vehicle-status-grid">${seguroBadge}${ipoBadge}${iucBadge}</div>` 
-               : "" 
+            ${
+              seguroBadge || ipoBadge || iucBadge
+                ? `<div class="vehicle-status-grid">${seguroBadge}${ipoBadge}${iucBadge}</div>`
+                : ""
             }
 
           </div>
@@ -306,7 +311,7 @@ async function carregarVeiculos() {
 
         <div class="metric metric-center">
           <div class="metric-value metric-value-primary">€${stats.total.toFixed(
-            0
+            0,
           )}</div>
           <div class="metric-label">Total Gasto</div>
         </div>
@@ -468,4 +473,18 @@ auth.onAuthStateChanged((user) => {
     return;
   }
   carregarVeiculos();
+
+  // --- NOVO: Listener de mensagens e refresh automático do token ---
+  if (typeof window.listenToForegroundMessages === "function") {
+    window.listenToForegroundMessages();
+  }
+  if ("Notification" in window && Notification.permission === "granted") {
+    getUserSettings().then((settings) => {
+      if (settings && settings.notificacoesAtivas !== false) {
+        console.log("[Veículos] A atualizar token FCM...");
+        window.requestNotificationPermissionAndSaveToken().catch(console.error);
+      }
+    });
+  }
+  // -----------------------------------------------------------------
 });

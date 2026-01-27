@@ -3,31 +3,33 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v13";
-const RUNTIME_CACHE = "l100-runtime-v13";
+const STATIC_CACHE = "l100-static-v14";
+const RUNTIME_CACHE = "l100-runtime-v14";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
   "./",
   "./index.html",
   "./dashboard.html",
-  "./abastecimentos.html",
+  "./abastecer.html",
   "./estatisticas.html",
   "./veiculos.html",
+  "./veiculo.html",
   "./mapa.html",
   "./auth.html",
+  "./perfil.html",
   "./css/style.css",
   "./css/dashboard.css",
   "./css/mapa.css",
   "./css/trip-calculator.css",
-
   "./js/firebase-config.js",
   "./js/auth.js",
   "./js/firestore.js",
+  "./js/notifications.js",
   "./js/dashboard.js",
-  "./js/modal-abastecimento.js",
   "./js/estatisticas.js",
   "./js/veiculos.js",
+  "./js/veiculo.js",
   "./js/mapa.js",
   "./js/tripCalculator.js",
   "./js/utils.js",

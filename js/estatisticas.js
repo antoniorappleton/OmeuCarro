@@ -11,6 +11,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     await initFilter();
     carregarEstatisticas(); // Carrega tudo inicialmente
+
+    // --- NOVO: Listener de mensagens e refresh automático do token ---
+    if (typeof window.listenToForegroundMessages === "function") {
+      window.listenToForegroundMessages();
+    }
+    if ("Notification" in window && Notification.permission === "granted") {
+      getUserSettings().then((settings) => {
+        if (settings && settings.notificacoesAtivas !== false) {
+          console.log("[Estatísticas] A atualizar token FCM...");
+          window
+            .requestNotificationPermissionAndSaveToken()
+            .catch(console.error);
+        }
+      });
+    }
+    // -----------------------------------------------------------------
   });
 });
 
