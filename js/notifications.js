@@ -38,7 +38,7 @@ async function requestNotificationPermissionAndSaveToken() {
     !swReg.active ||
     !swReg.active.scriptURL.includes("service-worker.js")
   ) {
-    swReg = await navigator.serviceWorker.register("./service-worker.js?v=14");
+    swReg = await navigator.serviceWorker.register("./service-worker.js?v=15");
   }
 
   const messaging = firebase.messaging();
@@ -89,6 +89,7 @@ function listenToForegroundMessages() {
       const title = payload.notification?.title || "L100";
       const body = payload.notification?.body || "";
       const icon = payload.notification?.icon || "./images/logo-icon192.png";
+      const badge = payload.notification?.badge || "./images/logo-icon192.png";
 
       // Opção 1: Toast Simples (se tiveres um sistema de toast)
       if (window.showToast) {
@@ -105,6 +106,9 @@ function listenToForegroundMessages() {
           reg.showNotification(title, {
             body: body,
             icon: icon,
+            badge: badge,
+            vibrate: [200, 100, 200],
+            tag: payload.notification?.tag || "l100-alert-fg",
             data: payload.data || {},
           });
         });

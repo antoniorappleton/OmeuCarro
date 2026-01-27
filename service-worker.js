@@ -3,8 +3,8 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v14";
-const RUNTIME_CACHE = "l100-runtime-v14";
+const STATIC_CACHE = "l100-static-v15";
+const RUNTIME_CACHE = "l100-runtime-v15";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -193,11 +193,17 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("[SW-Messaging] Background message received:", payload);
   const notificationTitle = payload.notification?.title || "L100";
+
+  // Extrair opções do payload ou usar padrões
   const notificationOptions = {
     body: payload.notification?.body,
-    icon: "/images/logo-icon192.png",
+    icon: payload.notification?.icon || "/images/logo-icon192.png",
+    badge: payload.notification?.badge || "/images/logo-icon192.png",
+    tag: payload.notification?.tag || "l100-alert",
+    vibrate: [200, 100, 200],
     data: payload.data || {},
   };
+
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 

@@ -196,9 +196,21 @@ exports.checkVehicleAlertsV2 = onSchedule(
                 url: "/veiculos.html",
                 veiculoId: doc.id,
               },
+              android: {
+                notification: {
+                  color: "#0de3f2",
+                  tag: `alert-${doc.id}-${alerta.titulo.substring(0, 5)}`,
+                },
+              },
               webpush: {
                 notification: {
                   icon: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
+                  badge:
+                    "https://omeucarro-d3889.web.app/images/logo-icon192.png",
+                  tag: `alert-${doc.id}`,
+                  vibrate: [200, 100, 200],
+                  renotify: true,
+                  requireInteraction: true,
                 },
                 fcm_options: {
                   link: "https://omeucarro-d3889.web.app/veiculos.html",
