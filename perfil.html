@@ -497,36 +497,24 @@
           <div class="settings-list">
             <div class="settings-row">
               <label class="settings-label" for="setting-notif-active"
-                >Notificações</label
+                >Notificações Ativas</label
               >
               <label class="toggle-switch">
                 <input type="checkbox" id="setting-notif-active" />
                 <span class="slider"></span>
               </label>
             </div>
-            <div class="settings-row">
-              <label class="settings-label" for="setting-alert-days"
-                >Antecedência (dias)</label
-              >
-              <select id="setting-alert-days" class="settings-select">
-                <option value="7">7 dias</option>
-                <option value="15">15 dias</option>
-                <option value="30">30 dias</option>
-              </select>
-            </div>
             <div
               class="settings-row"
-              style="border-top: 1px dashed var(--border-light)"
+              style="
+                font-size: 0.8rem;
+                color: var(--color-text-muted);
+                justify-content: flex-start;
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+              "
             >
-              <label class="settings-label">Diagnóstico</label>
-              <button
-                type="button"
-                onclick="window.testLocalNotification()"
-                class="btn-action"
-                style="text-align: right; justify-content: flex-end"
-              >
-                <span>Testar Notificação 🔔</span>
-              </button>
+              <span>Serás avisado de Seguros, IUCs e Manutenção.</span>
             </div>
           </div>
 
