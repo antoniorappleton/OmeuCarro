@@ -149,7 +149,7 @@ exports.checkVehicleAlertsV2 = onSchedule(
                   titulo: `🚨 ${titulo} vence HOJE!`,
                   corpo: `Dia de ${titulo} para o ${veiculoNome}!`,
                 });
-              } else if (diffDaysM > 0 && diffDaysM <= 15) {
+              } else if (diffDaysM > 0 && diffDaysM <= 30) {
                 alertas.push({
                   titulo: `🛠️ ${titulo} a chegar`,
                   corpo: `Faltam ${diffDaysM} dias para a próxima ${titulo} do ${veiculoNome}.`,
