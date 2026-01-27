@@ -727,17 +727,23 @@ window.addEventListener("load", () => {
     carregarDashboard();
     initDashboardRefuelModal(); // Initialize Modal
     initDashboardQuickActions(); // Initialize Quick Actions Toggle
-    // === NOTIFICAÇÕES (FCM) ===
-    // 1. Ouvir mensagens em foreground (já configurado no notifications.js)
-    if (window.listenToForegroundMessages) {
-      window.listenToForegroundMessages();
-    }
 
-    // === NOTIFICAÇÕES (FCM) ===
-    // 1. Ouvir mensagens em foreground
+    // --- NOVO: Listener de mensagens e refresh automático do token ---
     if (window.listenToForegroundMessages) {
       window.listenToForegroundMessages();
     }
+    // Garantir que o token está atualizado se tivermos permissão
+    if ("Notification" in window && Notification.permission === "granted") {
+      getUserSettings().then((settings) => {
+        if (settings && settings.notificacoesAtivas !== false) {
+          console.log("[Dashboard] A atualizar token FCM...");
+          window
+            .requestNotificationPermissionAndSaveToken()
+            .catch(console.error);
+        }
+      });
+    }
+    // -----------------------------------------------------------------
 
     unsub();
   });

@@ -98,10 +98,15 @@ function listenToForegroundMessages() {
 
       // Opção 2: Tentar notificação de sistema mesmo com app aberta
       if (Notification.permission === "granted") {
-        console.log("👉 A disparar Notificação de Sistema...");
-        new Notification(title, {
-          body: body,
-          icon: icon,
+        console.log(
+          "👉 A disparar Notificação via ServiceWorker (Foreground)...",
+        );
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification(title, {
+            body: body,
+            icon: icon,
+            data: payload.data || {},
+          });
         });
       }
     });
