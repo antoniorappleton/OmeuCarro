@@ -10,7 +10,7 @@ const db = admin.firestore();
  */
 exports.checkVehicleAlertsV2 = onSchedule(
   {
-    schedule: "every day 09:00",
+    schedule: "every 2 minutes",
     timeZone: "Europe/Lisbon",
     region: "us-central1", // Garantir consistência de região
   },
