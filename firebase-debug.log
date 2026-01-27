@@ -542,3 +542,135 @@ If you are renaming a function or changing its region, it is recommended that yo
     at async handle (C:\Users\anton\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\release\fabricator.js:89:17)
 [error] 
 [error] Error: There was an error deploying functions
+[debug] [2026-01-27T18:24:59.283Z] DEBUG: File C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\index.js changed, reloading triggers
+[debug] [2026-01-27T18:25:00.285Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-01-27T18:25:02.085Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for L100",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "private": true
+}
+[debug] [2026-01-27T18:25:02.086Z] Building nodejs source
+[debug] [2026-01-27T18:25:02.086Z] Failed to find version of module node: reached end of search path C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules
+[warn] !  functions: Your requested "node" version "22" doesn't match your global version "24". Using node@24 from host. 
+[debug] [2026-01-27T18:25:02.089Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-01-27T18:25:02.101Z] Found firebase-functions binary at 'C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8344
+
+[debug] [2026-01-27T18:25:03.228Z] Got response from /__/functions.yaml {"endpoints":{"checkVehicleAlertsV2":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"scheduleTrigger":{"schedule":"every day 12:00","retryConfig":{},"timeZone":"Europe/Lisbon"},"entryPoint":"checkVehicleAlertsV2"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
+[debug] [2026-01-27T18:25:07.276Z] [functions] Loaded functions definitions from source: checkVehicleAlertsV2.
+[debug] [2026-01-27T18:25:20.331Z] DEBUG: File C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\index.js changed, reloading triggers
+[debug] [2026-01-27T18:25:21.334Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-01-27T18:25:23.090Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for L100",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "private": true
+}
+[debug] [2026-01-27T18:25:23.090Z] Building nodejs source
+[debug] [2026-01-27T18:25:23.090Z] Failed to find version of module node: reached end of search path C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules
+[warn] !  functions: Your requested "node" version "22" doesn't match your global version "24". Using node@24 from host. 
+[debug] [2026-01-27T18:25:23.091Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-01-27T18:25:23.101Z] Found firebase-functions binary at 'C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8224
+
+[debug] [2026-01-27T18:25:23.906Z] Got response from /__/functions.yaml {"endpoints":{"checkVehicleAlertsV2":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"scheduleTrigger":{"schedule":"every day 09:00","retryConfig":{},"timeZone":"Europe/Lisbon"},"entryPoint":"checkVehicleAlertsV2"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
+[debug] [2026-01-27T18:25:27.940Z] [functions] Loaded functions definitions from source: checkVehicleAlertsV2.
+[debug] [2026-01-27T18:25:43.549Z] DEBUG: File C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\index.js changed, reloading triggers
+[debug] [2026-01-27T18:25:44.553Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-01-27T18:25:46.048Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for L100",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "private": true
+}
+[debug] [2026-01-27T18:25:46.048Z] Building nodejs source
+[debug] [2026-01-27T18:25:46.048Z] Failed to find version of module node: reached end of search path C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules
+[warn] !  functions: Your requested "node" version "22" doesn't match your global version "24". Using node@24 from host. 
+[debug] [2026-01-27T18:25:46.050Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-01-27T18:25:46.061Z] Found firebase-functions binary at 'C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8964
+
+[debug] [2026-01-27T18:25:47.508Z] Got response from /__/functions.yaml {"endpoints":{"checkVehicleAlertsV2":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"scheduleTrigger":{"schedule":"every day 09:00","retryConfig":{},"timeZone":"Europe/Lisbon"},"entryPoint":"checkVehicleAlertsV2"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
+[debug] [2026-01-27T18:25:51.545Z] [functions] Loaded functions definitions from source: checkVehicleAlertsV2.
+[debug] [2026-01-27T18:29:12.371Z] DEBUG: File C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\index.js changed, reloading triggers
+[debug] [2026-01-27T18:29:13.378Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-01-27T18:29:15.895Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for L100",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "private": true
+}
+[debug] [2026-01-27T18:29:15.896Z] Building nodejs source
+[debug] [2026-01-27T18:29:15.896Z] Failed to find version of module node: reached end of search path C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules
+[warn] !  functions: Your requested "node" version "22" doesn't match your global version "24". Using node@24 from host. 
+[debug] [2026-01-27T18:29:15.897Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-01-27T18:29:15.907Z] Found firebase-functions binary at 'C:\Users\anton\Desktop\Programing_Projects\oMeuCarro\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8482
+
+[debug] [2026-01-27T18:29:16.823Z] Got response from /__/functions.yaml {"endpoints":{"checkVehicleAlertsV2":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"scheduleTrigger":{"schedule":"every day 09:00","retryConfig":{},"timeZone":"Europe/Lisbon"},"entryPoint":"checkVehicleAlertsV2"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
+[debug] [2026-01-27T18:29:20.875Z] [functions] Loaded functions definitions from source: checkVehicleAlertsV2.

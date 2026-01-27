@@ -25,7 +25,7 @@ exports.checkVehicleAlertsV2 = onSchedule(
       hoje.getDate(),
     );
 
-    const prazosAviso = [30, 7, 3, 1];
+    const prazosAviso = [30, 15, 7, 3, 1];
 
     try {
       const veiculosSnapshot = await db.collection("veiculos").get();
@@ -94,6 +94,80 @@ exports.checkVehicleAlertsV2 = onSchedule(
           veiculo.inspecao ? veiculo.inspecao.proximaData : null,
           "Inspeção",
         );
+
+        // 🛠️ NOVO: Verificar Plano de Manutenção (Revisões/Serviços)
+        try {
+          const manutSnap = await doc.ref
+            .collection("manutencoesPlaneadas")
+            .get();
+          const currentOdo =
+            veiculo.odometroAtual || veiculo.odometroInicial || 0;
+
+          for (const mDoc of manutSnap.docs) {
+            const p = mDoc.data();
+            const titulo = p.titulo || p.tipo || "Manutenção";
+
+            // 1. Verificar por Quilómetros
+            if (p.intervaloKm && p.ultimoKm !== undefined) {
+              const nextKm = Number(p.ultimoKm) + Number(p.intervaloKm);
+              const diffKm = nextKm - currentOdo;
+
+              if (diffKm <= 0) {
+                alertas.push({
+                  titulo: `🚨 Manutenção ATRASADA: ${titulo}`,
+                  corpo: `O ${veiculoNome} passou o limite de ${nextKm} km (${Math.abs(diffKm)} km a mais).`,
+                });
+              } else if (diffKm <= 1000) {
+                alertas.push({
+                  titulo: `🛠️ Manutenção Próxima: ${titulo}`,
+                  corpo: `O ${veiculoNome} deve fazer ${titulo} em ${diffKm} km (aos ${nextKm} km).`,
+                });
+              }
+            }
+
+            // 2. Verificar por Data
+            if (p.intervaloMeses && p.ultimaData) {
+              const lastD = new Date(p.ultimaData);
+              const nextD = new Date(
+                lastD.getFullYear(),
+                lastD.getMonth() + Number(p.intervaloMeses),
+                lastD.getDate(),
+              );
+
+              // Normalizar nextD para midnight
+              const nextDNormalizada = new Date(
+                nextD.getFullYear(),
+                nextD.getMonth(),
+                nextD.getDate(),
+              );
+              const diffTimeM =
+                nextDNormalizada.getTime() - hojeNormalizado.getTime();
+              const diffDaysM = Math.round(diffTimeM / (1000 * 60 * 60 * 24));
+
+              if (diffDaysM === 0) {
+                alertas.push({
+                  titulo: `🚨 ${titulo} vence HOJE!`,
+                  corpo: `Dia de ${titulo} para o ${veiculoNome}!`,
+                });
+              } else if (diffDaysM > 0 && diffDaysM <= 15) {
+                alertas.push({
+                  titulo: `🛠️ ${titulo} a chegar`,
+                  corpo: `Faltam ${diffDaysM} dias para a próxima ${titulo} do ${veiculoNome}.`,
+                });
+              } else if (diffDaysM < 0) {
+                alertas.push({
+                  titulo: `🚨 ${titulo} em ATRASO!`,
+                  corpo: `A data de ${titulo} do ${veiculoNome} passou há ${Math.abs(diffDaysM)} dias.`,
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.error(
+            `Erro ao verificar manutenções para veículo ${doc.id}:`,
+            e,
+          );
+        }
 
         if (alertas.length > 0) {
           console.log(
