@@ -81,22 +81,20 @@ function listenToForegroundMessages() {
   try {
     const messaging = firebase.messaging();
     messaging.onMessage((payload) => {
-      console.log("Mensagem recebida em foreground:", payload);
+      console.log("🔔 [FCM Client] Mensagem recebida em foreground:", payload);
       const title = payload.notification?.title || "L100";
       const body = payload.notification?.body || "";
       const icon = payload.notification?.icon || "./images/logo-icon192.png";
 
-      // Podemos mostrar um Toast personalizado ou usar a Notification API se o utilizador deixar
-      // Nota: Browsers normalmente não mostram System Notifications se a aba estiver focada,
-      // a menos que usemos a API explicitamente.
-
       // Opção 1: Toast Simples (se tiveres um sistema de toast)
       if (window.showToast) {
+        console.log("👉 A mostrar Toast...");
         window.showToast(title + ": " + body, "info");
       }
 
-      // Opção 2: Tentar notificação de sistema mesmo com app aberta (útil para alertas de outros tabs)
+      // Opção 2: Tentar notificação de sistema mesmo com app aberta
       if (Notification.permission === "granted") {
+        console.log("👉 A disparar Notificação de Sistema...");
         new Notification(title, {
           body: body,
           icon: icon,

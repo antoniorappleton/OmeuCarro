@@ -176,14 +176,14 @@ exports.checkVehicleAlertsV2 = onSchedule(
           const tokensSnap = await userRef.collection("fcmTokens").get();
           if (tokensSnap.empty) {
             console.log(
-              `User ${userId} tem alertas mas sem tokens registados.`,
+              `[ALERTA] User ${userId} (${veiculoNome}) tem alertas mas NÃO tem tokens registados no Firestore.`,
             );
             continue;
           }
 
           const tokens = tokensSnap.docs.map((t) => t.data().token);
           console.log(
-            `Enviando para ${tokens.length} tokens do utilizador ${userId}`,
+            `[FCM] A enviar ${alertas.length} alertas para ${tokens.length} tokens do utilizador ${userId} (${veiculoNome}).`,
           );
 
           for (const alerta of alertas) {
@@ -210,7 +210,7 @@ exports.checkVehicleAlertsV2 = onSchedule(
                 tokens,
               });
               console.log(
-                `Alert enviado para ${userId} (${alerta.titulo}): Sucesso=${response.successCount}, Falhas=${response.failureCount}`,
+                `[FCM SUCCESS] Alerta "${alerta.titulo}" para ${userId}: Sucesso=${response.successCount}, Falhas=${response.failureCount}`,
               );
 
               if (response.failureCount > 0) {
