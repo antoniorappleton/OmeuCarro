@@ -13,9 +13,13 @@ async function requestNotificationPermissionAndSaveToken() {
     throw new Error("Este browser não suporta notificações.");
   }
 
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    throw new Error("Permissão de notificações negada.");
+  if (Notification.permission === "granted") {
+    console.log("Permissão de notificações já concedida.");
+  } else {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      throw new Error("Permissão de notificações negada.");
+    }
   }
 
   // Verificar se o utilizador está autenticado
@@ -34,7 +38,7 @@ async function requestNotificationPermissionAndSaveToken() {
     !swReg.active ||
     !swReg.active.scriptURL.includes("service-worker.js")
   ) {
-    swReg = await navigator.serviceWorker.register("./service-worker.js?v=12");
+    swReg = await navigator.serviceWorker.register("./service-worker.js?v=13");
   }
 
   const messaging = firebase.messaging();

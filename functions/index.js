@@ -199,7 +199,9 @@ exports.checkVehicleAlertsV2 = onSchedule(
               webpush: {
                 notification: {
                   icon: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
-                  click_action: "https://omeucarro-d3889.web.app/veiculos.html",
+                },
+                fcm_options: {
+                  link: "https://omeucarro-d3889.web.app/veiculos.html",
                 },
               },
             };
@@ -218,14 +220,16 @@ exports.checkVehicleAlertsV2 = onSchedule(
                   if (!resp.success) {
                     const errorInfo = resp.error;
                     console.warn(
-                      `Falha no token ${tokens[idx]}:`,
-                      errorInfo.code,
+                      `[FCM ERROR] Falha no token ${tokens[idx]}: Code=${errorInfo.code} | Message=${errorInfo.message}`,
                     );
                     if (
                       errorInfo.code ===
                         "messaging/registration-token-not-registered" ||
                       errorInfo.code === "messaging/invalid-argument"
                     ) {
+                      console.log(
+                        `[FCM] A remover token inválido: ${tokens[idx]}`,
+                      );
                       userRef
                         .collection("fcmTokens")
                         .doc(tokens[idx])
