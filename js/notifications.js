@@ -119,23 +119,54 @@ function listenToForegroundMessages() {
  * Diagnóstico: Mostra uma notificação de teste local.
  */
 async function testLocalNotification() {
-  console.log("🧪 A disparar notificação de teste local...");
+  console.log("🧪 [Diagnostics] A iniciar teste de notificação local...");
+
+  if (!("Notification" in window)) {
+    console.error("❌ [Diagnostics] Browser não suporta notificações.");
+    return alert("Este browser não suporta notificações.");
+  }
+
+  console.log("📍 [Diagnostics] Permissão atual:", Notification.permission);
+  if (Notification.permission !== "granted") {
+    console.warn("⚠️ [Diagnostics] Permissão não concedida. A pedir agora...");
+    const p = await Notification.requestPermission();
+    if (p !== "granted") {
+      return alert("Precisas de dar permissão nas definições do browser.");
+    }
+  }
+
   try {
+    console.log("⌛ [Diagnostics] À espera do Service Worker...");
     const reg = await navigator.serviceWorker.ready;
-    reg.showNotification("Teste de Notificação L100", {
+    console.log("✅ [Diagnostics] Service Worker pronto:", reg.scope);
+
+    console.log("👉 [Diagnostics] A executar reg.showNotification...");
+
+    // Tentamos await para capturar erros de permissão ou sistema
+    await reg.showNotification("Teste de Notificação L100", {
       body: "Se estás a ver isto, as notificações locais funcionam! ✅",
       icon: "./images/logo-icon192.png",
-      tag: "test-notification",
+      tag: "test-notification-" + Date.now(),
+      vibrate: [200, 100, 200],
+      requireInteraction: true,
+      data: { url: window.location.href },
     });
+
+    console.log("🎉 [Diagnostics] Comando showNotification enviado.");
+
     if (window.showToast) {
       window.showToast(
-        "Deverás ver uma notificação de sistema agora.",
+        "Deverá aparecer uma notificação agora. Verifica também o Centro de Ações do Windows.",
         "success",
       );
     }
   } catch (err) {
-    console.error("Erro no teste local:", err);
-    alert("Erro no teste: " + err.message);
+    console.error("❌ [Diagnostics] Erro no teste local:", err);
+    alert(
+      "Erro no teste: " +
+        err.message +
+        "\n\nVerifica a consola (F12) para detalhes.",
+    );
   }
 }
 
