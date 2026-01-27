@@ -163,6 +163,20 @@ auth.onAuthStateChanged(async (user) => {
       if (alertDaysSelect)
         alertDaysSelect.value = settings.alertaAntecedencia || "15";
 
+      // --- NOVO: Listener de mensagens e refresh automático do token ---
+      if (typeof window.listenToForegroundMessages === "function") {
+        window.listenToForegroundMessages();
+      }
+
+      if (
+        settings.notificacoesAtivas !== false &&
+        Notification.permission === "granted"
+      ) {
+        console.log("[Perfil] Notificações ativas. A atualizar token...");
+        window.requestNotificationPermissionAndSaveToken().catch(console.error);
+      }
+      // -----------------------------------------------------------------
+
       // Data
       if (includeDocsToggle)
         includeDocsToggle.checked = settings.incluirDocsExportacao || false;

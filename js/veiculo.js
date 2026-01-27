@@ -1922,7 +1922,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     init();
-    // Verificar se há parametros na URL para abrir modal de plano
-    // ou apenas carregar normal
+
+    // --- NOVO: Listener de mensagens e refresh automático do token ---
+    if (typeof window.listenToForegroundMessages === "function") {
+      window.listenToForegroundMessages();
+    }
+    // Garantir que o token está atualizado se tivermos permissão
+    if ("Notification" in window && Notification.permission === "granted") {
+      getUserSettings().then((settings) => {
+        if (settings && settings.notificacoesAtivas !== false) {
+          console.log("[Veículo] A atualizar token FCM...");
+          window
+            .requestNotificationPermissionAndSaveToken()
+            .catch(console.error);
+        }
+      });
+    }
+    // -----------------------------------------------------------------
   });
 });
