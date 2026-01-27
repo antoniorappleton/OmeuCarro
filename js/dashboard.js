@@ -739,61 +739,6 @@ window.addEventListener("load", () => {
       window.listenToForegroundMessages();
     }
 
-    // 2. Lógica de Permissão e Token
-    const headerActions = document.querySelector(".app-header-actions");
-    let btnNotifs = document.getElementById("btn-notifs");
-
-    // Se o botão não existir, cria-o
-    if (headerActions && !btnNotifs) {
-      btnNotifs = document.createElement("button");
-      btnNotifs.id = "btn-notifs";
-      btnNotifs.className = "icon-btn";
-      btnNotifs.title = "Ativar Notificações";
-      btnNotifs.innerHTML = `
-            <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-bell"></use>
-            </svg>
-        `;
-      // Inserir antes do logout
-      const btnLogout = document.getElementById("btn-logout");
-      headerActions.insertBefore(btnNotifs, btnLogout);
-
-      btnNotifs.addEventListener("click", async () => {
-        try {
-          const token =
-            await window.requestNotificationPermissionAndSaveToken();
-          alert(
-            "Notificações ativadas! Agora irá receber alertas sobre seguros, IUC e inspeções.",
-          );
-          // Atualizar visual do botão (pode ficar 'ativo' ou escondido)
-          btnNotifs.style.opacity = "0.5";
-          btnNotifs.title = "Notificações Ativas";
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao ativar: " + err.message);
-        }
-      });
-    }
-
-    // 3. Verificação Automática (Melhoria UX)
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        // Se já deu permissão, garante que temos o token atualizado
-        console.log("Permissão já concedida. A atualizar token...");
-        window.requestNotificationPermissionAndSaveToken().catch(console.error);
-        if (btnNotifs) {
-          btnNotifs.style.opacity = "0.5";
-          btnNotifs.title = "Notificações Ativas";
-        }
-      } else if (Notification.permission === "default") {
-        // Se ainda não decidiu, podemos destacar o botão ou mostrar um aviso
-        // Por enquanto, apenas mantemos o botão visível e clicável
-        if (btnNotifs) {
-          btnNotifs.classList.add("animate-pulse"); // Sugestão visual (se existir classe, senão ignora)
-        }
-      }
-    }
-
     unsub();
   });
 });
