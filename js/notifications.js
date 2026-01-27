@@ -34,7 +34,7 @@ async function requestNotificationPermissionAndSaveToken() {
     !swReg.active ||
     !swReg.active.scriptURL.includes("service-worker.js")
   ) {
-    swReg = await navigator.serviceWorker.register("/service-worker.js?v=11");
+    swReg = await navigator.serviceWorker.register("/service-worker.js?v=12");
   }
 
   const messaging = firebase.messaging();

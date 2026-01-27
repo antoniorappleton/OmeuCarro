@@ -150,6 +150,7 @@ auth.onAuthStateChanged(async (user) => {
             try {
               if (window.requestNotificationPermissionAndSaveToken) {
                 await window.requestNotificationPermissionAndSaveToken();
+                alert("Notificações ativadas com sucesso! 🔔");
               }
             } catch (err) {
               console.error("Erro ao pedir permissão:", err);

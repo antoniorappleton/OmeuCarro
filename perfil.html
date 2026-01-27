@@ -20,13 +20,10 @@
     <script defer src="js/firebase-config.js"></script>
     <script defer src="js/auth.js"></script>
     <script defer src="js/firestore.js"></script>
-
-    <!-- Theme Logic (Loaded early to prevent flash, but here deferred is fine as long as logic handles it) -->
-    <!-- Actually for best results it should be blocking in head, but deferred is existing pattern. 
-       Let's put it before other deferred scripts or just in head. 
-       Since I am editing a block with deferred scripts, I will add it here. -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+    <script defer src="js/notifications.js"></script>
+    <script defer src="js/utils.js"></script>
     <script src="js/theme.js"></script>
-
     <script defer src="js/perfil.js"></script>
 
     <style>

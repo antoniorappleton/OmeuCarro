@@ -18,44 +18,47 @@ if (window.location.search.includes("nocache=1")) {
   window.addEventListener("load", () => {
     // FORCE UPDATE CHECKS: Append version to URL to bypass browser cache of the SW file itself
     navigator.serviceWorker
-      .register("./service-worker.js?v=11") 
+      .register("./service-worker.js?v=12")
       .then((reg) => {
-        console.log("Service Worker registado com sucesso (v11):", reg);
+        console.log("Service Worker registado com sucesso (v12):", reg);
 
         // Check for updates periodically
         reg.update();
 
         // 1. Detect if there's a new SW waiting
         if (reg.waiting) {
-            updateReady(reg.waiting);
+          updateReady(reg.waiting);
         }
 
         // 2. Detect if a new SW is installing
         reg.addEventListener("updatefound", () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener("statechange", () => {
-                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                    // New version available!
-                    updateReady(newWorker);
-                }
-            });
+          const newWorker = reg.installing;
+          newWorker.addEventListener("statechange", () => {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              // New version available!
+              updateReady(newWorker);
+            }
+          });
         });
       })
       .catch((err) => {
         console.error("Erro ao registar o Service Worker:", err);
       });
 
-      // 3. Refresh page when new SW takes control
-      let refreshing;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          window.location.reload();
-          refreshing = true;
-      });
+    // 3. Refresh page when new SW takes control
+    let refreshing;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      window.location.reload();
+      refreshing = true;
+    });
   });
 }
 
 function updateReady(worker) {
-    console.log("New version found. Updating...");
-    worker.postMessage({ type: "SKIP_WAITING" });
+  console.log("New version found. Updating...");
+  worker.postMessage({ type: "SKIP_WAITING" });
 }
