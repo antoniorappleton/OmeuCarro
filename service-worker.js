@@ -192,16 +192,20 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   console.log("[SW-Messaging] Background message received:", payload);
-  const notificationTitle = payload.notification?.title || "L100";
+  
+  // Tentar obter dados do payload.data (Robustez)
+  const dataOptions = payload.data || {};
+  const notificationTitle = payload.notification?.title || dataOptions.title || "L100";
+  const notificationBody = payload.notification?.body || dataOptions.body || "";
 
   // Extrair opções do payload ou usar padrões
   const notificationOptions = {
-    body: payload.notification?.body,
-    icon: payload.notification?.icon || "/images/logo-icon192.png",
-    badge: payload.notification?.badge || "/images/logo-icon192.png",
-    tag: payload.notification?.tag || "l100-alert",
+    body: notificationBody,
+    icon: payload.notification?.icon || dataOptions.icon || "/images/logo-icon192.png",
+    badge: payload.notification?.badge || dataOptions.badge || "/images/logo-icon192.png",
+    tag: payload.notification?.tag || dataOptions.tag || "l100-alert",
     vibrate: [200, 100, 200],
-    data: payload.data || {},
+    data: dataOptions, // Passar todos os dados para o click handler
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

@@ -195,14 +195,20 @@ exports.checkVehicleAlertsV2 = onSchedule(
               data: {
                 url: "/veiculos.html",
                 veiculoId: doc.id,
+                title: alerta.titulo,
+                body: alerta.corpo,
               },
               android: {
+                priority: "high",
                 notification: {
                   color: "#0de3f2",
                   tag: `alert-${doc.id}-${alerta.titulo.substring(0, 5)}`,
                 },
               },
               webpush: {
+                headers: {
+                  Urgency: "high",
+                },
                 notification: {
                   icon: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
                   badge:
