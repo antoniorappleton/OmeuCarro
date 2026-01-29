@@ -432,10 +432,67 @@
     };
   }
 
+  /**
+   * Calculates Financial Metrics (Total Cost, Cost/Km).
+   * Uses "Real World" totals (Everything spent / Total Distance driven).
+   *
+   * @param {Object} veiculo - Vehicle object (needs odometroAtual, odometroInicial)
+   * @param {Array} abastecimentos - All refueling records
+   * @param {Array} reparacoes - All maintenance records
+   * @returns {Object} { totalSpent, totalFuelCost, totalMaintCost, totalDist, costPerKm }
+   */
+  function calculateCostMetrics(veiculo, abastecimentos, reparacoes) {
+    if (!veiculo) return null;
+
+    // 1. Total Distance (Real Odometer Difference)
+    const currentOdo = Number(veiculo.odometroAtual) || Number(veiculo.odometroInicial) || 0;
+    const initialOdo = Number(veiculo.odometroInicial) || 0;
+    let totalDist = currentOdo - initialOdo;
+    if (totalDist < 0) totalDist = 0;
+
+    // 2. Total Fuel Cost
+    let totalFuelCost = 0;
+    let totalLitros = 0;
+    if (abastecimentos && Array.isArray(abastecimentos)) {
+      for (const a of abastecimentos) {
+        const l = Number(a.litros) || 0;
+        const p = Number(a.precoPorLitro) || 0;
+        totalFuelCost += l * p;
+        totalLitros += l;
+      }
+    }
+
+    // 3. Total Maintenance Cost
+    let totalMaintCost = 0;
+    if (reparacoes && Array.isArray(reparacoes)) {
+      for (const r of reparacoes) {
+        totalMaintCost += Number(r.custo) || 0;
+      }
+    }
+
+    // 4. Aggregates
+    const totalSpent = totalFuelCost + totalMaintCost;
+    let costPerKm = 0;
+
+    if (totalDist > 0) {
+      costPerKm = totalSpent / totalDist;
+    }
+
+    return {
+      totalSpent,
+      totalFuelCost,
+      totalMaintCost,
+      totalLitros, // Useful for general stats
+      totalDist,
+      costPerKm,
+    };
+  }
+
   // Expose logic
   exports.Analytics = {
     calculateConsumption,
     calculateDrivingPace,
+    calculateCostMetrics,
     generateAnalytics,
   };
 })(window);

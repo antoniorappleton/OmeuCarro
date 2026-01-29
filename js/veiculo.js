@@ -1513,46 +1513,25 @@ document.addEventListener("DOMContentLoaded", () => {
           getReparacoesDoVeiculo(veiculoId),
         ]);
 
-        // 2. Sum Costs
-        let totalFuel = 0;
-        abs.forEach((a) => {
-          const l = Number(a.litros) || 0;
-          const p = Number(a.precoPorLitro) || 0;
-          totalFuel += l * p;
-        });
+        // 2. Centralized Calculation
+        const metrics = window.Analytics.calculateCostMetrics(v, abs, reps);
 
-        let totalMaint = 0;
-        reps.forEach((r) => {
-          totalMaint += Number(r.custo) || 0;
-        });
-
-        const totalSpent = totalFuel + totalMaint;
-
-        // 3. Calc Distance
-        // Use Odometer difference
-        const currentOdo = v.odometroAtual || 0;
-        const initialOdo = v.odometroInicial || 0;
-        let totalDist = currentOdo - initialOdo;
-
-        if (totalDist < 0) totalDist = 0;
-
-        // 4. Update UI
+        // 3. Update UI
         if (elTotalCost) {
           elTotalCost.textContent = formatCurrency(
-            totalSpent,
+            metrics.totalSpent,
             settings?.moeda || "EUR",
           );
         }
 
         if (elTotalKm) {
-          elTotalKm.textContent = totalDist.toLocaleString() + " km";
+          elTotalKm.textContent = metrics.totalDist.toLocaleString() + " km";
         }
 
         if (elCostKm) {
-          if (totalDist > 0) {
-            const cpk = totalSpent / totalDist;
+          if (metrics.costPerKm > 0) {
             // e.g. 0.123 €/km
-            elCostKm.textContent = `${cpk.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+            elCostKm.textContent = `${metrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
           } else {
             elCostKm.textContent = "—";
           }
@@ -1591,34 +1570,23 @@ document.addEventListener("DOMContentLoaded", () => {
         el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
       if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
 
-      // consumo médio e custo/km
-      abs.sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
-
-      let km = 0;
-      let litrosSeg = 0;
-      let custoSeg = 0;
-
-      for (let i = 1; i < abs.length; i++) {
-        const d = (abs[i].odometro || 0) - (abs[i - 1].odometro || 0);
-        if (d > 0) {
-          km += d;
-          litrosSeg += Number(abs[i].litros) || 0;
-          custoSeg +=
-            (Number(abs[i].litros) || 0) * (Number(abs[i].precoPorLitro) || 0);
-        }
-      }
+      // consumo médio e custo/km (Fuel Only)
+      const consResult = window.Analytics.calculateConsumption(abs);
+      const fuelMetrics = window.Analytics.calculateCostMetrics(v, abs, []);
 
       if (el.kpiConsumo) {
-        const ef = calculateEfficiency(km, litrosSeg, settings.unidadeConsumo);
-        el.kpiConsumo.textContent = ef
-          ? formatConsumption(ef, settings.unidadeConsumo)
+        el.kpiConsumo.textContent = consResult.averageL100
+          ? formatConsumption(
+              consResult.averageL100,
+              settings.unidadeConsumo,
+            )
           : "—";
       }
 
       if (el.kpiCustoKm) {
         el.kpiCustoKm.textContent =
-          km > 0
-            ? (custoSeg / km).toFixed(3) +
+          fuelMetrics.costPerKm > 0
+            ? fuelMetrics.costPerKm.toFixed(3) +
               ` ${getCurrencySymbol(settings.moeda)}/${
                 settings.unidadeDistancia || "km"
               }`

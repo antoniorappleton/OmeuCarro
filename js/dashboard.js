@@ -119,63 +119,58 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
     ? abastecimentos.filter((a) => a.veiculoId === veiculoSelecionadoId)
     : abastecimentos;
 
-  // 2️⃣ Totais Gerais (Soma direta de tudo)
   let totalLitros = 0;
   let totalCusto = 0;
-
-  filtrados.forEach((a) => {
-    const L = Number(a.litros) || 0;
-    const P = Number(a.precoPorLitro) || 0;
-    totalLitros += L;
-    totalCusto += L * P;
-  });
-
-  // 3️⃣ Cálculo de Eficiência (Consumo Médio e Custo/Km)
-  // Requer intervalos válidos entre abastecimentos completos
-  let distTotalEficiencia = 0;
-  let litrosTotalEficiencia = 0;
-  let custoTotalEficiencia = 0;
+  
+  // Aggregators for Efficiency & Cost/Km
+  let aggValidDist = 0;   // From Analytics (Cleaned)
+  let aggValidLiters = 0; // From Analytics (Cleaned)
+  let aggRawDist = 0;     // From Max-Min Odo (Period actual)
 
   // Agrupar por veículo
   const porVeiculo = {};
   filtrados.forEach((a) => {
+    // Sum Raw Totals
+    const L = Number(a.litros) || 0;
+    const P = Number(a.precoPorLitro) || 0;
+    totalLitros += L;
+    totalCusto += L * P;
+
     if (!a.veiculoId) return;
     if (!porVeiculo[a.veiculoId]) porVeiculo[a.veiculoId] = [];
     porVeiculo[a.veiculoId].push(a);
   });
 
   Object.values(porVeiculo).forEach((lista) => {
-    // Ordenar por odómetro
-    const ordenados = [...lista]
-      // .filter((a) => a.completo) // REMOVIDO: User quer cálculo sempre, independente de ser cheio ou não
-      .sort((a, b) => (a.odometro || 0) - (b.odometro || 0));
+    if (lista.length < 2) return;
 
-    for (let i = 1; i < ordenados.length; i++) {
-      const prev = ordenados[i - 1];
-      const atual = ordenados[i];
-
-      const km = Number(atual.odometro) - Number(prev.odometro);
-      if (km <= 0) continue; // erro ou sem movimento
-
-      const litros = Number(atual.litros);
-      const preco = Number(atual.precoPorLitro);
-
-      if (isNaN(litros) || isNaN(preco)) continue;
-
-      distTotalEficiencia += km;
-      litrosTotalEficiencia += litros;
-      custoTotalEficiencia += litros * preco;
+    // 1. Efficiency (Use Robust Analytics)
+    // Analytics expects sorted list, calculateConsumption handles sorting but better passing sorted just in case?
+    // Analytics handles sorting.
+    const metrics = window.Analytics.calculateConsumption(lista);
+    
+    if (metrics && metrics.samples > 0) {
+        aggValidDist += metrics.totalDist || 0;
+        aggValidLiters += metrics.totalLiters || 0;
     }
+
+    // 2. Raw Distance (for Cost/Km in this period)
+    const sorted = [...lista].sort((a, b) => (Number(a.odometro) || 0) - (Number(b.odometro) || 0));
+    const minOdo = Number(sorted[0].odometro) || 0;
+    const maxOdo = Number(sorted[sorted.length - 1].odometro) || 0;
+    const dist = maxOdo - minOdo;
+    if (dist > 0) aggRawDist += dist;
   });
 
-  const eficiencia = calculateEfficiency(
-    distTotalEficiencia,
-    litrosTotalEficiencia,
-    settings.unidadeConsumo,
-  );
+  // Calculate Global Efficiency (Weighted)
+  let eficiencia = null;
+  if (aggValidDist > 0 && aggValidLiters > 0) {
+      eficiencia = (aggValidLiters / aggValidDist) * 100;
+  }
 
-  const custoPorKm =
-    distTotalEficiencia > 0 ? custoTotalEficiencia / distTotalEficiencia : null;
+  // Calculate Cost Per Km (Raw Cost / Raw Dist)
+  // This represents "Money spent in this period / Distance driven in this period"
+  const custoPorKm = aggRawDist > 0 ? totalCusto / aggRawDist : null;
 
   return {
     totalLitros,
