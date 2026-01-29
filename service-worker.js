@@ -208,7 +208,11 @@ messaging.onBackgroundMessage((payload) => {
     data: dataOptions, // Passar todos os dados para o click handler
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  // Se o payload já traz "notification", o browser mostra automaticamente.
+  // Só mostramos manualmente se não vier "notification" (Robustez para data-only)
+  if (!payload.notification) {
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  }
 });
 
 self.addEventListener("notificationclick", (event) => {
