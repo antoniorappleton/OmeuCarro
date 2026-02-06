@@ -22,6 +22,7 @@ const DEFAULT_PIDS = {
   coolant: ["k5", "05"],          // °C
   intakeTemp: ["kf", "0f"],       // °C
   maf: ["k10", "10"],             // g/s
+  engineLoad: ["k4", "04"],       // %
 };
 
 /**
@@ -99,6 +100,7 @@ exports.uploadTorqueData = onRequest(
           odometer: getVal("odometer"),
           fuelLevel: getVal("fuelLevel"),
           coolant: getVal("coolant"),
+          engineLoad: getVal("engineLoad"),
           location: null
         };
 

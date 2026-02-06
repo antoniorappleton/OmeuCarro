@@ -1511,39 +1511,89 @@ document.addEventListener("DOMContentLoaded", () => {
       const elCostKm = document.getElementById("float-cost-km");
       const elTotalCost = document.getElementById("float-total-cost");
       const elTotalKm = document.getElementById("float-total-km");
-
-      if (!elCostKm || !elTotalCost) return;
+      
+      // Elements for the Analytics Card (Popup)
+      const elAnL100 = document.getElementById("an-l100");
+      const elAnRange = document.getElementById("an-range-km");
+      const elAnRangeDays = document.getElementById("an-range-days");
+      const elAnConf = document.getElementById("an-confidence");
 
       try {
         // 1. Fetch all data (parallel for speed)
-        const [abs, reps] = await Promise.all([
-          getAbastecimentosDoVeiculo(veiculoId, 1000), // get all likely
+        // We also fetch the latest OBD reading for fallback!
+        const [abs, reps, obdSnap] = await Promise.all([
+          getAbastecimentosDoVeiculo(veiculoId, 1000), 
           getReparacoesDoVeiculo(veiculoId),
+          db.collection("veiculos").doc(veiculoId).collection("leiturasObd").orderBy("timestamp", "desc").limit(1).get()
         ]);
 
-        // 2. Centralized Calculation
-        const metrics = window.Analytics.calculateCostMetrics(v, abs, reps);
+        // 2. Centralized Calculation (Cost & Consumption)
+        const costMetrics = window.Analytics.calculateCostMetrics(v, abs, reps);
+        const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
 
-        // 3. Update UI
-        if (elTotalCost) {
-          elTotalCost.textContent = formatCurrency(
-            metrics.totalSpent,
-            settings?.moeda || "EUR",
-          );
-        }
-
-        if (elTotalKm) {
-          elTotalKm.textContent = metrics.totalDist.toLocaleString() + " km";
-        }
-
+        // 3. Update Floating Summary (Cost)
+        if (elTotalCost) elTotalCost.textContent = formatCurrency(costMetrics.totalSpent, settings?.moeda || "EUR");
+        if (elTotalKm) elTotalKm.textContent = costMetrics.totalDist.toLocaleString() + " km";
         if (elCostKm) {
-          if (metrics.costPerKm > 0) {
-            // e.g. 0.123 €/km
-            elCostKm.textContent = `${metrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+          if (costMetrics.costPerKm > 0) {
+            elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
           } else {
             elCostKm.textContent = "—";
           }
         }
+
+        // 4. Update Analytics Card (Consumption & Range)
+        let l100 = fuelMetrics.consumoMedioL100;
+        let range = fuelMetrics.kmAteReservaEstimado;
+        let days = fuelMetrics.diasAteReservaEstimado;
+        let source = "manual";
+
+        // FALLBACK: If standard analytics failed (no manual history), try OBD
+        if ((!l100 || l100 === 0) && !obdSnap.empty) {
+           const obdData = obdSnap.docs[0].data();
+           const parsed = obdData.parsed || {};
+           
+           // Try "Long Term Average" or "Trip Average"
+           const obdL100 = parsed["Litres Per 100 Kilometer(Long Term Average)(l/100km)"] || parsed["Trip average Litres/100 KM(l/100km)"];
+           
+           if (obdL100 > 0) {
+               l100 = obdL100;
+               source = "obd";
+               
+               // Estimate Range using OBD consumption + Fuel Level
+               const fuelLevel = parsed.fuelLevel || 0; // %
+               const capacity = v.capacidadeDepositoLitros || 0;
+               if (capacity > 0 && fuelLevel > 0) {
+                   const litersLeft = (fuelLevel / 100) * capacity;
+                   range = (litersLeft / l100) * 100;
+               }
+           }
+        }
+
+        if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
+        if (elAnRange) elAnRange.textContent = range ? Math.round(range).toLocaleString() : "--";
+        if (elAnRangeDays) elAnRangeDays.textContent = days ? `${days} dias` : (source === 'obd' ? "Est. via OBD" : "--");
+        
+        if (elAnConf) {
+            if (source === 'obd') {
+                elAnConf.textContent = "Fonte: Torque Pro (OBD)";
+                elAnConf.className = "status-blue"; 
+            } else if (l100) {
+                elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
+                elAnConf.className = "status-neutral";
+            } else {
+                 elAnConf.textContent = "Sem dados suficientes";
+            }
+        }
+        
+        // Unhide Analytics Button if we have something to show
+        const btnAnalytics = document.getElementById("btn-float-analytics");
+        if (btnAnalytics) {
+            if (costMetrics.totalSpent > 0 || l100 > 0 || source === 'obd') {
+                btnAnalytics.classList.remove("hidden");
+            }
+        }
+
       } catch (e) {
         console.error("Error calculating floating metrics", e);
       }
@@ -1551,15 +1601,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setupTorqueIntegration(veiculoId) {
        const btnObd = document.getElementById("btn-float-obd");
-       const cardObd = document.getElementById("section-obd");
+       
+       // Now using a standard Modal, not a floating card
+       const modalObd = document.getElementById("obd-modal"); 
+       const btnCloseObd = document.getElementById("btn-close-obd");
+       
        const lastUpdateEl = document.getElementById("obd-last-update");
        
-       const elSpeed = document.getElementById("obd-speed");
-       const elRpm = document.getElementById("obd-rpm");
+       const elTripL100 = document.getElementById("trip-l100");
+       const elTripDuration = document.getElementById("trip-duration");
+       
+       const elSpeed = document.getElementById("obd-speed"); // Keep for legacy/debug if needed
        const elCoolant = document.getElementById("obd-coolant");
-       const elFuel = document.getElementById("obd-fuel");
-       const elLocBox = document.getElementById("obd-location-box");
-       const elLoc = document.getElementById("obd-location");
+       const elStatusCoolant = document.getElementById("status-coolant");
+       const elLoad = document.getElementById("obd-load");
+
+       if(!btnObd) return;
+
+       // Modal Logic
+       btnObd.addEventListener("click", () => {
+           if(modalObd) modalObd.classList.remove("hidden");
+       });
+       if(btnCloseObd && modalObd) {
+           btnCloseObd.addEventListener("click", () => {
+               modalObd.classList.add("hidden");
+           });
+           
+           // Close on outside click
+           modalObd.addEventListener("click", (e) => {
+               if(e.target === modalObd) modalObd.classList.add("hidden");
+           });
+       }
+
 
        if(!btnObd) return;
 
@@ -1585,11 +1658,57 @@ document.addEventListener("DOMContentLoaded", () => {
              // Show button
              btnObd.classList.remove("hidden");
 
-             // Update UI
-             if(elSpeed) elSpeed.innerText = reading.speed != null ? Math.round(reading.speed) : "--";
-             if(elRpm) elRpm.innerText = reading.rpm != null ? Math.round(reading.rpm) : "--";
-             if(elCoolant) elCoolant.innerText = reading.coolant != null ? Math.round(reading.coolant) : "--";
-             if(elFuel) elFuel.innerText = reading.fuelLevel != null ? Math.round(reading.fuelLevel) : "--";
+             // Helper to find keys case-insensitive/fuzzy
+             const findKey = (obj, ...parts) => {
+                 const keys = Object.keys(obj);
+                 for(const k of keys) {
+                     const lower = k.toLowerCase();
+                     if(parts.every(p => lower.includes(p.toLowerCase()))) return obj[k];
+                 }
+                 return null;
+             };
+
+             // 1. Trip Consumption
+             const tripL100 = findKey(reading, "Trip average", "l/100");
+             if(elTripL100) elTripL100.innerText = tripL100 ? Number(tripL100).toFixed(1) : "--";
+
+             // 2. Trip Duration (Calc)
+             const tripDist = findKey(reading, "Trip Distance");
+             const tripSpeed = findKey(reading, "Average trip speed"); 
+             
+             if(elTripDuration) {
+                 const d = Number(tripDist || 0);
+                 const s = Number(tripSpeed || 0);
+                 if(d > 0 && s > 0) {
+                     const minutes = Math.round((d / s) * 60);
+                     elTripDuration.innerText = minutes;
+                 } else {
+                     elTripDuration.innerText = "--";
+                 }
+             }
+
+             // 3. Health (Coolant)
+             const temp = findKey(reading, "Coolant") || reading.coolant;
+             if(elCoolant) elCoolant.innerText = temp != null ? Math.round(temp) : "--";
+             
+             if(elStatusCoolant && temp != null) {
+                 if(temp > 105) elStatusCoolant.className = "alert-status-indicator status-red"; 
+                 else if(temp > 90) elStatusCoolant.className = "alert-status-indicator status-yellow"; 
+                 else elStatusCoolant.className = "alert-status-indicator status-green"; 
+             }
+
+             // 4. Load
+             const load = findKey(reading, "Engine Load") || reading.engineLoad;
+             if(elLoad) elLoad.innerText = load != null ? Math.round(load) : "--";
+             
+             // 5. RPM & Speed
+             const rpm = findKey(reading, "Engine RPM") || reading.rpm;
+             const elRpm = document.getElementById("obd-rpm");
+             if(elRpm) elRpm.innerText = rpm != null ? Math.round(rpm) : "--";
+
+             const speed = findKey(reading, "Speed (OBD)") || reading.speed;
+             const elSpeed = document.getElementById("obd-speed");
+             if(elSpeed) elSpeed.innerText = speed != null ? Math.round(speed) : "--";
              
              // Time
              if(lastUpdateEl && data.timestamp) {
@@ -1600,17 +1719,7 @@ document.addEventListener("DOMContentLoaded", () => {
                  lastUpdateEl.innerText = isToday ? d.toLocaleTimeString() : d.toLocaleDateString() + " " + d.toLocaleTimeString();
              }
 
-             // Location
-             if(reading.location && elLoc && elLocBox) {
-                 elLocBox.classList.remove("hidden");
-                 const lat = reading.location.latitude;
-                 const lon = reading.location.longitude;
-                 elLoc.innerText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-                 // Optional: Link to maps?
-                 // elLocBox.onclick = () => window.open(`https://maps.google.com/?q=${lat},${lon}`);
-             } else if(elLocBox) {
-                 elLocBox.classList.add("hidden");
-             }
+
              
              // Also update card color/status if old data?
              // Not requested but good UX.

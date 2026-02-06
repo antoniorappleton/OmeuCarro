@@ -590,7 +590,7 @@
       <button id="btn-float-obd" class="fab-right hidden" aria-label="Torque OBD"
         style="background: var(--color-surface); color: #00d2ff">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-wrench-clock"></use> <!-- icon placeholder, maybe gauge? -->
+          <use href="assets/icons-unified.svg#icon-activity"></use>
         </svg>
       </button>
 
@@ -602,64 +602,96 @@
     </div>
   </div>
 
-  <!-- 4. TORQUE OBD CARD (New) -->
-  <div id="section-obd" class="floating-card hidden">
-    <div class="floating-card-header">
-      <span class="muted" style="display:flex; align-items:center; gap:6px;">
-        <span style="width:8px; height:8px; border-radius:50%; background:#00d2ff; display:inline-block;"></span>
-        Torque Pro
-      </span>
-      <button id="btn-close-obd" class="icon-btn-xs" style="border: none; background: transparent">
-        <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-close"></use>
-        </svg>
-      </button>
+  <!-- 4. HEALTH & TRIP CARD (New Request) -->
+  <div id="obd-modal" class="modal hidden" style="z-index: 9999;">
+    <div class="modal-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);">
     </div>
-    <div class="card-body" style="padding: 0; margin-top: 12px">
-      <div style="font-size: 0.8rem; margin-bottom: 12px; display:flex; justify-content:space-between;">
-        <span class="muted">Última leitura:</span>
-        <span id="obd-last-update" style="font-weight:600;">--</span>
+    <div class="modal-content"
+      style="position:relative; background: var(--bg-card); margin: 10vh auto; max-width: 90%; width: 400px; border-radius: 16px; padding: 24px; border: 1px solid var(--border-light); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header"
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <span class="muted" style="display:flex; align-items:center; gap:6px;">
+          <span class="status-indicator-dot pulse"></span>
+          Saúde & Viagem
+        </span>
+        <button id="btn-close-obd" class="icon-btn-xs" style="border: none; background: transparent">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
       </div>
+      <div class="modal-body">
 
-      <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
-        <!-- Speed -->
-        <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
-          <div class="muted" style="font-size: 0.75rem">Velocidade</div>
-          <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
-            <span id="obd-speed">--</span> <small class="muted">km/h</small>
+        <!-- Last Trip Summary -->
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px;">Última Viagem</h4>
+        <div class="analytics-grid"
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+          <!-- Trip Consumption -->
+          <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
+            <div class="muted" style="font-size: 0.75rem">Consumo Média</div>
+            <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
+              <span id="trip-l100">--</span> <small class="muted">L/100</small>
+            </div>
+          </div>
+          <!-- Duration (Calculated) -->
+          <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
+            <div class="muted" style="font-size: 0.75rem">Duração</div>
+            <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
+              <span id="trip-duration">--</span> <small class="muted">min</small>
+            </div>
           </div>
         </div>
+
+        <!-- Realtime Health -->
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px;">Estado Atual</h4>
+        <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px;">
+
+          <!-- Engine Temp -->
+          <div class="alert-item">
+            <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
+            <div class="alert-info">
+              <span class="alert-label">Temperatura Motor</span>
+              <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
+            </div>
+          </div>
+
+          <!-- Battery / Voltage (if available, else Load) -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral"></div>
+            <div class="alert-info">
+              <span class="alert-label">Carga Motor</span>
+              <span class="alert-value"><span id="obd-load">--</span> %</span>
+            </div>
+          </div>
+
+        </div>
+
         <!-- RPM -->
-        <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
-          <div class="muted" style="font-size: 0.75rem">RPM</div>
-          <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
-            <span id="obd-rpm">--</span>
+        <div class="alert-item">
+          <div class="alert-status-indicator status-neutral" style="background:transparent;"></div>
+          <div class="alert-info">
+            <span class="alert-label">Rotações</span>
+            <span class="alert-value"><span id="obd-rpm">--</span> rpm</span>
           </div>
         </div>
-        <!-- Coolant -->
-        <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
-          <div class="muted" style="font-size: 0.75rem">Temp. Motor</div>
-          <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
-            <span id="obd-coolant">--</span> <small class="muted">°C</small>
+
+        <!-- Speed -->
+        <div class="alert-item">
+          <div class="alert-status-indicator status-neutral" style="background:transparent;"></div>
+          <div class="alert-info">
+            <span class="alert-label">Velocidade</span>
+            <span class="alert-value"><span id="obd-speed">--</span> km/h</span>
           </div>
         </div>
-        <!-- Fuel -->
-        <div class="analytics-box" style="background: var(--bg-hover); padding: 10px; border-radius: 8px;">
-          <div class="muted" style="font-size: 0.75rem">Combustível</div>
-          <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
-            <span id="obd-fuel">--</span> <small class="muted">%</small>
-          </div>
-        </div>
+
       </div>
 
-      <div id="obd-location-box" class="hidden"
-        style="margin-top:12px; font-size: 0.85rem; padding: 8px; border: 1px solid var(--border-light); border-radius: 6px;">
-        <svg class="icon-sm" style="vertical-align: middle; margin-right:4px; opacity: 0.7;">
-          <use href="assets/icons-unified.svg#icon-map"></use>
-        </svg>
-        <span id="obd-location">--</span>
+      <div style="font-size: 0.75rem; margin-top: 12px; text-align: right;" class="muted">
+        Atualizado: <span id="obd-last-update">--</span>
       </div>
+
     </div>
+  </div>
   </div>
 
   <!-- MODAL: NOVA REPARAÇÃO -->

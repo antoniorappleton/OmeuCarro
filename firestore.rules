@@ -85,6 +85,14 @@ service cloud.firestore {
          allow read, write: if request.auth != null && 
             get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
       }
+      
+      // Allow access to OBD Data (Torque/Import)
+      match /leiturasObd/{readingId} {
+         // Read-only for client is sufficient as import is server-side
+         allow read: if request.auth != null && 
+            get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
+      }
     }
+
   }
 }

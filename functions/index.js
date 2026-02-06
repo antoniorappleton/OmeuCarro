@@ -2,11 +2,17 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const { uploadTorqueData } = require("./torque"); // <--- Importar nova função
 
+const { importFuelData } = require("./import_fuel"); // <--- Import helper
+const { importTorqueCsv } = require("./import_torque_csv"); // <--- Bulk Import CSV
+
 admin.initializeApp();
 const db = admin.firestore();
 
 // Exportar a função HTTP
 exports.uploadTorqueData = uploadTorqueData;
+
+exports.importFuelData = importFuelData;
+exports.importTorqueCsv = importTorqueCsv;
 
 /**
  * Função agendada para correr todos os dias às 09:00 AM.
