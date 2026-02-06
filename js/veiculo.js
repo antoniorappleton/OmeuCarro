@@ -1709,6 +1709,19 @@ document.addEventListener("DOMContentLoaded", () => {
              const speed = findKey(reading, "Speed (OBD)") || reading.speed;
              const elSpeed = document.getElementById("obd-speed");
              if(elSpeed) elSpeed.innerText = speed != null ? Math.round(speed) : "--";
+
+             // 6. Extended Metrics
+             const intake = findKey(reading, "Intake Air Temperature") || reading.intake;
+             const elIntake = document.getElementById("obd-intake");
+             if(elIntake) elIntake.innerText = intake != null ? Math.round(intake) : "--";
+
+             const maf = findKey(reading, "Mass Air Flow Rate") || reading.maf;
+             const elMaf = document.getElementById("obd-maf");
+             if(elMaf) elMaf.innerText = maf != null ? Number(maf).toFixed(1) : "--";
+
+             const voltage = findKey(reading, "Voltage") || findKey(reading, "Volts") || reading.voltage;
+             const elVoltage = document.getElementById("obd-voltage");
+             if(elVoltage) elVoltage.innerText = voltage != null ? Number(voltage).toFixed(1) : "--";
              
              // Time
              if(lastUpdateEl && data.timestamp) {

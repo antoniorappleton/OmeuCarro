@@ -23,6 +23,7 @@ const DEFAULT_PIDS = {
   intakeTemp: ["kf", "0f"],       // °C
   maf: ["k10", "10"],             // g/s
   engineLoad: ["k4", "04"],       // %
+  voltage: ["k42", "42", "kff1238"], // V (Control module or Adapter)
 };
 
 /**
@@ -101,6 +102,9 @@ exports.uploadTorqueData = onRequest(
           fuelLevel: getVal("fuelLevel"),
           coolant: getVal("coolant"),
           engineLoad: getVal("engineLoad"),
+          intake: getVal("intakeTemp"),
+          maf: getVal("maf"),
+          voltage: getVal("voltage"),
           location: null
         };
 
