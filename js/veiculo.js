@@ -1511,7 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const elCostKm = document.getElementById("float-cost-km");
       const elTotalCost = document.getElementById("float-total-cost");
       const elTotalKm = document.getElementById("float-total-km");
-      
+
       // Elements for the Analytics Card (Popup)
       const elAnL100 = document.getElementById("an-l100");
       const elAnRange = document.getElementById("an-range-km");
@@ -1522,9 +1522,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // 1. Fetch all data (parallel for speed)
         // We also fetch the latest OBD reading for fallback!
         const [abs, reps, obdSnap] = await Promise.all([
-          getAbastecimentosDoVeiculo(veiculoId, 1000), 
+          getAbastecimentosDoVeiculo(veiculoId, 1000),
           getReparacoesDoVeiculo(veiculoId),
-          db.collection("veiculos").doc(veiculoId).collection("leiturasObd").orderBy("timestamp", "desc").limit(1).get()
+          db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("leiturasObd")
+            .orderBy("timestamp", "desc")
+            .limit(1)
+            .get(),
         ]);
 
         // 2. Centralized Calculation (Cost & Consumption)
@@ -1532,8 +1538,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
 
         // 3. Update Floating Summary (Cost)
-        if (elTotalCost) elTotalCost.textContent = formatCurrency(costMetrics.totalSpent, settings?.moeda || "EUR");
-        if (elTotalKm) elTotalKm.textContent = costMetrics.totalDist.toLocaleString() + " km";
+        if (elTotalCost)
+          elTotalCost.textContent = formatCurrency(
+            costMetrics.totalSpent,
+            settings?.moeda || "EUR",
+          );
+        if (elTotalKm)
+          elTotalKm.textContent =
+            costMetrics.totalDist.toLocaleString() + " km";
         if (elCostKm) {
           if (costMetrics.costPerKm > 0) {
             elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
@@ -1550,196 +1562,373 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // FALLBACK: If standard analytics failed (no manual history), try OBD
         if ((!l100 || l100 === 0) && !obdSnap.empty) {
-           const obdData = obdSnap.docs[0].data();
-           const parsed = obdData.parsed || {};
-           
-           // Try "Long Term Average" or "Trip Average"
-           const obdL100 = parsed["Litres Per 100 Kilometer(Long Term Average)(l/100km)"] || parsed["Trip average Litres/100 KM(l/100km)"];
-           
-           if (obdL100 > 0) {
-               l100 = obdL100;
-               source = "obd";
-               
-               // Estimate Range using OBD consumption + Fuel Level
-               const fuelLevel = parsed.fuelLevel || 0; // %
-               const capacity = v.capacidadeDepositoLitros || 0;
-               if (capacity > 0 && fuelLevel > 0) {
-                   const litersLeft = (fuelLevel / 100) * capacity;
-                   range = (litersLeft / l100) * 100;
-               }
-           }
+          const obdData = obdSnap.docs[0].data();
+          const parsed = obdData.parsed || {};
+
+          // Try "Long Term Average" or "Trip Average"
+          const obdL100 =
+            parsed["Litres Per 100 Kilometer(Long Term Average)(l/100km)"] ||
+            parsed["Trip average Litres/100 KM(l/100km)"];
+
+          if (obdL100 > 0) {
+            l100 = obdL100;
+            source = "obd";
+
+            // Estimate Range using OBD consumption + Fuel Level
+            const fuelLevel = parsed.fuelLevel || 0; // %
+            const capacity = v.capacidadeDepositoLitros || 0;
+            if (capacity > 0 && fuelLevel > 0) {
+              const litersLeft = (fuelLevel / 100) * capacity;
+              range = (litersLeft / l100) * 100;
+            }
+          }
         }
 
         if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
-        if (elAnRange) elAnRange.textContent = range ? Math.round(range).toLocaleString() : "--";
-        if (elAnRangeDays) elAnRangeDays.textContent = days ? `${days} dias` : (source === 'obd' ? "Est. via OBD" : "--");
-        
+        if (elAnRange)
+          elAnRange.textContent = range
+            ? Math.round(range).toLocaleString()
+            : "--";
+        if (elAnRangeDays)
+          elAnRangeDays.textContent = days
+            ? `${days} dias`
+            : source === "obd"
+              ? "Est. via OBD"
+              : "--";
+
         if (elAnConf) {
-            if (source === 'obd') {
-                elAnConf.textContent = "Fonte: Torque Pro (OBD)";
-                elAnConf.className = "status-blue"; 
-            } else if (l100) {
-                elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
-                elAnConf.className = "status-neutral";
-            } else {
-                 elAnConf.textContent = "Sem dados suficientes";
-            }
+          if (source === "obd") {
+            elAnConf.textContent = "Fonte: Torque Pro (OBD)";
+            elAnConf.className = "status-blue";
+          } else if (l100) {
+            elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
+            elAnConf.className = "status-neutral";
+          } else {
+            elAnConf.textContent = "Sem dados suficientes";
+          }
         }
-        
+
         // Unhide Analytics Button if we have something to show
         const btnAnalytics = document.getElementById("btn-float-analytics");
         if (btnAnalytics) {
-            if (costMetrics.totalSpent > 0 || l100 > 0 || source === 'obd') {
-                btnAnalytics.classList.remove("hidden");
-            }
+          if (costMetrics.totalSpent > 0 || l100 > 0 || source === "obd") {
+            btnAnalytics.classList.remove("hidden");
+          }
         }
-
       } catch (e) {
         console.error("Error calculating floating metrics", e);
       }
     }
 
     function setupTorqueIntegration(veiculoId) {
-       const btnObd = document.getElementById("btn-float-obd");
-       
-       // Now using a standard Modal, not a floating card
-       const modalObd = document.getElementById("obd-modal"); 
-       const btnCloseObd = document.getElementById("btn-close-obd");
-       
-       const lastUpdateEl = document.getElementById("obd-last-update");
-       
-       const elTripL100 = document.getElementById("trip-l100");
-       const elTripDuration = document.getElementById("trip-duration");
-       
-       const elSpeed = document.getElementById("obd-speed"); // Keep for legacy/debug if needed
-       const elCoolant = document.getElementById("obd-coolant");
-       const elStatusCoolant = document.getElementById("status-coolant");
-       const elLoad = document.getElementById("obd-load");
+      const btnObd = document.getElementById("btn-float-obd");
+      const modalObd = document.getElementById("obd-modal");
+      const btnCloseObd = document.getElementById("btn-close-obd");
 
-       if(!btnObd) return;
+      // Modal & Tab Logic
+      if (!btnObd || !modalObd) return;
 
-       // Modal Logic
-       btnObd.addEventListener("click", () => {
-           if(modalObd) modalObd.classList.remove("hidden");
-       });
-       if(btnCloseObd && modalObd) {
-           btnCloseObd.addEventListener("click", () => {
-               modalObd.classList.add("hidden");
-           });
-           
-           // Close on outside click
-           modalObd.addEventListener("click", (e) => {
-               if(e.target === modalObd) modalObd.classList.add("hidden");
-           });
-       }
+      btnObd.addEventListener("click", () => {
+        modalObd.classList.remove("hidden");
+        loadLastTrip(veiculoId);
+      });
 
+      if (btnCloseObd) {
+        btnCloseObd.addEventListener("click", () =>
+          modalObd.classList.add("hidden"),
+        );
+        modalObd.addEventListener("click", (e) => {
+          if (e.target === modalObd) modalObd.classList.add("hidden");
+        });
+      }
 
-       if(!btnObd) return;
+      // Tabs
+      const tabBtns = modalObd.querySelectorAll(".tab-btn");
+      const tabPanels = modalObd.querySelectorAll(".tab-panel");
 
-       // Realtime listener
-       db.collection("veiculos")
-         .doc(veiculoId)
-         .collection("leiturasObd")
-         .orderBy("timestamp", "desc")
-         .limit(1)
-         .onSnapshot(snapshot => {
-             if(snapshot.empty) {
-                 // btnObd.classList.add("hidden"); 
-                 // Maybe show it anyway if we want user to see feature exists? 
-                 // But requested "detalhes que só possam vir da Firebase"
-                 btnObd.classList.add("hidden");
-                 return;
-             }
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.dataset.tab;
 
-             const doc = snapshot.docs[0];
-             const data = doc.data();
-             const reading = data.parsed || {};
-             
-             // Show button
-             btnObd.classList.remove("hidden");
+          // Update UI
+          tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
+          tabPanels.forEach((p) =>
+            p.classList.toggle("hidden", p.id !== `tab-${target}`),
+          );
 
-             // Helper to find keys case-insensitive/fuzzy
-             const findKey = (obj, ...parts) => {
-                 const keys = Object.keys(obj);
-                 for(const k of keys) {
-                     const lower = k.toLowerCase();
-                     if(parts.every(p => lower.includes(p.toLowerCase()))) return obj[k];
-                 }
-                 return null;
-             };
+          // Load Data
+          if (target === "historico") loadTripsHistory(veiculoId);
+          if (target === "ultima") loadLastTrip(veiculoId);
+        });
+      });
 
-             // 1. Trip Consumption
-             const tripL100 = findKey(reading, "Trip average", "l/100");
-             if(elTripL100) elTripL100.innerText = tripL100 ? Number(tripL100).toFixed(1) : "--";
+      // --- BACKFILL TRIGGER ---
+      const btnScan = document.getElementById("btn-scan-trip");
+      if (btnScan) {
+        btnScan.onclick = async () => {
+          if (
+            !confirm(
+              "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
+            )
+          )
+            return;
 
-             // 2. Trip Duration (Calc)
-             const tripDist = findKey(reading, "Trip Distance");
-             const tripSpeed = findKey(reading, "Average trip speed"); 
-             
-             if(elTripDuration) {
-                 const d = Number(tripDist || 0);
-                 const s = Number(tripSpeed || 0);
-                 if(d > 0 && s > 0) {
-                     const minutes = Math.round((d / s) * 60);
-                     elTripDuration.innerText = minutes;
-                 } else {
-                     elTripDuration.innerText = "--";
-                 }
-             }
+          btnScan.disabled = true;
+          const originalText = btnScan.textContent;
+          btnScan.textContent = "A processar...";
 
-             // 3. Health (Coolant)
-             const temp = findKey(reading, "Coolant") || reading.coolant;
-             if(elCoolant) elCoolant.innerText = temp != null ? Math.round(temp) : "--";
-             
-             if(elStatusCoolant && temp != null) {
-                 if(temp > 105) elStatusCoolant.className = "alert-status-indicator status-red"; 
-                 else if(temp > 90) elStatusCoolant.className = "alert-status-indicator status-yellow"; 
-                 else elStatusCoolant.className = "alert-status-indicator status-green"; 
-             }
+          try {
+            const res = await fetch(
+              `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
+            );
+            if (!res.ok) throw new Error("Falha no pedido");
 
-             // 4. Load
-             const load = findKey(reading, "Engine Load") || reading.engineLoad;
-             if(elLoad) elLoad.innerText = load != null ? Math.round(load) : "--";
-             
-             // 5. RPM & Speed
-             const rpm = findKey(reading, "Engine RPM") || reading.rpm;
-             const elRpm = document.getElementById("obd-rpm");
-             if(elRpm) elRpm.innerText = rpm != null ? Math.round(rpm) : "--";
+            const data = await res.json();
+            if (data.success) {
+              alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
+              loadLastTrip(veiculoId); // Reload UI
+            } else {
+              alert("Não foram encontradas novas viagens.");
+            }
+          } catch (e) {
+            console.error(e);
+            alert("Erro ao processar histórico.");
+          } finally {
+            btnScan.disabled = false;
+            btnScan.textContent = originalText;
+          }
+        };
+      }
 
-             const speed = findKey(reading, "Speed (OBD)") || reading.speed;
-             const elSpeed = document.getElementById("obd-speed");
-             if(elSpeed) elSpeed.innerText = speed != null ? Math.round(speed) : "--";
+      // --- DATA LOADING ---
 
-             // 6. Extended Metrics
-             const intake = findKey(reading, "Intake Air Temperature") || reading.intake;
-             const elIntake = document.getElementById("obd-intake");
-             if(elIntake) elIntake.innerText = intake != null ? Math.round(intake) : "--";
+      async function loadLastTrip(vid) {
+        const empty = document.getElementById("last-trip-empty");
+        const content = document.getElementById("last-trip-content");
 
-             const maf = findKey(reading, "Mass Air Flow Rate") || reading.maf;
-             const elMaf = document.getElementById("obd-maf");
-             if(elMaf) elMaf.innerText = maf != null ? Number(maf).toFixed(1) : "--";
+        try {
+          const snap = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(1)
+            .get();
 
-             const voltage = findKey(reading, "Voltage") || findKey(reading, "Volts") || reading.voltage;
-             const elVoltage = document.getElementById("obd-voltage");
-             if(elVoltage) elVoltage.innerText = voltage != null ? Number(voltage).toFixed(1) : "--";
-             
-             // Time
-             if(lastUpdateEl && data.timestamp) {
-                 const d = new Date(Number(data.timestamp));
-                 // Format: HH:MM:SS if today, else Date
-                 const now = new Date();
-                 const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                 lastUpdateEl.innerText = isToday ? d.toLocaleTimeString() : d.toLocaleDateString() + " " + d.toLocaleTimeString();
-             }
+          if (snap.empty) {
+            if (empty) empty.classList.remove("hidden");
+            if (content) content.classList.add("hidden");
+            return;
+          }
 
+          if (empty) empty.classList.add("hidden");
+          if (content) content.classList.remove("hidden");
 
-             
-             // Also update card color/status if old data?
-             // Not requested but good UX.
+          const trip = snap.docs[0].data();
+          renderTripDetails(trip);
+        } catch (e) {
+          console.error("Error loading last trip:", e);
+        }
+      }
 
-         }, err => {
-             console.error("Torque listener error:", err);
-         });
+      async function loadTripsHistory(vid) {
+        const list = document.getElementById("trips-list");
+        if (!list) return;
+
+        list.innerHTML = '<div class="spinner"></div>';
+
+        try {
+          const snap = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(20)
+            .get();
+
+          const empty = document.getElementById("trips-empty");
+
+          if (snap.empty) {
+            list.innerHTML = "";
+            if (empty) empty.classList.remove("hidden");
+            return;
+          }
+
+          if (empty) empty.classList.add("hidden");
+          list.innerHTML = "";
+
+          snap.forEach((doc) => {
+            list.appendChild(createTripCard(doc.data()));
+          });
+        } catch (e) {
+          console.error("Error loading history:", e);
+          list.innerHTML =
+            '<div class="muted">Erro ao carregar histórico.</div>';
+        }
+      }
+
+      function renderTripDetails(trip) {
+        // Dates
+        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+        document.getElementById("last-trip-date").textContent =
+          end.toLocaleDateString("pt-PT");
+        document.getElementById("last-trip-time").textContent =
+          end.toLocaleTimeString("pt-PT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+        // Metrics
+        document.getElementById("last-trip-dist").textContent =
+          trip.distancia?.toFixed(1) || "--";
+        document.getElementById("last-trip-l100").textContent =
+          trip.consumoMedio?.toFixed(1) || "--";
+        document.getElementById("last-trip-speed").textContent =
+          Math.round(trip.velocidadeMedia || 0) || "--";
+        document.getElementById("last-trip-duration").textContent =
+          trip.duracao || "--";
+
+        // Details
+        document.getElementById("last-trip-rpm").textContent =
+          (trip.metricas?.rpmMedio || "--") + " rpm";
+        document.getElementById("last-trip-temp").textContent =
+          (trip.metricas?.temperaturaMaxima || "--") + " °C";
+
+        // Cost (Estimative)
+        const cost = trip.custoEstimado || 0;
+        document.getElementById("last-trip-cost").textContent =
+          cost > 0 ? "€" + cost.toFixed(2) : "--";
+      }
+
+      function createTripCard(trip) {
+        const el = document.createElement("article");
+        el.className = "trip-card"; // Need styling for this!
+        // Styling injection for quick fix:
+        el.style.cssText =
+          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
+
+        const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+
+        el.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap: 8px; align-items:center;">
+                        <div class="status-indicator-dot status-neutral"></div>
+                        <strong>${date.toLocaleDateString()}</strong>
+                        <span class="muted" style="font-size:0.8rem;">${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                    <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
+                    <div style="text-align:center;">
+                        <div style="font-weight:700;">${trip.distancia?.toFixed(1) || "--"}</div>
+                        <div class="muted" style="font-size:0.7rem;">km</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-weight:700;">${trip.consumoMedio?.toFixed(1) || "--"}</div>
+                        <div class="muted" style="font-size:0.7rem;">L/100</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-weight:700;">${Math.round(trip.velocidadeMedia || 0)}</div>
+                        <div class="muted" style="font-size:0.7rem;">km/h</div>
+                    </div>
+                </div>
+             `;
+        return el;
+      }
+
+      // --- REALTIME LISTENER (LIVE TAB) ---
+      const liveElements = {
+        rpm: document.getElementById("obd-rpm"),
+        speed: document.getElementById("obd-speed"),
+        coolant: document.getElementById("obd-coolant"),
+        load: document.getElementById("obd-load"),
+        voltage: document.getElementById("obd-voltage"),
+        maf: document.getElementById("obd-maf"),
+        lastUpdate: document.getElementById("obd-last-update"),
+        statusCoolant: document.getElementById("status-coolant"),
+      };
+
+      db.collection("veiculos")
+        .doc(veiculoId)
+        .collection("leiturasObd")
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .onSnapshot(
+          (snapshot) => {
+            if (snapshot.empty) {
+              btnObd.classList.add("hidden");
+              return;
+            }
+            btnObd.classList.remove("hidden");
+
+            const data = snapshot.docs[0].data();
+            const reading = data.parsed || {};
+
+            const findKey = (obj, ...parts) => {
+              const keys = Object.keys(obj);
+              for (const k of keys) {
+                const lower = k.toLowerCase();
+                if (parts.every((p) => lower.includes(p.toLowerCase())))
+                  return obj[k];
+              }
+              return null;
+            };
+
+            // Update DOM
+            const rpm = findKey(reading, "Engine RPM") || reading.rpm;
+            if (liveElements.rpm)
+              liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
+
+            const speed = findKey(reading, "Speed (OBD)") || reading.speed;
+            if (liveElements.speed)
+              liveElements.speed.textContent = speed ? Math.round(speed) : "--";
+
+            const temp = findKey(reading, "Coolant") || reading.coolant;
+            if (liveElements.coolant)
+              liveElements.coolant.textContent = temp ? Math.round(temp) : "--";
+            if (temp && liveElements.statusCoolant) {
+              if (temp > 105)
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-red";
+              else if (temp > 90)
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-yellow";
+              else
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-green";
+            }
+
+            const load = findKey(reading, "Engine Load") || reading.engineLoad;
+            if (liveElements.load)
+              liveElements.load.textContent = load ? Math.round(load) : "--";
+
+            const volts =
+              findKey(reading, "Voltage") ||
+              findKey(reading, "Volts") ||
+              reading.voltage;
+            if (liveElements.voltage)
+              liveElements.voltage.textContent = volts
+                ? Number(volts).toFixed(1)
+                : "--";
+
+            const maf = findKey(reading, "Mass Air Flow") || reading.maf;
+            if (liveElements.maf)
+              liveElements.maf.textContent = maf
+                ? Number(maf).toFixed(1)
+                : "--";
+
+            // Timestamp
+            if (liveElements.lastUpdate && data.timestamp) {
+              const d = new Date(Number(data.timestamp));
+              const now = new Date();
+              const isToday = d.toDateString() === now.toDateString();
+              liveElements.lastUpdate.textContent = isToday
+                ? d.toLocaleTimeString()
+                : d.toLocaleString();
+            }
+          },
+          (err) => console.error(err),
+        );
     }
 
     // =========================
@@ -1777,10 +1966,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (el.kpiConsumo) {
         el.kpiConsumo.textContent = consResult.averageL100
-          ? formatConsumption(
-              consResult.averageL100,
-              settings.unidadeConsumo,
-            )
+          ? formatConsumption(consResult.averageL100, settings.unidadeConsumo)
           : "—";
       }
 

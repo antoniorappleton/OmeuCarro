@@ -433,7 +433,7 @@ body.map-page-standalone {
 
 .chip {
     padding: 8px 16px;
-    background: #f1f5f9;
+    background: var(--color-surface-container);
     border-radius: 99px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -446,7 +446,7 @@ body.map-page-standalone {
 
 .chip:active,
 .chip.active {
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: rgba(49, 100, 104, 0.15);
     color: var(--color-primary-start);
     border-color: var(--color-primary-start);
 }
@@ -681,7 +681,7 @@ body.map-page-standalone {
 .type-chip.input-mode {
     background: var(--color-surface);
     border-color: var(--color-primary-start);
-    padding: 0; 
+    padding: 0;
     overflow: hidden;
     cursor: default;
     width: auto;

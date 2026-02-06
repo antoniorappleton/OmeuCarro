@@ -14,6 +14,12 @@ exports.uploadTorqueData = uploadTorqueData;
 exports.importFuelData = importFuelData;
 exports.importTorqueCsv = importTorqueCsv;
 
+const { processOBDReading } = require("./tripDetector");
+const { backfillTrips } = require("./backfill_trips");
+
+exports.processOBDReading = processOBDReading;
+exports.backfillTrips = backfillTrips;
+
 /**
  * Função agendada para correr todos os dias às 09:00 AM.
  * Verifica Seguros, IUCs e Inspeções a expirar.
