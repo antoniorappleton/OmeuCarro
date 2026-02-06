@@ -1445,6 +1445,9 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
+    // NEW: Torque Integration
+    setupTorqueIntegration(veiculoId);
+
     // NEW: Floating Metrics Setup
     setupFloatingMetrics(veiculoId);
     // Calc metrics (async but don't block)
@@ -1469,6 +1472,11 @@ document.addEventListener("DOMContentLoaded", () => {
           btnId: "btn-float-alerts",
           cardId: "section-alerts",
           closeId: "btn-close-alerts",
+        },
+        {
+          btnId: "btn-float-obd",
+          cardId: "section-obd",
+          closeId: "btn-close-obd",
         },
       ];
 
@@ -1539,6 +1547,77 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (e) {
         console.error("Error calculating floating metrics", e);
       }
+    }
+
+    function setupTorqueIntegration(veiculoId) {
+       const btnObd = document.getElementById("btn-float-obd");
+       const cardObd = document.getElementById("section-obd");
+       const lastUpdateEl = document.getElementById("obd-last-update");
+       
+       const elSpeed = document.getElementById("obd-speed");
+       const elRpm = document.getElementById("obd-rpm");
+       const elCoolant = document.getElementById("obd-coolant");
+       const elFuel = document.getElementById("obd-fuel");
+       const elLocBox = document.getElementById("obd-location-box");
+       const elLoc = document.getElementById("obd-location");
+
+       if(!btnObd) return;
+
+       // Realtime listener
+       db.collection("veiculos")
+         .doc(veiculoId)
+         .collection("leiturasObd")
+         .orderBy("timestamp", "desc")
+         .limit(1)
+         .onSnapshot(snapshot => {
+             if(snapshot.empty) {
+                 // btnObd.classList.add("hidden"); 
+                 // Maybe show it anyway if we want user to see feature exists? 
+                 // But requested "detalhes que só possam vir da Firebase"
+                 btnObd.classList.add("hidden");
+                 return;
+             }
+
+             const doc = snapshot.docs[0];
+             const data = doc.data();
+             const reading = data.parsed || {};
+             
+             // Show button
+             btnObd.classList.remove("hidden");
+
+             // Update UI
+             if(elSpeed) elSpeed.innerText = reading.speed != null ? Math.round(reading.speed) : "--";
+             if(elRpm) elRpm.innerText = reading.rpm != null ? Math.round(reading.rpm) : "--";
+             if(elCoolant) elCoolant.innerText = reading.coolant != null ? Math.round(reading.coolant) : "--";
+             if(elFuel) elFuel.innerText = reading.fuelLevel != null ? Math.round(reading.fuelLevel) : "--";
+             
+             // Time
+             if(lastUpdateEl && data.timestamp) {
+                 const d = new Date(Number(data.timestamp));
+                 // Format: HH:MM:SS if today, else Date
+                 const now = new Date();
+                 const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                 lastUpdateEl.innerText = isToday ? d.toLocaleTimeString() : d.toLocaleDateString() + " " + d.toLocaleTimeString();
+             }
+
+             // Location
+             if(reading.location && elLoc && elLocBox) {
+                 elLocBox.classList.remove("hidden");
+                 const lat = reading.location.latitude;
+                 const lon = reading.location.longitude;
+                 elLoc.innerText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+                 // Optional: Link to maps?
+                 // elLocBox.onclick = () => window.open(`https://maps.google.com/?q=${lat},${lon}`);
+             } else if(elLocBox) {
+                 elLocBox.classList.add("hidden");
+             }
+             
+             // Also update card color/status if old data?
+             // Not requested but good UX.
+
+         }, err => {
+             console.error("Torque listener error:", err);
+         });
     }
 
     // =========================
