@@ -1,8 +1,12 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
+const { uploadTorqueData } = require("./torque"); // <--- Importar nova função
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// Exportar a função HTTP
+exports.uploadTorqueData = uploadTorqueData;
 
 /**
  * Função agendada para correr todos os dias às 09:00 AM.
