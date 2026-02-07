@@ -17,6 +17,7 @@ function uploadData(params) {
     const query = new URLSearchParams({
       vehicleId: CONFIG.vehicleId,
       key: CONFIG.key,
+      id: "manual_csv", // Tag para identificar origem e permitir limpeza
       ...params,
     }).toString();
 
@@ -99,6 +100,11 @@ async function importCSV(filePath) {
         row[h] = val;
       }
     });
+
+    // Debug: ver o que estamos a enviar (primeiros 3 ou se tiver erro)
+    if (total <= 3) {
+      console.log(`[DEBUG] Linha ${total} a enviar:`, JSON.stringify(row));
+    }
 
     // Skip se não tem dados relevantes
     if (!row["Engine RPM(rpm)"] && !row["Speed (OBD)(km/h)"]) {

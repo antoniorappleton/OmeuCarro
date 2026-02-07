@@ -1560,22 +1560,42 @@ document.addEventListener("DOMContentLoaded", () => {
         let days = fuelMetrics.diasAteReservaEstimado;
         let source = "manual";
 
+        // Helper simple para fuzzy match (igual ao tripDetector)
+        const findKey = (obj, ...parts) => {
+          const keys = Object.keys(obj || {});
+          for (const k of keys) {
+            const lower = k.toLowerCase();
+            if (parts.every((p) => lower.includes(p.toLowerCase())))
+              return obj[k];
+          }
+          return null;
+        };
+
         // FALLBACK: If standard analytics failed (no manual history), try OBD
         if ((!l100 || l100 === 0) && !obdSnap.empty) {
           const obdData = obdSnap.docs[0].data();
           const parsed = obdData.parsed || {};
 
-          // Try "Long Term Average" or "Trip Average"
-          const obdL100 =
-            parsed["Litres Per 100 Kilometer(Long Term Average)(l/100km)"] ||
-            parsed["Trip average Litres/100 KM(l/100km)"];
+          console.log("OBD Keys Available:", Object.keys(parsed));
+
+          // Try "Long Term Average" or "Trip Average" using fuzzy search
+          // Prioridade: Média da Viagem > Média Longo Prazo
+          const tripAvg = findKey(parsed, "Trip average", "l/100");
+          const longTermAvg = findKey(parsed, "Long Term Average", "l/100");
+
+          const obdL100 = Number(tripAvg || longTermAvg || 0);
 
           if (obdL100 > 0) {
             l100 = obdL100;
             source = "obd";
 
             // Estimate Range using OBD consumption + Fuel Level
-            const fuelLevel = parsed.fuelLevel || 0; // %
+            // Fuel Level também pode vir com nomes estranhos
+            const fuelLevelVal =
+              findKey(parsed, "Fuel Level", "%") ||
+              findKey(parsed, "Fuel", "%");
+            const fuelLevel = Number(fuelLevelVal || 0); // %
+
             const capacity = v.capacidadeDepositoLitros || 0;
             if (capacity > 0 && fuelLevel > 0) {
               const litersLeft = (fuelLevel / 100) * capacity;
@@ -1630,7 +1650,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       btnObd.addEventListener("click", () => {
         modalObd.classList.remove("hidden");
-        loadLastTrip(veiculoId);
+        loadLastTrip(veiculoId); // RESTORED
       });
 
       if (btnCloseObd) {
@@ -1658,7 +1678,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Load Data
           if (target === "historico") loadTripsHistory(veiculoId);
-          if (target === "ultima") loadLastTrip(veiculoId);
+          if (target === "ultima") loadLastTrip(veiculoId); // RESTORED
         });
       });
 
@@ -1729,6 +1749,80 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
           console.error("Error loading last trip:", e);
         }
+      }
+
+      async function loadLastTrip(vid) {
+        try {
+          const snap = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(1)
+            .get();
+
+          const content = document.getElementById("last-trip-content");
+          const empty = document.getElementById("last-trip-empty");
+
+          if (snap.empty) {
+            if (empty) empty.classList.remove("hidden");
+            if (content) content.classList.add("hidden");
+            return;
+          }
+
+          if (empty) empty.classList.add("hidden");
+          if (content) content.classList.remove("hidden");
+
+          const trip = snap.docs[0].data();
+          renderTripDetails(trip);
+        } catch (e) {
+          console.error("Error loading last trip:", e);
+        }
+      }
+
+      function renderTripDetails(trip) {
+        // Dates
+        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+        const elDate = document.getElementById("last-trip-date");
+        const elTime = document.getElementById("last-trip-time");
+
+        if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
+        if (elTime)
+          elTime.textContent = end.toLocaleTimeString("pt-PT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+        // Metrics
+        const elDist = document.getElementById("last-trip-dist");
+        const elL100 = document.getElementById("last-trip-l100");
+        const elSpeed = document.getElementById("last-trip-speed");
+        const elDur = document.getElementById("last-trip-duration");
+
+        if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
+        if (elL100) elL100.textContent = trip.consumoMedio?.toFixed(1) || "--";
+        if (elSpeed)
+          elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
+        if (elDur)
+          elDur.textContent = trip.duracao
+            ? `${Math.round(trip.duracao / 60)} min`
+            : "--";
+
+        // Details
+        const elRpm = document.getElementById("last-trip-rpm");
+        const elTemp = document.getElementById("last-trip-temp");
+
+        if (elRpm)
+          elRpm.textContent = (trip.metricas?.rpmMedio || "--") + " rpm";
+        if (elTemp)
+          elTemp.textContent =
+            (trip.metricas?.temperaturaMaxima || "--") + " °C";
+
+        // Cost
+        const cost = trip.custoEstimado || 0;
+        const elCost = document.getElementById("last-trip-cost");
+        if (elCost)
+          elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
       }
 
       async function loadTripsHistory(vid) {

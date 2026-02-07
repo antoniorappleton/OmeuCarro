@@ -19,6 +19,9 @@ exports.processOBDReading = onDocumentCreated(
     const vehicleId = event.params.vehicleId;
     const reading = snap.data();
     const parsed = reading.parsed || {};
+    console.log(
+      `[TripDetector] Extracted keys: ${Object.keys(parsed).join(", ")}`,
+    );
 
     // Validar timestamp
     const timestamp = reading.timestamp || Date.now();

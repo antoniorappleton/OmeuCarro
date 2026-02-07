@@ -136,21 +136,31 @@ exports.uploadTorqueData = onRequest(
 
         // Helper para extrair valor numérico com fallback
         const getVal = (fieldKey) => {
+          // Helper local para parsear float aceitando virgula
+          const parseNum = (v) => {
+            if (v === undefined || v === null || v === "") return null;
+            if (typeof v === "number") return v;
+            const s = String(v).replace(",", ".");
+            const n = parseFloat(s);
+            return isNaN(n) ? null : n;
+          };
+
           // Opção 1: Mapeamento explícito no veículo
           if (pidMap[fieldKey]) {
             const val = safeParams[pidMap[fieldKey]];
-            if (val !== undefined && val !== "") return Number(val);
+            const num = parseNum(val);
+            if (num !== null) return num;
           }
 
           // Opção 2: PIDs padrão (tenta lista de short codes)
           const defaults = DEFAULT_PIDS[fieldKey] || [];
           for (const pid of defaults) {
             const val = safeParams[pid];
-            if (val !== undefined && val !== "") return Number(val);
+            const num = parseNum(val);
+            if (num !== null) return num;
           }
 
-          // Opção 3: NOVO - Procurar por nomes completos do Torque (fuzzy search)
-          // Ex: "Engine RPM(rpm)", "Engine Coolant Temperature(°C)"
+          // Opção 3: Procurar por nomes completos do Torque (fuzzy search)
           const fuzzyPatterns = {
             speed: ["speed", "km/h"],
             rpm: ["engine", "rpm"],
@@ -161,16 +171,17 @@ exports.uploadTorqueData = onRequest(
             maf: ["mass air flow", "g/s"],
             engineLoad: ["engine load", "%"],
             voltage: ["voltage", "v"],
+            l100: ["l/100", "average"], // Generic l100
           };
 
           const patterns = fuzzyPatterns[fieldKey];
           if (patterns) {
             for (const key of Object.keys(safeParams)) {
               const lowerKey = key.toLowerCase();
-              // Verifica se a key contém TODAS as patterns
               if (patterns.every((p) => lowerKey.includes(p.toLowerCase()))) {
                 const val = safeParams[key];
-                if (val !== undefined && val !== "") return Number(val);
+                const num = parseNum(val);
+                if (num !== null) return num;
               }
             }
           }
@@ -188,6 +199,7 @@ exports.uploadTorqueData = onRequest(
           intake: getVal("intakeTemp"),
           maf: getVal("maf"),
           voltage: getVal("voltage"),
+          l100: getVal("l100"), // <--- Extrair L100
           location: null,
         };
 

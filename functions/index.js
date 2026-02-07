@@ -20,6 +20,12 @@ const { backfillTrips } = require("./backfill_trips");
 exports.processOBDReading = processOBDReading;
 exports.backfillTrips = backfillTrips;
 
+const { cleanupManualRecords } = require("./cleanup_manual");
+exports.cleanupManualRecords = cleanupManualRecords;
+
+const { analyzeData } = require("./analyze_data");
+exports.analyzeData = analyzeData;
+
 /**
  * Função agendada para correr todos os dias às 09:00 AM.
  * Verifica Seguros, IUCs e Inspeções a expirar.
