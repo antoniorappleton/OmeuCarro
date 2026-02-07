@@ -26,11 +26,36 @@ O projeto combina uma interface premium com um backend reativo (Firebase), ofere
 - **Simulador de Viagens**: Calculadora integrada de custo de viagem baseada no teu consumo médio real e preços atuais.
 - **Integração GPS**: Navegação direta para os teus pontos de interesse.
 
+### ❤️ Saúde & Viagens
+
+- **Live Dashboard (OBD-II)**: Monitorização em tempo real de L/100, RPM, Temp. Motor, Carga e Bateria via conexão com Torque Pro.
+- **Histórico de Viagens**: Registo automático de cada percurso com estatísticas de consumo, velocidade média e custo estimado.
+- **Diagnóstico Inteligente**: Alertas visuais para temperaturas anómalas ou voltagem da bateria abaixo do normal.
+
 ### 📱 Experiência PWA Premium
 
 - **Modo Offline**: Funciona sem internet para consulta de dados críticos.
 - **Sincronização em Nuvem**: Dados seguros e sincronizados entre múltiplos dispositivos via Firestore.
 - **Dark Mode Nativo**: Interface otimizada para visibilidade em qualquer condição de luz.
+
+---
+
+## 🔌 Integração OBD-II (Torque Pro)
+
+O **L100** suporta integração nativa com a app **Torque Pro** (Android) para receber dados da ECU do veículo em tempo real.
+
+### Como Configurar:
+
+1.  No **Torque Pro**, ir a **Settings** > **Data Logging & Upload**.
+2.  Ativar **Upload to Webserver**.
+3.  Em **Webserver URL**, colocar o endpoint da Cloud Function:
+    `https://<region>-<project-id>.cloudfunctions.net/uploadTorqueData?vehicleId=<ID_DO_VEICULO>&key=<SECRET_KEY>`
+4.  Certificar que os PIDs de **Speed**, **RPM**, **Fuel Level** e **Intake Temp** estão ativos.
+
+**Resultados:**
+
+- **Ao Vivo**: A app atualiza a cada 2-5 segundos.
+- **Viagens**: Ao desligar o carro, uma nova viagem é guardada no histórico.
 
 ---
 
@@ -41,7 +66,7 @@ O projeto combina uma interface premium com um backend reativo (Firebase), ofere
 - **Backend / BaaS**:
   - **Firebase Auth**: Gestão de identidade segura.
   - **Firestore**: Base de dados NoSQL em tempo real.
-  - **Cloud Functions (V2)**: Lógica de servidor agendada para alertas diários.
+  - **Cloud Functions (V2)**: Processamento de dados OBD e alertas.
   - **Firebase Messaging (FCM)**: Infraestrutura de notificações push.
 - **PWA**: Service Workers com estratégias de cache dinâmicas (v14).
 
@@ -52,10 +77,13 @@ O projeto combina uma interface premium com um backend reativo (Firebase), ofere
 ```text
 ├── css/                # Temas e folhas de estilo modulares
 ├── js/                 # Lógica de negócio e integrações Firebase
+│   ├── veiculo.js       # Gestão de dados do veículo, OBD e UI reativa
 │   ├── notifications.js # Sistema central de notificações e permissões
 │   ├── analytics.js     # Motores de cálculo de eficiência
 │   └── mapa.js         # Integração Leaflet e Geocoding
-├── functions/          # Backend (Node.js) para processamento de alertas
+├── functions/          # Backend (Node.js) para processamento OBD e alertas
+│   ├── torque.js        # Parser e gravação de dados Torque Pro
+│   └── index.js        # Entry point das funções
 ├── index.html          # Gateway e Loader da aplicação
 └── manifest.json       # Configuração da instalação PWA
 ```

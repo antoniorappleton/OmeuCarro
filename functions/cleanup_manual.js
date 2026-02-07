@@ -25,16 +25,17 @@ exports.cleanupManualRecords = onRequest(async (req, res) => {
       const snapManual = await readingsRef
         .where("deviceId", "==", "manual_csv")
         .get();
-      // Em Firestore, where("field", "==", null) funciona para campos nulos explicitamente,
-      // mas se o campo não existe, precisa de truca.
-      // Assumindo que antes a gente NÃO mandava deviceId, ele não existia ou era null?
-      // No import antigo: const params = ...; uploadData(params).
-      // Se não tinha 'id' nos params, chegava null ao create?
-      // O endpoint antigo fazia: deviceId: safeParams.id || null
-      // Então gravou como null.
       const snapNull = await readingsRef.where("deviceId", "==", null).get();
 
-      const docsToDelete = [...snapManual.docs, ...snapNull.docs];
+      // TAMBÉM LIMPAR AS VIAGENS (Sessões)
+      const tripsRef = doc.ref.collection("viagens");
+      const snapTrips = await tripsRef.limit(50).get(); // Limpar tudo por agora (dev)
+
+      const docsToDelete = [
+        ...snapManual.docs,
+        ...snapNull.docs,
+        ...snapTrips.docs,
+      ];
 
       if (docsToDelete.length === 0) continue;
 

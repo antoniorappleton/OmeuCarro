@@ -13,7 +13,7 @@ const apiKeySecret = defineSecret("TORQUE_UPLOAD_KEY");
 // Mapas de PIDs padrão (fallback)
 // Suporta array de strings para tentar várias opções (ordem de preferência)
 const DEFAULT_PIDS = {
-  speed: ["kd"], // km/h
+  speed: ["kd", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, GPS Bearing Speed)
   rpm: ["kc"], // rpm
   odometer: ["a6", "kff1201"], // km (a6 from ECU, kff1201 from GPS/Calc)
   fuelLevel: ["2f", "k2f"], // % (2f from ECU, k2f from Torque)
@@ -295,6 +295,11 @@ exports.uploadTorqueData = onRequest(
 
         if (parsed.location) {
           updates.localizacaoAtual = parsed.location;
+        }
+
+        // Feature Requested: Update Average Consumption if available (Long Term Average)
+        if (parsed.l100 !== null && parsed.l100 > 0) {
+          updates.consumoMedioObd = parsed.l100;
         }
 
         t.update(vehicleRef, updates);

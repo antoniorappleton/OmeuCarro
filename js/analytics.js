@@ -312,25 +312,41 @@
     // Pré-requisitos
     const capacidade = Number(veiculo?.capacidadeDepositoLitros || 0);
     const odometroAtual = Number(veiculo?.odometroAtual || 0);
-    const consumoMedioL100 = Number(consResult?.averageL100 || 0);
+
+    // 1. Determine Consumption Source (Manual > OBD > Safe Fallback)
+    let consumoMedioL100 = Number(consResult?.averageL100 || 0);
+    let source = "manual";
+
+    if (consumoMedioL100 <= 0 && veiculo.consumoMedioObd > 0) {
+      consumoMedioL100 = Number(veiculo.consumoMedioObd);
+      source = "obd_stored";
+    }
+
+    // Fallback if still 0 (to avoid critical alerts on empty history)
+    if (consumoMedioL100 <= 0) {
+      consumoMedioL100 = 6.0;
+      source = "fallback";
+    }
+
     const kmDiaMedio = Number(paceResult?.kmPerDay || 0);
 
     if (!capacidade || capacidade <= 0)
       reasonUnavailable = "missing_tank_capacity";
     else if (!odometroAtual || odometroAtual <= 0)
       reasonUnavailable = "missing_odometer";
-    else if (!consumoMedioL100 || consumoMedioL100 <= 0)
-      reasonUnavailable = "missing_consumption";
 
     let lastFull = null;
-    let sorted = []; // Declare in outer scope
+    let sorted = [];
 
+    // 2. Calculate Remaining Fuel (Manual Projection vs OBD Level)
+    let litrosRestantes = 0;
+    let fuelCalculationMethod = "none";
+
+    // Try Manual Projection first
     if (!reasonUnavailable) {
-      // abastecimentos já devem vir ordenados por odometro desc (se não, ordenar aqui)
       sorted = [...(abastecimentos || [])].sort(
         (a, b) => (Number(b.odometro) || 0) - (Number(a.odometro) || 0),
       );
-      // Relaxed check for "full" status to handle Firestore data inconsistencies (strings/numbers)
       const isFull = (r) =>
         r.completo === true ||
         r.completo === "true" ||
@@ -339,85 +355,90 @@
 
       lastFull = sorted.find(isFull) || null;
 
-      if (!lastFull) reasonUnavailable = "missing_full_refuel";
+      if (lastFull) {
+        // ... (manual logic calc) ...
+        const parseNum = (v) => {
+          if (typeof v === "number") return v;
+          if (typeof v === "string")
+            return Number(v.replace(/\s+/g, "").replace(",", "."));
+          return 0;
+        };
+
+        const odoFull = parseNum(lastFull.odometro);
+        const kmDesdeUltimoCheio = odometroAtual - odoFull;
+
+        if (kmDesdeUltimoCheio >= 0) {
+          const litrosConsumidosTeorico =
+            (kmDesdeUltimoCheio * consumoMedioL100) / 100;
+          let litrosAdicionadosPosteriormente = 0;
+          for (const r of sorted) {
+            if (r.id === lastFull.id) break;
+            const lit = parseNum(r.litros);
+            if (lit > 0) litrosAdicionadosPosteriormente += lit;
+          }
+          litrosRestantes =
+            capacidade -
+            litrosConsumidosTeorico +
+            litrosAdicionadosPosteriormente;
+          fuelCalculationMethod = "manual_projection";
+        }
+      }
     }
 
-    if (!reasonUnavailable) {
-      // Robust number parsing (handle "121 122")
-      const parseNum = (v) => {
-        if (typeof v === "number") return v;
-        if (typeof v === "string")
-          return Number(v.replace(/\s+/g, "").replace(",", "."));
-        return 0;
-      };
-
-      const odoFull = parseNum(lastFull.odometro);
-      const kmDesdeUltimoCheio = odometroAtual - odoFull;
-
-      if (kmDesdeUltimoCheio < 0) {
-        reasonUnavailable = "invalid_km_since_full";
-      } else {
-        const litrosConsumidosTeorico =
-          (kmDesdeUltimoCheio * consumoMedioL100) / 100;
-
-        // Sum partial fills since last full tank
-        let litrosAdicionadosPosteriormente = 0;
-
-        for (const r of sorted) {
-          if (r.id === lastFull.id) break;
-          const lit = parseNum(r.litros);
-          if (lit > 0) {
-            litrosAdicionadosPosteriormente += lit;
-          }
-        }
-
-        let litrosRestantes =
-          capacidade -
-          litrosConsumidosTeorico +
-          litrosAdicionadosPosteriormente;
-
-        // clamp
-        litrosRestantes = Math.max(0, Math.min(capacidade, litrosRestantes));
-
-        litrosRestantesEstimado = Number(litrosRestantes.toFixed(1));
-
-        const litrosAteReserva = Math.max(litrosRestantes - reservaLitros, 0);
-        const kmAteReserva = (litrosAteReserva / consumoMedioL100) * 100;
-
-        kmAteReservaEstimado = Number(kmAteReserva.toFixed(0));
-
-        if (kmDiaMedio > 0) {
-          diasAteReservaEstimado = Number(
-            (kmAteReserva / kmDiaMedio).toFixed(1),
-          );
-        } else {
-          diasAteReservaEstimado = null;
-        }
-
-        // Alert rules
-        if (litrosRestantes <= reservaLitros) {
-          alertaFuelNivel = "critical";
-        } else if (
-          litrosRestantes <= reservaLitros + 2 ||
-          (diasAteReservaEstimado !== null && diasAteReservaEstimado <= 2)
-        ) {
-          alertaFuelNivel = "warning";
-        } else {
-          alertaFuelNivel = "none";
-        }
-
-        alertaFuelAtivo = alertaFuelNivel !== "none";
+    // If Manual failed or implies negative fuel (drift), try OBD Level
+    // Or if we prefer OBD when available?
+    // Let's use OBD if Manual is impossible OR if Manual result is wildly wrong (<0 or >capacity)
+    // Actually, if we have OBD level, it's usually ground truth.
+    if (veiculo.nivelCombustivel > 0) {
+      // If we don't have manual history, definitely use OBD.
+      // If we DO have manual history, maybe OBD is better?
+      // Let's prioritize OBD if Manual is missing.
+      if (
+        fuelCalculationMethod === "none" ||
+        litrosRestantes < 0 ||
+        litrosRestantes > capacidade
+      ) {
+        litrosRestantes = (veiculo.nivelCombustivel / 100) * capacidade;
+        fuelCalculationMethod = "obd_level";
+        reasonUnavailable = null; // Clear error if we have OBD
       }
+    }
+
+    // Clamp
+    litrosRestantes = Math.max(0, Math.min(capacidade, litrosRestantes));
+    litrosRestantesEstimado = Number(litrosRestantes.toFixed(1));
+
+    // 3. Range & Alerts
+    if (consumoMedioL100 > 0) {
+      const estRange = (litrosRestantes / consumoMedioL100) * 100;
+      kmAteReservaEstimado = Number(Math.max(0, estRange).toFixed(0));
+
+      // Alert Logic
+      let rangeThresholdWarning = 80;
+      let rangeThresholdCritical = 40;
+
+      if (estRange <= rangeThresholdCritical) alertaFuelNivel = "critical";
+      else if (estRange <= rangeThresholdWarning) alertaFuelNivel = "warning";
+      else alertaFuelNivel = "none";
+
+      alertaFuelAtivo = alertaFuelNivel !== "none";
+
+      if (kmDiaMedio > 0) {
+        diasAteReservaEstimado = Number((estRange / kmDiaMedio).toFixed(1));
+      }
+    } else {
+      reasonUnavailable = "missing_consumption"; // Should be covered by fallback
     }
 
     // Final payload matches requested structure
     return {
       atualizadoEm: new Date().toISOString(),
 
-      consumoMedioL100: consResult.averageL100,
-      consumoMetodo: consResult.method,
-      consumoConfianca: consResult.confidence,
-      consumoAmostras: consResult.samples,
+      consumoMedioL100: Number(consumoMedioL100.toFixed(2)),
+      consumoMetodo: consResult?.method || source,
+      consumoConfianca:
+        consResult?.confidence || (source === "obd_stored" ? "medium" : "low"),
+      consumoAmostras: consResult?.samples,
 
       kmDiaMedio: paceResult.kmPerDay,
       kmDiaAmostras: paceResult.samples,
@@ -445,7 +466,8 @@
     if (!veiculo) return null;
 
     // 1. Total Distance (Real Odometer Difference)
-    const currentOdo = Number(veiculo.odometroAtual) || Number(veiculo.odometroInicial) || 0;
+    const currentOdo =
+      Number(veiculo.odometroAtual) || Number(veiculo.odometroInicial) || 0;
     const initialOdo = Number(veiculo.odometroInicial) || 0;
     let totalDist = currentOdo - initialOdo;
     if (totalDist < 0) totalDist = 0;

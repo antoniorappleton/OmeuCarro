@@ -1560,6 +1560,26 @@ document.addEventListener("DOMContentLoaded", () => {
         let days = fuelMetrics.diasAteReservaEstimado;
         let source = "manual";
 
+        // EXPLICIT OBD OVERRIDE (From Torque L100 Long Term)
+        if (v.consumoMedioObd && v.consumoMedioObd > 0) {
+          l100 = v.consumoMedioObd;
+          source = "obd_stored";
+
+          // Recalculate Range based on this new consumption
+          const capacity = v.capacidadeDepositoLitros || 0;
+          // We need current fuel level.
+          // If we have manual logs, fuelMetrics has estimates.
+          // However, if we rely on OBD L100, we should probably stick to OBD Fuel Level if available?
+          // Let's stick to the hybrid approach:
+          // If we have a fuel level from OBD (in v.nivelCombustivel), use it.
+
+          const fuelLevelPct = v.nivelCombustivel || 0; // Stored from Torque
+          if (capacity > 0 && fuelLevelPct > 0) {
+            const litersLeft = (fuelLevelPct / 100) * capacity;
+            range = (litersLeft / l100) * 100;
+          }
+        }
+
         // Helper simple para fuzzy match (igual ao tripDetector)
         const findKey = (obj, ...parts) => {
           const keys = Object.keys(obj || {});
@@ -1571,8 +1591,12 @@ document.addEventListener("DOMContentLoaded", () => {
           return null;
         };
 
-        // FALLBACK: If standard analytics failed (no manual history), try OBD
-        if ((!l100 || l100 === 0) && !obdSnap.empty) {
+        // FALLBACK: If standard analytics failed AND no stored OBD, try Live OBD Snap
+        if (
+          (!l100 || l100 === 0) &&
+          !obdSnap.empty &&
+          source !== "obd_stored"
+        ) {
           const obdData = obdSnap.docs[0].data();
           const parsed = obdData.parsed || {};
 
@@ -1635,6 +1659,10 @@ document.addEventListener("DOMContentLoaded", () => {
             btnAnalytics.classList.remove("hidden");
           }
         }
+
+        // Force OBD Button Visibility (Users want to see it even without data)
+        const btnObd = document.getElementById("btn-float-obd");
+        if (btnObd) btnObd.classList.remove("hidden");
       } catch (e) {
         console.error("Error calculating floating metrics", e);
       }

@@ -3,8 +3,9 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v16";
-const RUNTIME_CACHE = "l100-runtime-v16";
+// Aumenta a versão sempre que fizeres deploy
+const STATIC_CACHE = "l100-static-v19";
+const RUNTIME_CACHE = "l100-runtime-v19";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -72,7 +73,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v13");
+  console.log("[SW] Activate v19");
 
   event.waitUntil(
     caches.keys().then((names) =>
@@ -192,17 +193,24 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   console.log("[SW-Messaging] Background message received:", payload);
-  
+
   // Tentar obter dados do payload.data (Robustez)
   const dataOptions = payload.data || {};
-  const notificationTitle = payload.notification?.title || dataOptions.title || "L100";
+  const notificationTitle =
+    payload.notification?.title || dataOptions.title || "L100";
   const notificationBody = payload.notification?.body || dataOptions.body || "";
 
   // Extrair opções do payload ou usar padrões
   const notificationOptions = {
     body: notificationBody,
-    icon: payload.notification?.icon || dataOptions.icon || "/images/logo-icon192.png",
-    badge: payload.notification?.badge || dataOptions.badge || "/images/logo-icon192.png",
+    icon:
+      payload.notification?.icon ||
+      dataOptions.icon ||
+      "/images/logo-icon192.png",
+    badge:
+      payload.notification?.badge ||
+      dataOptions.badge ||
+      "/images/logo-icon192.png",
     tag: payload.notification?.tag || dataOptions.tag || "l100-alert",
     vibrate: [200, 100, 200],
     data: dataOptions, // Passar todos os dados para o click handler

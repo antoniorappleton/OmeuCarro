@@ -1,5 +1,23 @@
 let deferredPrompt = null;
 
+// PANIC SWITCH: ?nocache=1 -- Forces SW unregister and Cache clear
+if (window.location.search.includes("nocache=1")) {
+  console.warn("PANIC SWITCH ACTIVATED: Clearing SW and Caches");
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
+      console.log("SW Unregistered");
+    });
+  }
+  caches.keys().then((names) => {
+    Promise.all(names.map((name) => caches.delete(name))).then(() => {
+      console.log("Caches Deleted");
+      alert("Cache limpa! A reiniciar...");
+      window.location.href = window.location.pathname;
+    });
+  });
+}
+
 window.addEventListener("beforeinstallprompt", (e) => {
   // impede o popup “fugaz”
   e.preventDefault();
