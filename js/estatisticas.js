@@ -255,7 +255,7 @@ async function carregarEstatisticas(filterVeiculoId = null) {
     // We want to add a text context like "Mais caro que há 2 meses" or "Média: X/mês".
 
     const contextoGasto = `Média: ~${formatCurrency(avgSpend, settings.moeda)}/mês`;
-    const contextoLitros = `Média: ~${avgLiters.toFixed(0)}L/mês`;
+    const contextoLitros = `Média: ~${formatVolume(avgLiters)}/mês`;
 
     // Efficiency Context
     // Simple heuristic: compare with user's avg or just say "Global avg"
@@ -319,7 +319,7 @@ async function carregarEstatisticas(filterVeiculoId = null) {
       totalGastoEl.textContent = formatCurrency(totalGasto, settings.moeda);
     if (ctxGastoEl) ctxGastoEl.textContent = contextoGasto;
 
-    if (totalLitrosEl) totalLitrosEl.textContent = `${totalLitros.toFixed(0)}L`;
+    if (totalLitrosEl) totalLitrosEl.textContent = formatVolume(totalLitros);
     if (ctxLitrosEl) ctxLitrosEl.textContent = contextoLitros;
 
     // Price KPI Update

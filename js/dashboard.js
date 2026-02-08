@@ -121,11 +121,11 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
 
   let totalLitros = 0;
   let totalCusto = 0;
-  
+
   // Aggregators for Efficiency & Cost/Km
-  let aggValidDist = 0;   // From Analytics (Cleaned)
+  let aggValidDist = 0; // From Analytics (Cleaned)
   let aggValidLiters = 0; // From Analytics (Cleaned)
-  let aggRawDist = 0;     // From Max-Min Odo (Period actual)
+  let aggRawDist = 0; // From Max-Min Odo (Period actual)
 
   // Agrupar por veículo
   const porVeiculo = {};
@@ -148,14 +148,16 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
     // Analytics expects sorted list, calculateConsumption handles sorting but better passing sorted just in case?
     // Analytics handles sorting.
     const metrics = window.Analytics.calculateConsumption(lista);
-    
+
     if (metrics && metrics.samples > 0) {
-        aggValidDist += metrics.totalDist || 0;
-        aggValidLiters += metrics.totalLiters || 0;
+      aggValidDist += metrics.totalDist || 0;
+      aggValidLiters += metrics.totalLiters || 0;
     }
 
     // 2. Raw Distance (for Cost/Km in this period)
-    const sorted = [...lista].sort((a, b) => (Number(a.odometro) || 0) - (Number(b.odometro) || 0));
+    const sorted = [...lista].sort(
+      (a, b) => (Number(a.odometro) || 0) - (Number(b.odometro) || 0),
+    );
     const minOdo = Number(sorted[0].odometro) || 0;
     const maxOdo = Number(sorted[sorted.length - 1].odometro) || 0;
     const dist = maxOdo - minOdo;
@@ -165,7 +167,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
   // Calculate Global Efficiency (Weighted)
   let eficiencia = null;
   if (aggValidDist > 0 && aggValidLiters > 0) {
-      eficiencia = (aggValidLiters / aggValidDist) * 100;
+    eficiencia = (aggValidLiters / aggValidDist) * 100;
   }
 
   // Calculate Cost Per Km (Raw Cost / Raw Dist)
@@ -453,7 +455,7 @@ async function carregarDashboard() {
       settings,
     );
 
-    litrosEl.textContent = `${totalLitros.toFixed(1)} L`;
+    litrosEl.textContent = formatVolume(totalLitros);
     gastosEl.textContent = formatCurrency(totalCusto, settings.moeda);
 
     // Preço Médio (Total Gasto / Total Litros) - simples

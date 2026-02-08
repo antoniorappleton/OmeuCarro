@@ -95,9 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="record-meta-row">
                         <div class="record-meta-item">
                             ${
-                              r.km
-                                ? `<span>${Number(r.km).toLocaleString()} km</span>`
-                                : ""
+                              r.km ? `<span>${formatDistance(r.km)}</span>` : ""
                             }
                             <span>${dateFormatted}</span>
                         </div>
@@ -1065,10 +1063,11 @@ document.addEventListener("DOMContentLoaded", () => {
           // Override label com detalhe se possível
           if (status.status !== "ok") {
             if (status.diffKm < 0)
-              label = `Passou ${Math.abs(status.diffKm)} km`;
-            else if (status.diffKm < 2000 && status.nextKm)
-              label = `Faltam ${status.diffKm} km`;
-            else if (status.diffDays < 0) label = `Passou data`;
+              label = `Passou ${Math.abs(status.diffKm).toFixed(1)} km`;
+            else if (status.diffKm < 2000 && status.nextKm) {
+              console.log("DEBUG: DiffKm formatted:", status.diffKm.toFixed(1));
+              label = `Faltam aprox. ${status.diffKm.toFixed(1)} km`;
+            } else if (status.diffDays < 0) label = `Passou data`;
             else if (status.diffDays < 30 && status.nextDate)
               label = `Faltam ${status.diffDays} dias`;
           }
@@ -1170,7 +1169,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             }</span>
                             <span class="muted">(${
                               status.diffKm > 0 ? "falta" : "passou"
-                            } ${Math.abs(status.diffKm)})</span>
+                            } ${Math.abs(status.diffKm).toFixed(1)})</span>
                         </div>`
                             : ""
                         }
@@ -1544,8 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
             settings?.moeda || "EUR",
           );
         if (elTotalKm)
-          elTotalKm.textContent =
-            costMetrics.totalDist.toLocaleString() + " km";
+          elTotalKm.textContent = formatDistance(costMetrics.totalDist);
         if (elCostKm) {
           if (costMetrics.costPerKm > 0) {
             elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
@@ -2078,8 +2076,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (el.kpiGasto)
         el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
-      if (el.kpiLitros)
-        el.kpiLitros.textContent = `${totalLitros.toFixed(1)} L`;
+      if (el.kpiLitros) el.kpiLitros.textContent = formatVolume(totalLitros);
       if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
 
       // consumo médio e custo/km (Fuel Only)
@@ -2152,7 +2149,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             <div class="record-grid-item">
               <span class="record-grid-label">Litros</span>
-              <span class="record-grid-value">${litros.toFixed(1)} L</span>
+              <span class="record-grid-value">${formatVolume(litros)}</span>
             </div>
             
             <div class="record-grid-item">

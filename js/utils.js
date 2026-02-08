@@ -63,8 +63,30 @@ function formatCurrency(value, currencyCode = "EUR") {
   return `${symbol}${Number(value).toFixed(2)}`;
 }
 
+function formatNumber(value, decimals = 1) {
+  const n = Number(value);
+  if (isNaN(n)) return "0";
+  // Se for inteiro, não precisa de casas decimais?
+  // O utilizador pediu "todos os valores NÃO-INTEIROS... arredondar a 1 casa".
+  // Se for inteiro (ex: 100), deve converter para 100.0 ou ficar 100?
+  // Geralmente em apps, consistência visual prefere 100.0 se for métrica contínua.
+  // Contudo, "non-integer" implies check.
+
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(decimals);
+}
+
 function formatConsumption(value, unit = "L/100km") {
-  return `${Number(value).toFixed(1)} ${unit}`;
+  // Forçar 1 casa decimal
+  return `${formatNumber(value, 1)} ${unit}`;
+}
+
+function formatDistance(value, unit = "km") {
+  return `${formatNumber(value, 1)} ${unit}`;
+}
+
+function formatVolume(value, unit = "L") {
+  return `${formatNumber(value, 1)} ${unit}`;
 }
 
 /**
@@ -98,7 +120,10 @@ function calculateEfficiency(km, liters, unit = "L/100km") {
 // Exportar globalmente (já que nao usamos modules estritos aqui)
 window.getCurrencySymbol = getCurrencySymbol;
 window.formatCurrency = formatCurrency;
+window.formatNumber = formatNumber;
 window.formatConsumption = formatConsumption;
+window.formatDistance = formatDistance;
+window.formatVolume = formatVolume;
 window.calculateEfficiency = calculateEfficiency;
 window.calculateMaintenanceStatus = calculateMaintenanceStatus;
 
@@ -131,8 +156,8 @@ function calculateMaintenanceStatus(
   // 1. KM Calc
   if (intervalKm && !isNaN(intervalKm)) {
     const pKm = Number(lastKm || 0) + Number(intervalKm);
-    result.nextKm = pKm;
-    result.diffKm = pKm - (currentKm || 0);
+    result.nextKm = Number(pKm.toFixed(1));
+    result.diffKm = Number((pKm - (currentKm || 0)).toFixed(1));
   }
 
   // 2. Date Calc
