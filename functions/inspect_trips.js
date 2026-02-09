@@ -11,7 +11,12 @@ exports.inspectTrips = onRequest(async (req, res) => {
   for (const vDoc of vSnap.docs) {
     const vId = vDoc.id;
     const vName = vDoc.data().nome || "Sem nome";
+    const vData = vDoc.data();
     summary += `--- Veículo: ${vId} (${vName}) ---\n`;
+    summary += `Profile: Odo ${vData.odometroAtual || "N/A"}km, Fuel ${vData.nivelCombustivel || "N/A"}%\n`;
+    if (vData.ultimasMetricas) {
+      summary += `Sync: ${JSON.stringify(vData.ultimasMetricas)}\n`;
+    }
 
     const tripsSnap = await vDoc.ref
       .collection("viagens")

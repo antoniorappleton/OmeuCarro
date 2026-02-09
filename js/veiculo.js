@@ -1447,6 +1447,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // NEW: Torque Integration
     setupTorqueIntegration(veiculoId);
 
+    // NEW: Real-time Profile Listener (Hero Odo & Fuel)
+    setupVehicleListener(veiculoId);
+
+    function setupVehicleListener(veiculoId) {
+      db.collection("veiculos")
+        .doc(veiculoId)
+        .onSnapshot((doc) => {
+          if (!doc.exists) return;
+          const data = doc.data();
+
+          // Update Hero Odometer
+          const heroOdo = document.getElementById("vehicle-odometer-val");
+          if (heroOdo && data.odometroAtual !== undefined) {
+            heroOdo.textContent = Number(data.odometroAtual).toLocaleString();
+          }
+
+          // Update Fuel Badge (Hero)
+          const fuelPct = data.nivelCombustivel;
+          const heroFuel = document.getElementById("vehicle-fuel");
+          if (heroFuel && fuelPct !== undefined) {
+            heroFuel.textContent = `${Math.round(fuelPct)}%`;
+          }
+
+          // Update Last Trip Summary in UI (Reactivity to ultimasMetricas sync)
+          if (data.ultimasMetricas) {
+            console.log(
+              "[VehicleListener] Ultimas Metricassync detected:",
+              data.ultimasMetricas,
+            );
+            // Optionally trigger a refresh of the last trip card if needed,
+            // but usually ultimasMetricas is for the profile view.
+          }
+        });
+    }
+
     // NEW: Floating Metrics Setup
     setupFloatingMetrics(veiculoId);
     // Calc metrics (async but don't block)
@@ -1792,17 +1827,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Metrics
         const elDist = document.getElementById("last-trip-dist");
-        const elL100 = document.getElementById("last-trip-l100");
+        const elConsumo = document.getElementById("last-trip-consumo");
         const elSpeed = document.getElementById("last-trip-speed");
         const elDur = document.getElementById("last-trip-duration");
 
         if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
-        if (elL100) elL100.textContent = trip.consumoMedio?.toFixed(1) || "--";
+        if (elConsumo)
+          elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
         if (elSpeed)
           elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
         if (elDur)
           elDur.textContent = trip.duracao
-            ? `${Math.round(trip.duracao / 60)} min`
+            ? `${Math.round(trip.duracao)} min`
             : "--";
 
         // Details
