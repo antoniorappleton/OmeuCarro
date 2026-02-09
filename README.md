@@ -1,103 +1,502 @@
-# 🏎️ L100 - Gestão Inteligente de Veículos
+# 🚗 L100 - Gestão Inteligente de Veículos
 
-**L100** é uma Progressive Web App (PWA) de alta performance desenhada para entusiastas e gestores de veículos que procuram controlo total sobre consumos, custos e manutenção.
+> Aplicação web progressiva (PWA) para gestão completa do seu veículo com integração OBD-II em tempo real.
 
-O projeto combina uma interface premium com um backend reativo (Firebase), oferecendo uma experiência nativa diretamente no browser ou instalada no telemóvel.
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat&logo=pwa)](https://web.dev/progressive-web-apps/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-## 🚀 Funcionalidades Principais
+## 📋 Índice
 
-### 📊 Analytics & Insights Avançados
+- [Funcionalidades](#-funcionalidades)
+- [Integração OBD-II](#-integração-obd-ii-torque-pro)
+- [Instalação](#-instalação)
+- [Configuração](#-configuração)
+- [Utilização](#-utilização)
+- [Arquitetura](#-arquitetura)
+- [Troubleshooting](#-troubleshooting)
 
-- **Dashboard Multinível**: Visualização instantânea de gastos totais, litros consumidos e eficiência (L/100km, km/L ou MPG).
-- **Gráficos Dinâmicos**: Evolução de preços, distribuição por tipo de combustível e ranking de postos mais económicos.
-- **Análise de Tendências**: Insights automáticos que comparam o desempenho do veículo mês a mês.
+---
 
-### 🔔 Sistema de Alertas Proativo
+## ✨ Funcionalidades
 
-- **Notificações Inteligentes**: Alertas automáticos para validade de Seguro, IUC e Inspeção Periodica (IPO).
-- **Plano de Manutenção**: Notificações baseadas em quilometragem e tempo para revisões, óleo, travões e outros consumíveis.
-- **Push Notifications (PWA)**: Notificações em tempo real tanto em dispositivos desktop como mobile (iOS/Android).
+### 🚙 Gestão de Veículos
 
-### 📍 Mapa & Localização
+- **Multi-veículo**: Gerir múltiplos veículos numa única conta
+- **Perfil Completo**: Marca, modelo, matrícula, ano, combustível
+- **Odómetro em Tempo Real**: Atualização automática via OBD-II
+- **Nível de Combustível**: Monitorização em tempo real
+- **Favoritos**: Marcar veículos favoritos para acesso rápido
 
-- **Gestão de Favoritos**: Guarda os teus postos, garagens ou destinos frequentes.
-- **Simulador de Viagens**: Calculadora integrada de custo de viagem baseada no teu consumo médio real e preços atuais.
-- **Integração GPS**: Navegação direta para os teus pontos de interesse.
+### ⛽ Gestão de Abastecimentos
 
-### ❤️ Saúde & Viagens
+- **Registo Manual**: Adicionar abastecimentos com data, km, litros e custo
+- **Cálculo Automático de Consumo**: L/100km baseado em dados reais
+- **Histórico Completo**: Visualizar todos os abastecimentos por veículo
+- **Estatísticas**: Consumo médio, custo por km, tendências
 
-- **Live Dashboard (OBD-II)**: Monitorização em tempo real de L/100, RPM, Temp. Motor, Carga e Bateria via conexão com Torque Pro.
-- **Histórico de Viagens**: Registo automático de cada percurso com estatísticas de consumo, velocidade média e custo estimado.
-- **Diagnóstico Inteligente**: Alertas visuais para temperaturas anómalas ou voltagem da bateria abaixo do normal.
+### 🔧 Gestão de Manutenções
 
-### 📱 Experiência PWA Premium
+- **Planos de Manutenção**: Criar planos personalizados (ex: revisão a cada 15.000 km)
+- **Alertas Automáticos**: Notificações quando a manutenção está próxima
+- **Histórico de Reparações**: Registar todas as intervenções
+- **Categorias**: Organizar por tipo (motor, travões, pneus, etc.)
+- **Anexos**: Adicionar documentos e faturas
 
-- **Modo Offline**: Funciona sem internet para consulta de dados críticos.
-- **Sincronização em Nuvem**: Dados seguros e sincronizados entre múltiplos dispositivos via Firestore.
-- **Dark Mode Nativo**: Interface otimizada para visibilidade em qualquer condição de luz.
+### 📊 Integração OBD-II (Torque Pro)
+
+- **Dados em Tempo Real**: RPM, velocidade, temperatura, carga do motor
+- **Viagens Automáticas**: Deteção e criação automática de viagens
+- **Consumo Instantâneo**: L/100km em tempo real
+- **Consumo Médio por Viagem**: Cálculo automático
+- **Histórico de Leituras**: Todas as métricas OBD guardadas
+- **Sincronização Automática**: Odómetro e combustível atualizados automaticamente
+
+### 📱 PWA (Progressive Web App)
+
+- **Instalável**: Adicionar ao ecrã inicial (Android/iOS)
+- **Offline**: Funciona sem internet (dados em cache)
+- **Notificações Push**: Alertas de manutenção e lembretes
+- **Responsivo**: Otimizado para telemóvel, tablet e desktop
 
 ---
 
 ## 🔌 Integração OBD-II (Torque Pro)
 
-O **L100** suporta integração nativa com a app **Torque Pro** (Android) para receber dados da ECU do veículo em tempo real.
+### Requisitos
 
-### Como Configurar:
+- **Torque Pro** (Android) - [Download](https://play.google.com/store/apps/details?id=org.prowl.torque)
+- **Adaptador OBD-II Bluetooth/WiFi** compatível
+- **Veículo com porta OBD-II** (carros fabricados após 2001)
 
-1.  No **Torque Pro**, ir a **Settings** > **Data Logging & Upload**.
-2.  Ativar **Upload to Webserver**.
-3.  Em **Webserver URL**, colocar o endpoint da Cloud Function:
-    `https://<region>-<project-id>.cloudfunctions.net/uploadTorqueData?vehicleId=<ID_DO_VEICULO>&key=<SECRET_KEY>`
-4.  Certificar que os PIDs de **Speed**, **RPM**, **Fuel Level** e **Intake Temp** estão ativos.
+### Configuração do Torque Pro
 
-**Resultados:**
+#### 1. Configurar URL do Servidor
 
-- **Ao Vivo**: A app atualiza a cada 2-5 segundos.
-- **Viagens**: Ao desligar o carro, uma nova viagem é guardada no histórico.
+1. Abrir **Torque Pro**
+2. Ir a **Settings → Data Logging & Upload**
+3. Configurar:
+   - **Upload to webserver**: ✅ Ativo
+   - **Webserver URL**:
+     ```
+     https://us-central1-omeucarro-d3889.cloudfunctions.net/uploadTorqueData?vehicleId=SEU_VEHICLE_ID&key=79051526
+     ```
+   - **Web Logging Interval**: `5 Seconds` (recomendado)
+   - **Send https: Bearer Token**: ❌ Desativado
+
+#### 2. Obter o Vehicle ID
+
+1. Abrir a **L100** no browser
+2. Ir à página do veículo
+3. O `vehicleId` está no URL: `https://omeucarro-d3889.web.app/veiculo.html?id=ESTE_É_O_ID`
+4. Copiar o ID e substituir `SEU_VEHICLE_ID` no URL do Torque Pro
+
+#### 3. Configurar PIDs Essenciais
+
+Para máxima compatibilidade, configurar estes PIDs no Torque Pro:
+
+| PID      | Nome                       | Descrição                      |
+| -------- | -------------------------- | ------------------------------ |
+| `0d`     | Speed (OBD)                | Velocidade                     |
+| `0c`     | Engine RPM                 | Rotações do motor              |
+| `05`     | Engine Coolant Temperature | Temperatura do motor           |
+| `04`     | Engine Load                | Carga do motor                 |
+| `2f`     | Fuel Level                 | Nível de combustível           |
+| `a6`     | Odometer (from ECU)        | Odómetro                       |
+| `ff1204` | Trip Distance              | **Distância da viagem** ⭐     |
+| `ff1208` | Trip average L/100 KM      | **Consumo médio da viagem** ⭐ |
+| `ff1226` | Horsepower (At the wheels) | Potência                       |
+| `ff1225` | Torque                     | Binário                        |
+
+**⭐ PIDs Essenciais** para deteção automática de viagens e cálculo de consumo.
+
+### Funcionalidades OBD
+
+#### 📊 Modal OBD → Tab "Ao Vivo"
+
+Mostra métricas em **tempo real** (atualiza a cada 5 segundos):
+
+- **RPM** - Rotações do motor
+- **Velocidade** - km/h
+- **Temperatura Motor** - °C
+- **Carga Motor** - %
+- **Bateria** - Volts
+- **MAF** - Mass Air Flow (g/s)
+- **Binário** - Nm
+- **Potência** - HP
+
+#### 🚗 Modal OBD → Tab "Última"
+
+Resumo da **última viagem completada**:
+
+- **Distância** - Km percorridos
+- **Consumo Médio** - L/100km
+- **Duração** - Minutos
+- **Velocidade Média** - km/h
+- **Temperatura Máxima** - °C
+
+#### 📈 Modal OBD → Tab "Histórico"
+
+Lista de todas as **viagens anteriores** com:
+
+- Data e hora
+- Distância percorrida
+- Consumo médio
+- Duração
+- Filtros e ordenação
+
+#### 🎯 Hero Section (Atualização Automática)
+
+No topo da página do veículo:
+
+- **Odómetro** - Atualiza automaticamente com base no Trip Distance
+- **Nível de Combustível** - Percentagem em tempo real
+
+### Como Funciona
+
+```
+Torque Pro (telemóvel)
+    ↓ HTTP POST (cada 5 segundos)
+Cloud Function: uploadTorqueData
+    ↓ Guarda em Firestore
+Subcoleção: leiturasObd
+    ↓ Trigger onCreate
+Cloud Function: processOBDReading
+    ↓ Processa e agrega dados
+Coleção: viagens
+    ↓ Listener onSnapshot
+L100 Frontend
+    ↓ Atualiza UI em tempo real
+```
+
+### Deteção Automática de Viagens
+
+O sistema cria viagens automaticamente quando:
+
+1. **Motor ligado** (RPM > 0)
+2. **Veículo em movimento** (Speed > 0)
+3. **Trip Distance > 0**
+
+**Agrupamento por Sessão:**
+
+- Usa `sessionId` do Torque Pro para agrupar leituras
+- Mesmo que a ligação caia, a viagem continua quando reconectar
+- Fallback temporal se não houver `sessionId`
+
+**Finalização de Viagem:**
+
+- Viagem é finalizada quando não há leituras por 10+ minutos
+- Ou quando o `sessionId` muda (nova sessão do Torque Pro)
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🚀 Instalação
 
-- **Frontend**: HTML5 Semantic, CSS3 Custom Properties (Vanilla), JS Puro (ES6+).
-- **Frameworks Visuais**: Charts.js para visualização, Leaflet para mapas.
-- **Backend / BaaS**:
-  - **Firebase Auth**: Gestão de identidade segura.
-  - **Firestore**: Base de dados NoSQL em tempo real.
-  - **Cloud Functions (V2)**: Processamento de dados OBD e alertas.
-  - **Firebase Messaging (FCM)**: Infraestrutura de notificações push.
-- **PWA**: Service Workers com estratégias de cache dinâmicas (v14).
+### Pré-requisitos
 
----
+- **Node.js** 18+ e npm
+- **Firebase CLI**: `npm install -g firebase-tools`
+- **Conta Firebase** com projeto criado
 
-## 📦 Estrutura do Projeto
+### Setup Local
 
-```text
-├── css/                # Temas e folhas de estilo modulares
-├── js/                 # Lógica de negócio e integrações Firebase
-│   ├── veiculo.js       # Gestão de dados do veículo, OBD e UI reativa
-│   ├── notifications.js # Sistema central de notificações e permissões
-│   ├── analytics.js     # Motores de cálculo de eficiência
-│   └── mapa.js         # Integração Leaflet e Geocoding
-├── functions/          # Backend (Node.js) para processamento OBD e alertas
-│   ├── torque.js        # Parser e gravação de dados Torque Pro
-│   └── index.js        # Entry point das funções
-├── index.html          # Gateway e Loader da aplicação
-└── manifest.json       # Configuração da instalação PWA
+```bash
+# 1. Clonar repositório
+git clone https://github.com/seu-usuario/oMeuCarro.git
+cd oMeuCarro
+
+# 2. Instalar dependências das Cloud Functions
+cd functions
+npm install
+cd ..
+
+# 3. Login no Firebase
+firebase login
+
+# 4. Selecionar projeto
+firebase use --add
+
+# 5. Configurar segredos (chave de autenticação do Torque Pro)
+firebase functions:secrets:set TORQUE_UPLOAD_KEY
+# Quando solicitado, inserir: 79051526
+
+# 6. Deploy
+firebase deploy
+```
+
+### Estrutura do Projeto
+
+```
+oMeuCarro/
+├── public/                 # Frontend (HTML, CSS, JS)
+│   ├── index.html         # Página inicial
+│   ├── veiculos.html      # Lista de veículos
+│   ├── veiculo.html       # Detalhes do veículo
+│   ├── css/
+│   │   └── styles.css     # Estilos globais
+│   └── js/
+│       ├── auth.js        # Autenticação Firebase
+│       ├── veiculos.js    # Gestão de veículos
+│       └── veiculo.js     # Detalhes e OBD
+├── functions/             # Cloud Functions (Backend)
+│   ├── index.js          # Entry point
+│   ├── torque.js         # Receção de dados OBD
+│   ├── tripDetector.js   # Deteção de viagens
+│   └── package.json
+├── firestore.rules       # Regras de segurança
+├── firestore.indexes.json # Índices do Firestore
+└── firebase.json         # Configuração Firebase
 ```
 
 ---
 
-## 📈 Potencial de Expansão
+## ⚙️ Configuração
 
-O L100 está preparado para integrar:
+### Firebase
 
-- **OBD-II Integration**: Leitura de dados reais do motor via Bluetooth.
-- **API de Preços**: Sincronização automática com preços de combustível em tempo real.
-- **Gestão de Frotas**: Suporte para equipas e partilha de faturas.
+1. **Firestore Database**
+   - Modo: Production
+   - Localização: `europe-west1` (recomendado para Portugal)
+
+2. **Authentication**
+   - Ativar **Email/Password**
+   - Configurar domínio autorizado
+
+3. **Hosting**
+   - Deploy automático via `firebase deploy`
+
+4. **Cloud Functions**
+   - Região: `us-central1`
+   - Runtime: Node.js 22
+
+### Variáveis de Ambiente
+
+Criar ficheiro `.env` na pasta `functions/`:
+
+```env
+TORQUE_UPLOAD_KEY=79051526
+```
 
 ---
 
-**L100** - _Porque cada quilómetro conta._
+## 📖 Utilização
+
+### Adicionar Veículo
+
+1. Login na aplicação
+2. Clicar em **"+ Adicionar Veículo"**
+3. Preencher dados:
+   - Marca, modelo, matrícula
+   - Ano, combustível
+   - Odómetro inicial
+4. Guardar
+
+### Registar Abastecimento
+
+1. Abrir página do veículo
+2. Clicar em **"Abastecimentos"** → **"+"**
+3. Preencher:
+   - Data
+   - Km atuais
+   - Litros
+   - Custo total
+4. O consumo é calculado automaticamente
+
+### Criar Plano de Manutenção
+
+1. Abrir página do veículo
+2. Clicar em **"Manutenções"** → **"Planos"** → **"+"**
+3. Configurar:
+   - Nome (ex: "Revisão")
+   - Intervalo em km (ex: 15000)
+   - Ou intervalo em meses (ex: 12)
+4. Sistema cria alertas automaticamente
+
+### Ativar Integração OBD
+
+1. Obter `vehicleId` do URL da página do veículo
+2. Configurar Torque Pro (ver [Integração OBD-II](#-integração-obd-ii-torque-pro))
+3. Ligar ao OBD-II
+4. Abrir Torque Pro
+5. Dados aparecem automaticamente na L100!
+
+---
+
+## 🏗️ Arquitetura
+
+### Frontend
+
+- **Vanilla JavaScript** (sem frameworks)
+- **Firebase SDK** para autenticação e Firestore
+- **Service Worker** para PWA e cache offline
+- **Responsive Design** com CSS Grid e Flexbox
+
+### Backend (Cloud Functions)
+
+#### `uploadTorqueData`
+
+- **Trigger**: HTTP POST
+- **Função**: Receber dados do Torque Pro
+- **Ações**:
+  1. Validar autenticação (`key`)
+  2. Validar `vehicleId`
+  3. Parsear PIDs do Torque Pro
+  4. Criar documento em `leiturasObd`
+  5. Atualizar documento do veículo (odómetro, combustível)
+
+#### `processOBDReading`
+
+- **Trigger**: Firestore onCreate (`leiturasObd/{id}`)
+- **Função**: Processar leitura e criar/atualizar viagem
+- **Ações**:
+  1. Extrair métricas (speed, rpm, tripDistance, tripL100)
+  2. Procurar viagem ativa (por `sessionId` ou temporal)
+  3. Criar nova viagem ou atualizar existente
+  4. Calcular agregações (distância total, consumo médio, etc.)
+  5. Sincronizar `ultimasMetricas` ao documento do veículo
+
+### Base de Dados (Firestore)
+
+```
+veiculos/
+  {vehicleId}/
+    - marca, modelo, matricula
+    - odometroAtual
+    - nivelCombustivel
+    - ultimasMetricas: { distancia, consumoMedio, sessionId }
+
+    abastecimentos/
+      {id}/
+        - data, km, litros, custo
+
+    manutencoes/
+      {id}/
+        - tipo, descricao, km, custo
+
+    leiturasObd/
+      {id}/
+        - timestamp, sessionId
+        - parsed: { speed, rpm, odometer, tripDistance, tripL100, ... }
+
+    viagens/
+      {id}/
+        - inicio, fim
+        - distancia, duracao
+        - consumoMedio, velocidadeMedia
+        - sessionId
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Torque Pro não envia dados
+
+**Sintomas:** Sem leituras OBD na L100
+
+**Soluções:**
+
+1. Verificar se "Upload to webserver" está ativo
+2. Confirmar URL correto (com `vehicleId` e `key`)
+3. Verificar ligação OBD-II (Torque Pro deve mostrar dados)
+4. Desativar "Send https: Bearer Token"
+5. Verificar logs: `firebase functions:log`
+
+### Viagens não são criadas
+
+**Sintomas:** Leituras OBD aparecem mas sem viagens
+
+**Causa:** Motor desligado (RPM = 0, Speed = 0)
+
+**Solução:**
+
+- Viagens só são criadas quando o motor está ligado e o carro em movimento
+- Verificar logs: `[TripDetector] Ignorado: Nova viagem sem motor ligado`
+
+### Odómetro não atualiza
+
+**Sintomas:** Odómetro não muda na L100
+
+**Verificações:**
+
+1. Torque Pro está a enviar `Trip Distance` (PID `ff1204`)?
+2. Verificar logs: `[Torque] UPDATE: ... | Odo: ...`
+3. Confirmar que `setupVehicleListener` está ativo no frontend
+
+### Consumo médio incorreto
+
+**Sintomas:** L/100km não corresponde à realidade
+
+**Verificações:**
+
+1. Torque Pro está a enviar `Trip average L/100` (PID `ff1208`)?
+2. Verificar se o Torque Pro está calibrado corretamente
+3. Confirmar que o veículo tem sensor de consumo (alguns não têm)
+
+### Limpeza de Dados de Teste
+
+Para apagar todas as leituras OBD de teste:
+
+```bash
+# Opção 1: Via Cloud Function
+curl -X POST "https://deepcleanuptrips-5jojqy2jpa-uc.a.run.app?vehicleId=SEU_VEHICLE_ID&deleteReadings=true&batchSize=500"
+
+# Opção 2: Firebase Console
+# 1. Ir a Firestore
+# 2. veiculos/{vehicleId}/leiturasObd
+# 3. Clicar nos 3 pontinhos → "Delete collection"
+```
+
+---
+
+## 📝 Notas de Desenvolvimento
+
+### Workarounds Temporários Ativos
+
+⚠️ **Atenção:** Existem workarounds temporários no código de produção:
+
+1. **Autenticação Desativada** ([torque.js:L96-107](functions/torque.js#L96-L107))
+   - A validação da `key` está comentada
+   - **TODO:** Investigar porque a `key` não chega nos parâmetros
+
+2. **VehicleId Hardcoded** ([torque.js:L132-137](functions/torque.js#L132-L137))
+   - Fallback para `DPK7LP2GXiEibKmSQUVA` quando `vehicleId` não chega
+   - **TODO:** Investigar porque o Torque Pro não envia o `vehicleId`
+
+### Próximas Funcionalidades
+
+- [ ] Adicionar consumo instantâneo no tab "Ao Vivo"
+- [ ] Gráficos de consumo ao longo do tempo
+- [ ] Exportar dados para CSV/PDF
+- [ ] Comparação de viagens
+- [ ] Alertas de condução (RPM alto, temperatura alta, etc.)
+- [ ] Suporte para múltiplos utilizadores por veículo
+
+---
+
+## 📄 Licença
+
+MIT License - ver [LICENSE](LICENSE)
+
+---
+
+## 👨‍💻 Autor
+
+**António Appleton**
+
+- GitHub: [@antoniorappleton](https://github.com/antoniorappleton)
+
+---
+
+## 🙏 Agradecimentos
+
+- [Firebase](https://firebase.google.com/) - Backend as a Service
+- [Torque Pro](https://torque-bhp.com/) - App OBD-II
+- Comunidade open-source
+
+---
+
+**Versão:** 1.0.0  
+**Última Atualização:** 09/02/2026

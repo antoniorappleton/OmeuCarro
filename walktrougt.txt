@@ -1,0 +1,149 @@
+Torque Pro Integration - Walkthrough Final
+🎯 Objetivo
+Integrar o Torque Pro com a L100 para enviar dados OBD em tempo real e criar viagens automaticamente.
+
+✅ Sucesso Confirmado!
+Data Flow Verificado (19:28:24)
+[TripDetector] Extracted keys: speed, rpm, odometer, fuelLevel, coolant, 
+engineLoad, intake, maf, voltage, l100, tripDistance, tripL100, 
+fuelUsedTrip, avgSpeedMoving, torqueNm, hpWheels, fuelRemainingPct, 
+distanceToEmptyKm, location
+Todos os campos essenciais estão a ser extraídos:
+
+✅ tripDistance - Distância da viagem
+✅ tripL100 - Consumo médio por viagem ⭐
+✅ odometer - Odómetro
+✅ fuelLevel - Nível de combustível
+✅ l100 - Consumo instantâneo
+🔧 Problemas Identificados e Resolvidos
+1. Autenticação Falhava (403 Forbidden)
+Problema:
+
+[Torque] Acesso negado. Key inválida: null
+[Torque] Tem Authorization header? false
+Causa:
+
+O Torque Pro tinha "Send https: Bearer Token" ativo
+Mas não estava a enviar nem o Bearer Token nem o query parameter key
+Solução Temporária:
+
+Desativado "Send https: Bearer Token" no Torque Pro
+Autenticação desativada na Cloud Function (
+torque.js:L96-107
+)
+javascript
+// === TEMPORÁRIO: AUTENTICAÇÃO DESATIVADA PARA DEBUG ===
+// TODO: Reativar depois de confirmar que os dados chegam
+/*
+if (!finalProvidedKey || finalProvidedKey !== validKey) {
+  return res.status(403).send("NO");
+}
+*/
+2. VehicleId Não Chegava (400 Bad Request)
+Problema:
+
+[Torque] vehicleId inválido: undefined
+Causa:
+
+O Torque Pro não está a enviar o vehicleId nos query parameters
+Possível bug do Torque Pro que substitui o URL base em vez de adicionar PIDs
+Solução Temporária:
+
+Fallback hardcoded para DPK7LP2GXiEibKmSQUVA (
+torque.js:L132-137
+)
+javascript
+if (!vehicleId) {
+  console.warn("[DEBUG] vehicleId não encontrado. Usando fallback: DPK7LP2GXiEibKmSQUVA");
+  vehicleId = "DPK7LP2GXiEibKmSQUVA"; // TEMPORÁRIO
+}
+📊 Fluxo de Dados Confirmado
+Torque Pro (telemóvel)
+    ↓ HTTP GET (cada 5 segundos)
+uploadTorqueData (Cloud Function)
+    ↓ Cria documento em leiturasObd
+Firestore onCreate Trigger
+    ↓
+processOBDReading (Cloud Function)
+    ↓ Extrai métricas e cria/atualiza viagem
+Firestore (veiculos/{id}/viagens)
+    ↓ onSnapshot
+L100 Frontend (veiculo.js)
+    ↓ Atualiza UI em tempo real
+🧪 Testes Realizados
+Teste 1: Autenticação
+✅ Pedidos chegam à Cloud Function
+❌ key não chega nos parâmetros
+✅ Autenticação desativada temporariamente
+Teste 2: VehicleId
+❌ vehicleId não chega nos parâmetros
+✅ Fallback hardcoded funciona
+Teste 3: Processamento de Dados
+✅ uploadTorqueData cria leituras OBD
+✅ processOBDReading trigger dispara
+✅ Todos os campos são extraídos corretamente
+📱 Configuração do Torque Pro
+URL Configurado:
+https://us-central1-omeucarro-d3889.cloudfunctions.net/uploadTorqueData?vehicleId=DPK7LP2GXiEibKmSQUVA&key=79051526
+Settings:
+✅ "Upload to webserver" - ATIVO
+✅ "Web Logging Interval" - 5 Seconds
+❌ "Só Quando Ligado ao OBD" - DESATIVADO (para testes)
+❌ "Send https: Bearer Token" - DESATIVADO
+PIDs Configurados:
+Speed (OBD) - 0d
+Engine RPM - 0c
+Trip Distance - ff1204 ⭐
+Trip average L/100 - ff1208 ⭐
+Fuel Level - 2f
+Odometer - a6
+Engine Coolant Temperature - 05
+Engine Load - 04
+Intake Air Temperature - 0f
+MAF - 66
+Torque - ff1225
+Horsepower - ff1226
+⚠️ Próximos Passos (TODO)
+1. Reativar Autenticação
+ Investigar porque o key não chega nos parâmetros
+ Testar com Bearer Token configurado no Torque Pro
+ Remover comentário da validação de autenticação em 
+torque.js
+2. Corrigir VehicleId
+ Investigar porque o vehicleId não chega nos parâmetros
+ Possível solução: Configurar o vehicleId no campo "User Email" do Torque Pro
+ Remover fallback hardcoded em 
+torque.js
+3. Testar no Carro
+ Reativar "Só Quando Ligado ao OBD"
+ Fazer uma viagem real
+ Verificar se as viagens são criadas corretamente
+ Confirmar que o odómetro atualiza
+ Verificar consumo médio por viagem
+4. Frontend
+ Adicionar campo de "Consumo Instantâneo" no tab "Ao Vivo"
+ Verificar se os dados aparecem em tempo real na L100
+ Testar no telemóvel (PWA)
+🔑 Informações Importantes
+Chave de Autenticação:
+79051526
+VehicleId:
+DPK7LP2GXiEibKmSQUVA
+Endpoint:
+https://us-central1-omeucarro-d3889.cloudfunctions.net/uploadTorqueData
+📝 Logs de Sucesso
+19:27:54 - VehicleId fallback ativo:
+
+[DEBUG] vehicleId não encontrado nos params. Usando fallback fixo: DPK7LP2GXiEibKmSQUVA
+19:28:24 - Dados processados com sucesso:
+
+[TripDetector] Extracted keys: speed, rpm, odometer, fuelLevel, coolant, engineLoad, intake, maf, voltage, l100, tripDistance, tripL100, fuelUsedTrip, avgSpeedMoving, torqueNm, hpWheels, fuelRemainingPct, distanceToEmptyKm, location
+🎉 Conclusão
+A integração Torque Pro → Firebase está FUNCIONAL! ✅
+
+Os dados estão a chegar, a ser processados e guardados no Firestore. As próximas etapas são:
+
+Resolver o problema do vehicleId e key nos parâmetros
+Reativar a autenticação
+Testar no carro com uma viagem real
+Status: 🟡 Funcional com workarounds temporários

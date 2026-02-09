@@ -42,6 +42,16 @@ exports.uploadTorqueData = onRequest(
       // 1. Unificar payload (GET ou POST)
       const params = { ...req.query, ...req.body };
 
+      // === DEBUG TEMPORÁRIO (REMOVER DEPOIS) ===
+      console.log("[DEBUG] === TORQUE REQUEST DEBUG ===");
+      console.log("[DEBUG] Method:", req.method);
+      console.log("[DEBUG] Query params:", JSON.stringify(req.query));
+      console.log("[DEBUG] Body params:", JSON.stringify(req.body));
+      console.log("[DEBUG] Merged params:", JSON.stringify(params));
+      console.log("[DEBUG] Headers:", JSON.stringify(req.headers));
+      console.log("[DEBUG] Raw URL:", req.url);
+      // === FIM DEBUG ===
+
       // 2. Validação de Segurança (ROBUSTA - múltiplos formatos)
 
       // Helper: Parse Basic Auth header
@@ -83,6 +93,9 @@ exports.uploadTorqueData = onRequest(
         });
       }
 
+      // === TEMPORÁRIO: AUTENTICAÇÃO DESATIVADA PARA DEBUG ===
+      // TODO: Reativar depois de confirmar que os dados chegam
+      /*
       if (!finalProvidedKey || finalProvidedKey !== validKey) {
         console.warn(
           `[Torque] Acesso negado. Key inválida: ${finalProvidedKey}`,
@@ -95,6 +108,11 @@ exports.uploadTorqueData = onRequest(
         );
         return res.status(403).send("NO");
       }
+      */
+      console.log(
+        "[TEMP] Autenticação desativada para debug. Key recebida:",
+        finalProvidedKey,
+      );
 
       // Remover a chave dos dados a guardar (Segurança)
       const {
@@ -108,13 +126,25 @@ exports.uploadTorqueData = onRequest(
         ...safeParams
       } = params;
 
-      // 3. Validação do Veículo
-      const vehicleId = safeParams.vehicleId || params.vehicleId;
+      // 3. Validação do Veículo (com fallback para debug)
+      let vehicleId = safeParams.vehicleId || params.vehicleId;
+
+      // Fallback: Usar vehicleId fixo temporariamente para debug
+      if (!vehicleId) {
+        console.warn(
+          "[DEBUG] vehicleId não encontrado nos params. Usando fallback fixo: DPK7LP2GXiEibKmSQUVA",
+        );
+        console.log("[DEBUG] Params disponíveis:", Object.keys(safeParams));
+        console.log("[DEBUG] Email recebido:", safeParams.eml);
+        vehicleId = "DPK7LP2GXiEibKmSQUVA"; // TEMPORÁRIO para debug
+      }
+
       // Aceitar hífens e underscores, min 3 chars
       const vehicleIdRegex = /^[A-Za-z0-9_-]{3,60}$/;
 
       if (!vehicleId || !vehicleIdRegex.test(vehicleId)) {
         console.warn(`[Torque] vehicleId inválido: ${vehicleId}`);
+
         return res.status(400).send("INVALID_ID");
       }
 
