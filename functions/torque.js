@@ -24,6 +24,11 @@ const DEFAULT_PIDS = {
   maf: ["k10", "10"], // g/s
   engineLoad: ["k4", "04"], // %
   voltage: ["k42", "42", "kff1238"], // V (Control module or Adapter)
+  tripDistance: ["kff1204"], // km
+  tripL100: ["kff1203"], // L/100
+  torqueNm: ["kff1225", "kff1226"], // Nm
+  hpWheels: ["kff1220", "kff1221"], // hp
+  fuelRemainingPct: ["kff126a", "kff1269"], // %
 };
 
 /**
@@ -119,9 +124,15 @@ exports.uploadTorqueData = onRequest(
 
       // Timestamp do registo
       const receivedAt = admin.firestore.Timestamp.now(); // Usar relógio do servidor Firestore
-      const timestamp = safeParams.time
+
+      // Normalização de Timestamp (Torque Pro pode enviar epoch em segundos)
+      let timestamp = safeParams.time
         ? Number(safeParams.time)
-        : receivedAt.toMillis(); // Usar relógio do servidor Firestore
+        : receivedAt.toMillis();
+      if (timestamp && timestamp < 10000000000) {
+        // Menos de 10 dígitos -> provavelmente segundos
+        timestamp = timestamp * 1000;
+      }
 
       // 5. Iniciar Transação (Concorrência Segura)
       await db.runTransaction(async (t) => {
@@ -138,7 +149,8 @@ exports.uploadTorqueData = onRequest(
         const getVal = (fieldKey) => {
           // Helper local para parsear float aceitando virgula
           const parseNum = (v) => {
-            if (v === undefined || v === null || v === "") return null;
+            if (v === undefined || v === null || v === "" || v === "-")
+              return null;
             if (typeof v === "number") return v;
             const s = String(v).replace(",", ".");
             const n = parseFloat(s);
@@ -172,6 +184,16 @@ exports.uploadTorqueData = onRequest(
             engineLoad: ["engine load", "%"],
             voltage: ["voltage", "v"],
             l100: ["l/100", "average"], // Generic l100
+
+            // --- NOVOS CAMPOS (Plan v2) ---
+            tripDistance: ["trip distance", "km"],
+            tripL100: ["trip average", "l/100"],
+            fuelUsedTrip: ["fuel used", "trip"],
+            avgSpeedMoving: ["average", "speed", "moving"],
+            torqueNm: ["torque", "nm"],
+            hpWheels: ["horsepower", "wheels"],
+            fuelRemainingPct: ["fuel remaining", "%"],
+            distanceToEmptyKm: ["distance to empty", "km"],
           };
 
           const patterns = fuzzyPatterns[fieldKey];
@@ -199,7 +221,18 @@ exports.uploadTorqueData = onRequest(
           intake: getVal("intakeTemp"),
           maf: getVal("maf"),
           voltage: getVal("voltage"),
-          l100: getVal("l100"), // <--- Extrair L100
+          l100: getVal("l100"),
+
+          // Novos campos para Viagens e UI
+          tripDistance: getVal("tripDistance"),
+          tripL100: getVal("tripL100"),
+          fuelUsedTrip: getVal("fuelUsedTrip"),
+          avgSpeedMoving: getVal("avgSpeedMoving"),
+          torqueNm: getVal("torqueNm"),
+          hpWheels: getVal("hpWheels"),
+          fuelRemainingPct: getVal("fuelRemainingPct"),
+          distanceToEmptyKm: getVal("distanceToEmptyKm"),
+
           location: null,
         };
 
@@ -285,6 +318,33 @@ exports.uploadTorqueData = onRequest(
 
           if (isValidOdo) {
             updates.odometroAtual = parsed.odometer;
+          }
+        } else if (
+          parsed.tripDistance !== null &&
+          parsed.tripDistance > 0 &&
+          vData.odometroAtual > 0
+        ) {
+          // --- Odometer Fallback (Incremental) ---
+          const lastTripDist = vData.lastTripDistance || 0;
+          const currentSessionId = safeParams.session || null;
+          const lastSessionId = vData.lastSessionId || null;
+
+          // Detect session change or Torque trip reset
+          if (
+            currentSessionId !== lastSessionId ||
+            parsed.tripDistance < lastTripDist
+          ) {
+            // New session or manual reset: just sync the baseline
+            updates.lastTripDistance = parsed.tripDistance;
+            updates.lastSessionId = currentSessionId;
+          } else {
+            // Same session: add delta to current odometer
+            const delta = parsed.tripDistance - lastTripDist;
+            if (delta > 0 && delta < 50) {
+              // Safety: limit delta per reading
+              updates.odometroAtual = vData.odometroAtual + delta;
+              updates.lastTripDistance = parsed.tripDistance;
+            }
           }
         }
         // ---------------------------------

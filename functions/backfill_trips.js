@@ -41,10 +41,12 @@ exports.backfillTrips = onRequest(async (req, res) => {
 
     // 2. Process Readings Chronologically
     for (const r of readings) {
-      const timestamp = r.timestamp.toDate
-        ? r.timestamp.toDate()
-        : new Date(r.timestamp);
-      const tripDist = parseFloat(r.tripDistance || 0);
+      // Normalização de Timestamp (Pode ser número/ms ou Date)
+      const tsMs = Number(r.timestamp);
+      const timestamp = new Date(tsMs);
+
+      const parsed = r.parsed || {};
+      const tripDist = parseFloat(parsed.tripDistance || 0);
 
       let isNewTrip = false;
 
@@ -72,23 +74,30 @@ exports.backfillTrips = onRequest(async (req, res) => {
         // Start new
         currentTrip = {
           vehicleId: vehicleId,
-          startTime: timestamp,
-          endTime: timestamp,
+          dataInicio: timestamp,
+          dataFim: timestamp,
           startKm: tripDist,
           endKm: tripDist,
           maxSpeed: 0,
           readingsCount: 0,
-          fuelUsed: 0, // Placeholder
+          rpmSum: 0,
+          tempMax: -99,
         };
       }
 
       // Update Current Trip
-      currentTrip.endTime = timestamp;
+      currentTrip.dataFim = timestamp;
       currentTrip.endKm = tripDist;
       currentTrip.readingsCount++;
 
-      const speed = parseFloat(r.speed || 0);
+      const speed = parseFloat(parsed.speed || 0);
       if (speed > currentTrip.maxSpeed) currentTrip.maxSpeed = speed;
+
+      const rpm = parseFloat(parsed.rpm || 0);
+      currentTrip.rpmSum += rpm;
+
+      const coolant = parseFloat(parsed.coolant || -99);
+      if (coolant > currentTrip.tempMax) currentTrip.tempMax = coolant;
 
       // Track last reading for logic
       lastReading = {
@@ -114,17 +123,26 @@ exports.backfillTrips = onRequest(async (req, res) => {
       const tripRef = db.collection(`veiculos/${vehicleId}/viagens`).doc();
 
       // Calculate aggregations
-      const distance = Math.max(0, trip.endKm - trip.startKm).toFixed(2);
-      // Default efficientcy if unknown
-      const avgConsumption = 7.0; // Hardcoded fallback or use avg from readings if available (MAF)
+      const distance = Math.max(0, trip.endKm - trip.startKm);
+      const avgRpm =
+        trip.readingsCount > 0 ? trip.rpmSum / trip.readingsCount : 0;
 
       const tripData = {
-        startTime: trip.startTime,
-        endTime: trip.endTime,
-        distanceKm: parseFloat(distance),
-        maxSpeed: trip.maxSpeed,
-        readingsCount: trip.readingsCount,
-        avgConsumption: avgConsumption,
+        dataInicio: admin.firestore.Timestamp.fromDate(trip.dataInicio),
+        dataFim: admin.firestore.Timestamp.fromDate(trip.dataFim),
+        lastUpdate: trip.dataFim.getTime(),
+        distancia: parseFloat(distance.toFixed(2)),
+        distanciaMax: trip.endKm,
+        velocidadeMedia: 0, // Não temos tempo de movimento exato no backfill simples
+        consumoMedio: 7.0, // Fallback
+        origem: "backfill",
+        metricas: {
+          rpmMedio: Math.round(avgRpm),
+          rpmMax: 0, // não rastreado explicitamente em cada loop para simplificar
+          velocidadeMax: trip.maxSpeed,
+          temperaturaMax: trip.tempMax > -50 ? trip.tempMax : null,
+          count: trip.readingsCount,
+        },
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 

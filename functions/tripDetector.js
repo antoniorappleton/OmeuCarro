@@ -37,12 +37,18 @@ exports.processOBDReading = onDocumentCreated(
       return null; // ou undefined
     };
 
-    // Extrair Métricas Chave
-    const speed = Number(findKey(parsed, "Speed") || 0);
-    const rpm = Number(findKey(parsed, "RPM") || 0);
-    const tripDist = Number(findKey(parsed, "Trip Distance") || 0);
-    const tripL100 = Number(findKey(parsed, "Trip average", "l/100") || 0);
-    const coolant = Number(findKey(parsed, "Coolant") || -999);
+    // Extrair Métricas Chave (Preferir campos normalizados do Torque.js fixes)
+    const speed = Number(parsed.speed ?? findKey(parsed, "Speed") ?? 0);
+    const rpm = Number(parsed.rpm ?? findKey(parsed, "RPM") ?? 0);
+    const tripDist = Number(
+      parsed.tripDistance ?? findKey(parsed, "Trip Distance") ?? 0,
+    );
+    const tripL100 = Number(
+      parsed.tripL100 ?? findKey(parsed, "Trip average", "l/100") ?? 0,
+    );
+    const coolant = Number(
+      parsed.coolant ?? findKey(parsed, "Coolant") ?? -999,
+    );
 
     // Ignorar leituras sem dados relevantes (motor desligado e sem movimento)
     // Mas cuidado: podemos querer registar o fim da viagem onde RPM=0.
@@ -54,17 +60,32 @@ exports.processOBDReading = onDocumentCreated(
       .doc(vehicleId)
       .collection("viagens");
 
-    // 1. Buscar a ÚLTIMA viagem registada (ativa ou não)
-    const lastTripQuery = await tripRef
-      .orderBy("lastUpdate", "desc")
-      .limit(1)
-      .get();
-
+    // 1. Procurar por SessionId (Prioridade Máxima para lógica do Torque)
     let currentTrip = null;
     let isNewTrip = false;
 
-    if (!lastTripQuery.empty) {
-      currentTrip = lastTripQuery.docs[0];
+    if (reading.sessionId) {
+      const sessionQuery = await tripRef
+        .where("sessionId", "==", reading.sessionId)
+        .limit(1)
+        .get();
+
+      if (!sessionQuery.empty) {
+        currentTrip = sessionQuery.docs[0];
+        console.log(`[TripDetector] Sessão encontrada: ${reading.sessionId}`);
+      }
+    }
+
+    // 2. Fallback: Procurar por Janela de Tempo (se não houver sessão ou não encontrada)
+    if (!currentTrip) {
+      const lastTripQuery = await tripRef
+        .orderBy("lastUpdate", "desc")
+        .limit(1)
+        .get();
+
+      if (!lastTripQuery.empty) {
+        currentTrip = lastTripQuery.docs[0];
+      }
     }
 
     // 2. Decidir se cria NOVA ou ATUALIZA
@@ -142,10 +163,27 @@ exports.processOBDReading = onDocumentCreated(
         },
 
         origem: "torque-auto",
+        sessionId: reading.sessionId || null,
       };
 
       await tripRef.add(newTripData);
       console.log(`[TripDetector] Nova viagem criada.`);
+
+      // Sync to Vehicle Profile
+      await db
+        .collection("veiculos")
+        .doc(vehicleId)
+        .set(
+          {
+            ultimasMetricas: {
+              distancia: tripDist,
+              consumoMedio: tripL100,
+              lastUpdate: timestamp,
+              sessionId: reading.sessionId || null,
+            },
+          },
+          { merge: true },
+        );
     } else {
       // Atualizar EXISTENTE
       const tripData = currentTrip.data();
@@ -190,6 +228,22 @@ exports.processOBDReading = onDocumentCreated(
       };
 
       await currentTrip.ref.update(updates);
+
+      // Sync to Vehicle Profile
+      await db
+        .collection("veiculos")
+        .doc(vehicleId)
+        .set(
+          {
+            ultimasMetricas: {
+              distancia: updates.distancia,
+              consumoMedio: updates.consumoMedio,
+              lastUpdate: timestamp,
+              sessionId: reading.sessionId || null,
+            },
+          },
+          { merge: true },
+        );
     }
 
     return null;

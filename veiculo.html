@@ -1315,6 +1315,32 @@
                   >
                 </div>
               </div>
+              <!-- Torque -->
+              <div class="alert-item">
+                <div
+                  class="alert-status-indicator status-neutral"
+                  style="background: transparent"
+                ></div>
+                <div class="alert-info">
+                  <span class="alert-label">Binário (Torque)</span>
+                  <span class="alert-value"
+                    ><span id="obd-torque">--</span> Nm</span
+                  >
+                </div>
+              </div>
+              <!-- HP -->
+              <div class="alert-item">
+                <div
+                  class="alert-status-indicator status-neutral"
+                  style="background: transparent"
+                ></div>
+                <div class="alert-info">
+                  <span class="alert-label">Potência (HP)</span>
+                  <span class="alert-value"
+                    ><span id="obd-hp">--</span> hp</span
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1687,183 +1713,5 @@
         </div>
       </div>
     </div>
-    <!-- MODAL: NOVO PLANO DE MANUTENÇÃO -->
-    <div id="plan-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-clipboard"></use>
-            </svg>
-            Agendar Manutenção
-          </h2>
-          <button id="plan-close" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
-
-        <div class="modal-body">
-          <div class="form-grid">
-            <label style="grid-column: 1/-1">
-              <span class="muted">Descrição</span>
-              <input
-                id="plan-titulo"
-                type="text"
-                placeholder="Ex: Mudar Óleo, Inspeção..."
-              />
-            </label>
-
-            <label>
-              <span class="muted">Data Prevista</span>
-              <input id="plan-data" type="date" />
-            </label>
-
-            <label>
-              <span class="muted">Km Previstos (Target)</span>
-              <input id="plan-km" type="number" placeholder="Ex: 150000" />
-            </label>
-
-            <div
-              style="
-                grid-column: 1/-1;
-                border-top: 1px solid var(--border-light);
-                margin: 8px 0;
-              "
-            ></div>
-
-            <label style="grid-column: 1/-1">
-              <span class="muted"
-                >Último Registo (Opcional - Atualiza Odómetro)</span
-              >
-              <input
-                id="plan-ultimo-km"
-                type="number"
-                placeholder="Se já fez, indique os Km atuais"
-              />
-            </label>
-
-            <label style="grid-column: 1/-1">
-              <span class="muted">Notas</span>
-              <input id="plan-obs" type="text" />
-            </label>
-          </div>
-          <p id="plan-msg" class="muted"></p>
-        </div>
-
-        <footer class="modal-footer">
-          <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="plan-save" class="btn btn-primary btn-gradient">
-            Guardar Plano
-          </button>
-        </footer>
-        <div
-          style="
-            text-align: center;
-            font-size: 0.75rem;
-            opacity: 0.3;
-            margin-top: 8px;
-            margin-bottom: 8px;
-          "
-        >
-          antonioappleton
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL: TORQUE OBD -->
-    <div id="obd-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-activity"></use>
-            </svg>
-            Dados OBD (Torque)
-          </h2>
-          <button id="btn-close-obd" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
-
-        <div class="modal-body" style="padding: 0">
-          <div class="tabs-header-row" style="padding: 12px 16px 0; border-bottom: 1px solid var(--border-light)">
-            <nav class="section-tabs" style="justify-content: flex-start; margin-bottom: 0">
-              <button class="tab-btn active" data-tab="ultima">Última</button>
-              <button class="tab-btn" data-tab="historico">Histórico</button>
-            </nav>
-          </div>
-
-          <!-- TAB: ULTIMA VIAJEM -->
-          <div id="tab-ultima" class="tab-panel" style="padding: 16px">
-            <div id="last-trip-empty" class="vehicles-empty hidden" style="text-align: center; padding: 20px;">
-              <p>Sem dados de última viagem.</p>
-            </div>
-            
-            <div id="last-trip-content">
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
-                <div>
-                   <div id="last-trip-date" class="muted" style="font-size: 0.9rem">--/--/----</div>
-                   <div id="last-trip-time" style="font-size: 1.5rem; font-weight: bold">--:--</div>
-                </div>
-                <!-- Duração -->
-                <div style="text-align: right">
-                    <div class="muted" style="font-size: 0.8rem">Duração</div>
-                    <strong id="last-trip-duration" style="font-size: 1.2rem">--</strong>
-                </div>
-              </div>
-
-              <!-- Grid de Métricas -->
-              <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                 <article class="stats-card compact" style="padding: 10px;">
-                    <span class="muted" style="font-size: 0.8rem">Distância</span>
-                    <strong id="last-trip-dist" style="font-size: 1.1rem">--</strong>
-                    <small>km</small>
-                 </article>
-                 <article class="stats-card compact" style="padding: 10px;">
-                    <span class="muted" style="font-size: 0.8rem">Consumo</span>
-                    <strong id="last-trip-l100" style="font-size: 1.1rem">--</strong>
-                    <small>L/100</small>
-                 </article>
-                 <article class="stats-card compact" style="padding: 10px;">
-                    <span class="muted" style="font-size: 0.8rem">Vel. Média</span>
-                    <strong id="last-trip-speed" style="font-size: 1.1rem">--</strong>
-                    <small>km/h</small>
-                 </article>
-                 <article class="stats-card compact" style="padding: 10px;">
-                    <span class="muted" style="font-size: 0.8rem">Custo Est.</span>
-                    <strong id="last-trip-cost" style="font-size: 1.1rem; color: var(--color-warning);">--</strong>
-                 </article>
-              </div>
-
-              <!-- Detalhes Extra -->
-              <div style="background: var(--bg-hover); padding: 12px; border-radius: 8px; font-size: 0.9rem; display: grid; gap: 8px;">
-                 <div style="display: flex; justify-content: space-between;">
-                    <span class="muted">RPM Médio</span>
-                    <strong id="last-trip-rpm">--</strong>
-                 </div>
-                 <div style="display: flex; justify-content: space-between;">
-                    <span class="muted">Temp. Máxima</span>
-                    <strong id="last-trip-temp">--</strong>
-                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB: HISTORICO -->
-          <div id="tab-historico" class="tab-panel hidden" style="padding: 16px">
-             <div id="trips-empty" class="vehicles-empty hidden" style="text-align: center; padding: 20px;">
-               <p>Histórico vazio.</p>
-             </div>
-             <div id="trips-list" style="display: grid; gap: 12px;"></div>
-          </div>
-
-        </div>
-      </div>
-  </body>
+body>
 </html>

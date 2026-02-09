@@ -13,6 +13,12 @@ exports.uploadTorqueData = uploadTorqueData;
 
 exports.importFuelData = importFuelData;
 exports.importTorqueCsv = importTorqueCsv;
+const { cleanupTripsCloud } = require("./direct_cleanup");
+exports.cleanupTripsCloud = cleanupTripsCloud;
+const { deepCleanupTrips } = require("./deep_cleanup");
+exports.deepCleanupTrips = deepCleanupTrips;
+const { inspectTrips } = require("./inspect_trips");
+exports.inspectTrips = inspectTrips;
 
 const { processOBDReading } = require("./tripDetector");
 const { backfillTrips } = require("./backfill_trips");

@@ -1777,35 +1777,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      async function loadLastTrip(vid) {
-        try {
-          const snap = await db
-            .collection("veiculos")
-            .doc(vid)
-            .collection("viagens")
-            .orderBy("dataFim", "desc")
-            .limit(1)
-            .get();
-
-          const content = document.getElementById("last-trip-content");
-          const empty = document.getElementById("last-trip-empty");
-
-          if (snap.empty) {
-            if (empty) empty.classList.remove("hidden");
-            if (content) content.classList.add("hidden");
-            return;
-          }
-
-          if (empty) empty.classList.add("hidden");
-          if (content) content.classList.remove("hidden");
-
-          const trip = snap.docs[0].data();
-          renderTripDetails(trip);
-        } catch (e) {
-          console.error("Error loading last trip:", e);
-        }
-      }
-
       function renderTripDetails(trip) {
         // Dates
         const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
@@ -1841,8 +1812,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (elRpm)
           elRpm.textContent = (trip.metricas?.rpmMedio || "--") + " rpm";
         if (elTemp)
-          elTemp.textContent =
-            (trip.metricas?.temperaturaMaxima || "--") + " °C";
+          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
 
         // Cost
         const cost = trip.custoEstimado || 0;
@@ -1885,39 +1855,6 @@ document.addEventListener("DOMContentLoaded", () => {
           list.innerHTML =
             '<div class="muted">Erro ao carregar histórico.</div>';
         }
-      }
-
-      function renderTripDetails(trip) {
-        // Dates
-        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
-        document.getElementById("last-trip-date").textContent =
-          end.toLocaleDateString("pt-PT");
-        document.getElementById("last-trip-time").textContent =
-          end.toLocaleTimeString("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-        // Metrics
-        document.getElementById("last-trip-dist").textContent =
-          trip.distancia?.toFixed(1) || "--";
-        document.getElementById("last-trip-l100").textContent =
-          trip.consumoMedio?.toFixed(1) || "--";
-        document.getElementById("last-trip-speed").textContent =
-          Math.round(trip.velocidadeMedia || 0) || "--";
-        document.getElementById("last-trip-duration").textContent =
-          trip.duracao || "--";
-
-        // Details
-        document.getElementById("last-trip-rpm").textContent =
-          (trip.metricas?.rpmMedio || "--") + " rpm";
-        document.getElementById("last-trip-temp").textContent =
-          (trip.metricas?.temperaturaMaxima || "--") + " °C";
-
-        // Cost (Estimative)
-        const cost = trip.custoEstimado || 0;
-        document.getElementById("last-trip-cost").textContent =
-          cost > 0 ? "€" + cost.toFixed(2) : "--";
       }
 
       function createTripCard(trip) {
@@ -1964,6 +1901,8 @@ document.addEventListener("DOMContentLoaded", () => {
         load: document.getElementById("obd-load"),
         voltage: document.getElementById("obd-voltage"),
         maf: document.getElementById("obd-maf"),
+        torque: document.getElementById("obd-torque"),
+        hp: document.getElementById("obd-hp"),
         lastUpdate: document.getElementById("obd-last-update"),
         statusCoolant: document.getElementById("status-coolant"),
       };
@@ -2036,6 +1975,16 @@ document.addEventListener("DOMContentLoaded", () => {
               liveElements.maf.textContent = maf
                 ? Number(maf).toFixed(1)
                 : "--";
+
+            const torque = findKey(reading, "Torque") || reading.torqueNm;
+            if (liveElements.torque)
+              liveElements.torque.textContent = torque
+                ? Math.round(torque)
+                : "--";
+
+            const hp = findKey(reading, "Horsepower") || reading.hpWheels;
+            if (liveElements.hp)
+              liveElements.hp.textContent = hp ? Math.round(hp) : "--";
 
             // Timestamp
             if (liveElements.lastUpdate && data.timestamp) {
