@@ -203,8 +203,27 @@ Para obter os melhores resultados com a L100 e o Torque Pro:
 4. **Fim da Viagem**: Para garantir que a viagem aparece imediatamente como concluída, pode fechar a app Torque Pro (o que encerra a sessão) ou esperar pelo timeout automático se não usar Session IDs.
 
 ---
-
-## 🚀 Instalação
+ 
+ ## 🔕 Notificações
+ 
+ A L100 suporta notificações push para mantê-lo informado sem precisar de abrir a app constantemente.
+ 
+ ### Como Ativar
+ 
+ 1. Abrir a **L100** no telemóvel (preferencialmente instalada como PWA).
+ 2. Ir ao **Perfil** ou procurar o botão **"Ativar Notificações"** no dashboard.
+ 3. Aceitar o pedido de permissão do browser.
+ 4. No Windows/Android, garantir que as notificações do Chrome/Edge não estão bloqueadas nas definições do sistema.
+ 
+ ### Tipos de Alertas
+ 
+ - **🏁 Fim de Viagem**: Recebe um resumo (KM e L/100) assim que termina uma viagem.
+ - **⚠️ Alertas de Saúde**: Notificação imediata se a temperatura do motor subir excessivamente (>105°C) ou se a bateria estiver fraca (<11.8V).
+ - **📅 Manutenção**: Lembretes de revisões, seguro e IUC a expirar.
+ 
+ ---
+ 
+ ## 🚀 Instalação
 
 ### Pré-requisitos
 

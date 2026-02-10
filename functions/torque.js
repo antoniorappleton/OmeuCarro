@@ -261,6 +261,37 @@ exports.uploadTorqueData = onRequest(
           lastObdUpdate: receivedAt,
         };
 
+        // --- Alertas em Tempo Real (Cooldown 30 min) ---
+        const lastAlarmAt = vData.lastAlarmAt ? vData.lastAlarmAt.toMillis() : 0;
+        const nowMs = receivedAt.toMillis();
+        const alarmCooldown = 30 * 60 * 1000; // 30 minutos
+
+        if (nowMs - lastAlarmAt > alarmCooldown) {
+          let alarmTitle = "";
+          let alarmBody = "";
+
+          if (parsed.coolant !== null && parsed.coolant > 105) {
+            alarmTitle = "⚠️ Alerta: Motor Quente!";
+            alarmBody = `A temperatura do motor atingiu ${Math.round(parsed.coolant)}°C no ${vData.nome || "seu veículo"}.`;
+          } else if (parsed.voltage !== null && parsed.voltage > 0 && parsed.voltage < 11.8) {
+            alarmTitle = "⚠️ Alerta: Bateria Fraca!";
+            alarmBody = `A voltagem da bateria baixou para ${parsed.voltage.toFixed(1)}V no ${vData.nome || "seu veículo"}.`;
+          }
+
+          if (alarmTitle) {
+            // Enviar notificação (fora do await da transação para não atrasar a escrita)
+            // No entanto, como queremos ser robustos, usamos await aqui se não for crítico
+            console.log(`[Torque] Disparando alerta: ${alarmTitle}`);
+            sendNotificationToUser(vData.userId, alarmTitle, alarmBody, {
+              veiculoId: vDoc.id,
+              type: "alarm",
+              url: `/veiculo.html?id=${vDoc.id}`
+            }).catch(e => console.error("[FCM Alarm Error]", e));
+
+            updates.lastAlarmAt = receivedAt;
+          }
+        }
+
         // --- Lógica de Odómetro Robusta ---
         if (
           parsed.odometer !== null &&

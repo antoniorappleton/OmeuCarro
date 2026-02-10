@@ -1,5 +1,6 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
+const { sendNotificationToUser } = require("./notify_utils");
 const db = admin.firestore();
 
 /**
@@ -138,6 +139,37 @@ exports.processOBDReading = onDocumentCreated(
       };
 
       await tripRef.doc(tripId).set(newTripData, { merge: true });
+
+      // --- Notificação de Fim de Viagem Anterior ---
+      // Se estamos a começar uma NOVA viagem, vamos ver se a ANTERIOR precisa de um resumo
+      try {
+        const lastTrips = await tripRef
+          .orderBy("dataFim", "desc")
+          .limit(2) // A primeira é a que acabámos de criar
+          .get();
+
+        if (lastTrips.size > 1) {
+          const prevTripDoc = lastTrips.docs[1];
+          const prevTrip = prevTripDoc.data();
+
+          if (!prevTrip.notified && prevTrip.distancia > 0.1) {
+            const userIdTrip = (await db.collection("veiculos").doc(vehicleId).get()).data()?.userId;
+            const dist = prevTrip.distancia.toFixed(1);
+            const cons = prevTrip.consumoMedio ? prevTrip.consumoMedio.toFixed(1) : "--";
+            
+            await sendNotificationToUser(
+              userIdTrip,
+              "🏁 Viagem Concluída",
+              `Percorreu ${dist} km com média de ${cons} L/100.`,
+              { url: "/veiculos.html", tripId: prevTripDoc.id }
+            );
+
+            await prevTripDoc.ref.update({ notified: true });
+          }
+        }
+      } catch (e) {
+        console.error("[TripDetector] Erro ao enviar resumo de viagem:", e);
+      }
       console.log(`[TripDetector] Viagem ${tripId} processada (Merge Mode).`);
 
       // Sync to Vehicle Profile
