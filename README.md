@@ -122,9 +122,11 @@ Mostra métricas em **tempo real** (atualiza a cada 5 segundos):
 
 - **RPM** - Rotações do motor
 - **Velocidade** - km/h
-- **Temperatura Motor** - °C
+- **Temperatura Motor** - °C (com alertas se > 105°C)
 - **Carga Motor** - %
-- **Bateria** - Volts
+- **Bateria** - Volts (com alerta se < 11.8V)
+- **Pressão do Turbo** - bar/psi
+- **Gasto na Viagem** - Litros
 - **MAF** - Mass Air Flow (g/s)
 - **Binário** - Nm
 - **Potência** - HP
@@ -491,7 +493,6 @@ curl -X POST "https://deepcleanuptrips-5jojqy2jpa-uc.a.run.app?vehicleId=SEU_VEH
 - [ ] Gráficos de consumo ao longo do tempo
 - [ ] Exportar dados para CSV/PDF
 - [ ] Comparação de viagens
-- [ ] Alertas de condução (RPM alto, temperatura alta, etc.)
 - [ ] Suporte para múltiplos utilizadores por veículo
 
 ---
@@ -518,5 +519,5 @@ MIT License - ver [LICENSE](LICENSE)
 
 ---
 
-**Versão:** 1.0.0  
-**Última Atualização:** 10/02/2026
+**Versão:** 1.0.1  
+**Última Atualização:** 10/02/2026 (Manual e Alertas Push)
