@@ -98,6 +98,12 @@ service cloud.firestore {
          allow read, write: if request.auth != null && 
             get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
       }
+
+      // Allow access to Diagnostics (Mode $06)
+      match /diagnosticos/{diagId} {
+         allow read, write: if request.auth != null && 
+            get(/databases/$(database)/documents/veiculos/$(veiculoId)).data.userId == request.auth.uid;
+      }
     }
 
   }

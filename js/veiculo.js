@@ -3101,6 +3101,7 @@ function setupDiagnostics(veiculoId) {
           .collection("diagnosticos")
           .add({
             ...report,
+            userId: auth.currentUser.uid, // Explicitly save userId for rules/consistency
             importedAt: firebase.firestore.FieldValue.serverTimestamp(),
             rawText: text,
           });
