@@ -1327,7 +1327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.plate.textContent = v.matricula || "Sem matrícula";
     const fuelType = v.combustivelPadrao || "—";
     const fuelLevel = v.nivelCombustivel;
-    
+
     if (fuelLevel !== undefined && fuelLevel !== null && fuelLevel > 0) {
       el.fuel.textContent = `${fuelType} (${Math.round(fuelLevel)}%)`;
     } else {
@@ -2574,15 +2574,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const boost = reading.boost;
             if (liveElements.boost)
-              liveElements.boost.textContent = boost !== undefined && boost !== null
-                ? Number(boost).toFixed(1)
-                : "--";
+              liveElements.boost.textContent =
+                boost !== undefined && boost !== null
+                  ? Number(boost).toFixed(1)
+                  : "--";
 
             const fuelUsed = reading.fuelUsed;
             if (liveElements.fuelUsed)
-              liveElements.fuelUsed.textContent = fuelUsed !== undefined && fuelUsed !== null
-                ? Number(fuelUsed).toFixed(1)
-                : "--";
+              liveElements.fuelUsed.textContent =
+                fuelUsed !== undefined && fuelUsed !== null
+                  ? Number(fuelUsed).toFixed(1)
+                  : "--";
 
             // Timestamp
             if (liveElements.lastUpdate && data.timestamp) {
@@ -3125,8 +3127,8 @@ function parseTorqueMode06(text) {
   const vinLine = lines.find((l) => l.startsWith("VIN"));
   const vin = vinLine ? vinLine.split(":")[1]?.trim() : null;
 
-  // Split by separator
-  const blocks = text.split("-".repeat(4)); // "----"
+  // Split by separator (handle 4 or more dashes)
+  const blocks = text.split(/-{4,}/);
 
   for (const block of blocks) {
     const blines = block
