@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const el = {
     name: document.getElementById("vehicle-name"),
     subtitle: document.getElementById("vehicle-subtitle"),
+
+    // Unsubscribe handle for realtime listener
+    vehicleUnsubscribe: null,
     plate: document.getElementById("vehicle-plate"),
     fuel: document.getElementById("vehicle-fuel"),
     odo: document.getElementById("vehicle-odometer"),
@@ -1451,7 +1454,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setupVehicleListener(veiculoId);
 
     function setupVehicleListener(veiculoId) {
-      db.collection("veiculos")
+      if (typeof el.vehicleUnsubscribe === "function") {
+        el.vehicleUnsubscribe(); // Clean up old listener if exists
+      }
+      el.vehicleUnsubscribe = db
+        .collection("veiculos")
         .doc(veiculoId)
         .onSnapshot((doc) => {
           if (!doc.exists) return;
@@ -1711,7 +1718,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       btnObd.addEventListener("click", () => {
         modalObd.classList.remove("hidden");
-        loadLastTrip(veiculoId); // RESTORED
+        loadTripsHistory(veiculoId); // Load History by default
       });
 
       if (btnCloseObd) {
@@ -1739,9 +1746,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Load Data
           if (target === "historico") loadTripsHistory(veiculoId);
-          if (target === "ultima") loadLastTrip(veiculoId); // RESTORED
+          if (target === "ultima") loadLastTrip(veiculoId);
+          if (target === "diagnosticos") loadDiagnostics(veiculoId);
         });
       });
+
+      // Setup Diagnostics Logic
+      setupDiagnostics(veiculoId);
 
       // --- BACKFILL TRIGGER ---
       const btnScan = document.getElementById("btn-scan-trip");
@@ -1779,6 +1790,314 @@ document.addEventListener("DOMContentLoaded", () => {
             btnScan.textContent = originalText;
           }
         };
+      }
+
+      // --- TORQUE CSV/ZIP IMPORT ---
+      const btnImportCsv = document.getElementById("btn-import-torque-csv");
+      const csvInput = document.getElementById("torque-csv-input");
+
+      // Manual Trip Button (Placeholder)
+      const btnAddManual = document.getElementById("btn-add-trip-manual");
+      if (btnAddManual) {
+        btnAddManual.addEventListener("click", () => {
+          alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
+        });
+      }
+
+      if (btnImportCsv && csvInput) {
+        btnImportCsv.addEventListener("click", () => csvInput.click());
+
+        csvInput.addEventListener("change", async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          // Modal Progresso
+          const progressModal = document.getElementById(
+            "upload-progress-modal",
+          );
+          const progressBar = document.getElementById("upload-progress-bar");
+          const progressText = document.getElementById("upload-progress-text");
+
+          if (progressModal) {
+            progressModal.classList.remove("hidden");
+            if (progressBar) progressBar.style.width = "5%";
+            if (progressText) progressText.textContent = "A ler ficheiro...";
+          }
+
+          // Unsubscribe from real-time listener to avoid spam/freeze during heavy batch writes
+          if (
+            el.vehicleUnsubscribe &&
+            typeof el.vehicleUnsubscribe === "function"
+          ) {
+            console.log("[Import] Pausing real-time listener...");
+            el.vehicleUnsubscribe();
+            el.vehicleUnsubscribe = null;
+          }
+
+          try {
+            let csvText = "";
+
+            // 1. Handle ZIP or CSV
+            if (file.name.toLowerCase().endsWith(".zip")) {
+              if (typeof JSZip === "undefined") {
+                throw new Error("JSZip não carregado. Recarrega a página.");
+              }
+              const zip = await JSZip.loadAsync(file);
+              const csvFile = Object.values(zip.files).find(
+                (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+              );
+              if (!csvFile) {
+                throw new Error(
+                  "Nenhum ficheiro CSV encontrado dentro do ZIP.",
+                );
+              }
+              csvText = await csvFile.async("string");
+              console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
+            } else {
+              csvText = await file.text();
+            }
+
+            // 2. Parse CSV
+            const lines = csvText.trim().split("\n");
+            if (lines.length < 2) {
+              throw new Error("CSV vazio ou sem dados.");
+            }
+
+            const headers = lines[0].split(",").map((h) => h.trim());
+            console.log(`[Import] Headers: ${headers.length} colunas`);
+
+            // Portuguese month mapping
+            const ptMonths = {
+              "jan.": "Jan",
+              "fev.": "Feb",
+              "mar.": "Mar",
+              "abr.": "Apr",
+              "mai.": "May",
+              "jun.": "Jun",
+              "jul.": "Jul",
+              "ago.": "Aug",
+              "set.": "Sep",
+              "out.": "Oct",
+              "nov.": "Nov",
+              "dez.": "Dec",
+            };
+
+            // Fuzzy header finder
+            const findHeader = (part) =>
+              headers.find((h) => h.toLowerCase().includes(part.toLowerCase()));
+
+            // Locate key columns
+            const dateCol = findHeader("Device Time") || headers[1]; // fallback
+            const speedCol = findHeader("Speed (OBD)");
+            const rpmCol = findHeader("RPM");
+            const odoCol = findHeader("Odometer");
+            const fuelCol = findHeader("Fuel Level");
+            const coolantCol = findHeader("Coolant");
+            const loadCol = findHeader("Engine Load");
+            const latCol = findHeader("Latitude") || "Latitude";
+            const lonCol = findHeader("Longitude") || "Longitude";
+            const mafCol = findHeader("Mass air flow");
+            const voltageCol = findHeader("Voltage");
+            const torqueCol = findHeader("Torque(Nm)") || findHeader("Torque");
+            const hpCol = findHeader("Horsepower");
+            const tripDistCol = findHeader("Trip Distance");
+            const tripL100Col = findHeader("Trip average");
+            const intakeCol = findHeader("Intake Air");
+            const fuelRemCol = findHeader("Fuel Remaining");
+
+            // 3. Map rows to readings
+            const readings = [];
+            let skipped = 0;
+
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line || line.startsWith("---")) continue;
+
+              const values = line.split(",");
+              const row = {};
+              headers.forEach((h, idx) => {
+                row[h] = values[idx] || null;
+              });
+
+              // Parse date
+              let dateStr = row[dateCol];
+              if (!dateStr || dateStr === "-") {
+                skipped++;
+                continue;
+              }
+
+              // Replace Portuguese months
+              for (const [pt, en] of Object.entries(ptMonths)) {
+                if (dateStr.toLowerCase().includes(pt)) {
+                  dateStr = dateStr.toLowerCase().replace(pt, en);
+                  break;
+                }
+              }
+
+              const timestamp = new Date(dateStr).getTime();
+              if (isNaN(timestamp)) {
+                skipped++;
+                continue;
+              }
+
+              // Parse numeric value helper
+              const getNum = (col) => {
+                if (!col) return null;
+                const val = row[col];
+                if (!val || val === "-") return null;
+                const n = parseFloat(String(val).replace(",", "."));
+                return isNaN(n) ? null : n;
+              };
+
+              const lat = getNum(latCol);
+              const lon = getNum(lonCol);
+
+              const parsed = {
+                speed: getNum(speedCol),
+                rpm: getNum(rpmCol),
+                odometer: getNum(odoCol),
+                fuelLevel: getNum(fuelCol),
+                coolant: getNum(coolantCol),
+                engineLoad: getNum(loadCol),
+                intake: getNum(intakeCol),
+                maf: getNum(mafCol),
+                voltage: getNum(voltageCol),
+                torqueNm: getNum(torqueCol),
+                hpWheels: getNum(hpCol),
+                tripDistance: getNum(tripDistCol),
+                tripL100: getNum(tripL100Col),
+                fuelRemainingPct: getNum(fuelRemCol),
+                location: null,
+              };
+
+              if (lat && lon && (lat !== 0 || lon !== 0)) {
+                parsed.location = new firebase.firestore.GeoPoint(lat, lon);
+              }
+
+              readings.push({
+                vehicleId: veiculoId,
+                timestamp,
+                receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
+                sessionId:
+                  "csv_import_" + new Date().toISOString().split("T")[0],
+                deviceId: "csv_import",
+                email: "csv@import",
+                imported: true, // Flag to skip Cloud Function
+                raw: { ...row },
+                parsed,
+              });
+            }
+
+            if (readings.length === 0) {
+              throw new Error(
+                `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
+              );
+            }
+
+            console.log(
+              `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
+            );
+
+            if (progressText)
+              progressText.textContent = `A preparar ${readings.length} registos...`;
+            if (progressBar) progressBar.style.width = "20%";
+
+            // 4. Calculate Trips (Client-Side)
+            // Sort first to ensure order
+            readings.sort((a, b) => a.timestamp - b.timestamp);
+
+            const tripsToCreate = calculateTripsFromReadings(readings);
+            console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
+
+            // 5. Batch write to Firestore (Readings + Trips)
+            const collRef = db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("leiturasObd");
+
+            // Write Trips first
+            const tripsRef = db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("viagens");
+
+            if (tripsToCreate.length > 0) {
+              const tripBatch = db.batch();
+              tripsToCreate.forEach((trip) => {
+                tripBatch.set(tripsRef.doc(), trip);
+              });
+              await tripBatch.commit();
+              console.log("[Import] Trips saved.");
+            }
+
+            const BATCH_SIZE = 450;
+            let written = 0;
+            const total = readings.length;
+
+            for (let i = 0; i < total; i += BATCH_SIZE) {
+              const chunk = readings.slice(i, i + BATCH_SIZE);
+              const batch = db.batch();
+
+              for (const r of chunk) {
+                batch.set(collRef.doc(), r);
+              }
+
+              await batch.commit();
+              written += chunk.length;
+
+              // Update progress
+              const pct = Math.round(20 + (written / total) * 70);
+              if (progressBar) progressBar.style.width = `${pct}%`;
+              if (progressText)
+                progressText.textContent = `A enviar ${written}/${total}...`;
+            }
+
+            // 5. Update vehicle state with latest reading
+            readings.sort((a, b) => b.timestamp - a.timestamp);
+            const latest = readings[0];
+
+            if (latest && latest.parsed) {
+              const vehicleUpdate = {
+                lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+              };
+
+              if (latest.parsed.odometer && latest.parsed.odometer > 0) {
+                vehicleUpdate.odometroAtual = latest.parsed.odometer;
+              }
+              if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
+                vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
+              }
+
+              await db
+                .collection("veiculos")
+                .doc(veiculoId)
+                .update(vehicleUpdate);
+            }
+
+            // 6. Success!
+            alert(
+              `✅ Importação concluída!\n${written} registos importados com sucesso.`,
+            );
+
+            // Close Modals & Go to History
+            if (progressModal) progressModal.classList.add("hidden");
+            const btnHistory = document.querySelector(
+              '.tab-btn[data-tab="historico"]',
+            );
+            if (btnHistory) btnHistory.click(); // Switches tab and reloads history
+
+            // Reload trip data
+            loadLastTrip(veiculoId);
+            loadTripsHistory(veiculoId);
+          } catch (err) {
+            console.error("[Import] Error:", err);
+            alert(`❌ Erro na importação:\n${err.message}`);
+          } finally {
+            btnImportCsv.disabled = false;
+            btnImportCsv.textContent = originalText;
+            csvInput.value = ""; // Reset file input
+          }
+        });
       }
 
       // --- DATA LOADING ---
@@ -1846,7 +2165,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const elTemp = document.getElementById("last-trip-temp");
 
         if (elRpm)
-          elRpm.textContent = (trip.metricas?.rpmMedio || "--") + " rpm";
+          elRpm.textContent =
+            (trip.metricas?.rpmMedio
+              ? Number(trip.metricas.rpmMedio).toFixed(1)
+              : "--") + " rpm";
         if (elTemp)
           elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
 
@@ -1855,6 +2177,221 @@ document.addEventListener("DOMContentLoaded", () => {
         const elCost = document.getElementById("last-trip-cost");
         if (elCost)
           elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
+
+        // --- CHARTS HANDLER ---
+        const btnCharts = document.getElementById("btn-load-charts");
+        const chartsContainer = document.getElementById(
+          "trip-charts-container",
+        );
+
+        if (btnCharts && chartsContainer) {
+          // Reset UI
+          btnCharts.classList.remove("hidden");
+          btnCharts.disabled = false;
+          btnCharts.textContent = "Ver Gráficos Detalhados";
+          chartsContainer.classList.add("hidden");
+
+          // Remove old listener (clone node trick)
+          const newBtn = btnCharts.cloneNode(true);
+          btnCharts.parentNode.replaceChild(newBtn, btnCharts);
+
+          newBtn.addEventListener("click", () => {
+            loadTripCharts(trip, newBtn, chartsContainer);
+          });
+        }
+      }
+
+      async function loadTripCharts(trip, btn, container) {
+        if (!trip.dataInicio || !trip.dataFim) {
+          alert("Erro: Viagem sem datas definidas.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "A carregar dados...";
+
+        try {
+          // Parse dates (Firestore Timestamp or Date string)
+          const start = trip.dataInicio.toDate
+            ? trip.dataInicio.toDate()
+            : new Date(trip.dataInicio);
+          const end = trip.dataFim.toDate
+            ? trip.dataFim.toDate()
+            : new Date(trip.dataFim);
+
+          // Get readings
+          const snapshot = await db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("leiturasObd")
+            .where("timestamp", ">=", start.getTime())
+            .where("timestamp", "<=", end.getTime())
+            .orderBy("timestamp", "asc")
+            .limit(2000) // Safety limit
+            .get();
+
+          if (snapshot.empty) {
+            alert("Não existem dados detalhados para esta viagem.");
+            btn.textContent = "Sem dados";
+            return;
+          }
+
+          const readings = snapshot.docs.map((doc) => doc.data());
+          console.log(`[Charts] Loaded ${readings.length} readings`);
+
+          renderTripCharts(readings);
+
+          // Show charts, hide button
+          container.classList.remove("hidden");
+          btn.classList.add("hidden");
+        } catch (error) {
+          console.error("Error loading charts:", error);
+          alert("Erro ao carregar gráficos: " + error.message);
+          btn.textContent = "Erro";
+          btn.disabled = false;
+        }
+      }
+
+      let chartSpeedRpm = null;
+      let chartFuel = null;
+
+      function renderTripCharts(readings) {
+        // Prepara Data
+        const labels = readings.map((r) => {
+          const d = new Date(r.timestamp);
+          return d.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        });
+
+        const speedData = readings.map((r) => r.parsed?.speed || 0);
+        const rpmData = readings.map((r) => r.parsed?.rpm || 0);
+        const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
+
+        // --- UPDATE SUMMARY CARDS ---
+        const maxSpeed = Math.max(...speedData);
+        const maxRpm = Math.max(...rpmData);
+
+        const elMaxSpeed = document.getElementById("trip-max-speed");
+        const elMaxRpm = document.getElementById("trip-max-rpm");
+
+        if (elMaxSpeed)
+          elMaxSpeed.textContent = isFinite(maxSpeed)
+            ? Math.round(maxSpeed)
+            : "--";
+        if (elMaxRpm)
+          elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
+
+        // --- Chart 1: Speed & RPM ---
+        const ctxSpeed = document
+          .getElementById("chart-trip-speed-rpm")
+          .getContext("2d");
+
+        // Gradient for Speed
+        const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+        gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
+        gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
+        // Gradient for RPM
+        const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+        gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
+        gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
+
+        if (chartSpeedRpm) chartSpeedRpm.destroy();
+
+        chartSpeedRpm = new Chart(ctxSpeed, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Velocidade (km/h)",
+                data: speedData,
+                borderColor: "#3b82f6", // blue-500
+                backgroundColor: gradSpeed,
+                yAxisID: "y",
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 2,
+                fill: true,
+              },
+              {
+                label: "RPM",
+                data: rpmData,
+                borderColor: "#ef4444", // red-500
+                backgroundColor: gradRpm,
+                yAxisID: "y1",
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 2,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "top" },
+              tooltip: { enabled: true },
+            },
+            scales: {
+              x: { display: false }, // Hide X labels if too many
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: { display: true, text: "km/h" },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: "RPM" },
+              },
+            },
+          },
+        });
+
+        // --- Chart 2: Fuel ---
+        const ctxFuel = document
+          .getElementById("chart-trip-fuel")
+          .getContext("2d");
+
+        if (chartFuel) chartFuel.destroy();
+
+        // Filter nulls for smoother line if gaps
+        // But chart.js handles nulls as gaps usually.
+
+        chartFuel = new Chart(ctxFuel, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Nível Combustível (%)",
+                data: fuelData,
+                borderColor: "#10b981", // green-500
+                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { display: false },
+              y: { min: 0, max: 100 },
+            },
+          },
+        });
       }
 
       async function loadTripsHistory(vid) {
@@ -2400,3 +2937,319 @@ document.addEventListener("DOMContentLoaded", () => {
     // -----------------------------------------------------------------
   });
 });
+
+// --- HELPERS FOR IMPORT ---
+function calculateTripsFromReadings(readings) {
+  if (!readings || !readings.length) return [];
+  const trips = [];
+  let currentBatch = [readings[0]];
+
+  for (let i = 1; i < readings.length; i++) {
+    const prev = readings[i - 1];
+    const curr = readings[i];
+    // Gap > 15 min = New Trip
+    if (curr.timestamp - prev.timestamp > 15 * 60 * 1000) {
+      const t = processTripBatch(currentBatch);
+      if (t) trips.push(t);
+      currentBatch = [];
+    }
+    currentBatch.push(curr);
+  }
+  if (currentBatch.length > 0) {
+    const t = processTripBatch(currentBatch);
+    if (t) trips.push(t);
+  }
+  return trips;
+}
+
+function processTripBatch(batch) {
+  if (!batch || !batch.length) return null;
+  const start = batch[0];
+  const end = batch[batch.length - 1];
+  const durationMin = (end.timestamp - start.timestamp) / 1000 / 60;
+
+  // Filter noise (trips < 1 min or 0 distance?)
+  if (durationMin < 1 && batch.length < 10) return null;
+
+  let maxSpeed = 0,
+    maxRpm = 0,
+    maxTemp = 0;
+  let sumSpeed = 0,
+    sumRpm = 0;
+  let dist = 0;
+
+  for (let i = 0; i < batch.length; i++) {
+    const p = batch[i].parsed || {};
+    const s = Number(p.speed) || 0;
+    const r = Number(p.rpm) || 0;
+    const t = Number(p.temp);
+
+    if (s > maxSpeed) maxSpeed = s;
+    if (r > maxRpm) maxRpm = r;
+    if (!isNaN(t) && t > maxTemp) maxTemp = t;
+
+    sumSpeed += s;
+    sumRpm += r;
+
+    // Calc dist (trapezoidal approx or simple rect)
+    if (i > 0) {
+      const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
+      if (dt > 0 && dt < 300) {
+        const v = s / 3.6; // m/s
+        dist += v * dt;
+      }
+    }
+  }
+
+  // Odometer fallback
+  if (start.parsed?.odometer && end.parsed?.odometer) {
+    const d = end.parsed.odometer - start.parsed.odometer;
+    if (d > 0 && d < 2000) dist = d * 1000;
+  }
+
+  return {
+    dataInicio: firebase.firestore.Timestamp.fromMillis(start.timestamp),
+    dataFim: firebase.firestore.Timestamp.fromMillis(end.timestamp),
+    distancia: Number((dist / 1000).toFixed(2)),
+    duracao: Number(durationMin.toFixed(1)),
+    velocidadeMedia: Number(
+      (batch.length ? sumSpeed / batch.length : 0).toFixed(1),
+    ),
+    consumoMedio: 0,
+    custoEstimado: 0,
+    metricas: {
+      rpmMedio: batch.length ? Math.round(sumRpm / batch.length) : 0,
+      velocidadeMax: Number(maxSpeed.toFixed(1)),
+      temperaturaMax: maxTemp,
+    },
+    source: "import_csv",
+    importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+}
+
+// --- DIAGNOSTICS (MODE $06) ---
+function setupDiagnostics(veiculoId) {
+  const btnAdd = document.getElementById("btn-add-diagnostic");
+  const modal = document.getElementById("diagnostics-upload-modal");
+  const btnClose = document.getElementById("btn-close-diag-upload");
+  const btnCancel = document.getElementById("btn-cancel-diag");
+  const btnSave = document.getElementById("btn-save-diag");
+  const input = document.getElementById("diag-input-text");
+
+  if (!btnAdd || !modal) return;
+
+  const close = () => {
+    modal.classList.add("hidden");
+    if (input) input.value = "";
+  };
+
+  btnAdd.onclick = () => {
+    modal.classList.remove("hidden");
+    if (input) input.focus();
+  };
+
+  if (btnClose) btnClose.onclick = close;
+  if (btnCancel) btnCancel.onclick = close;
+
+  if (btnSave) {
+    btnSave.onclick = async () => {
+      const text = input.value;
+      if (!text.trim()) {
+        alert("Cola o texto do relatório primeiro.");
+        return;
+      }
+
+      btnSave.disabled = true;
+      btnSave.textContent = "A processar...";
+
+      try {
+        const report = parseTorqueMode06(text);
+        if (report.tests.length === 0) {
+          throw new Error("Não foi possível detetar testes válidos no texto.");
+        }
+
+        await db
+          .collection("veiculos")
+          .doc(veiculoId)
+          .collection("diagnosticos")
+          .add({
+            ...report,
+            importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            rawText: text,
+          });
+
+        alert("Relatório guardado com sucesso!");
+        close();
+        loadDiagnostics(veiculoId); // Refresh list
+      } catch (e) {
+        console.error(e);
+        alert("Erro ao processar: " + e.message);
+      } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = "Processar e Guardar";
+      }
+    };
+  }
+}
+
+function parseTorqueMode06(text) {
+  const lines = text.split("\n").map((l) => l.trim());
+  const tests = [];
+
+  // Header Info
+  const vinLine = lines.find((l) => l.startsWith("VIN"));
+  const vin = vinLine ? vinLine.split(":")[1]?.trim() : null;
+
+  // Split by separator
+  const blocks = text.split("-".repeat(4)); // "----"
+
+  for (const block of blocks) {
+    const blines = block
+      .trim()
+      .split("\n")
+      .map((l) => l.trim());
+    if (blines.length < 3) continue;
+
+    const midLine = blines.find((l) => l.startsWith("MID:"));
+    if (!midLine) continue;
+
+    // Extract MID/TID
+    // MID:$31 TID:$82
+    const midMatch = midLine.match(/MID:(\$[\da-fA-F]+)/);
+    const tidMatch = midLine.match(/TID:(\$[\da-fA-F]+)/);
+
+    // Extract Name (Line after MID?)
+    const nameIndex = blines.indexOf(midLine) + 1;
+    const component = blines[nameIndex];
+
+    // Extract Result
+    // PASS or FAIL
+    const status =
+      blines.find((l) => l === "PASS" || l === "FAIL") || "UNKNOWN";
+
+    // Extract Values
+    // Max: 2   Min: 0,9
+    // Test result value: 1
+    const limitsLine = blines.find((l) => l.startsWith("Max:"));
+    const valLine = blines.find((l) => l.startsWith("Test result value:"));
+
+    let max = null,
+      min = null,
+      val = null;
+    if (limitsLine) {
+      // Simple match, assuming format "Max: X   Min: Y"
+      const parts = limitsLine.split("Min:");
+      if (parts.length > 0) max = parts[0].replace("Max:", "").trim();
+      if (parts.length > 1) min = parts[1].trim();
+    }
+    if (valLine) {
+      val = valLine.replace("Test result value:", "").trim();
+    }
+
+    tests.push({
+      mid: midMatch ? midMatch[1] : "",
+      tid: tidMatch ? tidMatch[1] : "",
+      component: component || "",
+      value: val,
+      min,
+      max,
+      status,
+    });
+  }
+
+  return {
+    vin,
+    timestamp: Date.now(),
+    tests,
+    summary: {
+      total: tests.length,
+      passed: tests.filter((t) => t.status === "PASS").length,
+      failed: tests.filter((t) => t.status === "FAIL").length,
+    },
+  };
+}
+
+async function loadDiagnostics(veiculoId) {
+  const container = document.getElementById("diagnostics-list");
+  if (!container) return;
+
+  container.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const snap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("diagnosticos")
+      .orderBy("importedAt", "desc")
+      .limit(20)
+      .get();
+
+    if (snap.empty) {
+      container.innerHTML =
+        '<div class="vehicles-empty"><p>Nenhum relatório de diagnóstico encontrado.</p></div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    snap.forEach((doc) => {
+      const data = doc.data();
+      const date = data.importedAt
+        ? data.importedAt.toDate().toLocaleString()
+        : "Data desconhecida";
+      const failCount = data.summary?.failed || 0;
+      const contextClass = failCount > 0 ? "status-error" : "status-success";
+      const statusText =
+        failCount > 0
+          ? `${failCount} Falhas detetadas`
+          : "Todos os testes passaram";
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.cursor = "pointer";
+      card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div class="muted" style="font-size:0.8rem;">${date}</div>
+                        <div style="font-weight:600;">${statusText}</div>
+                        <div style="font-size:0.85rem;" class="muted">${data.tests?.length || 0} testes executados</div>
+                    </div>
+                    <div class="status-indicator-dot ${contextClass}" style="width:12px; height:12px;"></div>
+                </div>
+                <div class="diag-details hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-light);">
+                    <table style="width:100%; font-size:0.8rem; border-collapse: collapse;">
+                        <thead>
+                            <tr class="muted" style="text-align:left;">
+                                <th>Componente</th>
+                                <th>Valor</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(data.tests || [])
+                              .map(
+                                (t) => `
+                                <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : ""}">
+                                    <td style="padding:4px 0;">${t.component}</td>
+                                    <td style="padding:4px 0;">${t.value}</td>
+                                    <td style="padding:4px 0;">${t.status}</td>
+                                </tr>
+                            `,
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+      card.onclick = () => {
+        const det = card.querySelector(".diag-details");
+        det.classList.toggle("hidden");
+      };
+
+      container.appendChild(card);
+    });
+  } catch (e) {
+    console.error(e);
+    container.innerHTML = `<div class="error-box">Erro ao carregar diagnósticos: ${e.message}</div>`;
+  }
+}

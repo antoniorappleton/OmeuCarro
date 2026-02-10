@@ -4,8 +4,9 @@
 
 // Aumenta a versão sempre que fizeres deploy
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v19";
-const RUNTIME_CACHE = "l100-runtime-v19";
+// Aumenta a versão sempre que fizeres deploy
+const STATIC_CACHE = "l100-static-v20";
+const RUNTIME_CACHE = "l100-runtime-v20";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -37,6 +38,7 @@ const APP_SHELL = [
   "./js/service-worker-register.js",
   "./images/logo-icon192.png",
   "./images/logo-icon512.png",
+  "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
 ];
 
 // ===============================
@@ -73,7 +75,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v19");
+  console.log("[SW] Activate v20");
 
   event.waitUntil(
     caches.keys().then((names) =>

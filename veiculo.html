@@ -7,7 +7,11 @@
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/home.css" />
+    <link rel="stylesheet" href="css/home.css" />
     <script src="js/theme.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Firebase v9 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -22,8 +26,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
     <script defer src="js/notifications.js"></script>
     <script defer src="js/utils.js?v=22"></script>
+    <!-- JSZip for Torque CSV/ZIP import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=24"></script>
+    <script defer src="js/veiculo.js?v=32"></script>
   </head>
 
   <body class="app-page" data-page="vehicle-detail">
@@ -872,7 +878,7 @@
         >
           <button
             class="tab-btn active"
-            data-tab="ultima"
+            data-tab="historico"
             style="
               padding-bottom: 12px;
               border-bottom: 2px solid var(--color-primary-start);
@@ -881,45 +887,41 @@
               background: transparent;
             "
           >
-            Última
-          </button>
-          <button
-            class="tab-btn"
-            data-tab="historico"
-            style="
-              padding-bottom: 12px;
-              border-bottom: 2px solid transparent;
-              color: var(--color-text-muted);
-              background: transparent;
-            "
-          >
             Histórico
           </button>
           <button
             class="tab-btn"
-            data-tab="live"
+            data-tab="ultima"
             style="
               padding-bottom: 12px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
-              display: flex;
-              align-items: center;
-              gap: 6px;
             "
           >
-            <span
-              class="status-indicator-dot pulse"
-              style="width: 6px; height: 6px"
-            ></span>
-            Ao Vivo
+            Última Viagem
+          </button>
+          <button
+            class="tab-btn"
+            data-tab="diagnosticos"
+            style="
+              padding-bottom: 12px;
+              border-bottom: 2px solid transparent;
+              color: var(--color-text-muted);
+              background: transparent;
+            "
+          >
+            Diagnósticos Mode $06
           </button>
         </nav>
 
+        <!-- MODAL PROGRESSO UPLOAD REMOVED FROM HERE -->
+
+    <!-- MODAL ADICIONAR REGISTO (Existente) -->
         <!-- MODAL BODY (Scrollable) -->
         <div class="modal-body" style="padding: 24px; overflow-y: auto">
           <!-- TAB 1: ÚLTIMA VIAGEM -->
-          <div id="tab-ultima" class="tab-panel active">
+          <div id="tab-ultima" class="tab-panel hidden">
             <!-- Empty State for Last Trip -->
             <div
               id="last-trip-empty"
@@ -1110,13 +1112,72 @@
 
               <!-- SECONDARY DETAILS -->
               <div
-                class="trip-details-list"
                 style="
-                  background: var(--bg-hover);
-                  border-radius: 12px;
                   padding: 16px;
                 "
               >
+                <div class="trip-detail-item">
+                  <span class="muted">RPM Médio</span>
+                  <span id="last-trip-rpm" class="fw-bold">--</span>
+                </div>
+                <div class="trip-detail-item">
+                  <span class="muted">Temp. Max</span>
+                  <span id="last-trip-temp" class="fw-bold">--</span>
+                </div>
+                <!-- Add Cost breakdown if available -->
+                <div class="trip-detail-item">
+                  <span class="muted">Custo Estimado</span>
+                  <span id="last-trip-cost" class="fw-bold text-primary">--</span>
+                </div>
+              </div>
+
+              <!-- CHARTS SECTION (NEW) -->
+              <div
+                class="charts-section"
+                style="margin-top: 20px; text-align: center"
+              >
+                <button id="btn-load-charts" class="btn btn-secondary btn-sm">
+                  <svg class="icon icon-left">
+                    <use href="assets/icons-unified.svg#icon-trend-up"></use>
+                  </svg>
+                  Ver Gráficos Detalhados
+                </button>
+
+                <div id="trip-charts-container" class="hidden" style="margin-top: 20px">
+                  
+                  <!-- SUMMARY CARDS (NEW) -->
+                  <div class="summary-cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div class="card-mini" style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+                       <div class="muted" style="font-size: 0.75rem;">Vel. Máx</div>
+                       <div id="trip-max-speed" style="font-size: 1.2rem; font-weight: 700; color: #3b82f6;">--</div>
+                       <div style="font-size: 0.75rem;">km/h</div>
+                    </div>
+                    <div class="card-mini" style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+                       <div class="muted" style="font-size: 0.75rem;">RPM Máx</div>
+                       <div id="trip-max-rpm" style="font-size: 1.2rem; font-weight: 700; color: #ef4444;">--</div>
+                       <div style="font-size: 0.75rem;">rpm</div>
+                    </div>
+                  </div>
+
+                  <!-- Speed & RPM -->
+                  <div class="chart-card" style="background: var(--bg-hover); padding: 10px; border-radius: 12px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; text-align: left;">Velocidade & RPM</h4>
+                    <div style="height: 200px;">
+                      <canvas id="chart-trip-speed-rpm"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Fuel & Alt -->
+                  <div class="chart-card" style="background: var(--bg-hover); padding: 10px; border-radius: 12px;">
+                     <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; text-align: left;">Combustível (%)</h4>
+                     <div style="height: 150px;">
+                        <canvas id="chart-trip-fuel"></canvas>
+                     </div>
+                  </div>
+
+                </div>
+              </div>
+              </div>
                 <div
                   class="detail-row"
                   style="
@@ -1157,20 +1218,28 @@
           </div>
 
           <!-- TAB 2: HISTÓRICO -->
-          <div id="tab-historico" class="tab-panel hidden">
+          <div id="tab-historico" class="tab-panel active">
             <div
               style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 12px;
+                gap: 8px;
               "
             >
-              <button id="btn-add-trip-manual" class="btn btn-secondary btn-xs">
+              <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
                 <svg class="icon">
                   <use href="assets/icons-unified.svg#icon-plus"></use>
                 </svg>
                 Manual
               </button>
+              <button id="btn-import-torque-csv" class="btn btn-primary btn-sm">
+                <svg class="icon">
+                  <use href="assets/icons-unified.svg#icon-file-text"></use>
+                </svg>
+                Importar CSV
+              </button>
+              <input type="file" id="torque-csv-input" accept=".zip,.csv" style="display:none" />
             </div>
 
             <div
@@ -1342,6 +1411,24 @@
                 </div>
               </div>
             </div>
+          </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: DIAGNÓSTICOS (NEW) -->
+          <div id="tab-diagnosticos" class="tab-panel hidden">
+             <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
+                   <svg class="icon"><use href="assets/icons-unified.svg#icon-plus"></use></svg>
+                   Novo Relatório
+                </button>
+             </div>
+             
+             <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="vehicles-empty">
+                   <p>Nenhum relatório de diagnóstico encontrado.</p>
+                </div>
+             </div>
           </div>
         </div>
         <!-- End Modal Body -->
@@ -1712,6 +1799,75 @@
           antonioappleton
         </div>
       </div>
+      </div>
     </div>
-body>
+
+    <!-- MODAL PROGRESSO UPLOAD (Novo - Moved to end) -->
+    <div id="upload-progress-modal" class="modal hidden" style="z-index: 10000; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+      <div class="modal-overlay"></div>
+      <div
+        class="modal-content"
+        style="
+          position: relative;
+          z-index: 2;
+          background: var(--bg-card);
+          padding: 2rem;
+          border-radius: 16px;
+          text-align: center;
+          max-width: 300px;
+          margin: 20vh auto;
+        "
+      >
+        <div class="spinner" style="margin: 0 auto 1rem auto"></div>
+        <h3 id="upload-progress-title" style="margin-bottom: 0.5rem">
+          A processar...
+        </h3>
+        <p
+          id="upload-progress-text"
+          class="muted"
+          style="font-size: 0.9rem; margin-bottom: 1rem"
+        >
+          A ler ficheiro...
+        </p>
+        <div
+          class="progress-bar-container"
+          style="
+            background: var(--bg-hover);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+          "
+        >
+          <div
+            id="upload-progress-bar"
+            style="
+              width: 0%;
+              height: 100%;
+              background: var(--color-primary-start);
+              transition: width 0.3s ease;
+            "
+          ></div>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL IMPORT DIAGNOSTICS (NEW) -->
+    <div id="diagnostics-upload-modal" class="modal hidden" style="z-index: 10001">
+      <div class="modal-overlay"></div>
+      <div class="modal-content" style="max-width: 600px; width: 90%;">
+        <div class="modal-header" style="justify-content: space-between; display: flex; align-items: center; margin-bottom: 15px;">
+           <h3 style="margin: 0;">Importar Relatório Mode $06</h3>
+           <button id="btn-close-diag-upload" class="icon-btn-xs" style="background:transparent; border:none;"><svg class="icon"><use href="assets/icons-unified.svg#icon-close"></use></svg></button>
+        </div>
+        <div class="modal-body">
+           <p class="muted" style="margin-bottom: 10px; font-size: 0.9rem;">Cola aqui o texto do relatório gerado pelo Torque (ou partilha do telemóvel).</p>
+           <textarea id="diag-input-text" style="width: 100%; height: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-light); font-family: monospace; font-size: 0.85rem; background: var(--bg-input); color: var(--color-text-main);" placeholder="Modo $06 - relatório generado por Torque..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding-top: 15px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+           <button id="btn-cancel-diag" class="btn btn-secondary">Cancelar</button>
+           <button id="btn-save-diag" class="btn btn-primary">Processar e Guardar</button>
+        </div>
+      </div>
+    </div>
+
+  </body>
 </html>

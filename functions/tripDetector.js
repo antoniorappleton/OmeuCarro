@@ -18,6 +18,10 @@ exports.processOBDReading = onDocumentCreated(
     }
     const vehicleId = event.params.vehicleId;
     const reading = snap.data();
+
+    // Skip bulk imports (handled by client)
+    if (reading.imported) return;
+
     const parsed = reading.parsed || {};
     console.log(
       `[TripDetector] Extracted keys: ${Object.keys(parsed).join(", ")}`,
