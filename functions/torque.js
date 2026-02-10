@@ -298,6 +298,7 @@ exports.uploadTorqueData = onRequest(
           !isNaN(parsed.odometer) &&
           parsed.odometer > 0
         ) {
+          // --- Opção A: Odómetro Absoluto (ECU) ---
           const currentOdo = vData.odometroAtual || 0;
           const diff = parsed.odometer - currentOdo;
 
@@ -327,11 +328,9 @@ exports.uploadTorqueData = onRequest(
               const lastMs = vData.lastObdUpdate.toDate().getTime();
               const minutesDiff = (nowMs - lastMs) / 60000;
 
-              // Só valida se passou tempo relevante (> 6 segs / 0.1 min) E distância relevante (> 5km)
               if (minutesDiff > 0.1 && diff > 5) {
-                const impliedSpeed = (diff / minutesDiff) * 60; // km/h
+                const impliedSpeed = (diff / minutesDiff) * 60;
                 if (impliedSpeed > 500) {
-                  // Tolerância 500 km/h (glitches de GPS/ecu)
                   console.warn(
                     `[Torque] Salto temporal impossível: ${diff}km em ${minutesDiff.toFixed(1)}min (${impliedSpeed.toFixed(0)}km/h)`,
                   );
@@ -339,40 +338,42 @@ exports.uploadTorqueData = onRequest(
                 }
               }
             }
-          } else {
-            // Ignorar silenciosamente ou warn se diminuiu
-            // console.warn(...) se quisermos debug
-            isValidOdo = false;
           }
 
           if (isValidOdo) {
             updates.odometroAtual = parsed.odometer;
+            console.log(`[Torque] Odo Absoluto (ECU): ${parsed.odometer}`);
           }
         } else if (
           parsed.tripDistance !== null &&
           parsed.tripDistance > 0 &&
-          vData.odometroAtual > 0
+          vData.odometroAtual > 0 &&
+          safeParams.session // SEGURANÇA: Só incremental se houver sessão
         ) {
-          // --- Odometer Fallback (Incremental) ---
+          // --- Opção B: Odómetro Incremental (Trip Distance) ---
           const lastTripDist = vData.lastTripDistance || 0;
-          const currentSessionId = safeParams.session || null;
+          const currentSessionId = safeParams.session;
           const lastSessionId = vData.lastSessionId || null;
 
-          // Detect session change or Torque trip reset
-          if (
-            currentSessionId !== lastSessionId ||
-            parsed.tripDistance < lastTripDist
-          ) {
-            // New session or manual reset: just sync the baseline
+          if (currentSessionId !== lastSessionId) {
+            // Mudança de sessão: apenas sincronizamos o baseline
+            console.log(`[Torque] Nova Sessão (${currentSessionId}). Baseline: ${parsed.tripDistance}km`);
             updates.lastTripDistance = parsed.tripDistance;
             updates.lastSessionId = currentSessionId;
           } else {
-            // Same session: add delta to current odometer
-            const delta = parsed.tripDistance - lastTripDist;
-            if (delta > 0 && delta < 50) {
-              // Safety: limit delta per reading
-              updates.odometroAtual = vData.odometroAtual + delta;
+            // Mesma sessão: calcular delta
+            if (parsed.tripDistance < lastTripDist) {
+              // Torque resetou a viagem no meio da sessão? Apenas sincronizamos o novo valor.
+              console.warn(`[Torque] Reset de Trip inesperado na sessão ${currentSessionId}: ${lastTripDist} -> ${parsed.tripDistance}`);
               updates.lastTripDistance = parsed.tripDistance;
+            } else {
+              const delta = parsed.tripDistance - lastTripDist;
+              // Segurança: delta razoável por leitura (5 segundos = max 0.5km @ 360km/h)
+              if (delta > 0 && delta < 5) {
+                updates.odometroAtual = vData.odometroAtual + delta;
+                updates.lastTripDistance = parsed.tripDistance;
+                // console.log(`[Torque] Odo Incremental: +${delta.toFixed(3)}km -> ${updates.odometroAtual.toFixed(1)}`);
+              }
             }
           }
         }
