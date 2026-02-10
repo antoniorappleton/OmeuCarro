@@ -1312,23 +1312,36 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ Bind crítico cedo (mesmo se o resto falhar, o botão funciona)
-    renderVehicleHealth(veiculoId);
-    setupTorqueIntegration(veiculoId);
-    setupUnifiedImport(veiculoId);
+    let settings = null;
+    let v = null;
 
     try {
+      // ✅ Render health (sibling function, already in scope)
+      renderVehicleHealth(veiculoId);
+
+      // ✅ Setup UI (Definitions hoisted to init level)
+      try {
+        setupTorqueIntegration(veiculoId);
+        setupUnifiedImport(veiculoId);
+      } catch (e) {
+        console.error("[INIT] Erro ao ligar botões:", e);
+      }
+
       // Obter settings do utilizador
-      const settings = await getUserSettings();
+      settings = await getUserSettings();
 
       // VEÍCULO
       const veiculos = await getVeiculosDoUtilizador();
-      const v = veiculos.find((x) => x.id === veiculoId);
+      v = veiculos.find((x) => x.id === veiculoId);
 
       if (!v) {
         showMessage("Veículo não encontrado.", "error");
         return;
       }
+
+      // NEW: Floating Metrics Setup & Data dependent calls
+      setupFloatingMetrics(veiculoId);
+      updateFloatingMetrics(veiculoId, v, settings);
 
       el.name.textContent = v.nome;
       el.subtitle.textContent = `${v.marca} ${v.modelo}`;
@@ -1504,1009 +1517,994 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           });
       }
-
-      // NEW: Floating Metrics Setup
-      setupFloatingMetrics(veiculoId);
-      // Calc metrics (async but don't block)
       updateFloatingMetrics(veiculoId, v, settings);
+    } catch (err) {
+      console.error("[INIT] Erro fatal no carregamento:", err);
+    }
 
-      // =========================
-      // FLOATING METRICS LOGIC
-      // =========================
-      function setupFloatingMetrics(veiculoId) {
-        const pairs = [
-          {
-            btnId: "btn-float-toggle",
-            cardId: "floating-metrics-card",
-            closeId: "btn-close-float",
-          },
-          {
-            btnId: "btn-float-analytics",
-            cardId: "section-analytics",
-            closeId: "btn-close-analytics",
-          },
-          {
-            btnId: "btn-float-alerts",
-            cardId: "section-alerts",
-            closeId: "btn-close-alerts",
-          },
-        ];
+    // =========================
+    // FLOATING METRICS LOGIC
+    // =========================
+    function setupFloatingMetrics(veiculoId) {
+      const pairs = [
+        {
+          btnId: "btn-float-toggle",
+          cardId: "floating-metrics-card",
+          closeId: "btn-close-float",
+        },
+        {
+          btnId: "btn-float-analytics",
+          cardId: "section-analytics",
+          closeId: "btn-close-analytics",
+        },
+        {
+          btnId: "btn-float-alerts",
+          cardId: "section-alerts",
+          closeId: "btn-close-alerts",
+        },
+      ];
 
-        pairs.forEach((p) => {
-          const btn = document.getElementById(p.btnId);
-          const card = document.getElementById(p.cardId);
-          const close = document.getElementById(p.closeId);
+      pairs.forEach((p) => {
+        const btn = document.getElementById(p.btnId);
+        const card = document.getElementById(p.cardId);
+        const close = document.getElementById(p.closeId);
 
-          if (!btn || !card) return;
+        if (!btn || !card) return;
 
-          btn.addEventListener("click", () => {
-            // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
-            // Usually exclusive is cleaner for popups on same side.
-            pairs.forEach((other) => {
-              if (other !== p) {
-                const c = document.getElementById(other.cardId);
-                if (c) c.classList.add("hidden");
-              }
-            });
-            card.classList.toggle("hidden");
-          });
-
-          if (close) {
-            close.addEventListener("click", () => {
-              card.classList.add("hidden");
-            });
-          }
-        });
-      }
-
-      async function updateFloatingMetrics(veiculoId, v, settings) {
-        const elCostKm = document.getElementById("float-cost-km");
-        const elTotalCost = document.getElementById("float-total-cost");
-        const elTotalKm = document.getElementById("float-total-km");
-
-        // Elements for the Analytics Card (Popup)
-        const elAnL100 = document.getElementById("an-l100");
-        const elAnRange = document.getElementById("an-range-km");
-        const elAnRangeDays = document.getElementById("an-range-days");
-        const elAnConf = document.getElementById("an-confidence");
-
-        try {
-          // 1. Fetch all data (parallel for speed)
-          // We also fetch the latest OBD reading for fallback!
-          const [abs, reps, obdSnap] = await Promise.all([
-            getAbastecimentosDoVeiculo(veiculoId, 1000),
-            getReparacoesDoVeiculo(veiculoId),
-            db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("leiturasObd")
-              .orderBy("timestamp", "desc")
-              .limit(1)
-              .get(),
-          ]);
-
-          // 2. Centralized Calculation (Cost & Consumption)
-          const costMetrics = window.Analytics.calculateCostMetrics(
-            v,
-            abs,
-            reps,
-          );
-          const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
-
-          // 3. Update Floating Summary (Cost)
-          if (elTotalCost)
-            elTotalCost.textContent = formatCurrency(
-              costMetrics.totalSpent,
-              settings?.moeda || "EUR",
-            );
-          if (elTotalKm)
-            elTotalKm.textContent = formatDistance(costMetrics.totalDist);
-          if (elCostKm) {
-            if (costMetrics.costPerKm > 0) {
-              elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
-            } else {
-              elCostKm.textContent = "—";
+        btn.addEventListener("click", () => {
+          // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
+          // Usually exclusive is cleaner for popups on same side.
+          pairs.forEach((other) => {
+            if (other !== p) {
+              const c = document.getElementById(other.cardId);
+              if (c) c.classList.add("hidden");
             }
+          });
+          card.classList.toggle("hidden");
+        });
+
+        if (close) {
+          close.addEventListener("click", () => {
+            card.classList.add("hidden");
+          });
+        }
+      });
+    }
+
+    async function updateFloatingMetrics(veiculoId, v, settings) {
+      const elCostKm = document.getElementById("float-cost-km");
+      const elTotalCost = document.getElementById("float-total-cost");
+      const elTotalKm = document.getElementById("float-total-km");
+
+      // Elements for the Analytics Card (Popup)
+      const elAnL100 = document.getElementById("an-l100");
+      const elAnRange = document.getElementById("an-range-km");
+      const elAnRangeDays = document.getElementById("an-range-days");
+      const elAnConf = document.getElementById("an-confidence");
+
+      try {
+        // 1. Fetch all data (parallel for speed)
+        // We also fetch the latest OBD reading for fallback!
+        const [abs, reps, obdSnap] = await Promise.all([
+          getAbastecimentosDoVeiculo(veiculoId, 1000),
+          getReparacoesDoVeiculo(veiculoId),
+          db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("leiturasObd")
+            .orderBy("timestamp", "desc")
+            .limit(1)
+            .get(),
+        ]);
+
+        // 2. Centralized Calculation (Cost & Consumption)
+        const costMetrics = window.Analytics.calculateCostMetrics(v, abs, reps);
+        const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
+
+        // 3. Update Floating Summary (Cost)
+        if (elTotalCost)
+          elTotalCost.textContent = formatCurrency(
+            costMetrics.totalSpent,
+            settings?.moeda || "EUR",
+          );
+        if (elTotalKm)
+          elTotalKm.textContent = formatDistance(costMetrics.totalDist);
+        if (elCostKm) {
+          if (costMetrics.costPerKm > 0) {
+            elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+          } else {
+            elCostKm.textContent = "—";
           }
+        }
 
-          // 4. Update Analytics Card (Consumption & Range)
-          let l100 = fuelMetrics.consumoMedioL100;
-          let range = fuelMetrics.kmAteReservaEstimado;
-          let days = fuelMetrics.diasAteReservaEstimado;
-          let source = "manual";
+        // 4. Update Analytics Card (Consumption & Range)
+        let l100 = fuelMetrics.consumoMedioL100;
+        let range = fuelMetrics.kmAteReservaEstimado;
+        let days = fuelMetrics.diasAteReservaEstimado;
+        let source = "manual";
 
-          // EXPLICIT OBD OVERRIDE (From Torque L100 Long Term)
-          if (v.consumoMedioObd && v.consumoMedioObd > 0) {
-            l100 = v.consumoMedioObd;
-            source = "obd_stored";
+        // EXPLICIT OBD OVERRIDE (From Torque L100 Long Term)
+        if (v.consumoMedioObd && v.consumoMedioObd > 0) {
+          l100 = v.consumoMedioObd;
+          source = "obd_stored";
 
-            // Recalculate Range based on this new consumption
+          // Recalculate Range based on this new consumption
+          const capacity = v.capacidadeDepositoLitros || 0;
+          // We need current fuel level.
+          // If we have manual logs, fuelMetrics has estimates.
+          // However, if we rely on OBD L100, we should probably stick to OBD Fuel Level if available?
+          // Let's stick to the hybrid approach:
+          // If we have a fuel level from OBD (in v.nivelCombustivel), use it.
+
+          const fuelLevelPct = v.nivelCombustivel || 0; // Stored from Torque
+          if (capacity > 0 && fuelLevelPct > 0) {
+            const litersLeft = (fuelLevelPct / 100) * capacity;
+            range = (litersLeft / l100) * 100;
+          }
+        }
+
+        // Helper simple para fuzzy match (igual ao tripDetector)
+        const findKey = (obj, ...parts) => {
+          const keys = Object.keys(obj || {});
+          for (const k of keys) {
+            const lower = k.toLowerCase();
+            if (parts.every((p) => lower.includes(p.toLowerCase())))
+              return obj[k];
+          }
+          return null;
+        };
+
+        // FALLBACK: If standard analytics failed AND no stored OBD, try Live OBD Snap
+        if (
+          (!l100 || l100 === 0) &&
+          !obdSnap.empty &&
+          source !== "obd_stored"
+        ) {
+          const obdData = obdSnap.docs[0].data();
+          const parsed = obdData.parsed || {};
+
+          console.log("OBD Keys Available:", Object.keys(parsed));
+
+          // Try "Long Term Average" or "Trip Average" using fuzzy search
+          // Prioridade: Média da Viagem > Média Longo Prazo
+          const tripAvg = findKey(parsed, "Trip average", "l/100");
+          const longTermAvg = findKey(parsed, "Long Term Average", "l/100");
+
+          const obdL100 = Number(tripAvg || longTermAvg || 0);
+
+          if (obdL100 > 0) {
+            l100 = obdL100;
+            source = "obd";
+
+            // Estimate Range using OBD consumption + Fuel Level
+            // Fuel Level também pode vir com nomes estranhos
+            const fuelLevelVal =
+              findKey(parsed, "Fuel Level", "%") ||
+              findKey(parsed, "Fuel", "%");
+            const fuelLevel = Number(fuelLevelVal || 0); // %
+
             const capacity = v.capacidadeDepositoLitros || 0;
-            // We need current fuel level.
-            // If we have manual logs, fuelMetrics has estimates.
-            // However, if we rely on OBD L100, we should probably stick to OBD Fuel Level if available?
-            // Let's stick to the hybrid approach:
-            // If we have a fuel level from OBD (in v.nivelCombustivel), use it.
-
-            const fuelLevelPct = v.nivelCombustivel || 0; // Stored from Torque
-            if (capacity > 0 && fuelLevelPct > 0) {
-              const litersLeft = (fuelLevelPct / 100) * capacity;
+            if (capacity > 0 && fuelLevel > 0) {
+              const litersLeft = (fuelLevel / 100) * capacity;
               range = (litersLeft / l100) * 100;
             }
           }
-
-          // Helper simple para fuzzy match (igual ao tripDetector)
-          const findKey = (obj, ...parts) => {
-            const keys = Object.keys(obj || {});
-            for (const k of keys) {
-              const lower = k.toLowerCase();
-              if (parts.every((p) => lower.includes(p.toLowerCase())))
-                return obj[k];
-            }
-            return null;
-          };
-
-          // FALLBACK: If standard analytics failed AND no stored OBD, try Live OBD Snap
-          if (
-            (!l100 || l100 === 0) &&
-            !obdSnap.empty &&
-            source !== "obd_stored"
-          ) {
-            const obdData = obdSnap.docs[0].data();
-            const parsed = obdData.parsed || {};
-
-            console.log("OBD Keys Available:", Object.keys(parsed));
-
-            // Try "Long Term Average" or "Trip Average" using fuzzy search
-            // Prioridade: Média da Viagem > Média Longo Prazo
-            const tripAvg = findKey(parsed, "Trip average", "l/100");
-            const longTermAvg = findKey(parsed, "Long Term Average", "l/100");
-
-            const obdL100 = Number(tripAvg || longTermAvg || 0);
-
-            if (obdL100 > 0) {
-              l100 = obdL100;
-              source = "obd";
-
-              // Estimate Range using OBD consumption + Fuel Level
-              // Fuel Level também pode vir com nomes estranhos
-              const fuelLevelVal =
-                findKey(parsed, "Fuel Level", "%") ||
-                findKey(parsed, "Fuel", "%");
-              const fuelLevel = Number(fuelLevelVal || 0); // %
-
-              const capacity = v.capacidadeDepositoLitros || 0;
-              if (capacity > 0 && fuelLevel > 0) {
-                const litersLeft = (fuelLevel / 100) * capacity;
-                range = (litersLeft / l100) * 100;
-              }
-            }
-          }
-
-          if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
-          if (elAnRange)
-            elAnRange.textContent = range
-              ? Math.round(range).toLocaleString()
-              : "--";
-          if (elAnRangeDays)
-            elAnRangeDays.textContent = days
-              ? `${days} dias`
-              : source === "obd"
-                ? "Est. via OBD"
-                : "--";
-
-          if (elAnConf) {
-            if (source === "obd") {
-              elAnConf.textContent = "Fonte: Torque Pro (OBD)";
-              elAnConf.className = "status-blue";
-            } else if (l100) {
-              elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
-              elAnConf.className = "status-neutral";
-            } else {
-              elAnConf.textContent = "Sem dados suficientes";
-            }
-          }
-
-          // Unhide Analytics Button if we have something to show
-          const btnAnalytics = document.getElementById("btn-float-analytics");
-          if (btnAnalytics) {
-            if (costMetrics.totalSpent > 0 || l100 > 0 || source === "obd") {
-              btnAnalytics.classList.remove("hidden");
-            }
-          }
-
-          // Force OBD Button Visibility (Users want to see it even without data)
-          const btnObd = document.getElementById("btn-float-obd");
-          if (btnObd) btnObd.classList.remove("hidden");
-        } catch (e) {
-          console.error("Error calculating floating metrics", e);
         }
+
+        if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
+        if (elAnRange)
+          elAnRange.textContent = range
+            ? Math.round(range).toLocaleString()
+            : "--";
+        if (elAnRangeDays)
+          elAnRangeDays.textContent = days
+            ? `${days} dias`
+            : source === "obd"
+              ? "Est. via OBD"
+              : "--";
+
+        if (elAnConf) {
+          if (source === "obd") {
+            elAnConf.textContent = "Fonte: Torque Pro (OBD)";
+            elAnConf.className = "status-blue";
+          } else if (l100) {
+            elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
+            elAnConf.className = "status-neutral";
+          } else {
+            elAnConf.textContent = "Sem dados suficientes";
+          }
+        }
+
+        // Unhide Analytics Button if we have something to show
+        const btnAnalytics = document.getElementById("btn-float-analytics");
+        if (btnAnalytics) {
+          if (costMetrics.totalSpent > 0 || l100 > 0 || source === "obd") {
+            btnAnalytics.classList.remove("hidden");
+          }
+        }
+
+        // Force OBD Button Visibility (Users want to see it even without data)
+        const btnObd = document.getElementById("btn-float-obd");
+        if (btnObd) btnObd.classList.remove("hidden");
+      } catch (e) {
+        console.error("Error calculating floating metrics", e);
+      }
+    }
+
+    function setupTorqueIntegration(veiculoId) {
+      const btnObd = document.getElementById("btn-float-obd");
+      const modalObd = document.getElementById("obd-modal");
+      const btnCloseObd = document.getElementById("btn-close-obd");
+
+      // Modal & Tab Logic
+      if (!modalObd) return;
+
+      const openObd = (tab = "historico") => {
+        modalObd.classList.remove("hidden");
+        // Trigger tab click if needed
+        const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
+        if (tabBtn) tabBtn.click();
+        else {
+          loadTripsHistory(veiculoId); // Fallback
+        }
+      };
+
+      if (btnObd) {
+        btnObd.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openObd("historico");
+        };
       }
 
-      function setupTorqueIntegration(veiculoId) {
-        const btnObd = document.getElementById("btn-float-obd");
-        const modalObd = document.getElementById("obd-modal");
-        const btnCloseObd = document.getElementById("btn-close-obd");
+      // Bind KPI Card
+      const kpiHealth = document.getElementById("kpi-health-status");
+      if (kpiHealth) {
+        kpiHealth.style.cursor = "pointer";
+        kpiHealth.onclick = () => openObd("diagnosticos");
+      }
 
-        // Modal & Tab Logic
-        if (!modalObd) return;
-
-        const openObd = (tab = "historico") => {
-          modalObd.classList.remove("hidden");
-          // Trigger tab click if needed
-          const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
-          if (tabBtn) tabBtn.click();
-          else {
-            loadTripsHistory(veiculoId); // Fallback
-          }
-        };
-
-        if (btnObd) {
-          btnObd.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openObd("historico");
-          };
-        }
-
-        // Bind KPI Card
-        const kpiHealth = document.getElementById("kpi-health-status");
-        if (kpiHealth) {
-          kpiHealth.style.cursor = "pointer";
-          kpiHealth.onclick = () => openObd("diagnosticos");
-        }
-
-        if (btnCloseObd) {
-          btnCloseObd.addEventListener("click", () =>
-            modalObd.classList.add("hidden"),
-          );
-          modalObd.addEventListener("click", (e) => {
-            if (e.target === modalObd) modalObd.classList.add("hidden");
-          });
-        }
-
-        // Tabs
-        const tabBtns = modalObd.querySelectorAll(".tab-btn");
-        const tabPanels = modalObd.querySelectorAll(".tab-panel");
-
-        tabBtns.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const target = btn.dataset.tab;
-
-            // Update UI
-            tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
-            tabPanels.forEach((p) =>
-              p.classList.toggle("hidden", p.id !== `tab-${target}`),
-            );
-
-            // Load Data
-            if (target === "historico") loadTripsHistory(veiculoId);
-            if (target === "ultima") loadLastTrip(veiculoId);
-            if (target === "diagnosticos") loadDiagnostics(veiculoId);
-          });
+      if (btnCloseObd) {
+        btnCloseObd.addEventListener("click", () =>
+          modalObd.classList.add("hidden"),
+        );
+        modalObd.addEventListener("click", (e) => {
+          if (e.target === modalObd) modalObd.classList.add("hidden");
         });
+      }
 
-        // Setup Diagnostics Logic
-        setupDiagnostics(veiculoId);
+      // Tabs
+      const tabBtns = modalObd.querySelectorAll(".tab-btn");
+      const tabPanels = modalObd.querySelectorAll(".tab-panel");
 
-        // --- BACKFILL TRIGGER ---
-        const btnScan = document.getElementById("btn-scan-trip");
-        if (btnScan) {
-          btnScan.onclick = async () => {
-            if (
-              !confirm(
-                "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
-              )
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.dataset.tab;
+
+          // Update UI
+          tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
+          tabPanels.forEach((p) =>
+            p.classList.toggle("hidden", p.id !== `tab-${target}`),
+          );
+
+          // Load Data
+          if (target === "historico") loadTripsHistory(veiculoId);
+          if (target === "ultima") loadLastTrip(veiculoId);
+          if (target === "diagnosticos") loadDiagnostics(veiculoId);
+        });
+      });
+
+      // Setup Diagnostics Logic
+      setupDiagnostics(veiculoId);
+
+      // --- BACKFILL TRIGGER ---
+      const btnScan = document.getElementById("btn-scan-trip");
+      if (btnScan) {
+        btnScan.onclick = async () => {
+          if (
+            !confirm(
+              "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
             )
-              return;
+          )
+            return;
 
-            btnScan.disabled = true;
-            const originalText = btnScan.textContent;
-            btnScan.textContent = "A processar...";
-
-            try {
-              const res = await fetch(
-                `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
-              );
-              if (!res.ok) throw new Error("Falha no pedido");
-
-              const data = await res.json();
-              if (data.success) {
-                alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
-                loadLastTrip(veiculoId); // Reload UI
-              } else {
-                alert("Não foram encontradas novas viagens.");
-              }
-            } catch (e) {
-              console.error(e);
-              alert("Erro ao processar histórico.");
-            } finally {
-              btnScan.disabled = false;
-              btnScan.textContent = originalText;
-            }
-          };
-        }
-
-        // --- TORQUE CSV/ZIP IMPORT ---
-        const btnImportCsv = document.getElementById("btn-import-torque-csv");
-        const csvInput = document.getElementById("torque-csv-input");
-
-        // Manual Trip Button (Placeholder)
-        const btnAddManual = document.getElementById("btn-add-trip-manual");
-        if (btnAddManual) {
-          btnAddManual.addEventListener("click", () => {
-            alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
-          });
-        }
-
-        if (btnImportCsv && csvInput) {
-          btnImportCsv.addEventListener("click", () => csvInput.click());
-
-          csvInput.addEventListener("change", async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Modal Progresso
-            const progressModal = document.getElementById(
-              "upload-progress-modal",
-            );
-            const progressBar = document.getElementById("upload-progress-bar");
-            const progressText = document.getElementById(
-              "upload-progress-text",
-            );
-
-            if (progressModal) {
-              progressModal.classList.remove("hidden");
-              if (progressBar) progressBar.style.width = "5%";
-              if (progressText) progressText.textContent = "A ler ficheiro...";
-            }
-
-            // Unsubscribe from real-time listener to avoid spam/freeze during heavy batch writes
-            if (
-              el.vehicleUnsubscribe &&
-              typeof el.vehicleUnsubscribe === "function"
-            ) {
-              console.log("[Import] Pausing real-time listener...");
-              el.vehicleUnsubscribe();
-              el.vehicleUnsubscribe = null;
-            }
-
-            try {
-              let csvText = "";
-
-              // 1. Handle ZIP or CSV
-              if (file.name.toLowerCase().endsWith(".zip")) {
-                if (typeof JSZip === "undefined") {
-                  throw new Error("JSZip não carregado. Recarrega a página.");
-                }
-                const zip = await JSZip.loadAsync(file);
-                const csvFile = Object.values(zip.files).find(
-                  (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
-                );
-                if (!csvFile) {
-                  throw new Error(
-                    "Nenhum ficheiro CSV encontrado dentro do ZIP.",
-                  );
-                }
-                csvText = await csvFile.async("string");
-                console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
-              } else {
-                csvText = await file.text();
-              }
-
-              // 2. Parse CSV
-              const lines = csvText.trim().split("\n");
-              if (lines.length < 2) {
-                throw new Error("CSV vazio ou sem dados.");
-              }
-
-              const headers = lines[0].split(",").map((h) => h.trim());
-              console.log(`[Import] Headers: ${headers.length} colunas`);
-
-              // Portuguese month mapping
-              const ptMonths = {
-                "jan.": "Jan",
-                "fev.": "Feb",
-                "mar.": "Mar",
-                "abr.": "Apr",
-                "mai.": "May",
-                "jun.": "Jun",
-                "jul.": "Jul",
-                "ago.": "Aug",
-                "set.": "Sep",
-                "out.": "Oct",
-                "nov.": "Nov",
-                "dez.": "Dec",
-              };
-
-              // Fuzzy header finder
-              const findHeader = (part) =>
-                headers.find((h) =>
-                  h.toLowerCase().includes(part.toLowerCase()),
-                );
-
-              // Locate key columns
-              const dateCol = findHeader("Device Time") || headers[1]; // fallback
-              const speedCol = findHeader("Speed (OBD)");
-              const rpmCol = findHeader("RPM");
-              const odoCol = findHeader("Odometer");
-              const fuelCol = findHeader("Fuel Level");
-              const coolantCol = findHeader("Coolant");
-              const loadCol = findHeader("Engine Load");
-              const latCol = findHeader("Latitude") || "Latitude";
-              const lonCol = findHeader("Longitude") || "Longitude";
-              const mafCol = findHeader("Mass air flow");
-              const voltageCol = findHeader("Voltage");
-              const torqueCol =
-                findHeader("Torque(Nm)") || findHeader("Torque");
-              const hpCol = findHeader("Horsepower");
-              const tripDistCol = findHeader("Trip Distance");
-              const tripL100Col = findHeader("Trip average");
-              const intakeCol = findHeader("Intake Air");
-              const fuelRemCol = findHeader("Fuel Remaining");
-
-              // 3. Map rows to readings
-              const readings = [];
-              let skipped = 0;
-
-              for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line || line.startsWith("---")) continue;
-
-                const values = line.split(",");
-                const row = {};
-                headers.forEach((h, idx) => {
-                  row[h] = values[idx] || null;
-                });
-
-                // Parse date
-                let dateStr = row[dateCol];
-                if (!dateStr || dateStr === "-") {
-                  skipped++;
-                  continue;
-                }
-
-                // Replace Portuguese months
-                for (const [pt, en] of Object.entries(ptMonths)) {
-                  if (dateStr.toLowerCase().includes(pt)) {
-                    dateStr = dateStr.toLowerCase().replace(pt, en);
-                    break;
-                  }
-                }
-
-                const timestamp = new Date(dateStr).getTime();
-                if (isNaN(timestamp)) {
-                  skipped++;
-                  continue;
-                }
-
-                // Parse numeric value helper
-                const getNum = (col) => {
-                  if (!col) return null;
-                  const val = row[col];
-                  if (!val || val === "-") return null;
-                  const n = parseFloat(String(val).replace(",", "."));
-                  return isNaN(n) ? null : n;
-                };
-
-                const lat = getNum(latCol);
-                const lon = getNum(lonCol);
-
-                const parsed = {
-                  speed: getNum(speedCol),
-                  rpm: getNum(rpmCol),
-                  odometer: getNum(odoCol),
-                  fuelLevel: getNum(fuelCol),
-                  coolant: getNum(coolantCol),
-                  engineLoad: getNum(loadCol),
-                  intake: getNum(intakeCol),
-                  maf: getNum(mafCol),
-                  voltage: getNum(voltageCol),
-                  torqueNm: getNum(torqueCol),
-                  hpWheels: getNum(hpCol),
-                  tripDistance: getNum(tripDistCol),
-                  tripL100: getNum(tripL100Col),
-                  fuelRemainingPct: getNum(fuelRemCol),
-                  location: null,
-                };
-
-                if (lat && lon && (lat !== 0 || lon !== 0)) {
-                  parsed.location = new firebase.firestore.GeoPoint(lat, lon);
-                }
-
-                readings.push({
-                  vehicleId: veiculoId,
-                  timestamp,
-                  receivedAt:
-                    firebase.firestore.Timestamp.fromMillis(timestamp),
-                  sessionId:
-                    "csv_import_" + new Date().toISOString().split("T")[0],
-                  deviceId: "csv_import",
-                  email: "csv@import",
-                  imported: true, // Flag to skip Cloud Function
-                  raw: { ...row },
-                  parsed,
-                });
-              }
-
-              if (readings.length === 0) {
-                throw new Error(
-                  `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
-                );
-              }
-
-              console.log(
-                `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
-              );
-
-              if (progressText)
-                progressText.textContent = `A preparar ${readings.length} registos...`;
-              if (progressBar) progressBar.style.width = "20%";
-
-              // 4. Calculate Trips (Client-Side)
-              // Sort first to ensure order
-              readings.sort((a, b) => a.timestamp - b.timestamp);
-
-              const tripsToCreate = calculateTripsFromReadings(readings);
-              console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
-
-              // 5. Batch write to Firestore (Readings + Trips)
-              const collRef = db
-                .collection("veiculos")
-                .doc(veiculoId)
-                .collection("leiturasObd");
-
-              // Write Trips first
-              const tripsRef = db
-                .collection("veiculos")
-                .doc(veiculoId)
-                .collection("viagens");
-
-              if (tripsToCreate.length > 0) {
-                const tripBatch = db.batch();
-                tripsToCreate.forEach((trip) => {
-                  tripBatch.set(tripsRef.doc(), trip);
-                });
-                await tripBatch.commit();
-                console.log("[Import] Trips saved.");
-              }
-
-              const BATCH_SIZE = 450;
-              let written = 0;
-              const total = readings.length;
-
-              for (let i = 0; i < total; i += BATCH_SIZE) {
-                const chunk = readings.slice(i, i + BATCH_SIZE);
-                const batch = db.batch();
-
-                for (const r of chunk) {
-                  batch.set(collRef.doc(), r);
-                }
-
-                await batch.commit();
-                written += chunk.length;
-
-                // Update progress
-                const pct = Math.round(20 + (written / total) * 70);
-                if (progressBar) progressBar.style.width = `${pct}%`;
-                if (progressText)
-                  progressText.textContent = `A enviar ${written}/${total}...`;
-              }
-
-              // 5. Update vehicle state with latest reading
-              readings.sort((a, b) => b.timestamp - a.timestamp);
-              const latest = readings[0];
-
-              if (latest && latest.parsed) {
-                const vehicleUpdate = {
-                  lastObdUpdate:
-                    firebase.firestore.FieldValue.serverTimestamp(),
-                };
-
-                if (latest.parsed.odometer && latest.parsed.odometer > 0) {
-                  vehicleUpdate.odometroAtual = latest.parsed.odometer;
-                }
-                if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
-                  vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
-                }
-
-                await db
-                  .collection("veiculos")
-                  .doc(veiculoId)
-                  .update(vehicleUpdate);
-              }
-
-              // 6. Success!
-              alert(
-                `✅ Importação concluída!\n${written} registos importados com sucesso.`,
-              );
-
-              // Close Modals & Go to History
-              if (progressModal) progressModal.classList.add("hidden");
-              const btnHistory = document.querySelector(
-                '.tab-btn[data-tab="historico"]',
-              );
-              if (btnHistory) btnHistory.click(); // Switches tab and reloads history
-
-              // Reload trip data
-              loadLastTrip(veiculoId);
-              loadTripsHistory(veiculoId);
-            } catch (err) {
-              console.error("[Import] Error:", err);
-              alert(`❌ Erro na importação:\n${err.message}`);
-            } finally {
-              btnImportCsv.disabled = false;
-              btnImportCsv.textContent = originalText;
-              csvInput.value = ""; // Reset file input
-            }
-          });
-        }
-
-        // --- DATA LOADING ---
-
-        async function loadLastTrip(vid) {
-          const empty = document.getElementById("last-trip-empty");
-          const content = document.getElementById("last-trip-content");
+          btnScan.disabled = true;
+          const originalText = btnScan.textContent;
+          btnScan.textContent = "A processar...";
 
           try {
-            const snap = await db
-              .collection("veiculos")
-              .doc(vid)
-              .collection("viagens")
-              .orderBy("dataFim", "desc")
-              .limit(1)
-              .get();
+            const res = await fetch(
+              `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
+            );
+            if (!res.ok) throw new Error("Falha no pedido");
 
-            if (snap.empty) {
-              if (empty) empty.classList.remove("hidden");
-              if (content) content.classList.add("hidden");
-              return;
+            const data = await res.json();
+            if (data.success) {
+              alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
+              loadLastTrip(veiculoId); // Reload UI
+            } else {
+              alert("Não foram encontradas novas viagens.");
             }
-
-            if (empty) empty.classList.add("hidden");
-            if (content) content.classList.remove("hidden");
-
-            const trip = snap.docs[0].data();
-            renderTripDetails(trip);
           } catch (e) {
-            console.error("Error loading last trip:", e);
+            console.error(e);
+            alert("Erro ao processar histórico.");
+          } finally {
+            btnScan.disabled = false;
+            btnScan.textContent = originalText;
           }
-        }
+        };
+      }
 
-        function renderTripDetails(trip) {
-          // Dates
-          const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
-          const elDate = document.getElementById("last-trip-date");
-          const elTime = document.getElementById("last-trip-time");
+      // --- TORQUE CSV/ZIP IMPORT ---
+      const btnImportCsv = document.getElementById("btn-import-torque-csv");
+      const csvInput = document.getElementById("torque-csv-input");
 
-          if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
-          if (elTime)
-            elTime.textContent = end.toLocaleTimeString("pt-PT", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+      // Manual Trip Button (Placeholder)
+      const btnAddManual = document.getElementById("btn-add-trip-manual");
+      if (btnAddManual) {
+        btnAddManual.addEventListener("click", () => {
+          alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
+        });
+      }
 
-          // Metrics
-          const elDist = document.getElementById("last-trip-dist");
-          const elConsumo = document.getElementById("last-trip-consumo");
-          const elSpeed = document.getElementById("last-trip-speed");
-          const elDur = document.getElementById("last-trip-duration");
+      if (btnImportCsv && csvInput) {
+        btnImportCsv.addEventListener("click", () => csvInput.click());
 
-          if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
-          if (elConsumo)
-            elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
-          if (elSpeed)
-            elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
-          if (elDur)
-            elDur.textContent = trip.duracao
-              ? `${Math.round(trip.duracao)} min`
-              : "--";
+        csvInput.addEventListener("change", async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
 
-          // Details
-          const elRpm = document.getElementById("last-trip-rpm");
-          const elTemp = document.getElementById("last-trip-temp");
-
-          if (elRpm)
-            elRpm.textContent =
-              (trip.metricas?.rpmMedio
-                ? Number(trip.metricas.rpmMedio).toFixed(1)
-                : "--") + " rpm";
-          if (elTemp)
-            elTemp.textContent =
-              (trip.metricas?.temperaturaMax || "--") + " °C";
-
-          // Battery
-          const elVolt = document.getElementById("last-trip-voltage");
-          if (elVolt)
-            elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
-
-          // Score
-          const elScore = document.getElementById("last-trip-score");
-          const elScoreDot = document.getElementById("last-trip-score-dot");
-          if (elScore) {
-            const s = trip.score || 0;
-            elScore.textContent = s > 0 ? s : "--";
-            if (elScoreDot) {
-              elScoreDot.className =
-                "status-indicator-dot " +
-                (s > 85
-                  ? "status-success"
-                  : s > 60
-                    ? "status-warning"
-                    : "status-error");
-            }
-          }
-
-          // Cost
-          const cost = trip.custoEstimado || 0;
-          const elCost = document.getElementById("last-trip-cost");
-          if (elCost)
-            elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
-
-          // --- CHARTS HANDLER ---
-          const btnCharts = document.getElementById("btn-load-charts");
-          const chartsContainer = document.getElementById(
-            "trip-charts-container",
+          // Modal Progresso
+          const progressModal = document.getElementById(
+            "upload-progress-modal",
           );
+          const progressBar = document.getElementById("upload-progress-bar");
+          const progressText = document.getElementById("upload-progress-text");
 
-          if (btnCharts && chartsContainer) {
-            // Reset UI
-            btnCharts.classList.remove("hidden");
-            btnCharts.disabled = false;
-            btnCharts.textContent = "Ver Gráficos Detalhados";
-            chartsContainer.classList.add("hidden");
-
-            // Remove old listener (clone node trick)
-            const newBtn = btnCharts.cloneNode(true);
-            btnCharts.parentNode.replaceChild(newBtn, btnCharts);
-
-            newBtn.addEventListener("click", () => {
-              loadTripCharts(trip, newBtn, chartsContainer);
-            });
+          if (progressModal) {
+            progressModal.classList.remove("hidden");
+            if (progressBar) progressBar.style.width = "5%";
+            if (progressText) progressText.textContent = "A ler ficheiro...";
           }
-        }
 
-        async function loadTripCharts(trip, btn, container) {
-          if (!trip.dataInicio || !trip.dataFim) {
-            alert("Erro: Viagem sem datas definidas.");
+          // Unsubscribe from real-time listener to avoid spam/freeze during heavy batch writes
+          if (
+            el.vehicleUnsubscribe &&
+            typeof el.vehicleUnsubscribe === "function"
+          ) {
+            console.log("[Import] Pausing real-time listener...");
+            el.vehicleUnsubscribe();
+            el.vehicleUnsubscribe = null;
+          }
+
+          try {
+            let csvText = "";
+
+            // 1. Handle ZIP or CSV
+            if (file.name.toLowerCase().endsWith(".zip")) {
+              if (typeof JSZip === "undefined") {
+                throw new Error("JSZip não carregado. Recarrega a página.");
+              }
+              const zip = await JSZip.loadAsync(file);
+              const csvFile = Object.values(zip.files).find(
+                (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+              );
+              if (!csvFile) {
+                throw new Error(
+                  "Nenhum ficheiro CSV encontrado dentro do ZIP.",
+                );
+              }
+              csvText = await csvFile.async("string");
+              console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
+            } else {
+              csvText = await file.text();
+            }
+
+            // 2. Parse CSV
+            const lines = csvText.trim().split("\n");
+            if (lines.length < 2) {
+              throw new Error("CSV vazio ou sem dados.");
+            }
+
+            const headers = lines[0].split(",").map((h) => h.trim());
+            console.log(`[Import] Headers: ${headers.length} colunas`);
+
+            // Portuguese month mapping
+            const ptMonths = {
+              "jan.": "Jan",
+              "fev.": "Feb",
+              "mar.": "Mar",
+              "abr.": "Apr",
+              "mai.": "May",
+              "jun.": "Jun",
+              "jul.": "Jul",
+              "ago.": "Aug",
+              "set.": "Sep",
+              "out.": "Oct",
+              "nov.": "Nov",
+              "dez.": "Dec",
+            };
+
+            // Fuzzy header finder
+            const findHeader = (part) =>
+              headers.find((h) => h.toLowerCase().includes(part.toLowerCase()));
+
+            // Locate key columns
+            const dateCol = findHeader("Device Time") || headers[1]; // fallback
+            const speedCol = findHeader("Speed (OBD)");
+            const rpmCol = findHeader("RPM");
+            const odoCol = findHeader("Odometer");
+            const fuelCol = findHeader("Fuel Level");
+            const coolantCol = findHeader("Coolant");
+            const loadCol = findHeader("Engine Load");
+            const latCol = findHeader("Latitude") || "Latitude";
+            const lonCol = findHeader("Longitude") || "Longitude";
+            const mafCol = findHeader("Mass air flow");
+            const voltageCol = findHeader("Voltage");
+            const torqueCol = findHeader("Torque(Nm)") || findHeader("Torque");
+            const hpCol = findHeader("Horsepower");
+            const tripDistCol = findHeader("Trip Distance");
+            const tripL100Col = findHeader("Trip average");
+            const intakeCol = findHeader("Intake Air");
+            const fuelRemCol = findHeader("Fuel Remaining");
+
+            // 3. Map rows to readings
+            const readings = [];
+            let skipped = 0;
+
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line || line.startsWith("---")) continue;
+
+              const values = line.split(",");
+              const row = {};
+              headers.forEach((h, idx) => {
+                row[h] = values[idx] || null;
+              });
+
+              // Parse date
+              let dateStr = row[dateCol];
+              if (!dateStr || dateStr === "-") {
+                skipped++;
+                continue;
+              }
+
+              // Replace Portuguese months
+              for (const [pt, en] of Object.entries(ptMonths)) {
+                if (dateStr.toLowerCase().includes(pt)) {
+                  dateStr = dateStr.toLowerCase().replace(pt, en);
+                  break;
+                }
+              }
+
+              const timestamp = new Date(dateStr).getTime();
+              if (isNaN(timestamp)) {
+                skipped++;
+                continue;
+              }
+
+              // Parse numeric value helper
+              const getNum = (col) => {
+                if (!col) return null;
+                const val = row[col];
+                if (!val || val === "-") return null;
+                const n = parseFloat(String(val).replace(",", "."));
+                return isNaN(n) ? null : n;
+              };
+
+              const lat = getNum(latCol);
+              const lon = getNum(lonCol);
+
+              const parsed = {
+                speed: getNum(speedCol),
+                rpm: getNum(rpmCol),
+                odometer: getNum(odoCol),
+                fuelLevel: getNum(fuelCol),
+                coolant: getNum(coolantCol),
+                engineLoad: getNum(loadCol),
+                intake: getNum(intakeCol),
+                maf: getNum(mafCol),
+                voltage: getNum(voltageCol),
+                torqueNm: getNum(torqueCol),
+                hpWheels: getNum(hpCol),
+                tripDistance: getNum(tripDistCol),
+                tripL100: getNum(tripL100Col),
+                fuelRemainingPct: getNum(fuelRemCol),
+                location: null,
+              };
+
+              if (lat && lon && (lat !== 0 || lon !== 0)) {
+                parsed.location = new firebase.firestore.GeoPoint(lat, lon);
+              }
+
+              readings.push({
+                vehicleId: veiculoId,
+                timestamp,
+                receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
+                sessionId:
+                  "csv_import_" + new Date().toISOString().split("T")[0],
+                deviceId: "csv_import",
+                email: "csv@import",
+                imported: true, // Flag to skip Cloud Function
+                raw: { ...row },
+                parsed,
+              });
+            }
+
+            if (readings.length === 0) {
+              throw new Error(
+                `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
+              );
+            }
+
+            console.log(
+              `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
+            );
+
+            if (progressText)
+              progressText.textContent = `A preparar ${readings.length} registos...`;
+            if (progressBar) progressBar.style.width = "20%";
+
+            // 4. Calculate Trips (Client-Side)
+            // Sort first to ensure order
+            readings.sort((a, b) => a.timestamp - b.timestamp);
+
+            const tripsToCreate = calculateTripsFromReadings(readings);
+            console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
+
+            // 5. Batch write to Firestore (Readings + Trips)
+            const collRef = db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("leiturasObd");
+
+            // Write Trips first
+            const tripsRef = db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("viagens");
+
+            if (tripsToCreate.length > 0) {
+              const tripBatch = db.batch();
+              tripsToCreate.forEach((trip) => {
+                tripBatch.set(tripsRef.doc(), trip);
+              });
+              await tripBatch.commit();
+              console.log("[Import] Trips saved.");
+            }
+
+            const BATCH_SIZE = 450;
+            let written = 0;
+            const total = readings.length;
+
+            for (let i = 0; i < total; i += BATCH_SIZE) {
+              const chunk = readings.slice(i, i + BATCH_SIZE);
+              const batch = db.batch();
+
+              for (const r of chunk) {
+                batch.set(collRef.doc(), r);
+              }
+
+              await batch.commit();
+              written += chunk.length;
+
+              // Update progress
+              const pct = Math.round(20 + (written / total) * 70);
+              if (progressBar) progressBar.style.width = `${pct}%`;
+              if (progressText)
+                progressText.textContent = `A enviar ${written}/${total}...`;
+            }
+
+            // 5. Update vehicle state with latest reading
+            readings.sort((a, b) => b.timestamp - a.timestamp);
+            const latest = readings[0];
+
+            if (latest && latest.parsed) {
+              const vehicleUpdate = {
+                lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+              };
+
+              if (latest.parsed.odometer && latest.parsed.odometer > 0) {
+                vehicleUpdate.odometroAtual = latest.parsed.odometer;
+              }
+              if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
+                vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
+              }
+
+              await db
+                .collection("veiculos")
+                .doc(veiculoId)
+                .update(vehicleUpdate);
+            }
+
+            // 6. Success!
+            alert(
+              `✅ Importação concluída!\n${written} registos importados com sucesso.`,
+            );
+
+            // Close Modals & Go to History
+            if (progressModal) progressModal.classList.add("hidden");
+            const btnHistory = document.querySelector(
+              '.tab-btn[data-tab="historico"]',
+            );
+            if (btnHistory) btnHistory.click(); // Switches tab and reloads history
+
+            // Reload trip data
+            loadLastTrip(veiculoId);
+            loadTripsHistory(veiculoId);
+          } catch (err) {
+            console.error("[Import] Error:", err);
+            alert(`❌ Erro na importação:\n${err.message}`);
+          } finally {
+            btnImportCsv.disabled = false;
+            btnImportCsv.textContent = originalText;
+            csvInput.value = ""; // Reset file input
+          }
+        });
+      }
+
+      // --- DATA LOADING ---
+
+      async function loadLastTrip(vid) {
+        const empty = document.getElementById("last-trip-empty");
+        const content = document.getElementById("last-trip-content");
+
+        try {
+          const snap = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(1)
+            .get();
+
+          if (snap.empty) {
+            if (empty) empty.classList.remove("hidden");
+            if (content) content.classList.add("hidden");
             return;
           }
 
-          btn.disabled = true;
-          btn.textContent = "A carregar dados...";
+          if (empty) empty.classList.add("hidden");
+          if (content) content.classList.remove("hidden");
 
-          try {
-            // Parse dates (Firestore Timestamp or Date string)
-            const start = trip.dataInicio.toDate
-              ? trip.dataInicio.toDate()
-              : new Date(trip.dataInicio);
-            const end = trip.dataFim.toDate
-              ? trip.dataFim.toDate()
-              : new Date(trip.dataFim);
+          const trip = snap.docs[0].data();
+          renderTripDetails(trip);
+        } catch (e) {
+          console.error("Error loading last trip:", e);
+        }
+      }
 
-            // Get readings
-            const snapshot = await db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("leiturasObd")
-              .where("timestamp", ">=", start.getTime())
-              .where("timestamp", "<=", end.getTime())
-              .orderBy("timestamp", "asc")
-              .limit(2000) // Safety limit
-              .get();
+      function renderTripDetails(trip) {
+        // Dates
+        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+        const elDate = document.getElementById("last-trip-date");
+        const elTime = document.getElementById("last-trip-time");
 
-            if (snapshot.empty) {
-              alert("Não existem dados detalhados para esta viagem.");
-              btn.textContent = "Sem dados";
-              return;
-            }
+        if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
+        if (elTime)
+          elTime.textContent = end.toLocaleTimeString("pt-PT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
 
-            const readings = snapshot.docs.map((doc) => doc.data());
-            console.log(`[Charts] Loaded ${readings.length} readings`);
+        // Metrics
+        const elDist = document.getElementById("last-trip-dist");
+        const elConsumo = document.getElementById("last-trip-consumo");
+        const elSpeed = document.getElementById("last-trip-speed");
+        const elDur = document.getElementById("last-trip-duration");
 
-            renderTripCharts(readings);
+        if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
+        if (elConsumo)
+          elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
+        if (elSpeed)
+          elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
+        if (elDur)
+          elDur.textContent = trip.duracao
+            ? `${Math.round(trip.duracao)} min`
+            : "--";
 
-            // Show charts, hide button
-            container.classList.remove("hidden");
-            btn.classList.add("hidden");
-          } catch (error) {
-            console.error("Error loading charts:", error);
-            alert("Erro ao carregar gráficos: " + error.message);
-            btn.textContent = "Erro";
-            btn.disabled = false;
+        // Details
+        const elRpm = document.getElementById("last-trip-rpm");
+        const elTemp = document.getElementById("last-trip-temp");
+
+        if (elRpm)
+          elRpm.textContent =
+            (trip.metricas?.rpmMedio
+              ? Number(trip.metricas.rpmMedio).toFixed(1)
+              : "--") + " rpm";
+        if (elTemp)
+          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
+
+        // Battery
+        const elVolt = document.getElementById("last-trip-voltage");
+        if (elVolt)
+          elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
+
+        // Score
+        const elScore = document.getElementById("last-trip-score");
+        const elScoreDot = document.getElementById("last-trip-score-dot");
+        if (elScore) {
+          const s = trip.score || 0;
+          elScore.textContent = s > 0 ? s : "--";
+          if (elScoreDot) {
+            elScoreDot.className =
+              "status-indicator-dot " +
+              (s > 85
+                ? "status-success"
+                : s > 60
+                  ? "status-warning"
+                  : "status-error");
           }
         }
 
-        let chartSpeedRpm = null;
-        let chartFuel = null;
+        // Cost
+        const cost = trip.custoEstimado || 0;
+        const elCost = document.getElementById("last-trip-cost");
+        if (elCost)
+          elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
 
-        function renderTripCharts(readings) {
-          // Prepara Data
-          const labels = readings.map((r) => {
-            const d = new Date(r.timestamp);
-            return d.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-          });
+        // --- CHARTS HANDLER ---
+        const btnCharts = document.getElementById("btn-load-charts");
+        const chartsContainer = document.getElementById(
+          "trip-charts-container",
+        );
 
-          const speedData = readings.map((r) => r.parsed?.speed || 0);
-          const rpmData = readings.map((r) => r.parsed?.rpm || 0);
-          const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
+        if (btnCharts && chartsContainer) {
+          // Reset UI
+          btnCharts.classList.remove("hidden");
+          btnCharts.disabled = false;
+          btnCharts.textContent = "Ver Gráficos Detalhados";
+          chartsContainer.classList.add("hidden");
 
-          // --- UPDATE SUMMARY CARDS ---
-          const maxSpeed = Math.max(...speedData);
-          const maxRpm = Math.max(...rpmData);
+          // Remove old listener (clone node trick)
+          const newBtn = btnCharts.cloneNode(true);
+          btnCharts.parentNode.replaceChild(newBtn, btnCharts);
 
-          const elMaxSpeed = document.getElementById("trip-max-speed");
-          const elMaxRpm = document.getElementById("trip-max-rpm");
-
-          if (elMaxSpeed)
-            elMaxSpeed.textContent = isFinite(maxSpeed)
-              ? Math.round(maxSpeed)
-              : "--";
-          if (elMaxRpm)
-            elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
-
-          // --- Chart 1: Speed & RPM ---
-          const ctxSpeed = document
-            .getElementById("chart-trip-speed-rpm")
-            .getContext("2d");
-
-          // Gradient for Speed
-          const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-          gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
-          gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
-
-          // Gradient for RPM
-          const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-          gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
-          gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
-
-          if (chartSpeedRpm) chartSpeedRpm.destroy();
-
-          chartSpeedRpm = new Chart(ctxSpeed, {
-            type: "line",
-            data: {
-              labels: labels,
-              datasets: [
-                {
-                  label: "Velocidade (km/h)",
-                  data: speedData,
-                  borderColor: "#3b82f6", // blue-500
-                  backgroundColor: gradSpeed,
-                  yAxisID: "y",
-                  tension: 0.4,
-                  pointRadius: 0,
-                  borderWidth: 2,
-                  fill: true,
-                },
-                {
-                  label: "RPM",
-                  data: rpmData,
-                  borderColor: "#ef4444", // red-500
-                  backgroundColor: gradRpm,
-                  yAxisID: "y1",
-                  tension: 0.4,
-                  pointRadius: 0,
-                  borderWidth: 2,
-                  fill: true,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              interaction: { mode: "index", intersect: false },
-              plugins: {
-                legend: { position: "top" },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { display: false }, // Hide X labels if too many
-                y: {
-                  type: "linear",
-                  display: true,
-                  position: "left",
-                  title: { display: true, text: "km/h" },
-                },
-                y1: {
-                  type: "linear",
-                  display: true,
-                  position: "right",
-                  grid: { drawOnChartArea: false },
-                  title: { display: true, text: "RPM" },
-                },
-              },
-            },
-          });
-
-          // --- Chart 2: Fuel ---
-          const ctxFuel = document
-            .getElementById("chart-trip-fuel")
-            .getContext("2d");
-
-          if (chartFuel) chartFuel.destroy();
-
-          // Filter nulls for smoother line if gaps
-          // But chart.js handles nulls as gaps usually.
-
-          chartFuel = new Chart(ctxFuel, {
-            type: "line",
-            data: {
-              labels: labels,
-              datasets: [
-                {
-                  label: "Nível Combustível (%)",
-                  data: fuelData,
-                  borderColor: "#10b981", // green-500
-                  backgroundColor: "rgba(16, 185, 129, 0.1)",
-                  fill: true,
-                  tension: 0.4,
-                  pointRadius: 0,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { display: false },
-                y: { min: 0, max: 100 },
-              },
-            },
+          newBtn.addEventListener("click", () => {
+            loadTripCharts(trip, newBtn, chartsContainer);
           });
         }
+      }
 
-        async function loadTripsHistory(vid) {
-          const list = document.getElementById("trips-list");
-          if (!list) return;
-
-          list.innerHTML = '<div class="spinner"></div>';
-
-          try {
-            const snap = await db
-              .collection("veiculos")
-              .doc(vid)
-              .collection("viagens")
-              .orderBy("dataFim", "desc")
-              .limit(20)
-              .get();
-
-            const empty = document.getElementById("trips-empty");
-
-            if (snap.empty) {
-              list.innerHTML = "";
-              if (empty) empty.classList.remove("hidden");
-              return;
-            }
-
-            if (empty) empty.classList.add("hidden");
-            list.innerHTML = "";
-
-            snap.forEach((doc) => {
-              list.appendChild(createTripCard(doc.data()));
-            });
-          } catch (e) {
-            console.error("Error loading history:", e);
-            list.innerHTML =
-              '<div class="muted">Erro ao carregar histórico.</div>';
-          }
+      async function loadTripCharts(trip, btn, container) {
+        if (!trip.dataInicio || !trip.dataFim) {
+          alert("Erro: Viagem sem datas definidas.");
+          return;
         }
 
-        function createTripCard(trip) {
-          const el = document.createElement("article");
-          el.className = "trip-card"; // Need styling for this!
-          // Styling injection for quick fix:
-          el.style.cssText =
-            "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
+        btn.disabled = true;
+        btn.textContent = "A carregar dados...";
 
-          const date = trip.dataFim?.toDate
+        try {
+          // Parse dates (Firestore Timestamp or Date string)
+          const start = trip.dataInicio.toDate
+            ? trip.dataInicio.toDate()
+            : new Date(trip.dataInicio);
+          const end = trip.dataFim.toDate
             ? trip.dataFim.toDate()
-            : new Date();
+            : new Date(trip.dataFim);
 
-          el.innerHTML = `
+          // Get readings
+          const snapshot = await db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("leiturasObd")
+            .where("timestamp", ">=", start.getTime())
+            .where("timestamp", "<=", end.getTime())
+            .orderBy("timestamp", "asc")
+            .limit(2000) // Safety limit
+            .get();
+
+          if (snapshot.empty) {
+            alert("Não existem dados detalhados para esta viagem.");
+            btn.textContent = "Sem dados";
+            return;
+          }
+
+          const readings = snapshot.docs.map((doc) => doc.data());
+          console.log(`[Charts] Loaded ${readings.length} readings`);
+
+          renderTripCharts(readings);
+
+          // Show charts, hide button
+          container.classList.remove("hidden");
+          btn.classList.add("hidden");
+        } catch (error) {
+          console.error("Error loading charts:", error);
+          alert("Erro ao carregar gráficos: " + error.message);
+          btn.textContent = "Erro";
+          btn.disabled = false;
+        }
+      }
+
+      let chartSpeedRpm = null;
+      let chartFuel = null;
+
+      function renderTripCharts(readings) {
+        // Prepara Data
+        const labels = readings.map((r) => {
+          const d = new Date(r.timestamp);
+          return d.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        });
+
+        const speedData = readings.map((r) => r.parsed?.speed || 0);
+        const rpmData = readings.map((r) => r.parsed?.rpm || 0);
+        const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
+
+        // --- UPDATE SUMMARY CARDS ---
+        const maxSpeed = Math.max(...speedData);
+        const maxRpm = Math.max(...rpmData);
+
+        const elMaxSpeed = document.getElementById("trip-max-speed");
+        const elMaxRpm = document.getElementById("trip-max-rpm");
+
+        if (elMaxSpeed)
+          elMaxSpeed.textContent = isFinite(maxSpeed)
+            ? Math.round(maxSpeed)
+            : "--";
+        if (elMaxRpm)
+          elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
+
+        // --- Chart 1: Speed & RPM ---
+        const ctxSpeed = document
+          .getElementById("chart-trip-speed-rpm")
+          .getContext("2d");
+
+        // Gradient for Speed
+        const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+        gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
+        gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
+        // Gradient for RPM
+        const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+        gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
+        gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
+
+        if (chartSpeedRpm) chartSpeedRpm.destroy();
+
+        chartSpeedRpm = new Chart(ctxSpeed, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Velocidade (km/h)",
+                data: speedData,
+                borderColor: "#3b82f6", // blue-500
+                backgroundColor: gradSpeed,
+                yAxisID: "y",
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 2,
+                fill: true,
+              },
+              {
+                label: "RPM",
+                data: rpmData,
+                borderColor: "#ef4444", // red-500
+                backgroundColor: gradRpm,
+                yAxisID: "y1",
+                tension: 0.4,
+                pointRadius: 0,
+                borderWidth: 2,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "top" },
+              tooltip: { enabled: true },
+            },
+            scales: {
+              x: { display: false }, // Hide X labels if too many
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: { display: true, text: "km/h" },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: "RPM" },
+              },
+            },
+          },
+        });
+
+        // --- Chart 2: Fuel ---
+        const ctxFuel = document
+          .getElementById("chart-trip-fuel")
+          .getContext("2d");
+
+        if (chartFuel) chartFuel.destroy();
+
+        // Filter nulls for smoother line if gaps
+        // But chart.js handles nulls as gaps usually.
+
+        chartFuel = new Chart(ctxFuel, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Nível Combustível (%)",
+                data: fuelData,
+                borderColor: "#10b981", // green-500
+                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { display: false },
+              y: { min: 0, max: 100 },
+            },
+          },
+        });
+      }
+
+      async function loadTripsHistory(vid) {
+        const list = document.getElementById("trips-list");
+        if (!list) return;
+
+        list.innerHTML = '<div class="spinner"></div>';
+
+        try {
+          const snap = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(20)
+            .get();
+
+          const empty = document.getElementById("trips-empty");
+
+          if (snap.empty) {
+            list.innerHTML = "";
+            if (empty) empty.classList.remove("hidden");
+            return;
+          }
+
+          if (empty) empty.classList.add("hidden");
+          list.innerHTML = "";
+
+          snap.forEach((doc) => {
+            list.appendChild(createTripCard(doc.data()));
+          });
+        } catch (e) {
+          console.error("Error loading history:", e);
+          list.innerHTML =
+            '<div class="muted">Erro ao carregar histórico.</div>';
+        }
+      }
+
+      function createTripCard(trip) {
+        const el = document.createElement("article");
+        el.className = "trip-card"; // Need styling for this!
+        // Styling injection for quick fix:
+        el.style.cssText =
+          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
+
+        const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+
+        el.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap: 8px; align-items:center;">
                         <div class="status-indicator-dot ${trip.score > 85 ? "status-success" : trip.score > 60 ? "status-warning" : "status-error"}"></div>
@@ -2533,206 +2531,200 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
              `;
-          return el;
-        }
-
-        // --- REALTIME LISTENER (LIVE TAB) ---
-        const liveElements = {
-          rpm: document.getElementById("obd-rpm"),
-          speed: document.getElementById("obd-speed"),
-          coolant: document.getElementById("obd-coolant"),
-          load: document.getElementById("obd-load"),
-          voltage: document.getElementById("obd-voltage"),
-          maf: document.getElementById("obd-maf"),
-          torque: document.getElementById("obd-torque"),
-          hp: document.getElementById("obd-hp"),
-          boost: document.getElementById("obd-boost"),
-          fuelUsed: document.getElementById("obd-fuelUsed"),
-          lastUpdate: document.getElementById("obd-last-update"),
-          statusCoolant: document.getElementById("status-coolant"),
-        };
-
-        db.collection("veiculos")
-          .doc(veiculoId)
-          .collection("leiturasObd")
-          .orderBy("timestamp", "desc")
-          .limit(1)
-          .onSnapshot(
-            (snapshot) => {
-              if (snapshot.empty) {
-                btnObd.classList.add("hidden");
-                return;
-              }
-              btnObd.classList.remove("hidden");
-
-              const data = snapshot.docs[0].data();
-              const reading = data.parsed || {};
-
-              const findKey = (obj, ...parts) => {
-                const keys = Object.keys(obj);
-                for (const k of keys) {
-                  const lower = k.toLowerCase();
-                  if (parts.every((p) => lower.includes(p.toLowerCase())))
-                    return obj[k];
-                }
-                return null;
-              };
-
-              // Update DOM
-              const rpm = findKey(reading, "Engine RPM") || reading.rpm;
-              if (liveElements.rpm)
-                liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
-
-              const speed = findKey(reading, "Speed (OBD)") || reading.speed;
-              if (liveElements.speed)
-                liveElements.speed.textContent = speed
-                  ? Math.round(speed)
-                  : "--";
-
-              const temp = findKey(reading, "Coolant") || reading.coolant;
-              if (liveElements.coolant)
-                liveElements.coolant.textContent = temp
-                  ? Math.round(temp)
-                  : "--";
-              if (temp && liveElements.statusCoolant) {
-                if (temp > 105)
-                  liveElements.statusCoolant.className =
-                    "alert-status-indicator status-red";
-                else if (temp > 90)
-                  liveElements.statusCoolant.className =
-                    "alert-status-indicator status-yellow";
-                else
-                  liveElements.statusCoolant.className =
-                    "alert-status-indicator status-green";
-              }
-
-              const load =
-                findKey(reading, "Engine Load") || reading.engineLoad;
-              if (liveElements.load)
-                liveElements.load.textContent = load ? Math.round(load) : "--";
-
-              const volts =
-                findKey(reading, "Voltage") ||
-                findKey(reading, "Volts") ||
-                reading.voltage;
-              if (liveElements.voltage)
-                liveElements.voltage.textContent = volts
-                  ? Number(volts).toFixed(1)
-                  : "--";
-
-              const maf = findKey(reading, "Mass Air Flow") || reading.maf;
-              if (liveElements.maf)
-                liveElements.maf.textContent = maf
-                  ? Number(maf).toFixed(1)
-                  : "--";
-
-              const torque = findKey(reading, "Torque") || reading.torqueNm;
-              if (liveElements.torque)
-                liveElements.torque.textContent = torque
-                  ? Math.round(torque)
-                  : "--";
-
-              const hp = findKey(reading, "Horsepower") || reading.hpWheels;
-              if (liveElements.hp)
-                liveElements.hp.textContent = hp ? Math.round(hp) : "--";
-
-              const boost = reading.boost;
-              if (liveElements.boost)
-                liveElements.boost.textContent =
-                  boost !== undefined && boost !== null
-                    ? Number(boost).toFixed(1)
-                    : "--";
-
-              const fuelUsed = reading.fuelUsed;
-              if (liveElements.fuelUsed)
-                liveElements.fuelUsed.textContent =
-                  fuelUsed !== undefined && fuelUsed !== null
-                    ? Number(fuelUsed).toFixed(1)
-                    : "--";
-
-              // Timestamp
-              if (liveElements.lastUpdate && data.timestamp) {
-                const d = new Date(Number(data.timestamp));
-                const now = new Date();
-                const isToday = d.toDateString() === now.toDateString();
-                liveElements.lastUpdate.textContent = isToday
-                  ? d.toLocaleTimeString()
-                  : d.toLocaleString();
-              }
-            },
-            (err) => console.error(err),
-          );
+        return el;
       }
 
-      // =========================
-      // ABASTECIMENTOS
-      // =========================
-      const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
+      // --- REALTIME LISTENER (LIVE TAB) ---
+      const liveElements = {
+        rpm: document.getElementById("obd-rpm"),
+        speed: document.getElementById("obd-speed"),
+        coolant: document.getElementById("obd-coolant"),
+        load: document.getElementById("obd-load"),
+        voltage: document.getElementById("obd-voltage"),
+        maf: document.getElementById("obd-maf"),
+        torque: document.getElementById("obd-torque"),
+        hp: document.getElementById("obd-hp"),
+        boost: document.getElementById("obd-boost"),
+        fuelUsed: document.getElementById("obd-fuelUsed"),
+        lastUpdate: document.getElementById("obd-last-update"),
+        statusCoolant: document.getElementById("status-coolant"),
+      };
 
-      if (!abs.length) {
-        if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
-        if (el.fuelList) el.fuelList.innerHTML = "";
-        if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
-      } else {
-        if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+      db.collection("veiculos")
+        .doc(veiculoId)
+        .collection("leiturasObd")
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .onSnapshot(
+          (snapshot) => {
+            if (snapshot.empty) {
+              btnObd.classList.add("hidden");
+              return;
+            }
+            btnObd.classList.remove("hidden");
 
-        // KPIs
-        let totalLitros = 0;
-        let totalGasto = 0;
+            const data = snapshot.docs[0].data();
+            const reading = data.parsed || {};
+
+            const findKey = (obj, ...parts) => {
+              const keys = Object.keys(obj);
+              for (const k of keys) {
+                const lower = k.toLowerCase();
+                if (parts.every((p) => lower.includes(p.toLowerCase())))
+                  return obj[k];
+              }
+              return null;
+            };
+
+            // Update DOM
+            const rpm = findKey(reading, "Engine RPM") || reading.rpm;
+            if (liveElements.rpm)
+              liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
+
+            const speed = findKey(reading, "Speed (OBD)") || reading.speed;
+            if (liveElements.speed)
+              liveElements.speed.textContent = speed ? Math.round(speed) : "--";
+
+            const temp = findKey(reading, "Coolant") || reading.coolant;
+            if (liveElements.coolant)
+              liveElements.coolant.textContent = temp ? Math.round(temp) : "--";
+            if (temp && liveElements.statusCoolant) {
+              if (temp > 105)
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-red";
+              else if (temp > 90)
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-yellow";
+              else
+                liveElements.statusCoolant.className =
+                  "alert-status-indicator status-green";
+            }
+
+            const load = findKey(reading, "Engine Load") || reading.engineLoad;
+            if (liveElements.load)
+              liveElements.load.textContent = load ? Math.round(load) : "--";
+
+            const volts =
+              findKey(reading, "Voltage") ||
+              findKey(reading, "Volts") ||
+              reading.voltage;
+            if (liveElements.voltage)
+              liveElements.voltage.textContent = volts
+                ? Number(volts).toFixed(1)
+                : "--";
+
+            const maf = findKey(reading, "Mass Air Flow") || reading.maf;
+            if (liveElements.maf)
+              liveElements.maf.textContent = maf
+                ? Number(maf).toFixed(1)
+                : "--";
+
+            const torque = findKey(reading, "Torque") || reading.torqueNm;
+            if (liveElements.torque)
+              liveElements.torque.textContent = torque
+                ? Math.round(torque)
+                : "--";
+
+            const hp = findKey(reading, "Horsepower") || reading.hpWheels;
+            if (liveElements.hp)
+              liveElements.hp.textContent = hp ? Math.round(hp) : "--";
+
+            const boost = reading.boost;
+            if (liveElements.boost)
+              liveElements.boost.textContent =
+                boost !== undefined && boost !== null
+                  ? Number(boost).toFixed(1)
+                  : "--";
+
+            const fuelUsed = reading.fuelUsed;
+            if (liveElements.fuelUsed)
+              liveElements.fuelUsed.textContent =
+                fuelUsed !== undefined && fuelUsed !== null
+                  ? Number(fuelUsed).toFixed(1)
+                  : "--";
+
+            // Timestamp
+            if (liveElements.lastUpdate && data.timestamp) {
+              const d = new Date(Number(data.timestamp));
+              const now = new Date();
+              const isToday = d.toDateString() === now.toDateString();
+              liveElements.lastUpdate.textContent = isToday
+                ? d.toLocaleTimeString()
+                : d.toLocaleString();
+            }
+          },
+          (err) => console.error(err),
+        );
+    }
+
+    // =========================
+    // ABASTECIMENTOS
+    // =========================
+    const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
+
+    if (!abs.length) {
+      if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
+      if (el.fuelList) el.fuelList.innerHTML = "";
+      if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
+    } else {
+      if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+
+      // KPIs
+      let totalLitros = 0;
+      let totalGasto = 0;
+
+      abs.forEach((a) => {
+        const L = Number(a.litros) || 0;
+        const P = Number(a.precoPorLitro) || 0;
+        totalLitros += L;
+        totalGasto += L * P;
+      });
+
+      if (el.kpiGasto)
+        el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
+      if (el.kpiLitros) el.kpiLitros.textContent = formatVolume(totalLitros);
+      if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
+
+      // consumo médio e custo/km (Fuel Only)
+      const consResult = window.Analytics.calculateConsumption(abs);
+      const fuelMetrics = window.Analytics.calculateCostMetrics(v, abs, []);
+
+      if (el.kpiConsumo) {
+        el.kpiConsumo.textContent = consResult.averageL100
+          ? formatConsumption(consResult.averageL100, settings.unidadeConsumo)
+          : "—";
+      }
+
+      if (el.kpiCustoKm) {
+        el.kpiCustoKm.textContent =
+          fuelMetrics.costPerKm > 0
+            ? fuelMetrics.costPerKm.toFixed(3) +
+              ` ${getCurrencySymbol(settings.moeda)}/${
+                settings.unidadeDistancia || "km"
+              }`
+            : "—";
+      }
+
+      // LISTA
+      if (el.fuelList) {
+        el.fuelList.innerHTML = "";
 
         abs.forEach((a) => {
-          const L = Number(a.litros) || 0;
-          const P = Number(a.precoPorLitro) || 0;
-          totalLitros += L;
-          totalGasto += L * P;
-        });
+          const litros = Number(a.litros) || 0;
+          const ppl = Number(a.precoPorLitro) || 0;
+          const custo = (litros * ppl).toFixed(2);
+          const kmTxt = `${Number(a.odometro) || 0} km`;
+          const posto = a.posto ? escapeHtml(a.posto) : "—";
 
-        if (el.kpiGasto)
-          el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
-        if (el.kpiLitros) el.kpiLitros.textContent = formatVolume(totalLitros);
-        if (el.kpiTotalReg)
-          el.kpiTotalReg.textContent = `${abs.length} registos`;
+          const card = document.createElement("article");
+          card.className = "record-card"; // Unified class
 
-        // consumo médio e custo/km (Fuel Only)
-        const consResult = window.Analytics.calculateConsumption(abs);
-        const fuelMetrics = window.Analytics.calculateCostMetrics(v, abs, []);
+          // Icon indicator for FULL TANK
+          const fullTankIcon = a.completo
+            ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
+            : "";
 
-        if (el.kpiConsumo) {
-          el.kpiConsumo.textContent = consResult.averageL100
-            ? formatConsumption(consResult.averageL100, settings.unidadeConsumo)
-            : "—";
-        }
-
-        if (el.kpiCustoKm) {
-          el.kpiCustoKm.textContent =
-            fuelMetrics.costPerKm > 0
-              ? fuelMetrics.costPerKm.toFixed(3) +
-                ` ${getCurrencySymbol(settings.moeda)}/${
-                  settings.unidadeDistancia || "km"
-                }`
-              : "—";
-        }
-
-        // LISTA
-        if (el.fuelList) {
-          el.fuelList.innerHTML = "";
-
-          abs.forEach((a) => {
-            const litros = Number(a.litros) || 0;
-            const ppl = Number(a.precoPorLitro) || 0;
-            const custo = (litros * ppl).toFixed(2);
-            const kmTxt = `${Number(a.odometro) || 0} km`;
-            const posto = a.posto ? escapeHtml(a.posto) : "—";
-
-            const card = document.createElement("article");
-            card.className = "record-card"; // Unified class
-
-            // Icon indicator for FULL TANK
-            const fullTankIcon = a.completo
-              ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
-              : "";
-
-            card.innerHTML = `
+          card.innerHTML = `
         <div class="record-icon-box is-fuel">
           <svg class="icon"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
         </div>
@@ -2796,214 +2788,207 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-            el.fuelList.appendChild(card);
-          });
+          el.fuelList.appendChild(card);
+        });
 
-          // Event Delegation (mantido igual)
-          el.fuelList.addEventListener("click", async (e) => {
-            const edit = e.target.closest("[data-edit]");
-            const del = e.target.closest("[data-del]");
+        // Event Delegation (mantido igual)
+        el.fuelList.addEventListener("click", async (e) => {
+          const edit = e.target.closest("[data-edit]");
+          const del = e.target.closest("[data-del]");
 
-            if (edit) {
-              const idAbs = edit.getAttribute("data-edit");
-              openAbastecimentoForEdit(veiculoId, idAbs);
-            }
+          if (edit) {
+            const idAbs = edit.getAttribute("data-edit");
+            openAbastecimentoForEdit(veiculoId, idAbs);
+          }
 
-            if (del) {
-              const idAbs = del.getAttribute("data-del");
-              if (!confirm("Eliminar este abastecimento?")) return;
-              await deleteAbastecimento(veiculoId, idAbs);
-              location.reload();
-            }
-          });
-        }
+          if (del) {
+            const idAbs = del.getAttribute("data-del");
+            if (!confirm("Eliminar este abastecimento?")) return;
+            await deleteAbastecimento(veiculoId, idAbs);
+            location.reload();
+          }
+        });
       }
+    }
 
-      async function renderAnalyticsCard(veiculoId) {
-        const section = document.getElementById("section-analytics");
-        if (!section) return;
+    async function renderAnalyticsCard(veiculoId) {
+      const section = document.getElementById("section-analytics");
+      if (!section) return;
 
-        try {
-          // 1. Fetch Data
-          const analytics = await getVehicleAnalytics(veiculoId);
+      try {
+        // 1. Fetch Data
+        const analytics = await getVehicleAnalytics(veiculoId);
 
-          // If absolutely no analytics yet, we can hide or show empty state.
-          // But we want to show "A aprender..." if exists but empty.
-          // If null, it means never calculated.
+        // If absolutely no analytics yet, we can hide or show empty state.
+        // But we want to show "A aprender..." if exists but empty.
+        // If null, it means never calculated.
 
-          // Show FAB Button (Floating Mode)
-          const btnFloat = document.getElementById("btn-float-analytics");
-          if (btnFloat) btnFloat.classList.remove("hidden");
+        // Show FAB Button (Floating Mode)
+        const btnFloat = document.getElementById("btn-float-analytics");
+        if (btnFloat) btnFloat.classList.remove("hidden");
 
-          // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
+        // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
 
-          // Elements
-          const elL100 = document.getElementById("an-l100");
-          const elConf = document.getElementById("an-confidence");
-          const elRangeKm = document.getElementById("an-range-km");
-          const elRangeDays = document.getElementById("an-range-days");
-          const elBadge = document.getElementById("analytics-badge");
-          const elWarnCap = document.getElementById("an-warning-capacity");
-          const elAlertBox = document.getElementById("an-alert-box");
+        // Elements
+        const elL100 = document.getElementById("an-l100");
+        const elConf = document.getElementById("an-confidence");
+        const elRangeKm = document.getElementById("an-range-km");
+        const elRangeDays = document.getElementById("an-range-days");
+        const elBadge = document.getElementById("analytics-badge");
+        const elWarnCap = document.getElementById("an-warning-capacity");
+        const elAlertBox = document.getElementById("an-alert-box");
 
-          if (!analytics) {
-            // Initial state
-            return;
-          }
+        if (!analytics) {
+          // Initial state
+          return;
+        }
 
-          // Consumption
-          if (analytics.consumoMedioL100) {
-            elL100.textContent = analytics.consumoMedioL100.toFixed(1);
+        // Consumption
+        if (analytics.consumoMedioL100) {
+          elL100.textContent = analytics.consumoMedioL100.toFixed(1);
 
-            // Confidence styling
-            const confMap = {
-              alta: { text: "Confiança Alta", class: "status-green" },
-              media: { text: "Confiança Média", class: "status-yellow" },
-              baixa: { text: "Estimat. Baixa", class: "status-neutral" },
-            };
-            const confData =
-              confMap[analytics.consumoConfianca] || confMap["baixa"];
-            elConf.className = confData.class;
-            elConf.innerHTML = `<span>${confData.text}</span>`;
+          // Confidence styling
+          const confMap = {
+            alta: { text: "Confiança Alta", class: "status-green" },
+            media: { text: "Confiança Média", class: "status-yellow" },
+            baixa: { text: "Estimat. Baixa", class: "status-neutral" },
+          };
+          const confData =
+            confMap[analytics.consumoConfianca] || confMap["baixa"];
+          elConf.className = confData.class;
+          elConf.innerHTML = `<span>${confData.text}</span>`;
 
-            elBadge.textContent = "Ativo";
-            elBadge.className = "badge badge-success badge-outline";
-          } else {
-            elL100.textContent = "--";
-            elConf.textContent = "A recolher dados...";
-            elBadge.textContent = "A aprender...";
-          }
+          elBadge.textContent = "Ativo";
+          elBadge.className = "badge badge-success badge-outline";
+        } else {
+          elL100.textContent = "--";
+          elConf.textContent = "A recolher dados...";
+          elBadge.textContent = "A aprender...";
+        }
 
-          // Range
-          if (analytics.reasonUnavailable === "missing_tank_capacity") {
-            elWarnCap.classList.remove("hidden");
-            elRangeKm.textContent = "--";
-            elRangeDays.textContent = "-- dias";
-          } else {
-            elWarnCap.classList.add("hidden");
-            if (analytics.kmAteReservaEstimado !== null) {
-              elRangeKm.textContent = analytics.kmAteReservaEstimado;
+        // Range
+        if (analytics.reasonUnavailable === "missing_tank_capacity") {
+          elWarnCap.classList.remove("hidden");
+          elRangeKm.textContent = "--";
+          elRangeDays.textContent = "-- dias";
+        } else {
+          elWarnCap.classList.add("hidden");
+          if (analytics.kmAteReservaEstimado !== null) {
+            elRangeKm.textContent = analytics.kmAteReservaEstimado;
 
-              if (analytics.diasAteReservaEstimado !== null) {
-                elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
-              } else {
-                elRangeDays.textContent = "-- dias";
-              }
+            if (analytics.diasAteReservaEstimado !== null) {
+              elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
             } else {
-              elRangeKm.textContent = "--";
+              elRangeDays.textContent = "-- dias";
             }
-          }
-
-          // Alerts
-          if (
-            analytics.alertaFuelNivel &&
-            analytics.alertaFuelNivel !== "none"
-          ) {
-            elAlertBox.classList.remove("hidden");
-            const isCrit = analytics.alertaFuelNivel === "critical";
-
-            elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
-            elAlertBox.textContent = isCrit
-              ? `⚠️ Reserva atingida! Abasteça urgentemente.`
-              : `⚠️ Combustível baixo. Planeie abastecer.`;
           } else {
-            elAlertBox.classList.add("hidden");
+            elRangeKm.textContent = "--";
           }
+        }
 
-          // Toggle Logic (Idempotent: Re-assigning onclick is safe)
-          const headerBtn = document.getElementById("btn-toggle-analytics");
-          const contentDiv = document.getElementById("analytics-content");
-          const iconToggle = document.getElementById("icon-analytics-toggle");
+        // Alerts
+        if (analytics.alertaFuelNivel && analytics.alertaFuelNivel !== "none") {
+          elAlertBox.classList.remove("hidden");
+          const isCrit = analytics.alertaFuelNivel === "critical";
 
-          if (headerBtn && contentDiv && iconToggle) {
-            headerBtn.onclick = () => {
-              const isHidden = contentDiv.classList.toggle("hidden");
-              // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
-              iconToggle.style.transform = isHidden
-                ? "rotate(180deg)"
-                : "rotate(0deg)";
-            };
+          elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
+          elAlertBox.textContent = isCrit
+            ? `⚠️ Reserva atingida! Abasteça urgentemente.`
+            : `⚠️ Combustível baixo. Planeie abastecer.`;
+        } else {
+          elAlertBox.classList.add("hidden");
+        }
+
+        // Toggle Logic (Idempotent: Re-assigning onclick is safe)
+        const headerBtn = document.getElementById("btn-toggle-analytics");
+        const contentDiv = document.getElementById("analytics-content");
+        const iconToggle = document.getElementById("icon-analytics-toggle");
+
+        if (headerBtn && contentDiv && iconToggle) {
+          headerBtn.onclick = () => {
+            const isHidden = contentDiv.classList.toggle("hidden");
+            // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
+            iconToggle.style.transform = isHidden
+              ? "rotate(180deg)"
+              : "rotate(0deg)";
+          };
+        }
+      } catch (err) {
+        console.error("Error rendering analytics:", err);
+      }
+    }
+
+    // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
+    await renderAnalyticsCard(veiculoId);
+    // 🛡️ DATA REPAIR
+    await checkAndFixCorruptedData(veiculoId, v);
+
+    initTabs();
+    setupTabsToggle(veiculoId);
+
+    // --- INTERNAL HELPER (Moved inside init to access renderAnalyticsCard) ---
+    async function checkAndFixCorruptedData(veiculoId, v) {
+      let fixed = false;
+
+      // 1. Fix Abastecimentos Types (String -> Number, String -> Boolean)
+      const records = await getAbastecimentosDoVeiculo(veiculoId, 100);
+      let badCount = 0;
+
+      for (const r of records) {
+        let needsUpdate = false;
+        let update = {};
+
+        // Fix Odometro
+        if (typeof r.odometro === "string") {
+          const clean = Number(r.odometro.replace(/\s+/g, ""));
+          if (!isNaN(clean) && clean > 0) {
+            update.odometro = clean;
+            needsUpdate = true;
           }
-        } catch (err) {
-          console.error("Error rendering analytics:", err);
+        }
+
+        // Fix Completo
+        if (typeof r.completo === "string") {
+          if (r.completo === "true") update.completo = true;
+          else if (r.completo === "false") update.completo = false;
+          needsUpdate = true;
+        }
+        if (r.completo === 1) {
+          update.completo = true;
+          needsUpdate = true;
+        }
+        if (r.completo === 0) {
+          update.completo = false;
+          needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+          console.log("Fixing record:", r.id, update);
+          await updateAbastecimento(veiculoId, r.id, update);
+          badCount++;
+          fixed = true;
         }
       }
 
-      // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
-      await renderAnalyticsCard(veiculoId);
-      // 🛡️ DATA REPAIR
-      await checkAndFixCorruptedData(veiculoId, v);
-
-      initTabs();
-      setupTabsToggle(veiculoId);
-
-      // --- INTERNAL HELPER (Moved inside init to access renderAnalyticsCard) ---
-      async function checkAndFixCorruptedData(veiculoId, v) {
-        let fixed = false;
-
-        // 1. Fix Abastecimentos Types (String -> Number, String -> Boolean)
-        const records = await getAbastecimentosDoVeiculo(veiculoId, 100);
-        let badCount = 0;
-
-        for (const r of records) {
-          let needsUpdate = false;
-          let update = {};
-
-          // Fix Odometro
-          if (typeof r.odometro === "string") {
-            const clean = Number(r.odometro.replace(/\s+/g, ""));
-            if (!isNaN(clean) && clean > 0) {
-              update.odometro = clean;
-              needsUpdate = true;
-            }
-          }
-
-          // Fix Completo
-          if (typeof r.completo === "string") {
-            if (r.completo === "true") update.completo = true;
-            else if (r.completo === "false") update.completo = false;
-            needsUpdate = true;
-          }
-          if (r.completo === 1) {
-            update.completo = true;
-            needsUpdate = true;
-          }
-          if (r.completo === 0) {
-            update.completo = false;
-            needsUpdate = true;
-          }
-
-          if (needsUpdate) {
-            console.log("Fixing record:", r.id, update);
-            await updateAbastecimento(veiculoId, r.id, update);
-            badCount++;
-            fixed = true;
-          }
-        }
-
-        // FORCE ANALYTICS REFRESH (Self-Heal Stale Data)
-        console.log("Forcing Analytics Refresh...");
-        if (typeof refreshVehicleAnalytics === "function") {
-          await refreshVehicleAnalytics(veiculoId);
-        } else {
-          console.warn(
-            "refreshVehicleAnalytics function not available globally.",
-          );
-        }
-
-        if (fixed) {
-          alert(
-            `Corrigidos ${badCount} registos de dados. A página vai recarregar.`,
-          );
-          location.reload();
-        } else {
-          // Now we can safe access renderAnalyticsCard
-          await renderAnalyticsCard(veiculoId);
-        }
+      // FORCE ANALYTICS REFRESH (Self-Heal Stale Data)
+      console.log("Forcing Analytics Refresh...");
+      if (typeof refreshVehicleAnalytics === "function") {
+        await refreshVehicleAnalytics(veiculoId);
+      } else {
+        console.warn(
+          "refreshVehicleAnalytics function not available globally.",
+        );
       }
-    } catch (err) {
-      console.error("[INIT] Erro fatal no carregamento:", err);
-      // Não bloqueia o uso básico da página pois os binds iniciais já correram.
+
+      if (fixed) {
+        alert(
+          `Corrigidos ${badCount} registos de dados. A página vai recarregar.`,
+        );
+        location.reload();
+      } else {
+        // Now we can safe access renderAnalyticsCard
+        await renderAnalyticsCard(veiculoId);
+      }
     }
   } // End init scope
 
@@ -3035,279 +3020,280 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // -----------------------------------------------------------------
   });
-});
 
-// --- HELPERS FOR IMPORT ---
-function calculateTripsFromReadings(readings) {
-  if (!readings || !readings.length) return [];
-  const trips = [];
-  let currentBatch = [readings[0]];
+  // --- HELPERS FOR IMPORT ---
+  function calculateTripsFromReadings(readings) {
+    if (!readings || !readings.length) return [];
+    const trips = [];
+    let currentBatch = [readings[0]];
 
-  for (let i = 1; i < readings.length; i++) {
-    const prev = readings[i - 1];
-    const curr = readings[i];
-    // Gap > 15 min = New Trip
-    if (curr.timestamp - prev.timestamp > 15 * 60 * 1000) {
+    for (let i = 1; i < readings.length; i++) {
+      const prev = readings[i - 1];
+      const curr = readings[i];
+      // Gap > 15 min = New Trip
+      if (curr.timestamp - prev.timestamp > 15 * 60 * 1000) {
+        const t = processTripBatch(currentBatch);
+        if (t) trips.push(t);
+        currentBatch = [];
+      }
+      currentBatch.push(curr);
+    }
+    if (currentBatch.length > 0) {
       const t = processTripBatch(currentBatch);
       if (t) trips.push(t);
-      currentBatch = [];
     }
-    currentBatch.push(curr);
+    return trips;
   }
-  if (currentBatch.length > 0) {
-    const t = processTripBatch(currentBatch);
-    if (t) trips.push(t);
-  }
-  return trips;
-}
 
-function processTripBatch(batch) {
-  if (!batch || !batch.length) return null;
-  const start = batch[0];
-  const end = batch[batch.length - 1];
-  const durationMin = (end.timestamp - start.timestamp) / 1000 / 60;
+  function processTripBatch(batch) {
+    if (!batch || !batch.length) return null;
+    const start = batch[0];
+    const end = batch[batch.length - 1];
+    const durationMin = (end.timestamp - start.timestamp) / 1000 / 60;
 
-  // Filter noise (trips < 1 min or 0 distance?)
-  if (durationMin < 1 && batch.length < 10) return null;
+    // Filter noise (trips < 1 min or 0 distance?)
+    if (durationMin < 1 && batch.length < 10) return null;
 
-  let maxSpeed = 0,
-    maxRpm = 0,
-    maxTemp = 0;
-  let sumSpeed = 0,
-    sumRpm = 0,
-    sumVoltage = 0,
-    sumLoad = 0,
-    sumL100 = 0;
-  let countVoltage = 0,
-    countLoad = 0,
-    countL100 = 0;
-  let dist = 0;
+    let maxSpeed = 0,
+      maxRpm = 0,
+      maxTemp = 0;
+    let sumSpeed = 0,
+      sumRpm = 0,
+      sumVoltage = 0,
+      sumLoad = 0,
+      sumL100 = 0;
+    let countVoltage = 0,
+      countLoad = 0,
+      countL100 = 0;
+    let dist = 0;
 
-  // Score system: start 100
-  let scorePoints = 100;
-  let penaltyRpm = 0;
-  let penaltySpeed = 0;
+    // Score system: start 100
+    let scorePoints = 100;
+    let penaltyRpm = 0;
+    let penaltySpeed = 0;
 
-  for (let i = 0; i < batch.length; i++) {
-    const p = batch[i].parsed || {};
-    const s = Number(p.speed) || 0;
-    const r = Number(p.rpm) || 0;
-    const t = Number(p.temp || p.coolant);
-    const v = Number(p.voltage);
-    const l = Number(p.engineLoad);
-    const c = Number(p.tripL100);
-    const f = Number(p.fuelRemainingPct || p.fuelLevel);
-    const a = Number(p.distanceToEmptyKm || p.distanceToEmpty);
-    const g = Number(p.fuelUsedTrip || p.fuelUsed);
+    for (let i = 0; i < batch.length; i++) {
+      const p = batch[i].parsed || {};
+      const s = Number(p.speed) || 0;
+      const r = Number(p.rpm) || 0;
+      const t = Number(p.temp || p.coolant);
+      const v = Number(p.voltage);
+      const l = Number(p.engineLoad);
+      const c = Number(p.tripL100);
+      const f = Number(p.fuelRemainingPct || p.fuelLevel);
+      const a = Number(p.distanceToEmptyKm || p.distanceToEmpty);
+      const g = Number(p.fuelUsedTrip || p.fuelUsed);
 
-    if (s > maxSpeed) maxSpeed = s;
-    if (r > maxRpm) maxRpm = r;
-    if (!isNaN(t) && t > maxTemp) maxTemp = t;
+      if (s > maxSpeed) maxSpeed = s;
+      if (r > maxRpm) maxRpm = r;
+      if (!isNaN(t) && t > maxTemp) maxTemp = t;
 
-    sumSpeed += s;
-    sumRpm += r;
+      sumSpeed += s;
+      sumRpm += r;
 
-    if (v > 0) {
-      sumVoltage += v;
-      countVoltage++;
-    }
-    if (l > 0) {
-      sumLoad += l;
-      countLoad++;
-    }
-    if (c > 0) {
-      sumL100 += c;
-      countL100++;
-    }
+      if (v > 0) {
+        sumVoltage += v;
+        countVoltage++;
+      }
+      if (l > 0) {
+        sumLoad += l;
+        countLoad++;
+      }
+      if (c > 0) {
+        sumL100 += c;
+        countL100++;
+      }
 
-    // Penalties
-    if (r > 3500) penaltyRpm += 0.5;
-    if (r > 4500) penaltyRpm += 2;
-    if (s > 125) penaltySpeed += 1;
+      // Penalties
+      if (r > 3500) penaltyRpm += 0.5;
+      if (r > 4500) penaltyRpm += 2;
+      if (s > 125) penaltySpeed += 1;
 
-    // Track last values for import update
-    if (f > 0) start.lastFuel = f;
-    if (a > 0) start.lastRange = a;
-    if (g > 0) start.lastFuelUsed = g;
+      // Track last values for import update
+      if (f > 0) start.lastFuel = f;
+      if (a > 0) start.lastRange = a;
+      if (g > 0) start.lastFuelUsed = g;
 
-    // Calc dist
-    if (i > 0) {
-      const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
-      if (dt > 0 && dt < 300) {
-        const velms = s / 3.6;
-        dist += velms * dt;
+      // Calc dist
+      if (i > 0) {
+        const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
+        if (dt > 0 && dt < 300) {
+          const velms = s / 3.6;
+          dist += velms * dt;
+        }
       }
     }
+
+    // Odometer fallback
+    if (start.parsed?.odometer && end.parsed?.odometer) {
+      const d = end.parsed.odometer - start.parsed.odometer;
+      if (d > 0 && d < 2000) dist = d * 1000;
+    }
+
+    scorePoints = Math.max(0, scorePoints - penaltyRpm - penaltySpeed);
+    const avgVoltage = countVoltage ? sumVoltage / countVoltage : null;
+    const avgLoad = countLoad ? sumLoad / countLoad : null;
+    const avgConsumo = countL100 ? sumL100 / countL100 : 0;
+
+    // Last known state from batch
+    const fuelFinal =
+      end.parsed?.fuelRemainingPct || end.parsed?.fuelLevel || start.lastFuel;
+    const autonomiaFinal =
+      end.parsed?.distanceToEmptyKm ||
+      end.parsed?.distanceToEmpty ||
+      start.lastRange;
+
+    return {
+      dataInicio: firebase.firestore.Timestamp.fromMillis(start.timestamp),
+      dataFim: firebase.firestore.Timestamp.fromMillis(end.timestamp),
+      distancia: Number((dist / 1000).toFixed(2)),
+      duracao: Number(durationMin.toFixed(1)),
+      velocidadeMedia: Number(
+        (batch.length ? sumSpeed / batch.length : 0).toFixed(1),
+      ),
+      consumoMedio: Number(avgConsumo.toFixed(2)),
+      custoEstimado: 0,
+      score: Math.round(scorePoints),
+      metricas: {
+        rpmMedio: batch.length ? Math.round(sumRpm / batch.length) : 0,
+        velocidadeMax: Number(maxSpeed.toFixed(1)),
+        temperaturaMax: maxTemp,
+        voltagemMedia: avgVoltage ? Number(avgVoltage.toFixed(1)) : null,
+        cargaMedia: avgLoad ? Math.round(avgLoad) : null,
+        combustivelFinal: fuelFinal ? Number(fuelFinal.toFixed(1)) : null,
+        autonomiaKm: autonomiaFinal ? Math.round(autonomiaFinal) : null,
+        combustivelGasto: start.lastFuelUsed
+          ? Number(start.lastFuelUsed.toFixed(2))
+          : null,
+      },
+      source: "import_csv",
+      importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
   }
 
-  // Odometer fallback
-  if (start.parsed?.odometer && end.parsed?.odometer) {
-    const d = end.parsed.odometer - start.parsed.odometer;
-    if (d > 0 && d < 2000) dist = d * 1000;
+  /**
+   * Render Vehicle Health KPI and potential Warning Cards
+   */
+  async function renderVehicleHealth(veiculoId) {
+    const elText = document.getElementById("kpi-health-text");
+    const elDot = document.getElementById("kpi-health-dot");
+    if (!elText || !elDot) return;
+
+    try {
+      // 1. Get Latest Diagnostic
+      const diagSnap = await db
+        .collection("veiculos")
+        .doc(veiculoId)
+        .collection("diagnosticos")
+        .orderBy("importedAt", "desc")
+        .limit(1)
+        .get();
+
+      // 2. Get Latest Trips for Voltage/Coolant trends
+      const tripSnap = await db
+        .collection("veiculos")
+        .doc(veiculoId)
+        .collection("viagens")
+        .orderBy("dataFim", "desc")
+        .limit(5)
+        .get();
+
+      let diagStatus = "Healthy";
+      let batteryStatus = "OK";
+      let coolantStatus = "OK";
+
+      if (!diagSnap.empty) {
+        const diag = diagSnap.docs[0].data();
+        diagStatus = diag.summary?.estado || "Healthy";
+      }
+
+      if (!tripSnap.empty) {
+        const trips = tripSnap.docs.map((d) => d.data());
+        const avgVolt =
+          trips.reduce(
+            (acc, t) => acc + (t.metricas?.voltagemMedia || 12.6),
+            0,
+          ) / trips.length;
+        if (avgVolt < 11.9) batteryStatus = "Fraca";
+
+        const maxTemp = Math.max(
+          ...trips.map((t) => t.metricas?.temperaturaMax || 0),
+        );
+        if (maxTemp > 105) coolantStatus = "Quente";
+      }
+
+      // Synthesis
+      let finalState = "Saudável";
+      let dotClass = "status-success";
+
+      if (
+        diagStatus === "Warning" ||
+        batteryStatus === "Fraca" ||
+        coolantStatus === "Quente"
+      ) {
+        finalState = "Atenção";
+        dotClass = "status-warning";
+      }
+      if (diagStatus === "Critical") {
+        finalState = "Crítico";
+        dotClass = "status-error";
+      }
+
+      elText.textContent = finalState;
+      elDot.className = "status-indicator-dot " + dotClass;
+    } catch (e) {
+      console.error("Error rendering health:", e);
+    }
   }
 
-  scorePoints = Math.max(0, scorePoints - penaltyRpm - penaltySpeed);
-  const avgVoltage = countVoltage ? sumVoltage / countVoltage : null;
-  const avgLoad = countLoad ? sumLoad / countLoad : null;
-  const avgConsumo = countL100 ? sumL100 / countL100 : 0;
+  // --- DIAGNOSTICS (MODE $06) ---
 
-  // Last known state from batch
-  const fuelFinal =
-    end.parsed?.fuelRemainingPct || end.parsed?.fuelLevel || start.lastFuel;
-  const autonomiaFinal =
-    end.parsed?.distanceToEmptyKm ||
-    end.parsed?.distanceToEmpty ||
-    start.lastRange;
+  async function loadDiagnostics(veiculoId) {
+    const container = document.getElementById("diagnostics-list");
+    if (!container) return;
 
-  return {
-    dataInicio: firebase.firestore.Timestamp.fromMillis(start.timestamp),
-    dataFim: firebase.firestore.Timestamp.fromMillis(end.timestamp),
-    distancia: Number((dist / 1000).toFixed(2)),
-    duracao: Number(durationMin.toFixed(1)),
-    velocidadeMedia: Number(
-      (batch.length ? sumSpeed / batch.length : 0).toFixed(1),
-    ),
-    consumoMedio: Number(avgConsumo.toFixed(2)),
-    custoEstimado: 0,
-    score: Math.round(scorePoints),
-    metricas: {
-      rpmMedio: batch.length ? Math.round(sumRpm / batch.length) : 0,
-      velocidadeMax: Number(maxSpeed.toFixed(1)),
-      temperaturaMax: maxTemp,
-      voltagemMedia: avgVoltage ? Number(avgVoltage.toFixed(1)) : null,
-      cargaMedia: avgLoad ? Math.round(avgLoad) : null,
-      combustivelFinal: fuelFinal ? Number(fuelFinal.toFixed(1)) : null,
-      autonomiaKm: autonomiaFinal ? Math.round(autonomiaFinal) : null,
-      combustivelGasto: start.lastFuelUsed
-        ? Number(start.lastFuelUsed.toFixed(2))
-        : null,
-    },
-    source: "import_csv",
-    importedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  };
-}
+    container.innerHTML = '<div class="spinner"></div>';
 
-/**
- * Render Vehicle Health KPI and potential Warning Cards
- */
-async function renderVehicleHealth(veiculoId) {
-  const elText = document.getElementById("kpi-health-text");
-  const elDot = document.getElementById("kpi-health-dot");
-  if (!elText || !elDot) return;
+    try {
+      const snap = await db
+        .collection("veiculos")
+        .doc(veiculoId)
+        .collection("diagnosticos")
+        .orderBy("importedAt", "desc")
+        .limit(20)
+        .get();
 
-  try {
-    // 1. Get Latest Diagnostic
-    const diagSnap = await db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("diagnosticos")
-      .orderBy("importedAt", "desc")
-      .limit(1)
-      .get();
+      if (snap.empty) {
+        container.innerHTML =
+          '<div class="vehicles-empty"><p>Nenhum relatório de diagnóstico encontrado.</p></div>';
+        return;
+      }
 
-    // 2. Get Latest Trips for Voltage/Coolant trends
-    const tripSnap = await db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("viagens")
-      .orderBy("dataFim", "desc")
-      .limit(5)
-      .get();
+      container.innerHTML = "";
+      snap.forEach((doc) => {
+        const data = doc.data();
+        const date = data.importedAt
+          ? data.importedAt.toDate().toLocaleString()
+          : "Data desconhecida";
+        const failCount = data.summary?.failCount || 0;
+        const nearLimit = data.summary?.nearLimitCount || 0;
+        const contextClass =
+          failCount > 0
+            ? "status-error"
+            : nearLimit > 0
+              ? "status-warning"
+              : "status-success";
+        const statusText =
+          failCount > 0
+            ? `${failCount} Falhas detetadas`
+            : nearLimit > 0
+              ? `${nearLimit} Alertas (Perto do limite)`
+              : "Saúde: Saudável";
 
-    let diagStatus = "Healthy";
-    let batteryStatus = "OK";
-    let coolantStatus = "OK";
-
-    if (!diagSnap.empty) {
-      const diag = diagSnap.docs[0].data();
-      diagStatus = diag.summary?.estado || "Healthy";
-    }
-
-    if (!tripSnap.empty) {
-      const trips = tripSnap.docs.map((d) => d.data());
-      const avgVolt =
-        trips.reduce((acc, t) => acc + (t.metricas?.voltagemMedia || 12.6), 0) /
-        trips.length;
-      if (avgVolt < 11.9) batteryStatus = "Fraca";
-
-      const maxTemp = Math.max(
-        ...trips.map((t) => t.metricas?.temperaturaMax || 0),
-      );
-      if (maxTemp > 105) coolantStatus = "Quente";
-    }
-
-    // Synthesis
-    let finalState = "Saudável";
-    let dotClass = "status-success";
-
-    if (
-      diagStatus === "Warning" ||
-      batteryStatus === "Fraca" ||
-      coolantStatus === "Quente"
-    ) {
-      finalState = "Atenção";
-      dotClass = "status-warning";
-    }
-    if (diagStatus === "Critical") {
-      finalState = "Crítico";
-      dotClass = "status-error";
-    }
-
-    elText.textContent = finalState;
-    elDot.className = "status-indicator-dot " + dotClass;
-  } catch (e) {
-    console.error("Error rendering health:", e);
-  }
-}
-
-// --- DIAGNOSTICS (MODE $06) ---
-
-async function loadDiagnostics(veiculoId) {
-  const container = document.getElementById("diagnostics-list");
-  if (!container) return;
-
-  container.innerHTML = '<div class="spinner"></div>';
-
-  try {
-    const snap = await db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("diagnosticos")
-      .orderBy("importedAt", "desc")
-      .limit(20)
-      .get();
-
-    if (snap.empty) {
-      container.innerHTML =
-        '<div class="vehicles-empty"><p>Nenhum relatório de diagnóstico encontrado.</p></div>';
-      return;
-    }
-
-    container.innerHTML = "";
-    snap.forEach((doc) => {
-      const data = doc.data();
-      const date = data.importedAt
-        ? data.importedAt.toDate().toLocaleString()
-        : "Data desconhecida";
-      const failCount = data.summary?.failCount || 0;
-      const nearLimit = data.summary?.nearLimitCount || 0;
-      const contextClass =
-        failCount > 0
-          ? "status-error"
-          : nearLimit > 0
-            ? "status-warning"
-            : "status-success";
-      const statusText =
-        failCount > 0
-          ? `${failCount} Falhas detetadas`
-          : nearLimit > 0
-            ? `${nearLimit} Alertas (Perto do limite)`
-            : "Saúde: Saudável";
-
-      const card = document.createElement("div");
-      card.className = "card";
-      card.style.cursor = "pointer";
-      card.innerHTML = `
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.cursor = "pointer";
+        card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div class="muted" style="font-size:0.8rem;">${date}</div>
@@ -3342,365 +3328,371 @@ async function loadDiagnostics(veiculoId) {
                 </div>
             `;
 
-      card.onclick = () => {
-        const det = card.querySelector(".diag-details");
-        det.classList.toggle("hidden");
-      };
+        card.onclick = () => {
+          const det = card.querySelector(".diag-details");
+          det.classList.toggle("hidden");
+        };
 
-      container.appendChild(card);
-    });
-  } catch (e) {
-    console.error(e);
-    container.innerHTML = `<div class="error-box">Erro ao carregar diagnósticos: ${e.message}</div>`;
-  }
-}
-
-/**
- * Setup the Unified Import Modal (3 tabs: CSV, Mode 06, Summary)
- */
-function setupUnifiedImport(veiculoId) {
-  const btnTrigger = document.getElementById("btn-import-torque-csv-zip");
-  const modal = document.getElementById("modalImport");
-  const btnClose = document.getElementById("btn-close-import");
-  const btnCancel = document.getElementById("btn-cancel-import");
-  const btnRun = document.getElementById("btn-run-import");
-  const tabBtns = document.querySelectorAll(".tabs .tab-btn[data-import-tab]");
-  const tabPanels = document.querySelectorAll(".import-tab-panel");
-
-  if (!btnTrigger || !modal) {
-    console.warn("[Import] Modal or Trigger not found");
-    return;
-  }
-
-  // Open Modal
-  btnTrigger.onclick = () => {
-    modal.classList.remove("hidden");
-    switchImportTab("tabCsv");
-  };
-
-  // Close Modal
-  const closeModal = () => {
-    modal.classList.add("hidden");
-    const input = document.getElementById("csvFileInput");
-    if (input) input.value = "";
-    const area = document.getElementById("mode06Text");
-    if (area) area.value = "";
-  };
-  if (btnCancel) btnCancel.onclick = closeModal;
-  if (btnClose) btnClose.onclick = closeModal;
-
-  // Tab Switching
-  function switchImportTab(tabId) {
-    tabBtns.forEach((b) => {
-      const isMatch = b.getAttribute("data-import-tab") === tabId;
-      b.classList.toggle("active", isMatch);
-      // Premium style fix for border-bottom
-      b.style.borderBottomColor = isMatch
-        ? "var(--color-primary-start)"
-        : "transparent";
-      b.style.fontWeight = isMatch ? "700" : "400";
-    });
-    tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== tabId));
-    updateImportSummary();
-  }
-
-  tabBtns.forEach((btn) => {
-    btn.onclick = () => switchImportTab(btn.getAttribute("data-import-tab"));
-  });
-
-  // Summary logic
-  function updateImportSummary() {
-    const summaryDiv = document.getElementById("importSummary");
-    if (!summaryDiv) return;
-
-    const fileInput = document.getElementById("csvFileInput");
-    const m06Text = document.getElementById("mode06Text")?.value.trim();
-    let html = "";
-
-    if (fileInput?.files?.length > 0) {
-      html += `<p>✅ <strong>CSV/ZIP:</strong> ${fileInput.files[0].name}</p>`;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<div class="error-box">Erro ao carregar diagnósticos: ${e.message}</div>`;
     }
-    if (m06Text) {
-      const parsed = parseMode06Text(m06Text);
-      html += `<p>✅ <strong>Mode $06:</strong> ${parsed.summary.totalTests} testes encontrados. Estado: <strong>${parsed.summary.estado}</strong></p>`;
+  }
+
+  /**
+   * Setup the Unified Import Modal (3 tabs: CSV, Mode 06, Summary)
+   */
+  function setupUnifiedImport(veiculoId) {
+    const btnTrigger = document.getElementById("btn-import-torque-csv-zip");
+    const modal = document.getElementById("modalImport");
+    const btnClose = document.getElementById("btn-close-import");
+    const btnCancel = document.getElementById("btn-cancel-import");
+    const btnRun = document.getElementById("btn-run-import");
+    const tabBtns = document.querySelectorAll(
+      ".tabs .tab-btn[data-import-tab]",
+    );
+    const tabPanels = document.querySelectorAll(".import-tab-panel");
+
+    if (!btnTrigger || !modal) {
+      console.warn("[Import] Modal or Trigger not found");
+      return;
     }
 
-    if (!html) {
-      html = '<p class="muted">Nenhum dado selecionado para importar.</p>';
-      if (btnRun) btnRun.disabled = true;
-    } else {
-      if (btnRun) btnRun.disabled = false;
-    }
-    summaryDiv.innerHTML = html;
-  }
-
-  // Listen for changes
-  document
-    .getElementById("csvFileInput")
-    ?.addEventListener("change", updateImportSummary);
-  document
-    .getElementById("mode06Text")
-    ?.addEventListener("input", updateImportSummary);
-
-  // RUN IMPORT
-  if (btnRun) {
-    btnRun.onclick = async () => {
-      const file = document.getElementById("csvFileInput")?.files[0];
-      const m06Text = document.getElementById("mode06Text")?.value.trim();
-      btnRun.disabled = true;
-      btnRun.textContent = "A importar...";
-
-      try {
-        if (file) {
-          await handleTorqueImport(veiculoId, file, {
-            sampleRate: document.getElementById("sampleRate").value,
-            grouping: document.getElementById("tripGrouping").value,
-          });
-        }
-        if (m06Text) {
-          const parsed = parseMode06Text(m06Text);
-          await db
-            .collection("veiculos")
-            .doc(veiculoId)
-            .collection("diagnosticos")
-            .add({
-              ...parsed,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            });
-        }
-        alert("Dados importados com sucesso!");
-        closeModal();
-        location.reload();
-      } catch (e) {
-        alert("Erro na importação: " + e.message);
-      } finally {
-        btnRun.disabled = false;
-        btnRun.textContent = "Importar Dados";
-      }
+    // Open Modal
+    btnTrigger.onclick = () => {
+      modal.classList.remove("hidden");
+      switchImportTab("tabCsv");
     };
-  }
-}
 
-/**
- * UPDATED: Handle Torque CSV/ZIP Import (Deterministic IDs & Fuel Fallback)
- */
-async function handleTorqueImport(veiculoId, file, options = {}) {
-  if (!file) return;
+    // Close Modal
+    const closeModal = () => {
+      modal.classList.add("hidden");
+      const input = document.getElementById("csvFileInput");
+      if (input) input.value = "";
+      const area = document.getElementById("mode06Text");
+      if (area) area.value = "";
+    };
+    if (btnCancel) btnCancel.onclick = closeModal;
+    if (btnClose) btnClose.onclick = closeModal;
 
-  const progressModal = document.getElementById("upload-progress-modal");
-  const progressBar = document.getElementById("upload-progress-bar");
-  const progressText = document.getElementById("upload-progress-text");
-
-  if (progressModal) {
-    progressModal.classList.remove("hidden");
-    if (progressBar) progressBar.style.width = "5%";
-    if (progressText) progressText.textContent = "A ler ficheiro...";
-  }
-
-  try {
-    let csvText = "";
-    if (file.name.toLowerCase().endsWith(".zip")) {
-      const zip = await JSZip.loadAsync(file);
-      const csvFile = Object.values(zip.files).find(
-        (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
-      );
-      if (!csvFile) throw new Error("Nenhum CSV no ZIP.");
-      csvText = await csvFile.async("string");
-    } else {
-      csvText = await file.text();
+    // Tab Switching
+    function switchImportTab(tabId) {
+      tabBtns.forEach((b) => {
+        const isMatch = b.getAttribute("data-import-tab") === tabId;
+        b.classList.toggle("active", isMatch);
+        // Premium style fix for border-bottom
+        b.style.borderBottomColor = isMatch
+          ? "var(--color-primary-start)"
+          : "transparent";
+        b.style.fontWeight = isMatch ? "700" : "400";
+      });
+      tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== tabId));
+      updateImportSummary();
     }
 
-    const lines = csvText.trim().split("\n");
-    if (lines.length < 2) throw new Error("CSV vazio.");
+    tabBtns.forEach((btn) => {
+      btn.onclick = () => switchImportTab(btn.getAttribute("data-import-tab"));
+    });
 
-    const headers = lines[0].split(",").map((h) => h.trim());
-    const findHeader = (p) =>
-      headers.find((h) => h.toLowerCase().includes(p.toLowerCase()));
+    // Summary logic
+    function updateImportSummary() {
+      const summaryDiv = document.getElementById("importSummary");
+      if (!summaryDiv) return;
 
-    const dateCol = findHeader("Device Time") || headers[1];
-    const speedCol = findHeader("Speed (OBD)");
-    const rpmCol = findHeader("RPM");
-    const odoCol = findHeader("Odometer");
-    const fuelCol = findHeader("Fuel Level");
-    const fuelRemCol = findHeader("Fuel Remaining");
-    const tripL100Col = findHeader("Trip average");
-    const rangeCol = findHeader("Distance to empty");
-    const latCol = findHeader("Latitude") || "Latitude";
-    const lonCol = findHeader("Longitude") || "Longitude";
+      const fileInput = document.getElementById("csvFileInput");
+      const m06Text = document.getElementById("mode06Text")?.value.trim();
+      let html = "";
 
-    const readings = [];
-    const sampleRate = parseInt(options.sampleRate) || 1;
-    const sessionId = options.sessionId || "csv_" + Date.now();
+      if (fileInput?.files?.length > 0) {
+        html += `<p>✅ <strong>CSV/ZIP:</strong> ${fileInput.files[0].name}</p>`;
+      }
+      if (m06Text) {
+        const parsed = parseMode06Text(m06Text);
+        html += `<p>✅ <strong>Mode $06:</strong> ${parsed.summary.totalTests} testes encontrados. Estado: <strong>${parsed.summary.estado}</strong></p>`;
+      }
 
-    for (let i = 1; i < lines.length; i++) {
-      if (i % sampleRate !== 0) continue;
-      const values = lines[i].split(",");
-      const row = {};
-      headers.forEach((h, idx) => {
-        row[h] = values[idx] || null;
-      });
-
-      let dateStr = row[dateCol];
-      if (!dateStr || dateStr === "-") continue;
-
-      const timestamp = new Date(dateStr).getTime();
-      if (isNaN(timestamp)) continue;
-
-      const getNum = (col) => {
-        if (!col) return null;
-        const v = row[col];
-        if (!v || v === "-") return null;
-        const n = parseFloat(String(v).replace(",", "."));
-        return isNaN(n) ? null : n;
-      };
-
-      // FUEL FALLBACK: Use Fuel Level or Fuel Remaining (Calculated)
-      const fuelLevelRaw = getNum(fuelCol);
-      const fuelRemRaw = getNum(fuelRemCol);
-      const finalFuel = fuelLevelRaw !== null ? fuelLevelRaw : fuelRemRaw;
-
-      const parsed = {
-        speed: getNum(speedCol),
-        rpm: getNum(rpmCol),
-        odometer: getNum(odoCol),
-        fuelLevel: finalFuel,
-        fuelRemainingPct: fuelRemRaw,
-        tripL100: getNum(tripL100Col),
-        distanceToEmptyKm: getNum(rangeCol),
-      };
-
-      const lat = getNum(latCol);
-      const lon = getNum(lonCol);
-      const loc = lat && lon ? new firebase.firestore.GeoPoint(lat, lon) : null;
-
-      // DETERMINISTIC ID
-      const rid = generateDeterministicId(veiculoId, timestamp, sessionId);
-
-      readings.push({
-        id: rid,
-        vehicleId: veiculoId,
-        timestamp,
-        receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
-        sessionId: sessionId,
-        deviceId: "csv_import",
-        imported: true,
-        parsed: { ...parsed, location: loc },
-      });
+      if (!html) {
+        html = '<p class="muted">Nenhum dado selecionado para importar.</p>';
+        if (btnRun) btnRun.disabled = true;
+      } else {
+        if (btnRun) btnRun.disabled = false;
+      }
+      summaryDiv.innerHTML = html;
     }
 
-    if (!readings.length) throw new Error("Sem dados válidos.");
+    // Listen for changes
+    document
+      .getElementById("csvFileInput")
+      ?.addEventListener("change", updateImportSummary);
+    document
+      .getElementById("mode06Text")
+      ?.addEventListener("input", updateImportSummary);
 
-    readings.sort((a, b) => a.timestamp - b.timestamp);
-    const trips = calculateTripsFromReadings(readings);
+    // RUN IMPORT
+    if (btnRun) {
+      btnRun.onclick = async () => {
+        const file = document.getElementById("csvFileInput")?.files[0];
+        const m06Text = document.getElementById("mode06Text")?.value.trim();
+        btnRun.disabled = true;
+        btnRun.textContent = "A importar...";
 
-    // DETERMINISTIC TRIPS
-    if (trips.length) {
-      const batch = db.batch();
-      const ref = db
+        try {
+          if (file) {
+            await handleTorqueImport(veiculoId, file, {
+              sampleRate: document.getElementById("sampleRate").value,
+              grouping: document.getElementById("tripGrouping").value,
+            });
+          }
+          if (m06Text) {
+            const parsed = parseMode06Text(m06Text);
+            await db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("diagnosticos")
+              .add({
+                ...parsed,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              });
+          }
+          alert("Dados importados com sucesso!");
+          closeModal();
+          location.reload();
+        } catch (e) {
+          alert("Erro na importação: " + e.message);
+        } finally {
+          btnRun.disabled = false;
+          btnRun.textContent = "Importar Dados";
+        }
+      };
+    }
+  }
+
+  /**
+   * UPDATED: Handle Torque CSV/ZIP Import (Deterministic IDs & Fuel Fallback)
+   */
+  async function handleTorqueImport(veiculoId, file, options = {}) {
+    if (!file) return;
+
+    const progressModal = document.getElementById("upload-progress-modal");
+    const progressBar = document.getElementById("upload-progress-bar");
+    const progressText = document.getElementById("upload-progress-text");
+
+    if (progressModal) {
+      progressModal.classList.remove("hidden");
+      if (progressBar) progressBar.style.width = "5%";
+      if (progressText) progressText.textContent = "A ler ficheiro...";
+    }
+
+    try {
+      let csvText = "";
+      if (file.name.toLowerCase().endsWith(".zip")) {
+        const zip = await JSZip.loadAsync(file);
+        const csvFile = Object.values(zip.files).find(
+          (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+        );
+        if (!csvFile) throw new Error("Nenhum CSV no ZIP.");
+        csvText = await csvFile.async("string");
+      } else {
+        csvText = await file.text();
+      }
+
+      const lines = csvText.trim().split("\n");
+      if (lines.length < 2) throw new Error("CSV vazio.");
+
+      const headers = lines[0].split(",").map((h) => h.trim());
+      const findHeader = (p) =>
+        headers.find((h) => h.toLowerCase().includes(p.toLowerCase()));
+
+      const dateCol = findHeader("Device Time") || headers[1];
+      const speedCol = findHeader("Speed (OBD)");
+      const rpmCol = findHeader("RPM");
+      const odoCol = findHeader("Odometer");
+      const fuelCol = findHeader("Fuel Level");
+      const fuelRemCol = findHeader("Fuel Remaining");
+      const tripL100Col = findHeader("Trip average");
+      const rangeCol = findHeader("Distance to empty");
+      const latCol = findHeader("Latitude") || "Latitude";
+      const lonCol = findHeader("Longitude") || "Longitude";
+
+      const readings = [];
+      const sampleRate = parseInt(options.sampleRate) || 1;
+      const sessionId = options.sessionId || "csv_" + Date.now();
+
+      for (let i = 1; i < lines.length; i++) {
+        if (i % sampleRate !== 0) continue;
+        const values = lines[i].split(",");
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx] || null;
+        });
+
+        let dateStr = row[dateCol];
+        if (!dateStr || dateStr === "-") continue;
+
+        const timestamp = new Date(dateStr).getTime();
+        if (isNaN(timestamp)) continue;
+
+        const getNum = (col) => {
+          if (!col) return null;
+          const v = row[col];
+          if (!v || v === "-") return null;
+          const n = parseFloat(String(v).replace(",", "."));
+          return isNaN(n) ? null : n;
+        };
+
+        // FUEL FALLBACK: Use Fuel Level or Fuel Remaining (Calculated)
+        const fuelLevelRaw = getNum(fuelCol);
+        const fuelRemRaw = getNum(fuelRemCol);
+        const finalFuel = fuelLevelRaw !== null ? fuelLevelRaw : fuelRemRaw;
+
+        const parsed = {
+          speed: getNum(speedCol),
+          rpm: getNum(rpmCol),
+          odometer: getNum(odoCol),
+          fuelLevel: finalFuel,
+          fuelRemainingPct: fuelRemRaw,
+          tripL100: getNum(tripL100Col),
+          distanceToEmptyKm: getNum(rangeCol),
+        };
+
+        const lat = getNum(latCol);
+        const lon = getNum(lonCol);
+        const loc =
+          lat && lon ? new firebase.firestore.GeoPoint(lat, lon) : null;
+
+        // DETERMINISTIC ID
+        const rid = generateDeterministicId(veiculoId, timestamp, sessionId);
+
+        readings.push({
+          id: rid,
+          vehicleId: veiculoId,
+          timestamp,
+          receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
+          sessionId: sessionId,
+          deviceId: "csv_import",
+          imported: true,
+          parsed: { ...parsed, location: loc },
+        });
+      }
+
+      if (!readings.length) throw new Error("Sem dados válidos.");
+
+      readings.sort((a, b) => a.timestamp - b.timestamp);
+      const trips = calculateTripsFromReadings(readings);
+
+      // DETERMINISTIC TRIPS
+      if (trips.length) {
+        const batch = db.batch();
+        const ref = db
+          .collection("veiculos")
+          .doc(veiculoId)
+          .collection("viagens");
+        trips.forEach((t) => {
+          // Use sessionId or hash for deterministic trip ID
+          const tid = generateDeterministicId(veiculoId, t.sessionId || "trip");
+          batch.set(ref.doc(tid), t, { merge: true });
+        });
+        await batch.commit();
+      }
+
+      // BATCH READINGS (Deterministic set)
+      const coll = db
         .collection("veiculos")
         .doc(veiculoId)
-        .collection("viagens");
-      trips.forEach((t) => {
-        // Use sessionId or hash for deterministic trip ID
-        const tid = generateDeterministicId(veiculoId, t.sessionId || "trip");
-        batch.set(ref.doc(tid), t, { merge: true });
-      });
-      await batch.commit();
-    }
+        .collection("leiturasObd");
 
-    // BATCH READINGS (Deterministic set)
-    const coll = db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("leiturasObd");
+      for (let i = 0; i < readings.length; i += 450) {
+        const chunk = readings.slice(i, i + 450);
+        const b = db.batch();
+        chunk.forEach((r) => {
+          const { id, ...data } = r;
+          b.set(coll.doc(id), data, { merge: true });
+        });
+        await b.commit();
+        if (progressBar)
+          progressBar.style.width = `${Math.round((i / readings.length) * 100)}%`;
+      }
 
-    for (let i = 0; i < readings.length; i += 450) {
-      const chunk = readings.slice(i, i + 450);
-      const b = db.batch();
-      chunk.forEach((r) => {
-        const { id, ...data } = r;
-        b.set(coll.doc(id), data, { merge: true });
-      });
-      await b.commit();
-      if (progressBar)
-        progressBar.style.width = `${Math.round((i / readings.length) * 100)}%`;
-    }
+      // UPDATE VEHICLE PROFILE (LATEST)
+      const latest = readings[readings.length - 1];
+      if (latest && latest.parsed) {
+        const upd = {
+          lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        if (latest.parsed.odometer) upd.odometroAtual = latest.parsed.odometer;
+        if (latest.parsed.fuelLevel !== null)
+          upd.nivelCombustivel = latest.parsed.fuelLevel;
+        if (latest.parsed.distanceToEmptyKm)
+          upd.autonomiaKm = latest.parsed.distanceToEmptyKm;
 
-    // UPDATE VEHICLE PROFILE (LATEST)
-    const latest = readings[readings.length - 1];
-    if (latest && latest.parsed) {
-      const upd = {
-        lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-      if (latest.parsed.odometer) upd.odometroAtual = latest.parsed.odometer;
-      if (latest.parsed.fuelLevel !== null)
-        upd.nivelCombustivel = latest.parsed.fuelLevel;
-      if (latest.parsed.distanceToEmptyKm)
-        upd.autonomiaKm = latest.parsed.distanceToEmptyKm;
+        await db.collection("veiculos").doc(veiculoId).update(upd);
+      }
 
-      await db.collection("veiculos").doc(veiculoId).update(upd);
-    }
-
-    if (progressModal) progressModal.classList.add("hidden");
-    return readings.length;
-  } catch (e) {
-    console.error(e);
-    if (progressModal) progressModal.classList.add("hidden");
-    throw e;
-  }
-}
-
-/**
- * Robust Mode $06 Parser
- */
-function parseMode06Text(text) {
-  const lines = text.split(/\r?\n/);
-  const tests = [];
-  const rePassFail =
-    /MID:\$(?<mid>[0-9A-Fa-f]{2})\s+TID:\$(?<tid>[0-9A-Fa-f]{2})\s+-\s*(?<name>.*?)\s+Max:\s*(?<max>[-0-9.,]+)(?<unitMax>[^\s]*)\s+Min:\s*(?<min>[-0-9.,]+)(?<unitMin>[^\s]*)\s+Test result value:\s*(?<val>[-0-9.,]+)(?<unitVal>[^\s]*)\s+(?<status>PASS|FAIL)/i;
-
-  for (const line of lines) {
-    let m = line.match(rePassFail);
-    if (m && m.groups) {
-      const toNum = (s) => parseFloat(String(s).replace(",", "."));
-      const max = toNum(m.groups.max);
-      const min = toNum(m.groups.min);
-      const val = toNum(m.groups.val);
-      const span = max - min;
-      const margin = span > 0 ? Math.min(val - min, max - val) / span : null;
-      tests.push({
-        mid: m.groups.mid.toUpperCase(),
-        tid: m.groups.tid.toUpperCase(),
-        name: m.groups.name.trim(),
-        min,
-        max,
-        val,
-        unit: m.groups.unitVal || m.groups.unitMax || "",
-        status: m.groups.status.toUpperCase(),
-        marginToLimit: margin,
-      });
+      if (progressModal) progressModal.classList.add("hidden");
+      return readings.length;
+    } catch (e) {
+      console.error(e);
+      if (progressModal) progressModal.classList.add("hidden");
+      throw e;
     }
   }
 
-  const failCount = tests.filter((t) => t.status === "FAIL").length;
-  const nearLimitCount = tests.filter(
-    (t) =>
-      t.status === "PASS" && t.marginToLimit !== null && t.marginToLimit < 0.1,
-  ).length;
+  /**
+   * Robust Mode $06 Parser
+   */
+  function parseMode06Text(text) {
+    const lines = text.split(/\r?\n/);
+    const tests = [];
+    const rePassFail =
+      /MID:\$(?<mid>[0-9A-Fa-f]{2})\s+TID:\$(?<tid>[0-9A-Fa-f]{2})\s+-\s*(?<name>.*?)\s+Max:\s*(?<max>[-0-9.,]+)(?<unitMax>[^\s]*)\s+Min:\s*(?<min>[-0-9.,]+)(?<unitMin>[^\s]*)\s+Test result value:\s*(?<val>[-0-9.,]+)(?<unitVal>[^\s]*)\s+(?<status>PASS|FAIL)/i;
 
-  let estado = "Healthy";
-  if (failCount > 0) estado = "Critical";
-  else if (nearLimitCount >= 3) estado = "Warning";
+    for (const line of lines) {
+      let m = line.match(rePassFail);
+      if (m && m.groups) {
+        const toNum = (s) => parseFloat(String(s).replace(",", "."));
+        const max = toNum(m.groups.max);
+        const min = toNum(m.groups.min);
+        const val = toNum(m.groups.val);
+        const span = max - min;
+        const margin = span > 0 ? Math.min(val - min, max - val) / span : null;
+        tests.push({
+          mid: m.groups.mid.toUpperCase(),
+          tid: m.groups.tid.toUpperCase(),
+          name: m.groups.name.trim(),
+          min,
+          max,
+          val,
+          unit: m.groups.unitVal || m.groups.unitMax || "",
+          status: m.groups.status.toUpperCase(),
+          marginToLimit: margin,
+        });
+      }
+    }
 
-  return {
-    summary: {
-      totalTests: tests.length,
-      passCount: tests.filter((t) => t.status === "PASS").length,
-      failCount,
-      nearLimitCount,
-      estado,
-    },
-    tests,
-    importedAt: new Date(),
-  };
-}
+    const failCount = tests.filter((t) => t.status === "FAIL").length;
+    const nearLimitCount = tests.filter(
+      (t) =>
+        t.status === "PASS" &&
+        t.marginToLimit !== null &&
+        t.marginToLimit < 0.1,
+    ).length;
+
+    let estado = "Healthy";
+    if (failCount > 0) estado = "Critical";
+    else if (nearLimitCount >= 3) estado = "Warning";
+
+    return {
+      summary: {
+        totalTests: tests.length,
+        passCount: tests.filter((t) => t.status === "PASS").length,
+        failCount,
+        nearLimitCount,
+        estado,
+      },
+      tests,
+      importedAt: new Date(),
+    };
+  }
+});
