@@ -3488,6 +3488,164 @@ async function loadDiagnostics(veiculoId) {
 }
 
 /**
+ * Setup the Unified Import Modal (3 tabs: CSV, Mode 06, Summary)
+ */
+function setupUnifiedImport(veiculoId) {
+  const btnTrigger = document.getElementById("btn-import-torque-csv-zip");
+  const modal = document.getElementById("modalImport");
+  const btnClose = document.getElementById("btn-close-import");
+  const btnCancel = document.getElementById("btn-cancel-import");
+  const btnRun = document.getElementById("btn-run-import");
+  const tabBtns = document.querySelectorAll(".tabs .tab-btn[data-import-tab]");
+  const tabPanels = document.querySelectorAll(".import-tab-panel");
+
+  if (!btnTrigger || !modal) {
+    console.warn("[Import] Modal or Trigger not found");
+    return;
+  }
+
+  // Open Modal
+  btnTrigger.onclick = () => {
+    modal.classList.remove("hidden");
+    switchImportTab("tabCsv");
+  };
+
+  // Close Modal
+  const closeModal = () => {
+    modal.classList.add("hidden");
+    const input = document.getElementById("csvFileInput");
+    if (input) input.value = "";
+    const area = document.getElementById("mode06Text");
+    if (area) area.value = "";
+  };
+  if (btnCancel) btnCancel.onclick = closeModal;
+  if (btnClose) btnClose.onclick = closeModal;
+
+  // Tab Switching
+  function switchImportTab(tabId) {
+    tabBtns.forEach((b) => {
+      const isMatch = b.getAttribute("data-import-tab") === tabId;
+      b.classList.toggle("active", isMatch);
+      // Premium style fix for border-bottom
+      b.style.borderBottomColor = isMatch
+        ? "var(--color-primary-start)"
+        : "transparent";
+      b.style.fontWeight = isMatch ? "700" : "400";
+    });
+    tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== tabId));
+    updateImportSummary();
+  }
+
+  tabBtns.forEach((btn) => {
+    btn.onclick = () => switchImportTab(btn.getAttribute("data-import-tab"));
+  });
+
+  // Summary logic
+  function updateImportSummary() {
+    const summaryDiv = document.getElementById("importSummary");
+    if (!summaryDiv) return;
+
+    const fileInput = document.getElementById("csvFileInput");
+    const m06Text = document.getElementById("mode06Text")?.value.trim();
+    let html = "";
+
+    if (fileInput?.files?.length > 0) {
+      html += `<p>✅ <strong>CSV/ZIP:</strong> ${fileInput.files[0].name}</p>`;
+    }
+    if (m06Text) {
+      const parsed = parseMode06Text(m06Text);
+      html += `<p>✅ <strong>Mode $06:</strong> ${parsed.summary.totalTests} testes encontrados. Estado: <strong>${parsed.summary.estado}</strong></p>`;
+    }
+
+    if (!html) {
+      html = '<p class="muted">Nenhum dado selecionado para importar.</p>';
+      if (btnRun) btnRun.disabled = true;
+    } else {
+      if (btnRun) btnRun.disabled = false;
+    }
+    summaryDiv.innerHTML = html;
+  }
+
+  // Listen for changes
+  document
+    .getElementById("csvFileInput")
+    ?.addEventListener("change", updateImportSummary);
+  document
+    .getElementById("mode06Text")
+    ?.addEventListener("input", updateImportSummary);
+
+  // RUN IMPORT
+  if (btnRun) {
+    btnRun.onclick = async () => {
+      const file = document.getElementById("csvFileInput")?.files[0];
+      const m06Text = document.getElementById("mode06Text")?.value.trim();
+      btnRun.disabled = true;
+      btnRun.textContent = "A importar...";
+
+      try {
+        if (file) await handleTorqueImport(veiculoId, file);
+        if (m06Text) {
+          const parsed = parseMode06Text(m06Text);
+          await db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("diagnosticos")
+            .add({
+              ...parsed,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+        }
+        alert("Dados importados com sucesso!");
+        closeModal();
+        location.reload();
+      } catch (e) {
+        alert("Erro na importação: " + e.message);
+      } finally {
+        btnRun.disabled = false;
+        btnRun.textContent = "Importar Dados";
+      }
+    };
+  }
+}
+
+/**
+ * Render Vehicle Health KPI on Dashboard
+ */
+async function renderVehicleHealth(veiculoId) {
+  const elText = document.getElementById("kpi-health-text");
+  const elDot = document.getElementById("kpi-health-dot");
+
+  if (!elText || !elDot) return;
+
+  try {
+    const snap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("diagnosticos")
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      elText.textContent = "Sem dados";
+      return;
+    }
+
+    const report = snap.docs[0].data();
+    const estado = report.summary?.estado || "Healthy";
+
+    elText.textContent = estado;
+    elDot.className = "status-indicator-dot"; // Reset
+
+    if (estado === "Critical") elDot.classList.add("status-error");
+    else if (estado === "Warning") elDot.classList.add("status-warning");
+    else elDot.classList.add("status-success");
+  } catch (e) {
+    console.error("[Health] Error:", e);
+  }
+}
+
+/**
  * Handle Torque CSV/ZIP Import (Legacy Logic refactored)
  */
 async function handleTorqueImport(veiculoId, file, options = {}) {
