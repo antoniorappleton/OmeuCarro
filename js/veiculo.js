@@ -1325,9 +1325,14 @@ document.addEventListener("DOMContentLoaded", () => {
     el.name.textContent = v.nome;
     el.subtitle.textContent = `${v.marca} ${v.modelo}`;
     el.plate.textContent = v.matricula || "Sem matrícula";
-    el.fuel.textContent = v.combustivelPadrao || "—";
-
-    el.fuel.textContent = v.combustivelPadrao || "—";
+    const fuelType = v.combustivelPadrao || "—";
+    const fuelLevel = v.nivelCombustivel;
+    
+    if (fuelLevel !== undefined && fuelLevel !== null && fuelLevel > 0) {
+      el.fuel.textContent = `${fuelType} (${Math.round(fuelLevel)}%)`;
+    } else {
+      el.fuel.textContent = fuelType;
+    }
 
     // 🔹 ODÓMETRO
     const currentOdo = v.odometroAtual || v.odometroInicial || 0;
@@ -1473,8 +1478,14 @@ document.addEventListener("DOMContentLoaded", () => {
           // Update Fuel Badge (Hero)
           const fuelPct = data.nivelCombustivel;
           const heroFuel = document.getElementById("vehicle-fuel");
-          if (heroFuel && fuelPct !== undefined) {
-            heroFuel.textContent = `${Math.round(fuelPct)}%`;
+          const fuelType = data.combustivelPadrao || "—";
+
+          if (heroFuel) {
+            if (fuelPct !== undefined && fuelPct !== null && fuelPct > 0) {
+              heroFuel.textContent = `${fuelType} (${Math.round(fuelPct)}%)`;
+            } else {
+              heroFuel.textContent = fuelType;
+            }
           }
 
           // Update Last Trip Summary in UI (Reactivity to ultimasMetricas sync)
@@ -2476,6 +2487,8 @@ document.addEventListener("DOMContentLoaded", () => {
         maf: document.getElementById("obd-maf"),
         torque: document.getElementById("obd-torque"),
         hp: document.getElementById("obd-hp"),
+        boost: document.getElementById("obd-boost"),
+        fuelUsed: document.getElementById("obd-fuelUsed"),
         lastUpdate: document.getElementById("obd-last-update"),
         statusCoolant: document.getElementById("status-coolant"),
       };
@@ -2558,6 +2571,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const hp = findKey(reading, "Horsepower") || reading.hpWheels;
             if (liveElements.hp)
               liveElements.hp.textContent = hp ? Math.round(hp) : "--";
+
+            const boost = reading.boost;
+            if (liveElements.boost)
+              liveElements.boost.textContent = boost !== undefined && boost !== null
+                ? Number(boost).toFixed(1)
+                : "--";
+
+            const fuelUsed = reading.fuelUsed;
+            if (liveElements.fuelUsed)
+              liveElements.fuelUsed.textContent = fuelUsed !== undefined && fuelUsed !== null
+                ? Number(fuelUsed).toFixed(1)
+                : "--";
 
             // Timestamp
             if (liveElements.lastUpdate && data.timestamp) {

@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
 
 // Garantir inicialização do admin
@@ -13,22 +14,25 @@ const apiKeySecret = defineSecret("TORQUE_UPLOAD_KEY");
 // Mapas de PIDs padrão (fallback)
 // Suporta array de strings para tentar várias opções (ordem de preferência)
 const DEFAULT_PIDS = {
-  speed: ["kd", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, GPS Bearing Speed)
-  rpm: ["kc"], // rpm
-  odometer: ["a6", "kff1201"], // km (a6 from ECU, kff1201 from GPS/Calc)
-  fuelLevel: ["2f", "k2f"], // % (2f from ECU, k2f from Torque)
+  speed: ["kd", "k0d", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, etc)
+  rpm: ["kc", "k0c"], // rpm
+  odometer: ["a6", "kff1201"], // km
+  fuelLevel: ["2f", "k2f", "k02f"], // %
   latitude: ["kff1006"],
   longitude: ["kff1005"],
-  coolant: ["k5", "05"], // °C
-  intakeTemp: ["kf", "0f"], // °C
+  coolant: ["k5", "05", "k05"], // °C
+  intakeTemp: ["kf", "0f", "k0f"], // °C
   maf: ["k10", "10"], // g/s
-  engineLoad: ["k4", "04"], // %
-  voltage: ["k42", "42", "kff1238"], // V (Control module or Adapter)
+  engineLoad: ["k4", "04", "k04"], // %
+  voltage: ["k42", "42", "kff1238"], // V
   tripDistance: ["kff1204"], // km
-  tripL100: ["kff1203"], // L/100
+  tripL100: ["kff1208", "kff1203"], // L/100 (ff1208 is user's average)
   torqueNm: ["kff1225", "kff1226"], // Nm
   hpWheels: ["kff1220", "kff1221"], // hp
-  fuelRemainingPct: ["kff126a", "kff1269"], // %
+  fuelRemainingPct: ["k2f", "2f"], // Re-using fuelLevel if specific PID missing
+  distanceToEmptyKm: ["kff126a"], // autonomy
+  fuelUsedTrip: ["kff1271"], // Liters
+  boost: ["kff12a5"], // kPa or PSI depending on Torque settings
 };
 
 /**
@@ -42,17 +46,7 @@ exports.uploadTorqueData = onRequest(
       // 1. Unificar payload (GET ou POST)
       const params = { ...req.query, ...req.body };
 
-      // === DEBUG TEMPORÁRIO (REMOVER DEPOIS) ===
-      console.log("[DEBUG] === TORQUE REQUEST DEBUG ===");
-      console.log("[DEBUG] Method:", req.method);
-      console.log("[DEBUG] Query params:", JSON.stringify(req.query));
-      console.log("[DEBUG] Body params:", JSON.stringify(req.body));
-      console.log("[DEBUG] Merged params:", JSON.stringify(params));
-      console.log("[DEBUG] Headers:", JSON.stringify(req.headers));
-      console.log("[DEBUG] Raw URL:", req.url);
-      // === FIM DEBUG ===
-
-      // 2. Validação de Segurança (ROBUSTA - múltiplos formatos)
+      // 2. Validação de Segurança (ROBUSTA)
 
       // Helper: Parse Basic Auth header
       function parseBasicAuth(req) {
@@ -68,6 +62,8 @@ exports.uploadTorqueData = onRequest(
       }
 
       // Tentar múltiplos nomes comuns para a key
+      // 2. Validação de Segurança (ROBUSTA)
+      const TORQUE_UPLOAD_KEY = apiKeySecret.value();
       const providedKey =
         params.key ||
         params.password ||
@@ -76,75 +72,34 @@ exports.uploadTorqueData = onRequest(
         params.auth ||
         params.token;
 
-      // Tentar Basic Auth header como fallback
       const providedKeyFromAuth = parseBasicAuth(req);
       const finalProvidedKey = providedKey || providedKeyFromAuth;
 
-      const validKey = apiKeySecret.value();
-
-      // Debug mode seguro (sem desligar auth)
-      const debug = params.debug === "1";
-      if (debug) {
-        console.log("[DEBUG] Param keys:", Object.keys(params));
-        console.log("[DEBUG] Sample:", {
-          vehicleId: params.vehicleId,
-          hasAuthHeader: !!req.get("authorization"),
-          keyLike: providedKey || providedKeyFromAuth || null,
-        });
-      }
-
-      // === TEMPORÁRIO: AUTENTICAÇÃO DESATIVADA PARA DEBUG ===
-      // TODO: Reativar depois de confirmar que os dados chegam
-      /*
-      if (!finalProvidedKey || finalProvidedKey !== validKey) {
-        console.warn(
-          `[Torque] Acesso negado. Key inválida: ${finalProvidedKey}`,
-        );
-        // Log útil (sem vazar segredos)
-        console.log("[Torque] Param keys recebidas:", Object.keys(params));
-        console.log(
-          "[Torque] Tem Authorization header?",
-          !!req.get("authorization"),
-        );
+      if (!finalProvidedKey || finalProvidedKey !== TORQUE_UPLOAD_KEY) {
+        console.warn("[Torque] Falha na autenticação.");
         return res.status(403).send("NO");
       }
-      */
-      console.log(
-        "[TEMP] Autenticação desativada para debug. Key recebida:",
-        finalProvidedKey,
-      );
 
-      // Remover a chave dos dados a guardar (Segurança)
+      // Remover a chave e campos sensíveis dos dados a guardar (Segurança)
       const {
-        key,
-        password,
-        pass,
-        pwd,
-        auth,
-        token,
-        debug: _,
+        key: _k,
+        password: _p,
+        pass: _pa,
+        pwd: _pw,
+        auth: _au,
+        token: _to,
+        debug: _de,
         ...safeParams
       } = params;
 
-      // 3. Validação do Veículo (com fallback para debug)
-      let vehicleId = safeParams.vehicleId || params.vehicleId;
-
-      // Fallback: Usar vehicleId fixo temporariamente para debug
-      if (!vehicleId) {
-        console.warn(
-          "[DEBUG] vehicleId não encontrado nos params. Usando fallback fixo: DPK7LP2GXiEibKmSQUVA",
-        );
-        console.log("[DEBUG] Params disponíveis:", Object.keys(safeParams));
-        console.log("[DEBUG] Email recebido:", safeParams.eml);
-        vehicleId = "DPK7LP2GXiEibKmSQUVA"; // TEMPORÁRIO para debug
-      }
+      // 3. Validação do Veículo
+      const vehicleId = safeParams.vehicleId || params.vehicleId;
 
       // Aceitar hífens e underscores, min 3 chars
       const vehicleIdRegex = /^[A-Za-z0-9_-]{3,60}$/;
 
       if (!vehicleId || !vehicleIdRegex.test(vehicleId)) {
         console.warn(`[Torque] vehicleId inválido: ${vehicleId}`);
-
         return res.status(400).send("INVALID_ID");
       }
 
@@ -156,9 +111,11 @@ exports.uploadTorqueData = onRequest(
       const receivedAt = admin.firestore.Timestamp.now(); // Usar relógio do servidor Firestore
 
       // Normalização de Timestamp (Torque Pro pode enviar epoch em segundos)
-      let timestamp = safeParams.time
-        ? Number(safeParams.time)
-        : receivedAt.toMillis();
+      let timestamp = safeParams.time ? Number(safeParams.time) : receivedAt.toMillis();
+      if (timestamp < 10000000000) {
+        // Se o valor for pequeno, provavelmente está em segundos (ex: 1.6e9 vs 1.6e12)
+        timestamp *= 1000;
+      }
       if (timestamp && timestamp < 10000000000) {
         // Menos de 10 dígitos -> provavelmente segundos
         timestamp = timestamp * 1000;
@@ -224,6 +181,8 @@ exports.uploadTorqueData = onRequest(
             hpWheels: ["horsepower", "wheels"],
             fuelRemainingPct: ["fuel remaining", "%"],
             distanceToEmptyKm: ["distance to empty", "km"],
+            boost: ["boost", "pressure"],
+            fuelUsedTrip: ["fuel used", "trip"],
           };
 
           const patterns = fuzzyPatterns[fieldKey];
@@ -262,6 +221,8 @@ exports.uploadTorqueData = onRequest(
           hpWheels: getVal("hpWheels"),
           fuelRemainingPct: getVal("fuelRemainingPct"),
           distanceToEmptyKm: getVal("distanceToEmptyKm"),
+          boost: getVal("boost"),
+          fuelUsed: getVal("fuelUsedTrip"),
 
           location: null,
         };
@@ -284,14 +245,52 @@ exports.uploadTorqueData = onRequest(
           parsed: parsed,
         };
 
-        // Criar referência para novo doc na subcoleção (dentro da tx)
-        const readingRef = vehicleRef.collection("leiturasObd").doc();
-        t.set(readingRef, readingData);
+        // Criar referência determinística robusta para evitar duplicados por retry do cliente
+        const deviceId = readingData.deviceId || "nodev";
+        const sessionId = readingData.sessionId || "nosession";
+        const readingId = crypto
+          .createHash("md5")
+          .update(`${vehicleId}_${deviceId}_${sessionId}_${timestamp}`)
+          .digest("hex");
+
+        const readingRef = vehicleRef.collection("leiturasObd").doc(readingId);
+        t.set(readingRef, readingData, { merge: true });
 
         // Agregação no Veículo
         const updates = {
           lastObdUpdate: receivedAt,
         };
+
+        // --- Alertas em Tempo Real (Cooldown 30 min) ---
+        const lastAlarmAt = vData.lastAlarmAt ? vData.lastAlarmAt.toMillis() : 0;
+        const nowMs = receivedAt.toMillis();
+        const alarmCooldown = 30 * 60 * 1000; // 30 minutos
+
+        if (nowMs - lastAlarmAt > alarmCooldown) {
+          let alarmTitle = "";
+          let alarmBody = "";
+
+          if (parsed.coolant !== null && parsed.coolant > 105) {
+            alarmTitle = "⚠️ Alerta: Motor Quente!";
+            alarmBody = `A temperatura do motor atingiu ${Math.round(parsed.coolant)}°C no ${vData.nome || "seu veículo"}.`;
+          } else if (parsed.voltage !== null && parsed.voltage > 0 && parsed.voltage < 11.8) {
+            alarmTitle = "⚠️ Alerta: Bateria Fraca!";
+            alarmBody = `A voltagem da bateria baixou para ${parsed.voltage.toFixed(1)}V no ${vData.nome || "seu veículo"}.`;
+          }
+
+          if (alarmTitle) {
+            // Enviar notificação (fora do await da transação para não atrasar a escrita)
+            // No entanto, como queremos ser robustos, usamos await aqui se não for crítico
+            console.log(`[Torque] Disparando alerta: ${alarmTitle}`);
+            sendNotificationToUser(vData.userId, alarmTitle, alarmBody, {
+              veiculoId: vDoc.id,
+              type: "alarm",
+              url: `/veiculo.html?id=${vDoc.id}`
+            }).catch(e => console.error("[FCM Alarm Error]", e));
+
+            updates.lastAlarmAt = receivedAt;
+          }
+        }
 
         // --- Lógica de Odómetro Robusta ---
         if (
@@ -299,6 +298,7 @@ exports.uploadTorqueData = onRequest(
           !isNaN(parsed.odometer) &&
           parsed.odometer > 0
         ) {
+          // --- Opção A: Odómetro Absoluto (ECU) ---
           const currentOdo = vData.odometroAtual || 0;
           const diff = parsed.odometer - currentOdo;
 
@@ -328,11 +328,9 @@ exports.uploadTorqueData = onRequest(
               const lastMs = vData.lastObdUpdate.toDate().getTime();
               const minutesDiff = (nowMs - lastMs) / 60000;
 
-              // Só valida se passou tempo relevante (> 6 segs / 0.1 min) E distância relevante (> 5km)
               if (minutesDiff > 0.1 && diff > 5) {
-                const impliedSpeed = (diff / minutesDiff) * 60; // km/h
+                const impliedSpeed = (diff / minutesDiff) * 60;
                 if (impliedSpeed > 500) {
-                  // Tolerância 500 km/h (glitches de GPS/ecu)
                   console.warn(
                     `[Torque] Salto temporal impossível: ${diff}km em ${minutesDiff.toFixed(1)}min (${impliedSpeed.toFixed(0)}km/h)`,
                   );
@@ -340,40 +338,42 @@ exports.uploadTorqueData = onRequest(
                 }
               }
             }
-          } else {
-            // Ignorar silenciosamente ou warn se diminuiu
-            // console.warn(...) se quisermos debug
-            isValidOdo = false;
           }
 
           if (isValidOdo) {
             updates.odometroAtual = parsed.odometer;
+            console.log(`[Torque] Odo Absoluto (ECU): ${parsed.odometer}`);
           }
         } else if (
           parsed.tripDistance !== null &&
           parsed.tripDistance > 0 &&
-          vData.odometroAtual > 0
+          vData.odometroAtual > 0 &&
+          safeParams.session // SEGURANÇA: Só incremental se houver sessão
         ) {
-          // --- Odometer Fallback (Incremental) ---
+          // --- Opção B: Odómetro Incremental (Trip Distance) ---
           const lastTripDist = vData.lastTripDistance || 0;
-          const currentSessionId = safeParams.session || null;
+          const currentSessionId = safeParams.session;
           const lastSessionId = vData.lastSessionId || null;
 
-          // Detect session change or Torque trip reset
-          if (
-            currentSessionId !== lastSessionId ||
-            parsed.tripDistance < lastTripDist
-          ) {
-            // New session or manual reset: just sync the baseline
+          if (currentSessionId !== lastSessionId) {
+            // Mudança de sessão: apenas sincronizamos o baseline
+            console.log(`[Torque] Nova Sessão (${currentSessionId}). Baseline: ${parsed.tripDistance}km`);
             updates.lastTripDistance = parsed.tripDistance;
             updates.lastSessionId = currentSessionId;
           } else {
-            // Same session: add delta to current odometer
-            const delta = parsed.tripDistance - lastTripDist;
-            if (delta > 0 && delta < 50) {
-              // Safety: limit delta per reading
-              updates.odometroAtual = vData.odometroAtual + delta;
+            // Mesma sessão: calcular delta
+            if (parsed.tripDistance < lastTripDist) {
+              // Torque resetou a viagem no meio da sessão? Apenas sincronizamos o novo valor.
+              console.warn(`[Torque] Reset de Trip inesperado na sessão ${currentSessionId}: ${lastTripDist} -> ${parsed.tripDistance}`);
               updates.lastTripDistance = parsed.tripDistance;
+            } else {
+              const delta = parsed.tripDistance - lastTripDist;
+              // Segurança: delta razoável por leitura (5 segundos = max 0.5km @ 360km/h)
+              if (delta > 0 && delta < 5) {
+                updates.odometroAtual = vData.odometroAtual + delta;
+                updates.lastTripDistance = parsed.tripDistance;
+                // console.log(`[Torque] Odo Incremental: +${delta.toFixed(3)}km -> ${updates.odometroAtual.toFixed(1)}`);
+              }
             }
           }
         }

@@ -1,5 +1,6 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
+const { sendNotificationToUser } = require("./notify_utils");
 const db = admin.firestore();
 
 /**
@@ -42,54 +43,31 @@ exports.processOBDReading = onDocumentCreated(
     };
 
     // Extrair Métricas Chave (Preferir campos normalizados do Torque.js fixes)
-    const speed = Number(parsed.speed ?? findKey(parsed, "Speed") ?? 0);
-    const rpm = Number(parsed.rpm ?? findKey(parsed, "RPM") ?? 0);
-    const tripDist = Number(
-      parsed.tripDistance ?? findKey(parsed, "Trip Distance") ?? 0,
-    );
-    const tripL100 = Number(
-      parsed.tripL100 ?? findKey(parsed, "Trip average", "l/100") ?? 0,
-    );
-    const coolant = Number(
-      parsed.coolant ?? findKey(parsed, "Coolant") ?? -999,
-    );
+    const rpm = reading.parsed?.rpm || 0;
+    const speed = reading.parsed?.speed || 0;
+    const coolant = reading.parsed?.coolant || -999;
+    const tripDist = reading.parsed?.tripDistance || 0;
+    const tripL100 = reading.parsed?.tripL100 || 0;
 
-    // Ignorar leituras sem dados relevantes (motor desligado e sem movimento)
-    // Mas cuidado: podemos querer registar o fim da viagem onde RPM=0.
-    // Vamos aceitar tudo por enquanto, mas marcar 'movement' flag.
-    const isMoving = speed > 0 || rpm > 0;
 
     const tripRef = db
       .collection("veiculos")
       .doc(vehicleId)
       .collection("viagens");
 
-    // 1. Procurar por SessionId (Prioridade Máxima para lógica do Torque)
+    // 1. Decidir Ancoragem da Viagem (Sessão Determinística > Janela de Tempo)
     let currentTrip = null;
     let isNewTrip = false;
+    const tripId =
+      reading.sessionId ||
+      `fallback_${reading.deviceId || "unknown"}_${readingDate.toISOString().split("T")[0]}_H${readingDate.getUTCHours()}`;
 
-    if (reading.sessionId) {
-      const sessionQuery = await tripRef
-        .where("sessionId", "==", reading.sessionId)
-        .limit(1)
-        .get();
+    // Tentar obter o documento diretamente (DETERMINÍSTICO)
+    const tripDoc = await tripRef.doc(tripId).get();
 
-      if (!sessionQuery.empty) {
-        currentTrip = sessionQuery.docs[0];
-        console.log(`[TripDetector] Sessão encontrada: ${reading.sessionId}`);
-      }
-    }
-
-    // 2. Fallback: Procurar por Janela de Tempo (se não houver sessão ou não encontrada)
-    if (!currentTrip) {
-      const lastTripQuery = await tripRef
-        .orderBy("lastUpdate", "desc")
-        .limit(1)
-        .get();
-
-      if (!lastTripQuery.empty) {
-        currentTrip = lastTripQuery.docs[0];
-      }
+    if (tripDoc.exists) {
+      currentTrip = tripDoc;
+      console.log(`[TripDetector] Viagem existente encontrada (ID: ${tripId})`);
     }
 
     // 2. Decidir se cria NOVA ou ATUALIZA
@@ -99,30 +77,28 @@ exports.processOBDReading = onDocumentCreated(
       const timeDiff = timestamp - lastUpdate;
       const minutesDiff = timeDiff / (1000 * 60);
 
-      // REGRA 1: Tempo (> 15 min de intervalo = nova viagem)
-      if (minutesDiff > 15) {
+      // REGRA 1: Tempo (> 15 min de intervalo)
+      // "Pro" logic: Se houver sessionId, o documento já existe e nunca criamos "isNewTrip" no mesmo ID.
+      // Se não houver sessionId (fallback), respeitamos os 15 min.
+      if (!reading.sessionId && minutesDiff > 15) {
         isNewTrip = true;
       }
 
       // REGRA 2: Reset do Torque (Trip Distance ficou menor que anterior drasticamente)
-      // Ex: Estava em 50km, passou para 0.1km
+      // "Pro" logic: Se for a mesma sessão, NÃO criamos nova viagem.
+      // Apenas detetamos o reset para gerir o acumulado (distanciaMax).
       if (
         !isNewTrip &&
-        tripDist < (tripData.distanciaMax || 0) &&
+        !reading.sessionId && // Só reinicia em nova viagem se não houver sessão tracking
+        tripDist < (tripData.lastTripDistSeen || 0) &&
         tripDist < 1.0 &&
-        (tripData.distanciaMax || 0) > 2.0
+        (tripData.lastTripDistSeen || 0) > 2.0
       ) {
-        console.log(
-          `[TripDetector] Reset detectado: Dist ${tripData.distanciaMax} -> ${tripDist}`,
-        );
         isNewTrip = true;
       }
 
       // Proteção contra out-of-order (leituras antigas que chegam tarde)
       if (!isNewTrip && timestamp < lastUpdate) {
-        console.log(
-          `[TripDetector] Leitura antiga ignorada: ${timestamp} < ${lastUpdate}`,
-        );
         return null;
       }
     } else {
@@ -133,25 +109,20 @@ exports.processOBDReading = onDocumentCreated(
     // e é uma NOVA viagem, talvez não devamos criar lixo?
     // Politica: Criar se tiver RPM > 0 (motor ligado)
     if (isNewTrip && rpm === 0 && speed === 0) {
-      console.log(`[TripDetector] Ignorado: Nova viagem sem motor ligado.`);
       return null;
     }
 
     // 3. Executar Ação
     if (isNewTrip) {
-      // Finalizar a anterior (opcional, só para garantir consistência visual se quisermos flag 'closed')
-      // Na verdade, a "Lazy" logic não precisa fechar explicitamente, só cria a nova.
-
-      // Criar NOVA
       const newTripData = {
         dataInicio: admin.firestore.Timestamp.fromMillis(timestamp),
         dataFim: admin.firestore.Timestamp.fromMillis(timestamp),
         lastUpdate: timestamp,
 
         // Totais
-        distancia: tripDist, // Valor final acumulado
-        distanciaMax: tripDist, // Auxiliar para detetar resets
-        duracao: 0, // min
+        distancia: tripDist,
+        lastTripDistSeen: tripDist, // NEW: Track last seen for delta calc
+        duracao: 0,
 
         // Médias (Inicial)
         velocidadeMedia: speed,
@@ -163,15 +134,47 @@ exports.processOBDReading = onDocumentCreated(
           rpmMax: rpm,
           velocidadeMax: speed,
           temperaturaMax: coolant > -100 ? coolant : null,
-          count: 1, // para médias ponderadas
+          count: 1,
         },
 
         origem: "torque-auto",
         sessionId: reading.sessionId || null,
+        deviceId: reading.deviceId || null,
       };
 
-      await tripRef.add(newTripData);
-      console.log(`[TripDetector] Nova viagem criada.`);
+      await tripRef.doc(tripId).set(newTripData, { merge: true });
+
+      // --- Notificação de Fim de Viagem Anterior ---
+      // Se estamos a começar uma NOVA viagem, vamos ver se a ANTERIOR precisa de um resumo
+      try {
+        const lastTrips = await tripRef
+          .orderBy("dataFim", "desc")
+          .limit(2) // A primeira é a que acabámos de criar
+          .get();
+
+        if (lastTrips.size > 1) {
+          const prevTripDoc = lastTrips.docs[1];
+          const prevTrip = prevTripDoc.data();
+
+          if (!prevTrip.notified && prevTrip.distancia > 0.1) {
+            const userIdTrip = (await db.collection("veiculos").doc(vehicleId).get()).data()?.userId;
+            const dist = prevTrip.distancia.toFixed(1);
+            const cons = prevTrip.consumoMedio ? prevTrip.consumoMedio.toFixed(1) : "--";
+            
+            await sendNotificationToUser(
+              userIdTrip,
+              "🏁 Viagem Concluída",
+              `Percorreu ${dist} km com média de ${cons} L/100.`,
+              { url: "/veiculos.html", tripId: prevTripDoc.id }
+            );
+
+            await prevTripDoc.ref.update({ notified: true });
+          }
+        }
+      } catch (e) {
+        console.error("[TripDetector] Erro ao enviar resumo de viagem:", e);
+      }
+      console.log(`[TripDetector] Viagem ${tripId} processada (Merge Mode).`);
 
       // Sync to Vehicle Profile
       await db
@@ -203,16 +206,23 @@ exports.processOBDReading = onDocumentCreated(
       const dataInicio = tripData.dataInicio.toMillis();
       const duracaoMin = (timestamp - dataInicio) / (1000 * 60);
 
+      // Lógica Pro: Acumular distância por deltas para resistir a resets do sensor/app
+      // delta = leitura_atual - ultima_leitura_vista (se > 0)
+      let deltaKm = 0;
+      const lastSeen = tripData.lastTripDistSeen || 0;
+      if (tripDist > lastSeen) {
+        deltaKm = tripDist - lastSeen;
+      } else if (tripDist < lastSeen && tripDist < 1.0) {
+        // Reset detetado! Usamos o valor atual como o novo delta inicial
+        deltaKm = tripDist;
+      }
+
       const updates = {
         dataFim: admin.firestore.Timestamp.fromMillis(timestamp),
         lastUpdate: timestamp,
         duracao: Math.round(duracaoMin), // min
-
-        // Se o tripDist do Torque for confiável e crescente, usamos ele direto.
-        // Se for 0 (erro de leitura), mantemos o anterior.
-        distancia:
-          tripDist > tripData.distanciaMax ? tripDist : tripData.distancia,
-        distanciaMax: Math.max(tripData.distanciaMax || 0, tripDist),
+        lastTripDistSeen: tripDist,
+        distancia: (tripData.distancia || 0) + deltaKm,
 
         // Médias diretas do Torque são preferíveis se existirem (tripL100)
         // Se o Torque mandar Trip Average, usamos.

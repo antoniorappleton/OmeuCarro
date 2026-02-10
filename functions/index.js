@@ -1,36 +1,25 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
-const { uploadTorqueData } = require("./torque"); // <--- Importar nova função
-
-const { importFuelData } = require("./import_fuel"); // <--- Import helper
-const { importTorqueCsv } = require("./import_torque_csv"); // <--- Bulk Import CSV
+const { uploadTorqueData } = require("./torque");
+const { importFuelData } = require("./import_fuel");
+const { importTorqueCsv } = require("./import_torque_csv");
+const { processOBDReading } = require("./tripDetector");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// Exportar a função HTTP
+// Exportar funções principais
 exports.uploadTorqueData = uploadTorqueData;
-
 exports.importFuelData = importFuelData;
 exports.importTorqueCsv = importTorqueCsv;
-const { cleanupTripsCloud } = require("./direct_cleanup");
-exports.cleanupTripsCloud = cleanupTripsCloud;
-const { deepCleanupTrips } = require("./deep_cleanup");
-exports.deepCleanupTrips = deepCleanupTrips;
-const { inspectTrips } = require("./inspect_trips");
-exports.inspectTrips = inspectTrips;
-
-const { processOBDReading } = require("./tripDetector");
-const { backfillTrips } = require("./backfill_trips");
-
 exports.processOBDReading = processOBDReading;
-exports.backfillTrips = backfillTrips;
 
-const { cleanupManualRecords } = require("./cleanup_manual");
-exports.cleanupManualRecords = cleanupManualRecords;
 
-const { analyzeData } = require("./analyze_data");
-exports.analyzeData = analyzeData;
+// Cleanup code removed after successful execution.
+
+
+
 
 /**
  * Função agendada para correr todos os dias às 09:00 AM.
