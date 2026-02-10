@@ -111,7 +111,9 @@ exports.uploadTorqueData = onRequest(
       const receivedAt = admin.firestore.Timestamp.now(); // Usar relógio do servidor Firestore
 
       // Normalização de Timestamp (Torque Pro pode enviar epoch em segundos)
-      let timestamp = safeParams.time ? Number(safeParams.time) : receivedAt.toMillis();
+      let timestamp = safeParams.time
+        ? Number(safeParams.time)
+        : receivedAt.toMillis();
       if (timestamp < 10000000000) {
         // Se o valor for pequeno, provavelmente está em segundos (ex: 1.6e9 vs 1.6e12)
         timestamp *= 1000;
@@ -262,7 +264,9 @@ exports.uploadTorqueData = onRequest(
         };
 
         // --- Alertas em Tempo Real (Cooldown 30 min) ---
-        const lastAlarmAt = vData.lastAlarmAt ? vData.lastAlarmAt.toMillis() : 0;
+        const lastAlarmAt = vData.lastAlarmAt
+          ? vData.lastAlarmAt.toMillis()
+          : 0;
         const nowMs = receivedAt.toMillis();
         const alarmCooldown = 30 * 60 * 1000; // 30 minutos
 
@@ -273,7 +277,11 @@ exports.uploadTorqueData = onRequest(
           if (parsed.coolant !== null && parsed.coolant > 105) {
             alarmTitle = "⚠️ Alerta: Motor Quente!";
             alarmBody = `A temperatura do motor atingiu ${Math.round(parsed.coolant)}°C no ${vData.nome || "seu veículo"}.`;
-          } else if (parsed.voltage !== null && parsed.voltage > 0 && parsed.voltage < 11.8) {
+          } else if (
+            parsed.voltage !== null &&
+            parsed.voltage > 0 &&
+            parsed.voltage < 11.8
+          ) {
             alarmTitle = "⚠️ Alerta: Bateria Fraca!";
             alarmBody = `A voltagem da bateria baixou para ${parsed.voltage.toFixed(1)}V no ${vData.nome || "seu veículo"}.`;
           }
@@ -283,10 +291,10 @@ exports.uploadTorqueData = onRequest(
             // No entanto, como queremos ser robustos, usamos await aqui se não for crítico
             console.log(`[Torque] Disparando alerta: ${alarmTitle}`);
             sendNotificationToUser(vData.userId, alarmTitle, alarmBody, {
-              veiculoId: vDoc.id,
+              veiculoId: vehicleId,
               type: "alarm",
-              url: `/veiculo.html?id=${vDoc.id}`
-            }).catch(e => console.error("[FCM Alarm Error]", e));
+              url: `/veiculo.html?id=${vehicleId}`,
+            }).catch((e) => console.error("[FCM Alarm Error]", e));
 
             updates.lastAlarmAt = receivedAt;
           }
@@ -357,14 +365,18 @@ exports.uploadTorqueData = onRequest(
 
           if (currentSessionId !== lastSessionId) {
             // Mudança de sessão: apenas sincronizamos o baseline
-            console.log(`[Torque] Nova Sessão (${currentSessionId}). Baseline: ${parsed.tripDistance}km`);
+            console.log(
+              `[Torque] Nova Sessão (${currentSessionId}). Baseline: ${parsed.tripDistance}km`,
+            );
             updates.lastTripDistance = parsed.tripDistance;
             updates.lastSessionId = currentSessionId;
           } else {
             // Mesma sessão: calcular delta
             if (parsed.tripDistance < lastTripDist) {
               // Torque resetou a viagem no meio da sessão? Apenas sincronizamos o novo valor.
-              console.warn(`[Torque] Reset de Trip inesperado na sessão ${currentSessionId}: ${lastTripDist} -> ${parsed.tripDistance}`);
+              console.warn(
+                `[Torque] Reset de Trip inesperado na sessão ${currentSessionId}: ${lastTripDist} -> ${parsed.tripDistance}`,
+              );
               updates.lastTripDistance = parsed.tripDistance;
             } else {
               const delta = parsed.tripDistance - lastTripDist;

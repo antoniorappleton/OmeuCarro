@@ -35,7 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
 
   function initTabs() {
-    const tabs = Array.from(document.querySelectorAll(".tab-btn[data-tab]"));
+    const tabs = Array.from(
+      document.querySelectorAll("main .tab-btn[data-tab]"),
+    );
     const panels = {
       fuel: document.getElementById("tab-fuel"),
       docs: document.getElementById("tab-docs"),
@@ -1310,1180 +1312,1201 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Obter settings do utilizador
-    const settings = await getUserSettings();
-
-    // VEÍCULO
-    const veiculos = await getVeiculosDoUtilizador();
-    const v = veiculos.find((x) => x.id === veiculoId);
-
-    if (!v) {
-      showMessage("Veículo não encontrado.", "error");
-      return;
-    }
-
-    el.name.textContent = v.nome;
-    el.subtitle.textContent = `${v.marca} ${v.modelo}`;
-    el.plate.textContent = v.matricula || "Sem matrícula";
-    const fuelType = v.combustivelPadrao || "—";
-    const fuelLevel = v.nivelCombustivel;
-
-    if (fuelLevel !== undefined && fuelLevel !== null && fuelLevel > 0) {
-      el.fuel.textContent = `${fuelType} (${Math.round(fuelLevel)}%)`;
-    } else {
-      el.fuel.textContent = fuelType;
-    }
-
-    // 🔹 ODÓMETRO
-    const currentOdo = v.odometroAtual || v.odometroInicial || 0;
-
-    // 1. Set Display Value
-    const odoValEl = document.getElementById("vehicle-odometer-val");
-    if (odoValEl) {
-      odoValEl.textContent = currentOdo.toLocaleString();
-    }
-
-    // 2. Bind Edit Events
-    const btnEditOdo = document.getElementById("btn-edit-odo-hero");
-    const wrapperOdo = document.getElementById("vehicle-odometer-wrapper");
-    const formOdo = document.getElementById("vehicle-odometer-edit-form");
-    const inputOdo = document.getElementById("odo-input-hero");
-    const btnSaveOdo = document.getElementById("btn-save-odo-hero");
-    const btnCancelOdo = document.getElementById("btn-cancel-odo-hero");
-
-    if (btnEditOdo && wrapperOdo && formOdo && inputOdo) {
-      // Open
-      btnEditOdo.onclick = () => {
-        wrapperOdo.classList.add("hidden");
-        formOdo.classList.remove("hidden");
-        inputOdo.value = currentOdo;
-        inputOdo.focus();
-      };
-
-      // Cancel
-      btnCancelOdo.onclick = () => {
-        formOdo.classList.add("hidden");
-        wrapperOdo.classList.remove("hidden");
-      };
-
-      // Save
-      btnSaveOdo.onclick = async () => {
-        const newVal = Number(inputOdo.value);
-        const initial = v.odometroInicial || 0;
-
-        if (!newVal || newVal < 0) {
-          alert("Valor inválido.");
-          return;
-        }
-
-        if (newVal < initial) {
-          alert(
-            `Erro: O odómetro não pode ser inferior ao valor inicial (${initial.toLocaleString()} km).`,
-          );
-          return;
-        }
-
-        // Allow updates at any time, but warn/block regression if critical?
-        // User requested "at any moment, must be editable".
-        // I'll keep the regression check for safety but basic.
-        if (newVal < currentOdo) {
-          if (
-            !confirm(
-              `O novo valor (${newVal}) é inferior ao atual (${currentOdo}). Tem a certeza?`,
-            )
-          ) {
-            return;
-          }
-        }
-
-        btnSaveOdo.disabled = true;
-        try {
-          await updateVeiculo(veiculoId, { odometroAtual: newVal });
-          location.reload();
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao guardar odómetro.");
-          btnSaveOdo.disabled = false;
-        }
-      };
-    }
-
-    // DOCUMENTOS
-    initDocumentosModal(veiculoId);
-    await renderDocumentos(veiculoId);
-
-    // REPARAÇÕES
-    renderReparacoes(veiculoId, settings);
-    initReparacoesModal(veiculoId);
-    initAbastecimentoModal(veiculoId, settings);
-
-    // MANUTENÇÕES PLANEADAS (Passando Current Odo explicitamente se necessário, ou v)
-    // Vamos garantir que v tem a propriedade que o renderPlanos espera
-    v.odometroAtual = currentOdo;
-    renderPlanos(veiculoId, v, settings);
-    renderMaintenanceAlerts(veiculoId, v); // <-- NEW: Render alerts summary
-    initPlanModal(veiculoId);
-
-    // RESPONSABILIDADES (ALARMES)
-    setupAlertsConfig(v);
-    updateResponsibilities(v, settings);
-
-    // Listener para o botão Editar Datas
-    const btnEditDates = document.getElementById("btn-edit-dates");
-    if (btnEditDates) {
-      btnEditDates.onclick = () => {
-        // Como o modal de edição completo está na veiculos.html,
-        // podemos redirecionar para lá com um param para abrir o modal,
-        // ou simplesmente informar. Vamos tentar ser prestáveis:
-        // "Por favor edite os dados na lista de veículos."
-        alert(
-          "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos.",
-        );
-        window.location.href = "veiculos.html";
-      };
-    }
-
-    // NEW: Quick Plan Button Listener
-    const btnQuickPlan = document.getElementById("btn-add-plan-quick");
-    if (btnQuickPlan) {
-      btnQuickPlan.onclick = () => {
-        const tabBtn = document.getElementById("btn-add-plan");
-        if (tabBtn) tabBtn.click();
-      };
-    }
-
-    // NEW: Torque Integration & Vehicle Health
+    // ✅ Bind crítico cedo (mesmo se o resto falhar, o botão funciona)
+    renderVehicleHealth(veiculoId);
     setupTorqueIntegration(veiculoId);
     setupUnifiedImport(veiculoId);
-    renderVehicleHealth(veiculoId);
 
-    // NEW: Real-time Profile Listener (Hero Odo & Fuel)
-    setupVehicleListener(veiculoId);
+    try {
+      // Obter settings do utilizador
+      const settings = await getUserSettings();
 
-    function setupVehicleListener(veiculoId) {
-      if (typeof el.vehicleUnsubscribe === "function") {
-        el.vehicleUnsubscribe(); // Clean up old listener if exists
+      // VEÍCULO
+      const veiculos = await getVeiculosDoUtilizador();
+      const v = veiculos.find((x) => x.id === veiculoId);
+
+      if (!v) {
+        showMessage("Veículo não encontrado.", "error");
+        return;
       }
-      el.vehicleUnsubscribe = db
-        .collection("veiculos")
-        .doc(veiculoId)
-        .onSnapshot((doc) => {
-          if (!doc.exists) return;
-          const data = doc.data();
 
-          // Update Hero Odometer
-          const heroOdo = document.getElementById("vehicle-odometer-val");
-          if (heroOdo && data.odometroAtual !== undefined) {
-            heroOdo.textContent = Number(data.odometroAtual).toLocaleString();
-          }
+      el.name.textContent = v.nome;
+      el.subtitle.textContent = `${v.marca} ${v.modelo}`;
+      el.plate.textContent = v.matricula || "Sem matrícula";
+      const fuelType = v.combustivelPadrao || "—";
+      const fuelLevel = v.nivelCombustivel;
 
-          // Update Fuel Badge (Hero)
-          const fuelPct = data.nivelCombustivel;
-          const heroFuel = document.getElementById("vehicle-fuel");
-          const fuelType = data.combustivelPadrao || "—";
+      if (fuelLevel !== undefined && fuelLevel !== null && fuelLevel > 0) {
+        el.fuel.textContent = `${fuelType} (${Math.round(fuelLevel)}%)`;
+      } else {
+        el.fuel.textContent = fuelType;
+      }
 
-          if (heroFuel) {
-            if (fuelPct !== undefined && fuelPct !== null && fuelPct > 0) {
-              heroFuel.textContent = `${fuelType} (${Math.round(fuelPct)}%)`;
-            } else {
-              heroFuel.textContent = fuelType;
-            }
-          }
+      // 🔹 ODÓMETRO
+      const currentOdo = v.odometroAtual || v.odometroInicial || 0;
 
-          // Update Last Trip Summary in UI (Reactivity to ultimasMetricas sync)
-          if (data.ultimasMetricas) {
-            console.log(
-              "[VehicleListener] Ultimas Metricassync detected:",
-              data.ultimasMetricas,
-            );
-            // Optionally trigger a refresh of the last trip card if needed,
-            // but usually ultimasMetricas is for the profile view.
-          }
-        });
-    }
+      // 1. Set Display Value
+      const odoValEl = document.getElementById("vehicle-odometer-val");
+      if (odoValEl) {
+        odoValEl.textContent = currentOdo.toLocaleString();
+      }
 
-    // NEW: Floating Metrics Setup
-    setupFloatingMetrics(veiculoId);
-    // Calc metrics (async but don't block)
-    updateFloatingMetrics(veiculoId, v, settings);
+      // 2. Bind Edit Events
+      const btnEditOdo = document.getElementById("btn-edit-odo-hero");
+      const wrapperOdo = document.getElementById("vehicle-odometer-wrapper");
+      const formOdo = document.getElementById("vehicle-odometer-edit-form");
+      const inputOdo = document.getElementById("odo-input-hero");
+      const btnSaveOdo = document.getElementById("btn-save-odo-hero");
+      const btnCancelOdo = document.getElementById("btn-cancel-odo-hero");
 
-    // =========================
-    // FLOATING METRICS LOGIC
-    // =========================
-    function setupFloatingMetrics(veiculoId) {
-      const pairs = [
-        {
-          btnId: "btn-float-toggle",
-          cardId: "floating-metrics-card",
-          closeId: "btn-close-float",
-        },
-        {
-          btnId: "btn-float-analytics",
-          cardId: "section-analytics",
-          closeId: "btn-close-analytics",
-        },
-        {
-          btnId: "btn-float-alerts",
-          cardId: "section-alerts",
-          closeId: "btn-close-alerts",
-        },
-      ];
-
-      pairs.forEach((p) => {
-        const btn = document.getElementById(p.btnId);
-        const card = document.getElementById(p.cardId);
-        const close = document.getElementById(p.closeId);
-
-        if (!btn || !card) return;
-
-        btn.addEventListener("click", () => {
-          // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
-          // Usually exclusive is cleaner for popups on same side.
-          pairs.forEach((other) => {
-            if (other !== p) {
-              const c = document.getElementById(other.cardId);
-              if (c) c.classList.add("hidden");
-            }
-          });
-          card.classList.toggle("hidden");
-        });
-
-        if (close) {
-          close.addEventListener("click", () => {
-            card.classList.add("hidden");
-          });
-        }
-      });
-    }
-
-    async function updateFloatingMetrics(veiculoId, v, settings) {
-      const elCostKm = document.getElementById("float-cost-km");
-      const elTotalCost = document.getElementById("float-total-cost");
-      const elTotalKm = document.getElementById("float-total-km");
-
-      // Elements for the Analytics Card (Popup)
-      const elAnL100 = document.getElementById("an-l100");
-      const elAnRange = document.getElementById("an-range-km");
-      const elAnRangeDays = document.getElementById("an-range-days");
-      const elAnConf = document.getElementById("an-confidence");
-
-      try {
-        // 1. Fetch all data (parallel for speed)
-        // We also fetch the latest OBD reading for fallback!
-        const [abs, reps, obdSnap] = await Promise.all([
-          getAbastecimentosDoVeiculo(veiculoId, 1000),
-          getReparacoesDoVeiculo(veiculoId),
-          db
-            .collection("veiculos")
-            .doc(veiculoId)
-            .collection("leiturasObd")
-            .orderBy("timestamp", "desc")
-            .limit(1)
-            .get(),
-        ]);
-
-        // 2. Centralized Calculation (Cost & Consumption)
-        const costMetrics = window.Analytics.calculateCostMetrics(v, abs, reps);
-        const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
-
-        // 3. Update Floating Summary (Cost)
-        if (elTotalCost)
-          elTotalCost.textContent = formatCurrency(
-            costMetrics.totalSpent,
-            settings?.moeda || "EUR",
-          );
-        if (elTotalKm)
-          elTotalKm.textContent = formatDistance(costMetrics.totalDist);
-        if (elCostKm) {
-          if (costMetrics.costPerKm > 0) {
-            elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
-          } else {
-            elCostKm.textContent = "—";
-          }
-        }
-
-        // 4. Update Analytics Card (Consumption & Range)
-        let l100 = fuelMetrics.consumoMedioL100;
-        let range = fuelMetrics.kmAteReservaEstimado;
-        let days = fuelMetrics.diasAteReservaEstimado;
-        let source = "manual";
-
-        // EXPLICIT OBD OVERRIDE (From Torque L100 Long Term)
-        if (v.consumoMedioObd && v.consumoMedioObd > 0) {
-          l100 = v.consumoMedioObd;
-          source = "obd_stored";
-
-          // Recalculate Range based on this new consumption
-          const capacity = v.capacidadeDepositoLitros || 0;
-          // We need current fuel level.
-          // If we have manual logs, fuelMetrics has estimates.
-          // However, if we rely on OBD L100, we should probably stick to OBD Fuel Level if available?
-          // Let's stick to the hybrid approach:
-          // If we have a fuel level from OBD (in v.nivelCombustivel), use it.
-
-          const fuelLevelPct = v.nivelCombustivel || 0; // Stored from Torque
-          if (capacity > 0 && fuelLevelPct > 0) {
-            const litersLeft = (fuelLevelPct / 100) * capacity;
-            range = (litersLeft / l100) * 100;
-          }
-        }
-
-        // Helper simple para fuzzy match (igual ao tripDetector)
-        const findKey = (obj, ...parts) => {
-          const keys = Object.keys(obj || {});
-          for (const k of keys) {
-            const lower = k.toLowerCase();
-            if (parts.every((p) => lower.includes(p.toLowerCase())))
-              return obj[k];
-          }
-          return null;
+      if (btnEditOdo && wrapperOdo && formOdo && inputOdo) {
+        // Open
+        btnEditOdo.onclick = () => {
+          wrapperOdo.classList.add("hidden");
+          formOdo.classList.remove("hidden");
+          inputOdo.value = currentOdo;
+          inputOdo.focus();
         };
 
-        // FALLBACK: If standard analytics failed AND no stored OBD, try Live OBD Snap
-        if (
-          (!l100 || l100 === 0) &&
-          !obdSnap.empty &&
-          source !== "obd_stored"
-        ) {
-          const obdData = obdSnap.docs[0].data();
-          const parsed = obdData.parsed || {};
+        // Cancel
+        btnCancelOdo.onclick = () => {
+          formOdo.classList.add("hidden");
+          wrapperOdo.classList.remove("hidden");
+        };
 
-          console.log("OBD Keys Available:", Object.keys(parsed));
+        // Save
+        btnSaveOdo.onclick = async () => {
+          const newVal = Number(inputOdo.value);
+          const initial = v.odometroInicial || 0;
 
-          // Try "Long Term Average" or "Trip Average" using fuzzy search
-          // Prioridade: Média da Viagem > Média Longo Prazo
-          const tripAvg = findKey(parsed, "Trip average", "l/100");
-          const longTermAvg = findKey(parsed, "Long Term Average", "l/100");
+          if (!newVal || newVal < 0) {
+            alert("Valor inválido.");
+            return;
+          }
 
-          const obdL100 = Number(tripAvg || longTermAvg || 0);
+          if (newVal < initial) {
+            alert(
+              `Erro: O odómetro não pode ser inferior ao valor inicial (${initial.toLocaleString()} km).`,
+            );
+            return;
+          }
 
-          if (obdL100 > 0) {
-            l100 = obdL100;
-            source = "obd";
+          // Allow updates at any time, but warn/block regression if critical?
+          // User requested "at any moment, must be editable".
+          // I'll keep the regression check for safety but basic.
+          if (newVal < currentOdo) {
+            if (
+              !confirm(
+                `O novo valor (${newVal}) é inferior ao atual (${currentOdo}). Tem a certeza?`,
+              )
+            ) {
+              return;
+            }
+          }
 
-            // Estimate Range using OBD consumption + Fuel Level
-            // Fuel Level também pode vir com nomes estranhos
-            const fuelLevelVal =
-              findKey(parsed, "Fuel Level", "%") ||
-              findKey(parsed, "Fuel", "%");
-            const fuelLevel = Number(fuelLevelVal || 0); // %
+          btnSaveOdo.disabled = true;
+          try {
+            await updateVeiculo(veiculoId, { odometroAtual: newVal });
+            location.reload();
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao guardar odómetro.");
+            btnSaveOdo.disabled = false;
+          }
+        };
+      }
 
+      // DOCUMENTOS
+      initDocumentosModal(veiculoId);
+      await renderDocumentos(veiculoId);
+
+      // REPARAÇÕES
+      renderReparacoes(veiculoId, settings);
+      initReparacoesModal(veiculoId);
+      initAbastecimentoModal(veiculoId, settings);
+
+      // MANUTENÇÕES PLANEADAS (Passando Current Odo explicitamente se necessário, ou v)
+      // Vamos garantir que v tem a propriedade que o renderPlanos espera
+      v.odometroAtual = currentOdo;
+      renderPlanos(veiculoId, v, settings);
+      renderMaintenanceAlerts(veiculoId, v); // <-- NEW: Render alerts summary
+      initPlanModal(veiculoId);
+
+      // RESPONSABILIDADES (ALARMES)
+      setupAlertsConfig(v);
+      updateResponsibilities(v, settings);
+
+      // Listener para o botão Editar Datas
+      const btnEditDates = document.getElementById("btn-edit-dates");
+      if (btnEditDates) {
+        btnEditDates.onclick = () => {
+          // Como o modal de edição completo está na veiculos.html,
+          // podemos redirecionar para lá com um param para abrir o modal,
+          // ou simplesmente informar. Vamos tentar ser prestáveis:
+          // "Por favor edite os dados na lista de veículos."
+          alert(
+            "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos.",
+          );
+          window.location.href = "veiculos.html";
+        };
+      }
+
+      // NEW: Quick Plan Button Listener
+      const btnQuickPlan = document.getElementById("btn-add-plan-quick");
+      if (btnQuickPlan) {
+        btnQuickPlan.onclick = () => {
+          const tabBtn = document.getElementById("btn-add-plan");
+          if (tabBtn) tabBtn.click();
+        };
+      }
+
+      // NEW: Real-time Profile Listener (Hero Odo & Fuel)
+      setupVehicleListener(veiculoId);
+
+      function setupVehicleListener(veiculoId) {
+        if (typeof el.vehicleUnsubscribe === "function") {
+          el.vehicleUnsubscribe(); // Clean up old listener if exists
+        }
+        el.vehicleUnsubscribe = db
+          .collection("veiculos")
+          .doc(veiculoId)
+          .onSnapshot((doc) => {
+            if (!doc.exists) return;
+            const data = doc.data();
+
+            // Update Hero Odometer
+            const heroOdo = document.getElementById("vehicle-odometer-val");
+            if (heroOdo && data.odometroAtual !== undefined) {
+              heroOdo.textContent = Number(data.odometroAtual).toLocaleString();
+            }
+
+            // Update Fuel Badge (Hero)
+            const fuelPct = data.nivelCombustivel;
+            const heroFuel = document.getElementById("vehicle-fuel");
+            const fuelType = data.combustivelPadrao || "—";
+
+            if (heroFuel) {
+              if (fuelPct !== undefined && fuelPct !== null && fuelPct > 0) {
+                heroFuel.textContent = `${fuelType} (${Math.round(fuelPct)}%)`;
+              } else {
+                heroFuel.textContent = fuelType;
+              }
+            }
+
+            // Update Last Trip Summary in UI (Reactivity to ultimasMetricas sync)
+            if (data.ultimasMetricas) {
+              console.log(
+                "[VehicleListener] Ultimas Metricassync detected:",
+                data.ultimasMetricas,
+              );
+              // Optionally trigger a refresh of the last trip card if needed,
+              // but usually ultimasMetricas is for the profile view.
+            }
+          });
+      }
+
+      // NEW: Floating Metrics Setup
+      setupFloatingMetrics(veiculoId);
+      // Calc metrics (async but don't block)
+      updateFloatingMetrics(veiculoId, v, settings);
+
+      // =========================
+      // FLOATING METRICS LOGIC
+      // =========================
+      function setupFloatingMetrics(veiculoId) {
+        const pairs = [
+          {
+            btnId: "btn-float-toggle",
+            cardId: "floating-metrics-card",
+            closeId: "btn-close-float",
+          },
+          {
+            btnId: "btn-float-analytics",
+            cardId: "section-analytics",
+            closeId: "btn-close-analytics",
+          },
+          {
+            btnId: "btn-float-alerts",
+            cardId: "section-alerts",
+            closeId: "btn-close-alerts",
+          },
+        ];
+
+        pairs.forEach((p) => {
+          const btn = document.getElementById(p.btnId);
+          const card = document.getElementById(p.cardId);
+          const close = document.getElementById(p.closeId);
+
+          if (!btn || !card) return;
+
+          btn.addEventListener("click", () => {
+            // Close others? Optional. User "mostrarem/ocultarem" might imply toggle independent or exclusive.
+            // Usually exclusive is cleaner for popups on same side.
+            pairs.forEach((other) => {
+              if (other !== p) {
+                const c = document.getElementById(other.cardId);
+                if (c) c.classList.add("hidden");
+              }
+            });
+            card.classList.toggle("hidden");
+          });
+
+          if (close) {
+            close.addEventListener("click", () => {
+              card.classList.add("hidden");
+            });
+          }
+        });
+      }
+
+      async function updateFloatingMetrics(veiculoId, v, settings) {
+        const elCostKm = document.getElementById("float-cost-km");
+        const elTotalCost = document.getElementById("float-total-cost");
+        const elTotalKm = document.getElementById("float-total-km");
+
+        // Elements for the Analytics Card (Popup)
+        const elAnL100 = document.getElementById("an-l100");
+        const elAnRange = document.getElementById("an-range-km");
+        const elAnRangeDays = document.getElementById("an-range-days");
+        const elAnConf = document.getElementById("an-confidence");
+
+        try {
+          // 1. Fetch all data (parallel for speed)
+          // We also fetch the latest OBD reading for fallback!
+          const [abs, reps, obdSnap] = await Promise.all([
+            getAbastecimentosDoVeiculo(veiculoId, 1000),
+            getReparacoesDoVeiculo(veiculoId),
+            db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("leiturasObd")
+              .orderBy("timestamp", "desc")
+              .limit(1)
+              .get(),
+          ]);
+
+          // 2. Centralized Calculation (Cost & Consumption)
+          const costMetrics = window.Analytics.calculateCostMetrics(
+            v,
+            abs,
+            reps,
+          );
+          const fuelMetrics = window.Analytics.generateAnalytics(v, abs);
+
+          // 3. Update Floating Summary (Cost)
+          if (elTotalCost)
+            elTotalCost.textContent = formatCurrency(
+              costMetrics.totalSpent,
+              settings?.moeda || "EUR",
+            );
+          if (elTotalKm)
+            elTotalKm.textContent = formatDistance(costMetrics.totalDist);
+          if (elCostKm) {
+            if (costMetrics.costPerKm > 0) {
+              elCostKm.textContent = `${costMetrics.costPerKm.toFixed(3)} ${getCurrencySymbol(settings?.moeda || "EUR")}/${settings?.unidadeDistancia || "km"}`;
+            } else {
+              elCostKm.textContent = "—";
+            }
+          }
+
+          // 4. Update Analytics Card (Consumption & Range)
+          let l100 = fuelMetrics.consumoMedioL100;
+          let range = fuelMetrics.kmAteReservaEstimado;
+          let days = fuelMetrics.diasAteReservaEstimado;
+          let source = "manual";
+
+          // EXPLICIT OBD OVERRIDE (From Torque L100 Long Term)
+          if (v.consumoMedioObd && v.consumoMedioObd > 0) {
+            l100 = v.consumoMedioObd;
+            source = "obd_stored";
+
+            // Recalculate Range based on this new consumption
             const capacity = v.capacidadeDepositoLitros || 0;
-            if (capacity > 0 && fuelLevel > 0) {
-              const litersLeft = (fuelLevel / 100) * capacity;
+            // We need current fuel level.
+            // If we have manual logs, fuelMetrics has estimates.
+            // However, if we rely on OBD L100, we should probably stick to OBD Fuel Level if available?
+            // Let's stick to the hybrid approach:
+            // If we have a fuel level from OBD (in v.nivelCombustivel), use it.
+
+            const fuelLevelPct = v.nivelCombustivel || 0; // Stored from Torque
+            if (capacity > 0 && fuelLevelPct > 0) {
+              const litersLeft = (fuelLevelPct / 100) * capacity;
               range = (litersLeft / l100) * 100;
             }
           }
-        }
 
-        if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
-        if (elAnRange)
-          elAnRange.textContent = range
-            ? Math.round(range).toLocaleString()
-            : "--";
-        if (elAnRangeDays)
-          elAnRangeDays.textContent = days
-            ? `${days} dias`
-            : source === "obd"
-              ? "Est. via OBD"
-              : "--";
-
-        if (elAnConf) {
-          if (source === "obd") {
-            elAnConf.textContent = "Fonte: Torque Pro (OBD)";
-            elAnConf.className = "status-blue";
-          } else if (l100) {
-            elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
-            elAnConf.className = "status-neutral";
-          } else {
-            elAnConf.textContent = "Sem dados suficientes";
-          }
-        }
-
-        // Unhide Analytics Button if we have something to show
-        const btnAnalytics = document.getElementById("btn-float-analytics");
-        if (btnAnalytics) {
-          if (costMetrics.totalSpent > 0 || l100 > 0 || source === "obd") {
-            btnAnalytics.classList.remove("hidden");
-          }
-        }
-
-        // Force OBD Button Visibility (Users want to see it even without data)
-        const btnObd = document.getElementById("btn-float-obd");
-        if (btnObd) btnObd.classList.remove("hidden");
-      } catch (e) {
-        console.error("Error calculating floating metrics", e);
-      }
-    }
-
-    function setupTorqueIntegration(veiculoId) {
-      const btnObd = document.getElementById("btn-float-obd");
-      const modalObd = document.getElementById("obd-modal");
-      const btnCloseObd = document.getElementById("btn-close-obd");
-
-      // Modal & Tab Logic
-      if (!modalObd) return;
-
-      const openObd = (tab = "historico") => {
-        modalObd.classList.remove("hidden");
-        // Trigger tab click if needed
-        const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
-        if (tabBtn) tabBtn.click();
-        else {
-          loadTripsHistory(veiculoId); // Fallback
-        }
-      };
-
-      if (btnObd) btnObd.addEventListener("click", () => openObd("historico"));
-
-      // Bind KPI Card
-      const kpiHealth = document.getElementById("kpi-health-status");
-      if (kpiHealth) {
-        kpiHealth.style.cursor = "pointer";
-        kpiHealth.onclick = () => openObd("diagnosticos");
-      }
-
-      if (btnCloseObd) {
-        btnCloseObd.addEventListener("click", () =>
-          modalObd.classList.add("hidden"),
-        );
-        modalObd.addEventListener("click", (e) => {
-          if (e.target === modalObd) modalObd.classList.add("hidden");
-        });
-      }
-
-      // Tabs
-      const tabBtns = modalObd.querySelectorAll(".tab-btn");
-      const tabPanels = modalObd.querySelectorAll(".tab-panel");
-
-      tabBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const target = btn.dataset.tab;
-
-          // Update UI
-          tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
-          tabPanels.forEach((p) =>
-            p.classList.toggle("hidden", p.id !== `tab-${target}`),
-          );
-
-          // Load Data
-          if (target === "historico") loadTripsHistory(veiculoId);
-          if (target === "ultima") loadLastTrip(veiculoId);
-          if (target === "diagnosticos") loadDiagnostics(veiculoId);
-        });
-      });
-
-      // Setup Diagnostics Logic
-      setupDiagnostics(veiculoId);
-
-      // --- BACKFILL TRIGGER ---
-      const btnScan = document.getElementById("btn-scan-trip");
-      if (btnScan) {
-        btnScan.onclick = async () => {
-          if (
-            !confirm(
-              "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
-            )
-          )
-            return;
-
-          btnScan.disabled = true;
-          const originalText = btnScan.textContent;
-          btnScan.textContent = "A processar...";
-
-          try {
-            const res = await fetch(
-              `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
-            );
-            if (!res.ok) throw new Error("Falha no pedido");
-
-            const data = await res.json();
-            if (data.success) {
-              alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
-              loadLastTrip(veiculoId); // Reload UI
-            } else {
-              alert("Não foram encontradas novas viagens.");
+          // Helper simple para fuzzy match (igual ao tripDetector)
+          const findKey = (obj, ...parts) => {
+            const keys = Object.keys(obj || {});
+            for (const k of keys) {
+              const lower = k.toLowerCase();
+              if (parts.every((p) => lower.includes(p.toLowerCase())))
+                return obj[k];
             }
-          } catch (e) {
-            console.error(e);
-            alert("Erro ao processar histórico.");
-          } finally {
-            btnScan.disabled = false;
-            btnScan.textContent = originalText;
+            return null;
+          };
+
+          // FALLBACK: If standard analytics failed AND no stored OBD, try Live OBD Snap
+          if (
+            (!l100 || l100 === 0) &&
+            !obdSnap.empty &&
+            source !== "obd_stored"
+          ) {
+            const obdData = obdSnap.docs[0].data();
+            const parsed = obdData.parsed || {};
+
+            console.log("OBD Keys Available:", Object.keys(parsed));
+
+            // Try "Long Term Average" or "Trip Average" using fuzzy search
+            // Prioridade: Média da Viagem > Média Longo Prazo
+            const tripAvg = findKey(parsed, "Trip average", "l/100");
+            const longTermAvg = findKey(parsed, "Long Term Average", "l/100");
+
+            const obdL100 = Number(tripAvg || longTermAvg || 0);
+
+            if (obdL100 > 0) {
+              l100 = obdL100;
+              source = "obd";
+
+              // Estimate Range using OBD consumption + Fuel Level
+              // Fuel Level também pode vir com nomes estranhos
+              const fuelLevelVal =
+                findKey(parsed, "Fuel Level", "%") ||
+                findKey(parsed, "Fuel", "%");
+              const fuelLevel = Number(fuelLevelVal || 0); // %
+
+              const capacity = v.capacidadeDepositoLitros || 0;
+              if (capacity > 0 && fuelLevel > 0) {
+                const litersLeft = (fuelLevel / 100) * capacity;
+                range = (litersLeft / l100) * 100;
+              }
+            }
+          }
+
+          if (elAnL100) elAnL100.textContent = l100 ? l100.toFixed(1) : "--";
+          if (elAnRange)
+            elAnRange.textContent = range
+              ? Math.round(range).toLocaleString()
+              : "--";
+          if (elAnRangeDays)
+            elAnRangeDays.textContent = days
+              ? `${days} dias`
+              : source === "obd"
+                ? "Est. via OBD"
+                : "--";
+
+          if (elAnConf) {
+            if (source === "obd") {
+              elAnConf.textContent = "Fonte: Torque Pro (OBD)";
+              elAnConf.className = "status-blue";
+            } else if (l100) {
+              elAnConf.textContent = `Confiança: ${fuelMetrics.consumoConfianca || "N/A"}`;
+              elAnConf.className = "status-neutral";
+            } else {
+              elAnConf.textContent = "Sem dados suficientes";
+            }
+          }
+
+          // Unhide Analytics Button if we have something to show
+          const btnAnalytics = document.getElementById("btn-float-analytics");
+          if (btnAnalytics) {
+            if (costMetrics.totalSpent > 0 || l100 > 0 || source === "obd") {
+              btnAnalytics.classList.remove("hidden");
+            }
+          }
+
+          // Force OBD Button Visibility (Users want to see it even without data)
+          const btnObd = document.getElementById("btn-float-obd");
+          if (btnObd) btnObd.classList.remove("hidden");
+        } catch (e) {
+          console.error("Error calculating floating metrics", e);
+        }
+      }
+
+      function setupTorqueIntegration(veiculoId) {
+        const btnObd = document.getElementById("btn-float-obd");
+        const modalObd = document.getElementById("obd-modal");
+        const btnCloseObd = document.getElementById("btn-close-obd");
+
+        // Modal & Tab Logic
+        if (!modalObd) return;
+
+        const openObd = (tab = "historico") => {
+          modalObd.classList.remove("hidden");
+          // Trigger tab click if needed
+          const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
+          if (tabBtn) tabBtn.click();
+          else {
+            loadTripsHistory(veiculoId); // Fallback
           }
         };
-      }
 
-      // --- TORQUE CSV/ZIP IMPORT ---
-      const btnImportCsv = document.getElementById("btn-import-torque-csv");
-      const csvInput = document.getElementById("torque-csv-input");
+        if (btnObd) {
+          btnObd.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openObd("historico");
+          };
+        }
 
-      // Manual Trip Button (Placeholder)
-      const btnAddManual = document.getElementById("btn-add-trip-manual");
-      if (btnAddManual) {
-        btnAddManual.addEventListener("click", () => {
-          alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
-        });
-      }
+        // Bind KPI Card
+        const kpiHealth = document.getElementById("kpi-health-status");
+        if (kpiHealth) {
+          kpiHealth.style.cursor = "pointer";
+          kpiHealth.onclick = () => openObd("diagnosticos");
+        }
 
-      if (btnImportCsv && csvInput) {
-        btnImportCsv.addEventListener("click", () => csvInput.click());
-
-        csvInput.addEventListener("change", async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-
-          // Modal Progresso
-          const progressModal = document.getElementById(
-            "upload-progress-modal",
+        if (btnCloseObd) {
+          btnCloseObd.addEventListener("click", () =>
+            modalObd.classList.add("hidden"),
           );
-          const progressBar = document.getElementById("upload-progress-bar");
-          const progressText = document.getElementById("upload-progress-text");
+          modalObd.addEventListener("click", (e) => {
+            if (e.target === modalObd) modalObd.classList.add("hidden");
+          });
+        }
 
-          if (progressModal) {
-            progressModal.classList.remove("hidden");
-            if (progressBar) progressBar.style.width = "5%";
-            if (progressText) progressText.textContent = "A ler ficheiro...";
-          }
+        // Tabs
+        const tabBtns = modalObd.querySelectorAll(".tab-btn");
+        const tabPanels = modalObd.querySelectorAll(".tab-panel");
 
-          // Unsubscribe from real-time listener to avoid spam/freeze during heavy batch writes
-          if (
-            el.vehicleUnsubscribe &&
-            typeof el.vehicleUnsubscribe === "function"
-          ) {
-            console.log("[Import] Pausing real-time listener...");
-            el.vehicleUnsubscribe();
-            el.vehicleUnsubscribe = null;
-          }
+        tabBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const target = btn.dataset.tab;
 
-          try {
-            let csvText = "";
+            // Update UI
+            tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
+            tabPanels.forEach((p) =>
+              p.classList.toggle("hidden", p.id !== `tab-${target}`),
+            );
 
-            // 1. Handle ZIP or CSV
-            if (file.name.toLowerCase().endsWith(".zip")) {
-              if (typeof JSZip === "undefined") {
-                throw new Error("JSZip não carregado. Recarrega a página.");
-              }
-              const zip = await JSZip.loadAsync(file);
-              const csvFile = Object.values(zip.files).find(
-                (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+            // Load Data
+            if (target === "historico") loadTripsHistory(veiculoId);
+            if (target === "ultima") loadLastTrip(veiculoId);
+            if (target === "diagnosticos") loadDiagnostics(veiculoId);
+          });
+        });
+
+        // Setup Diagnostics Logic
+        setupDiagnostics(veiculoId);
+
+        // --- BACKFILL TRIGGER ---
+        const btnScan = document.getElementById("btn-scan-trip");
+        if (btnScan) {
+          btnScan.onclick = async () => {
+            if (
+              !confirm(
+                "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
+              )
+            )
+              return;
+
+            btnScan.disabled = true;
+            const originalText = btnScan.textContent;
+            btnScan.textContent = "A processar...";
+
+            try {
+              const res = await fetch(
+                `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
               );
-              if (!csvFile) {
+              if (!res.ok) throw new Error("Falha no pedido");
+
+              const data = await res.json();
+              if (data.success) {
+                alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
+                loadLastTrip(veiculoId); // Reload UI
+              } else {
+                alert("Não foram encontradas novas viagens.");
+              }
+            } catch (e) {
+              console.error(e);
+              alert("Erro ao processar histórico.");
+            } finally {
+              btnScan.disabled = false;
+              btnScan.textContent = originalText;
+            }
+          };
+        }
+
+        // --- TORQUE CSV/ZIP IMPORT ---
+        const btnImportCsv = document.getElementById("btn-import-torque-csv");
+        const csvInput = document.getElementById("torque-csv-input");
+
+        // Manual Trip Button (Placeholder)
+        const btnAddManual = document.getElementById("btn-add-trip-manual");
+        if (btnAddManual) {
+          btnAddManual.addEventListener("click", () => {
+            alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
+          });
+        }
+
+        if (btnImportCsv && csvInput) {
+          btnImportCsv.addEventListener("click", () => csvInput.click());
+
+          csvInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Modal Progresso
+            const progressModal = document.getElementById(
+              "upload-progress-modal",
+            );
+            const progressBar = document.getElementById("upload-progress-bar");
+            const progressText = document.getElementById(
+              "upload-progress-text",
+            );
+
+            if (progressModal) {
+              progressModal.classList.remove("hidden");
+              if (progressBar) progressBar.style.width = "5%";
+              if (progressText) progressText.textContent = "A ler ficheiro...";
+            }
+
+            // Unsubscribe from real-time listener to avoid spam/freeze during heavy batch writes
+            if (
+              el.vehicleUnsubscribe &&
+              typeof el.vehicleUnsubscribe === "function"
+            ) {
+              console.log("[Import] Pausing real-time listener...");
+              el.vehicleUnsubscribe();
+              el.vehicleUnsubscribe = null;
+            }
+
+            try {
+              let csvText = "";
+
+              // 1. Handle ZIP or CSV
+              if (file.name.toLowerCase().endsWith(".zip")) {
+                if (typeof JSZip === "undefined") {
+                  throw new Error("JSZip não carregado. Recarrega a página.");
+                }
+                const zip = await JSZip.loadAsync(file);
+                const csvFile = Object.values(zip.files).find(
+                  (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+                );
+                if (!csvFile) {
+                  throw new Error(
+                    "Nenhum ficheiro CSV encontrado dentro do ZIP.",
+                  );
+                }
+                csvText = await csvFile.async("string");
+                console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
+              } else {
+                csvText = await file.text();
+              }
+
+              // 2. Parse CSV
+              const lines = csvText.trim().split("\n");
+              if (lines.length < 2) {
+                throw new Error("CSV vazio ou sem dados.");
+              }
+
+              const headers = lines[0].split(",").map((h) => h.trim());
+              console.log(`[Import] Headers: ${headers.length} colunas`);
+
+              // Portuguese month mapping
+              const ptMonths = {
+                "jan.": "Jan",
+                "fev.": "Feb",
+                "mar.": "Mar",
+                "abr.": "Apr",
+                "mai.": "May",
+                "jun.": "Jun",
+                "jul.": "Jul",
+                "ago.": "Aug",
+                "set.": "Sep",
+                "out.": "Oct",
+                "nov.": "Nov",
+                "dez.": "Dec",
+              };
+
+              // Fuzzy header finder
+              const findHeader = (part) =>
+                headers.find((h) =>
+                  h.toLowerCase().includes(part.toLowerCase()),
+                );
+
+              // Locate key columns
+              const dateCol = findHeader("Device Time") || headers[1]; // fallback
+              const speedCol = findHeader("Speed (OBD)");
+              const rpmCol = findHeader("RPM");
+              const odoCol = findHeader("Odometer");
+              const fuelCol = findHeader("Fuel Level");
+              const coolantCol = findHeader("Coolant");
+              const loadCol = findHeader("Engine Load");
+              const latCol = findHeader("Latitude") || "Latitude";
+              const lonCol = findHeader("Longitude") || "Longitude";
+              const mafCol = findHeader("Mass air flow");
+              const voltageCol = findHeader("Voltage");
+              const torqueCol =
+                findHeader("Torque(Nm)") || findHeader("Torque");
+              const hpCol = findHeader("Horsepower");
+              const tripDistCol = findHeader("Trip Distance");
+              const tripL100Col = findHeader("Trip average");
+              const intakeCol = findHeader("Intake Air");
+              const fuelRemCol = findHeader("Fuel Remaining");
+
+              // 3. Map rows to readings
+              const readings = [];
+              let skipped = 0;
+
+              for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line || line.startsWith("---")) continue;
+
+                const values = line.split(",");
+                const row = {};
+                headers.forEach((h, idx) => {
+                  row[h] = values[idx] || null;
+                });
+
+                // Parse date
+                let dateStr = row[dateCol];
+                if (!dateStr || dateStr === "-") {
+                  skipped++;
+                  continue;
+                }
+
+                // Replace Portuguese months
+                for (const [pt, en] of Object.entries(ptMonths)) {
+                  if (dateStr.toLowerCase().includes(pt)) {
+                    dateStr = dateStr.toLowerCase().replace(pt, en);
+                    break;
+                  }
+                }
+
+                const timestamp = new Date(dateStr).getTime();
+                if (isNaN(timestamp)) {
+                  skipped++;
+                  continue;
+                }
+
+                // Parse numeric value helper
+                const getNum = (col) => {
+                  if (!col) return null;
+                  const val = row[col];
+                  if (!val || val === "-") return null;
+                  const n = parseFloat(String(val).replace(",", "."));
+                  return isNaN(n) ? null : n;
+                };
+
+                const lat = getNum(latCol);
+                const lon = getNum(lonCol);
+
+                const parsed = {
+                  speed: getNum(speedCol),
+                  rpm: getNum(rpmCol),
+                  odometer: getNum(odoCol),
+                  fuelLevel: getNum(fuelCol),
+                  coolant: getNum(coolantCol),
+                  engineLoad: getNum(loadCol),
+                  intake: getNum(intakeCol),
+                  maf: getNum(mafCol),
+                  voltage: getNum(voltageCol),
+                  torqueNm: getNum(torqueCol),
+                  hpWheels: getNum(hpCol),
+                  tripDistance: getNum(tripDistCol),
+                  tripL100: getNum(tripL100Col),
+                  fuelRemainingPct: getNum(fuelRemCol),
+                  location: null,
+                };
+
+                if (lat && lon && (lat !== 0 || lon !== 0)) {
+                  parsed.location = new firebase.firestore.GeoPoint(lat, lon);
+                }
+
+                readings.push({
+                  vehicleId: veiculoId,
+                  timestamp,
+                  receivedAt:
+                    firebase.firestore.Timestamp.fromMillis(timestamp),
+                  sessionId:
+                    "csv_import_" + new Date().toISOString().split("T")[0],
+                  deviceId: "csv_import",
+                  email: "csv@import",
+                  imported: true, // Flag to skip Cloud Function
+                  raw: { ...row },
+                  parsed,
+                });
+              }
+
+              if (readings.length === 0) {
                 throw new Error(
-                  "Nenhum ficheiro CSV encontrado dentro do ZIP.",
+                  `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
                 );
               }
-              csvText = await csvFile.async("string");
-              console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
-            } else {
-              csvText = await file.text();
-            }
 
-            // 2. Parse CSV
-            const lines = csvText.trim().split("\n");
-            if (lines.length < 2) {
-              throw new Error("CSV vazio ou sem dados.");
-            }
-
-            const headers = lines[0].split(",").map((h) => h.trim());
-            console.log(`[Import] Headers: ${headers.length} colunas`);
-
-            // Portuguese month mapping
-            const ptMonths = {
-              "jan.": "Jan",
-              "fev.": "Feb",
-              "mar.": "Mar",
-              "abr.": "Apr",
-              "mai.": "May",
-              "jun.": "Jun",
-              "jul.": "Jul",
-              "ago.": "Aug",
-              "set.": "Sep",
-              "out.": "Oct",
-              "nov.": "Nov",
-              "dez.": "Dec",
-            };
-
-            // Fuzzy header finder
-            const findHeader = (part) =>
-              headers.find((h) => h.toLowerCase().includes(part.toLowerCase()));
-
-            // Locate key columns
-            const dateCol = findHeader("Device Time") || headers[1]; // fallback
-            const speedCol = findHeader("Speed (OBD)");
-            const rpmCol = findHeader("RPM");
-            const odoCol = findHeader("Odometer");
-            const fuelCol = findHeader("Fuel Level");
-            const coolantCol = findHeader("Coolant");
-            const loadCol = findHeader("Engine Load");
-            const latCol = findHeader("Latitude") || "Latitude";
-            const lonCol = findHeader("Longitude") || "Longitude";
-            const mafCol = findHeader("Mass air flow");
-            const voltageCol = findHeader("Voltage");
-            const torqueCol = findHeader("Torque(Nm)") || findHeader("Torque");
-            const hpCol = findHeader("Horsepower");
-            const tripDistCol = findHeader("Trip Distance");
-            const tripL100Col = findHeader("Trip average");
-            const intakeCol = findHeader("Intake Air");
-            const fuelRemCol = findHeader("Fuel Remaining");
-
-            // 3. Map rows to readings
-            const readings = [];
-            let skipped = 0;
-
-            for (let i = 1; i < lines.length; i++) {
-              const line = lines[i].trim();
-              if (!line || line.startsWith("---")) continue;
-
-              const values = line.split(",");
-              const row = {};
-              headers.forEach((h, idx) => {
-                row[h] = values[idx] || null;
-              });
-
-              // Parse date
-              let dateStr = row[dateCol];
-              if (!dateStr || dateStr === "-") {
-                skipped++;
-                continue;
-              }
-
-              // Replace Portuguese months
-              for (const [pt, en] of Object.entries(ptMonths)) {
-                if (dateStr.toLowerCase().includes(pt)) {
-                  dateStr = dateStr.toLowerCase().replace(pt, en);
-                  break;
-                }
-              }
-
-              const timestamp = new Date(dateStr).getTime();
-              if (isNaN(timestamp)) {
-                skipped++;
-                continue;
-              }
-
-              // Parse numeric value helper
-              const getNum = (col) => {
-                if (!col) return null;
-                const val = row[col];
-                if (!val || val === "-") return null;
-                const n = parseFloat(String(val).replace(",", "."));
-                return isNaN(n) ? null : n;
-              };
-
-              const lat = getNum(latCol);
-              const lon = getNum(lonCol);
-
-              const parsed = {
-                speed: getNum(speedCol),
-                rpm: getNum(rpmCol),
-                odometer: getNum(odoCol),
-                fuelLevel: getNum(fuelCol),
-                coolant: getNum(coolantCol),
-                engineLoad: getNum(loadCol),
-                intake: getNum(intakeCol),
-                maf: getNum(mafCol),
-                voltage: getNum(voltageCol),
-                torqueNm: getNum(torqueCol),
-                hpWheels: getNum(hpCol),
-                tripDistance: getNum(tripDistCol),
-                tripL100: getNum(tripL100Col),
-                fuelRemainingPct: getNum(fuelRemCol),
-                location: null,
-              };
-
-              if (lat && lon && (lat !== 0 || lon !== 0)) {
-                parsed.location = new firebase.firestore.GeoPoint(lat, lon);
-              }
-
-              readings.push({
-                vehicleId: veiculoId,
-                timestamp,
-                receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
-                sessionId:
-                  "csv_import_" + new Date().toISOString().split("T")[0],
-                deviceId: "csv_import",
-                email: "csv@import",
-                imported: true, // Flag to skip Cloud Function
-                raw: { ...row },
-                parsed,
-              });
-            }
-
-            if (readings.length === 0) {
-              throw new Error(
-                `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
+              console.log(
+                `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
               );
-            }
 
-            console.log(
-              `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
-            );
-
-            if (progressText)
-              progressText.textContent = `A preparar ${readings.length} registos...`;
-            if (progressBar) progressBar.style.width = "20%";
-
-            // 4. Calculate Trips (Client-Side)
-            // Sort first to ensure order
-            readings.sort((a, b) => a.timestamp - b.timestamp);
-
-            const tripsToCreate = calculateTripsFromReadings(readings);
-            console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
-
-            // 5. Batch write to Firestore (Readings + Trips)
-            const collRef = db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("leiturasObd");
-
-            // Write Trips first
-            const tripsRef = db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("viagens");
-
-            if (tripsToCreate.length > 0) {
-              const tripBatch = db.batch();
-              tripsToCreate.forEach((trip) => {
-                tripBatch.set(tripsRef.doc(), trip);
-              });
-              await tripBatch.commit();
-              console.log("[Import] Trips saved.");
-            }
-
-            const BATCH_SIZE = 450;
-            let written = 0;
-            const total = readings.length;
-
-            for (let i = 0; i < total; i += BATCH_SIZE) {
-              const chunk = readings.slice(i, i + BATCH_SIZE);
-              const batch = db.batch();
-
-              for (const r of chunk) {
-                batch.set(collRef.doc(), r);
-              }
-
-              await batch.commit();
-              written += chunk.length;
-
-              // Update progress
-              const pct = Math.round(20 + (written / total) * 70);
-              if (progressBar) progressBar.style.width = `${pct}%`;
               if (progressText)
-                progressText.textContent = `A enviar ${written}/${total}...`;
-            }
+                progressText.textContent = `A preparar ${readings.length} registos...`;
+              if (progressBar) progressBar.style.width = "20%";
 
-            // 5. Update vehicle state with latest reading
-            readings.sort((a, b) => b.timestamp - a.timestamp);
-            const latest = readings[0];
+              // 4. Calculate Trips (Client-Side)
+              // Sort first to ensure order
+              readings.sort((a, b) => a.timestamp - b.timestamp);
 
-            if (latest && latest.parsed) {
-              const vehicleUpdate = {
-                lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-              };
+              const tripsToCreate = calculateTripsFromReadings(readings);
+              console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
 
-              if (latest.parsed.odometer && latest.parsed.odometer > 0) {
-                vehicleUpdate.odometroAtual = latest.parsed.odometer;
-              }
-              if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
-                vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
-              }
-
-              await db
+              // 5. Batch write to Firestore (Readings + Trips)
+              const collRef = db
                 .collection("veiculos")
                 .doc(veiculoId)
-                .update(vehicleUpdate);
+                .collection("leiturasObd");
+
+              // Write Trips first
+              const tripsRef = db
+                .collection("veiculos")
+                .doc(veiculoId)
+                .collection("viagens");
+
+              if (tripsToCreate.length > 0) {
+                const tripBatch = db.batch();
+                tripsToCreate.forEach((trip) => {
+                  tripBatch.set(tripsRef.doc(), trip);
+                });
+                await tripBatch.commit();
+                console.log("[Import] Trips saved.");
+              }
+
+              const BATCH_SIZE = 450;
+              let written = 0;
+              const total = readings.length;
+
+              for (let i = 0; i < total; i += BATCH_SIZE) {
+                const chunk = readings.slice(i, i + BATCH_SIZE);
+                const batch = db.batch();
+
+                for (const r of chunk) {
+                  batch.set(collRef.doc(), r);
+                }
+
+                await batch.commit();
+                written += chunk.length;
+
+                // Update progress
+                const pct = Math.round(20 + (written / total) * 70);
+                if (progressBar) progressBar.style.width = `${pct}%`;
+                if (progressText)
+                  progressText.textContent = `A enviar ${written}/${total}...`;
+              }
+
+              // 5. Update vehicle state with latest reading
+              readings.sort((a, b) => b.timestamp - a.timestamp);
+              const latest = readings[0];
+
+              if (latest && latest.parsed) {
+                const vehicleUpdate = {
+                  lastObdUpdate:
+                    firebase.firestore.FieldValue.serverTimestamp(),
+                };
+
+                if (latest.parsed.odometer && latest.parsed.odometer > 0) {
+                  vehicleUpdate.odometroAtual = latest.parsed.odometer;
+                }
+                if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
+                  vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
+                }
+
+                await db
+                  .collection("veiculos")
+                  .doc(veiculoId)
+                  .update(vehicleUpdate);
+              }
+
+              // 6. Success!
+              alert(
+                `✅ Importação concluída!\n${written} registos importados com sucesso.`,
+              );
+
+              // Close Modals & Go to History
+              if (progressModal) progressModal.classList.add("hidden");
+              const btnHistory = document.querySelector(
+                '.tab-btn[data-tab="historico"]',
+              );
+              if (btnHistory) btnHistory.click(); // Switches tab and reloads history
+
+              // Reload trip data
+              loadLastTrip(veiculoId);
+              loadTripsHistory(veiculoId);
+            } catch (err) {
+              console.error("[Import] Error:", err);
+              alert(`❌ Erro na importação:\n${err.message}`);
+            } finally {
+              btnImportCsv.disabled = false;
+              btnImportCsv.textContent = originalText;
+              csvInput.value = ""; // Reset file input
+            }
+          });
+        }
+
+        // --- DATA LOADING ---
+
+        async function loadLastTrip(vid) {
+          const empty = document.getElementById("last-trip-empty");
+          const content = document.getElementById("last-trip-content");
+
+          try {
+            const snap = await db
+              .collection("veiculos")
+              .doc(vid)
+              .collection("viagens")
+              .orderBy("dataFim", "desc")
+              .limit(1)
+              .get();
+
+            if (snap.empty) {
+              if (empty) empty.classList.remove("hidden");
+              if (content) content.classList.add("hidden");
+              return;
             }
 
-            // 6. Success!
-            alert(
-              `✅ Importação concluída!\n${written} registos importados com sucesso.`,
-            );
+            if (empty) empty.classList.add("hidden");
+            if (content) content.classList.remove("hidden");
 
-            // Close Modals & Go to History
-            if (progressModal) progressModal.classList.add("hidden");
-            const btnHistory = document.querySelector(
-              '.tab-btn[data-tab="historico"]',
-            );
-            if (btnHistory) btnHistory.click(); // Switches tab and reloads history
-
-            // Reload trip data
-            loadLastTrip(veiculoId);
-            loadTripsHistory(veiculoId);
-          } catch (err) {
-            console.error("[Import] Error:", err);
-            alert(`❌ Erro na importação:\n${err.message}`);
-          } finally {
-            btnImportCsv.disabled = false;
-            btnImportCsv.textContent = originalText;
-            csvInput.value = ""; // Reset file input
+            const trip = snap.docs[0].data();
+            renderTripDetails(trip);
+          } catch (e) {
+            console.error("Error loading last trip:", e);
           }
-        });
-      }
+        }
 
-      // --- DATA LOADING ---
+        function renderTripDetails(trip) {
+          // Dates
+          const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+          const elDate = document.getElementById("last-trip-date");
+          const elTime = document.getElementById("last-trip-time");
 
-      async function loadLastTrip(vid) {
-        const empty = document.getElementById("last-trip-empty");
-        const content = document.getElementById("last-trip-content");
+          if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
+          if (elTime)
+            elTime.textContent = end.toLocaleTimeString("pt-PT", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
 
-        try {
-          const snap = await db
-            .collection("veiculos")
-            .doc(vid)
-            .collection("viagens")
-            .orderBy("dataFim", "desc")
-            .limit(1)
-            .get();
+          // Metrics
+          const elDist = document.getElementById("last-trip-dist");
+          const elConsumo = document.getElementById("last-trip-consumo");
+          const elSpeed = document.getElementById("last-trip-speed");
+          const elDur = document.getElementById("last-trip-duration");
 
-          if (snap.empty) {
-            if (empty) empty.classList.remove("hidden");
-            if (content) content.classList.add("hidden");
+          if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
+          if (elConsumo)
+            elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
+          if (elSpeed)
+            elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
+          if (elDur)
+            elDur.textContent = trip.duracao
+              ? `${Math.round(trip.duracao)} min`
+              : "--";
+
+          // Details
+          const elRpm = document.getElementById("last-trip-rpm");
+          const elTemp = document.getElementById("last-trip-temp");
+
+          if (elRpm)
+            elRpm.textContent =
+              (trip.metricas?.rpmMedio
+                ? Number(trip.metricas.rpmMedio).toFixed(1)
+                : "--") + " rpm";
+          if (elTemp)
+            elTemp.textContent =
+              (trip.metricas?.temperaturaMax || "--") + " °C";
+
+          // Battery
+          const elVolt = document.getElementById("last-trip-voltage");
+          if (elVolt)
+            elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
+
+          // Score
+          const elScore = document.getElementById("last-trip-score");
+          const elScoreDot = document.getElementById("last-trip-score-dot");
+          if (elScore) {
+            const s = trip.score || 0;
+            elScore.textContent = s > 0 ? s : "--";
+            if (elScoreDot) {
+              elScoreDot.className =
+                "status-indicator-dot " +
+                (s > 85
+                  ? "status-success"
+                  : s > 60
+                    ? "status-warning"
+                    : "status-error");
+            }
+          }
+
+          // Cost
+          const cost = trip.custoEstimado || 0;
+          const elCost = document.getElementById("last-trip-cost");
+          if (elCost)
+            elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
+
+          // --- CHARTS HANDLER ---
+          const btnCharts = document.getElementById("btn-load-charts");
+          const chartsContainer = document.getElementById(
+            "trip-charts-container",
+          );
+
+          if (btnCharts && chartsContainer) {
+            // Reset UI
+            btnCharts.classList.remove("hidden");
+            btnCharts.disabled = false;
+            btnCharts.textContent = "Ver Gráficos Detalhados";
+            chartsContainer.classList.add("hidden");
+
+            // Remove old listener (clone node trick)
+            const newBtn = btnCharts.cloneNode(true);
+            btnCharts.parentNode.replaceChild(newBtn, btnCharts);
+
+            newBtn.addEventListener("click", () => {
+              loadTripCharts(trip, newBtn, chartsContainer);
+            });
+          }
+        }
+
+        async function loadTripCharts(trip, btn, container) {
+          if (!trip.dataInicio || !trip.dataFim) {
+            alert("Erro: Viagem sem datas definidas.");
             return;
           }
 
-          if (empty) empty.classList.add("hidden");
-          if (content) content.classList.remove("hidden");
+          btn.disabled = true;
+          btn.textContent = "A carregar dados...";
 
-          const trip = snap.docs[0].data();
-          renderTripDetails(trip);
-        } catch (e) {
-          console.error("Error loading last trip:", e);
-        }
-      }
+          try {
+            // Parse dates (Firestore Timestamp or Date string)
+            const start = trip.dataInicio.toDate
+              ? trip.dataInicio.toDate()
+              : new Date(trip.dataInicio);
+            const end = trip.dataFim.toDate
+              ? trip.dataFim.toDate()
+              : new Date(trip.dataFim);
 
-      function renderTripDetails(trip) {
-        // Dates
-        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
-        const elDate = document.getElementById("last-trip-date");
-        const elTime = document.getElementById("last-trip-time");
+            // Get readings
+            const snapshot = await db
+              .collection("veiculos")
+              .doc(veiculoId)
+              .collection("leiturasObd")
+              .where("timestamp", ">=", start.getTime())
+              .where("timestamp", "<=", end.getTime())
+              .orderBy("timestamp", "asc")
+              .limit(2000) // Safety limit
+              .get();
 
-        if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
-        if (elTime)
-          elTime.textContent = end.toLocaleTimeString("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+            if (snapshot.empty) {
+              alert("Não existem dados detalhados para esta viagem.");
+              btn.textContent = "Sem dados";
+              return;
+            }
 
-        // Metrics
-        const elDist = document.getElementById("last-trip-dist");
-        const elConsumo = document.getElementById("last-trip-consumo");
-        const elSpeed = document.getElementById("last-trip-speed");
-        const elDur = document.getElementById("last-trip-duration");
+            const readings = snapshot.docs.map((doc) => doc.data());
+            console.log(`[Charts] Loaded ${readings.length} readings`);
 
-        if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
-        if (elConsumo)
-          elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
-        if (elSpeed)
-          elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
-        if (elDur)
-          elDur.textContent = trip.duracao
-            ? `${Math.round(trip.duracao)} min`
-            : "--";
+            renderTripCharts(readings);
 
-        // Details
-        const elRpm = document.getElementById("last-trip-rpm");
-        const elTemp = document.getElementById("last-trip-temp");
-
-        if (elRpm)
-          elRpm.textContent =
-            (trip.metricas?.rpmMedio
-              ? Number(trip.metricas.rpmMedio).toFixed(1)
-              : "--") + " rpm";
-        if (elTemp)
-          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
-
-        // Battery
-        const elVolt = document.getElementById("last-trip-voltage");
-        if (elVolt)
-          elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
-
-        // Score
-        const elScore = document.getElementById("last-trip-score");
-        const elScoreDot = document.getElementById("last-trip-score-dot");
-        if (elScore) {
-          const s = trip.score || 0;
-          elScore.textContent = s > 0 ? s : "--";
-          if (elScoreDot) {
-            elScoreDot.className =
-              "status-indicator-dot " +
-              (s > 85
-                ? "status-success"
-                : s > 60
-                  ? "status-warning"
-                  : "status-error");
+            // Show charts, hide button
+            container.classList.remove("hidden");
+            btn.classList.add("hidden");
+          } catch (error) {
+            console.error("Error loading charts:", error);
+            alert("Erro ao carregar gráficos: " + error.message);
+            btn.textContent = "Erro";
+            btn.disabled = false;
           }
         }
 
-        // Cost
-        const cost = trip.custoEstimado || 0;
-        const elCost = document.getElementById("last-trip-cost");
-        if (elCost)
-          elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
+        let chartSpeedRpm = null;
+        let chartFuel = null;
 
-        // --- CHARTS HANDLER ---
-        const btnCharts = document.getElementById("btn-load-charts");
-        const chartsContainer = document.getElementById(
-          "trip-charts-container",
-        );
+        function renderTripCharts(readings) {
+          // Prepara Data
+          const labels = readings.map((r) => {
+            const d = new Date(r.timestamp);
+            return d.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          });
 
-        if (btnCharts && chartsContainer) {
-          // Reset UI
-          btnCharts.classList.remove("hidden");
-          btnCharts.disabled = false;
-          btnCharts.textContent = "Ver Gráficos Detalhados";
-          chartsContainer.classList.add("hidden");
+          const speedData = readings.map((r) => r.parsed?.speed || 0);
+          const rpmData = readings.map((r) => r.parsed?.rpm || 0);
+          const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
 
-          // Remove old listener (clone node trick)
-          const newBtn = btnCharts.cloneNode(true);
-          btnCharts.parentNode.replaceChild(newBtn, btnCharts);
+          // --- UPDATE SUMMARY CARDS ---
+          const maxSpeed = Math.max(...speedData);
+          const maxRpm = Math.max(...rpmData);
 
-          newBtn.addEventListener("click", () => {
-            loadTripCharts(trip, newBtn, chartsContainer);
+          const elMaxSpeed = document.getElementById("trip-max-speed");
+          const elMaxRpm = document.getElementById("trip-max-rpm");
+
+          if (elMaxSpeed)
+            elMaxSpeed.textContent = isFinite(maxSpeed)
+              ? Math.round(maxSpeed)
+              : "--";
+          if (elMaxRpm)
+            elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
+
+          // --- Chart 1: Speed & RPM ---
+          const ctxSpeed = document
+            .getElementById("chart-trip-speed-rpm")
+            .getContext("2d");
+
+          // Gradient for Speed
+          const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+          gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
+          gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
+          // Gradient for RPM
+          const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
+          gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
+          gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
+
+          if (chartSpeedRpm) chartSpeedRpm.destroy();
+
+          chartSpeedRpm = new Chart(ctxSpeed, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Velocidade (km/h)",
+                  data: speedData,
+                  borderColor: "#3b82f6", // blue-500
+                  backgroundColor: gradSpeed,
+                  yAxisID: "y",
+                  tension: 0.4,
+                  pointRadius: 0,
+                  borderWidth: 2,
+                  fill: true,
+                },
+                {
+                  label: "RPM",
+                  data: rpmData,
+                  borderColor: "#ef4444", // red-500
+                  backgroundColor: gradRpm,
+                  yAxisID: "y1",
+                  tension: 0.4,
+                  pointRadius: 0,
+                  borderWidth: 2,
+                  fill: true,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: "index", intersect: false },
+              plugins: {
+                legend: { position: "top" },
+                tooltip: { enabled: true },
+              },
+              scales: {
+                x: { display: false }, // Hide X labels if too many
+                y: {
+                  type: "linear",
+                  display: true,
+                  position: "left",
+                  title: { display: true, text: "km/h" },
+                },
+                y1: {
+                  type: "linear",
+                  display: true,
+                  position: "right",
+                  grid: { drawOnChartArea: false },
+                  title: { display: true, text: "RPM" },
+                },
+              },
+            },
+          });
+
+          // --- Chart 2: Fuel ---
+          const ctxFuel = document
+            .getElementById("chart-trip-fuel")
+            .getContext("2d");
+
+          if (chartFuel) chartFuel.destroy();
+
+          // Filter nulls for smoother line if gaps
+          // But chart.js handles nulls as gaps usually.
+
+          chartFuel = new Chart(ctxFuel, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Nível Combustível (%)",
+                  data: fuelData,
+                  borderColor: "#10b981", // green-500
+                  backgroundColor: "rgba(16, 185, 129, 0.1)",
+                  fill: true,
+                  tension: 0.4,
+                  pointRadius: 0,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { display: false },
+                y: { min: 0, max: 100 },
+              },
+            },
           });
         }
-      }
 
-      async function loadTripCharts(trip, btn, container) {
-        if (!trip.dataInicio || !trip.dataFim) {
-          alert("Erro: Viagem sem datas definidas.");
-          return;
-        }
+        async function loadTripsHistory(vid) {
+          const list = document.getElementById("trips-list");
+          if (!list) return;
 
-        btn.disabled = true;
-        btn.textContent = "A carregar dados...";
+          list.innerHTML = '<div class="spinner"></div>';
 
-        try {
-          // Parse dates (Firestore Timestamp or Date string)
-          const start = trip.dataInicio.toDate
-            ? trip.dataInicio.toDate()
-            : new Date(trip.dataInicio);
-          const end = trip.dataFim.toDate
-            ? trip.dataFim.toDate()
-            : new Date(trip.dataFim);
+          try {
+            const snap = await db
+              .collection("veiculos")
+              .doc(vid)
+              .collection("viagens")
+              .orderBy("dataFim", "desc")
+              .limit(20)
+              .get();
 
-          // Get readings
-          const snapshot = await db
-            .collection("veiculos")
-            .doc(veiculoId)
-            .collection("leiturasObd")
-            .where("timestamp", ">=", start.getTime())
-            .where("timestamp", "<=", end.getTime())
-            .orderBy("timestamp", "asc")
-            .limit(2000) // Safety limit
-            .get();
+            const empty = document.getElementById("trips-empty");
 
-          if (snapshot.empty) {
-            alert("Não existem dados detalhados para esta viagem.");
-            btn.textContent = "Sem dados";
-            return;
-          }
+            if (snap.empty) {
+              list.innerHTML = "";
+              if (empty) empty.classList.remove("hidden");
+              return;
+            }
 
-          const readings = snapshot.docs.map((doc) => doc.data());
-          console.log(`[Charts] Loaded ${readings.length} readings`);
-
-          renderTripCharts(readings);
-
-          // Show charts, hide button
-          container.classList.remove("hidden");
-          btn.classList.add("hidden");
-        } catch (error) {
-          console.error("Error loading charts:", error);
-          alert("Erro ao carregar gráficos: " + error.message);
-          btn.textContent = "Erro";
-          btn.disabled = false;
-        }
-      }
-
-      let chartSpeedRpm = null;
-      let chartFuel = null;
-
-      function renderTripCharts(readings) {
-        // Prepara Data
-        const labels = readings.map((r) => {
-          const d = new Date(r.timestamp);
-          return d.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        });
-
-        const speedData = readings.map((r) => r.parsed?.speed || 0);
-        const rpmData = readings.map((r) => r.parsed?.rpm || 0);
-        const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
-
-        // --- UPDATE SUMMARY CARDS ---
-        const maxSpeed = Math.max(...speedData);
-        const maxRpm = Math.max(...rpmData);
-
-        const elMaxSpeed = document.getElementById("trip-max-speed");
-        const elMaxRpm = document.getElementById("trip-max-rpm");
-
-        if (elMaxSpeed)
-          elMaxSpeed.textContent = isFinite(maxSpeed)
-            ? Math.round(maxSpeed)
-            : "--";
-        if (elMaxRpm)
-          elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
-
-        // --- Chart 1: Speed & RPM ---
-        const ctxSpeed = document
-          .getElementById("chart-trip-speed-rpm")
-          .getContext("2d");
-
-        // Gradient for Speed
-        const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-        gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
-        gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
-
-        // Gradient for RPM
-        const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-        gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
-        gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
-
-        if (chartSpeedRpm) chartSpeedRpm.destroy();
-
-        chartSpeedRpm = new Chart(ctxSpeed, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Velocidade (km/h)",
-                data: speedData,
-                borderColor: "#3b82f6", // blue-500
-                backgroundColor: gradSpeed,
-                yAxisID: "y",
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-                fill: true,
-              },
-              {
-                label: "RPM",
-                data: rpmData,
-                borderColor: "#ef4444", // red-500
-                backgroundColor: gradRpm,
-                yAxisID: "y1",
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-                fill: true,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-              legend: { position: "top" },
-              tooltip: { enabled: true },
-            },
-            scales: {
-              x: { display: false }, // Hide X labels if too many
-              y: {
-                type: "linear",
-                display: true,
-                position: "left",
-                title: { display: true, text: "km/h" },
-              },
-              y1: {
-                type: "linear",
-                display: true,
-                position: "right",
-                grid: { drawOnChartArea: false },
-                title: { display: true, text: "RPM" },
-              },
-            },
-          },
-        });
-
-        // --- Chart 2: Fuel ---
-        const ctxFuel = document
-          .getElementById("chart-trip-fuel")
-          .getContext("2d");
-
-        if (chartFuel) chartFuel.destroy();
-
-        // Filter nulls for smoother line if gaps
-        // But chart.js handles nulls as gaps usually.
-
-        chartFuel = new Chart(ctxFuel, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Nível Combustível (%)",
-                data: fuelData,
-                borderColor: "#10b981", // green-500
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { display: false },
-              y: { min: 0, max: 100 },
-            },
-          },
-        });
-      }
-
-      async function loadTripsHistory(vid) {
-        const list = document.getElementById("trips-list");
-        if (!list) return;
-
-        list.innerHTML = '<div class="spinner"></div>';
-
-        try {
-          const snap = await db
-            .collection("veiculos")
-            .doc(vid)
-            .collection("viagens")
-            .orderBy("dataFim", "desc")
-            .limit(20)
-            .get();
-
-          const empty = document.getElementById("trips-empty");
-
-          if (snap.empty) {
+            if (empty) empty.classList.add("hidden");
             list.innerHTML = "";
-            if (empty) empty.classList.remove("hidden");
-            return;
+
+            snap.forEach((doc) => {
+              list.appendChild(createTripCard(doc.data()));
+            });
+          } catch (e) {
+            console.error("Error loading history:", e);
+            list.innerHTML =
+              '<div class="muted">Erro ao carregar histórico.</div>';
           }
-
-          if (empty) empty.classList.add("hidden");
-          list.innerHTML = "";
-
-          snap.forEach((doc) => {
-            list.appendChild(createTripCard(doc.data()));
-          });
-        } catch (e) {
-          console.error("Error loading history:", e);
-          list.innerHTML =
-            '<div class="muted">Erro ao carregar histórico.</div>';
         }
-      }
 
-      function createTripCard(trip) {
-        const el = document.createElement("article");
-        el.className = "trip-card"; // Need styling for this!
-        // Styling injection for quick fix:
-        el.style.cssText =
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
+        function createTripCard(trip) {
+          const el = document.createElement("article");
+          el.className = "trip-card"; // Need styling for this!
+          // Styling injection for quick fix:
+          el.style.cssText =
+            "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
 
-        const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+          const date = trip.dataFim?.toDate
+            ? trip.dataFim.toDate()
+            : new Date();
 
-        el.innerHTML = `
+          el.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap: 8px; align-items:center;">
                         <div class="status-indicator-dot ${trip.score > 85 ? "status-success" : trip.score > 60 ? "status-warning" : "status-error"}"></div>
@@ -2510,200 +2533,206 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
              `;
-        return el;
-      }
+          return el;
+        }
 
-      // --- REALTIME LISTENER (LIVE TAB) ---
-      const liveElements = {
-        rpm: document.getElementById("obd-rpm"),
-        speed: document.getElementById("obd-speed"),
-        coolant: document.getElementById("obd-coolant"),
-        load: document.getElementById("obd-load"),
-        voltage: document.getElementById("obd-voltage"),
-        maf: document.getElementById("obd-maf"),
-        torque: document.getElementById("obd-torque"),
-        hp: document.getElementById("obd-hp"),
-        boost: document.getElementById("obd-boost"),
-        fuelUsed: document.getElementById("obd-fuelUsed"),
-        lastUpdate: document.getElementById("obd-last-update"),
-        statusCoolant: document.getElementById("status-coolant"),
-      };
+        // --- REALTIME LISTENER (LIVE TAB) ---
+        const liveElements = {
+          rpm: document.getElementById("obd-rpm"),
+          speed: document.getElementById("obd-speed"),
+          coolant: document.getElementById("obd-coolant"),
+          load: document.getElementById("obd-load"),
+          voltage: document.getElementById("obd-voltage"),
+          maf: document.getElementById("obd-maf"),
+          torque: document.getElementById("obd-torque"),
+          hp: document.getElementById("obd-hp"),
+          boost: document.getElementById("obd-boost"),
+          fuelUsed: document.getElementById("obd-fuelUsed"),
+          lastUpdate: document.getElementById("obd-last-update"),
+          statusCoolant: document.getElementById("status-coolant"),
+        };
 
-      db.collection("veiculos")
-        .doc(veiculoId)
-        .collection("leiturasObd")
-        .orderBy("timestamp", "desc")
-        .limit(1)
-        .onSnapshot(
-          (snapshot) => {
-            if (snapshot.empty) {
-              btnObd.classList.add("hidden");
-              return;
-            }
-            btnObd.classList.remove("hidden");
-
-            const data = snapshot.docs[0].data();
-            const reading = data.parsed || {};
-
-            const findKey = (obj, ...parts) => {
-              const keys = Object.keys(obj);
-              for (const k of keys) {
-                const lower = k.toLowerCase();
-                if (parts.every((p) => lower.includes(p.toLowerCase())))
-                  return obj[k];
+        db.collection("veiculos")
+          .doc(veiculoId)
+          .collection("leiturasObd")
+          .orderBy("timestamp", "desc")
+          .limit(1)
+          .onSnapshot(
+            (snapshot) => {
+              if (snapshot.empty) {
+                btnObd.classList.add("hidden");
+                return;
               }
-              return null;
-            };
+              btnObd.classList.remove("hidden");
 
-            // Update DOM
-            const rpm = findKey(reading, "Engine RPM") || reading.rpm;
-            if (liveElements.rpm)
-              liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
+              const data = snapshot.docs[0].data();
+              const reading = data.parsed || {};
 
-            const speed = findKey(reading, "Speed (OBD)") || reading.speed;
-            if (liveElements.speed)
-              liveElements.speed.textContent = speed ? Math.round(speed) : "--";
+              const findKey = (obj, ...parts) => {
+                const keys = Object.keys(obj);
+                for (const k of keys) {
+                  const lower = k.toLowerCase();
+                  if (parts.every((p) => lower.includes(p.toLowerCase())))
+                    return obj[k];
+                }
+                return null;
+              };
 
-            const temp = findKey(reading, "Coolant") || reading.coolant;
-            if (liveElements.coolant)
-              liveElements.coolant.textContent = temp ? Math.round(temp) : "--";
-            if (temp && liveElements.statusCoolant) {
-              if (temp > 105)
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-red";
-              else if (temp > 90)
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-yellow";
-              else
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-green";
-            }
+              // Update DOM
+              const rpm = findKey(reading, "Engine RPM") || reading.rpm;
+              if (liveElements.rpm)
+                liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
 
-            const load = findKey(reading, "Engine Load") || reading.engineLoad;
-            if (liveElements.load)
-              liveElements.load.textContent = load ? Math.round(load) : "--";
-
-            const volts =
-              findKey(reading, "Voltage") ||
-              findKey(reading, "Volts") ||
-              reading.voltage;
-            if (liveElements.voltage)
-              liveElements.voltage.textContent = volts
-                ? Number(volts).toFixed(1)
-                : "--";
-
-            const maf = findKey(reading, "Mass Air Flow") || reading.maf;
-            if (liveElements.maf)
-              liveElements.maf.textContent = maf
-                ? Number(maf).toFixed(1)
-                : "--";
-
-            const torque = findKey(reading, "Torque") || reading.torqueNm;
-            if (liveElements.torque)
-              liveElements.torque.textContent = torque
-                ? Math.round(torque)
-                : "--";
-
-            const hp = findKey(reading, "Horsepower") || reading.hpWheels;
-            if (liveElements.hp)
-              liveElements.hp.textContent = hp ? Math.round(hp) : "--";
-
-            const boost = reading.boost;
-            if (liveElements.boost)
-              liveElements.boost.textContent =
-                boost !== undefined && boost !== null
-                  ? Number(boost).toFixed(1)
+              const speed = findKey(reading, "Speed (OBD)") || reading.speed;
+              if (liveElements.speed)
+                liveElements.speed.textContent = speed
+                  ? Math.round(speed)
                   : "--";
 
-            const fuelUsed = reading.fuelUsed;
-            if (liveElements.fuelUsed)
-              liveElements.fuelUsed.textContent =
-                fuelUsed !== undefined && fuelUsed !== null
-                  ? Number(fuelUsed).toFixed(1)
+              const temp = findKey(reading, "Coolant") || reading.coolant;
+              if (liveElements.coolant)
+                liveElements.coolant.textContent = temp
+                  ? Math.round(temp)
+                  : "--";
+              if (temp && liveElements.statusCoolant) {
+                if (temp > 105)
+                  liveElements.statusCoolant.className =
+                    "alert-status-indicator status-red";
+                else if (temp > 90)
+                  liveElements.statusCoolant.className =
+                    "alert-status-indicator status-yellow";
+                else
+                  liveElements.statusCoolant.className =
+                    "alert-status-indicator status-green";
+              }
+
+              const load =
+                findKey(reading, "Engine Load") || reading.engineLoad;
+              if (liveElements.load)
+                liveElements.load.textContent = load ? Math.round(load) : "--";
+
+              const volts =
+                findKey(reading, "Voltage") ||
+                findKey(reading, "Volts") ||
+                reading.voltage;
+              if (liveElements.voltage)
+                liveElements.voltage.textContent = volts
+                  ? Number(volts).toFixed(1)
                   : "--";
 
-            // Timestamp
-            if (liveElements.lastUpdate && data.timestamp) {
-              const d = new Date(Number(data.timestamp));
-              const now = new Date();
-              const isToday = d.toDateString() === now.toDateString();
-              liveElements.lastUpdate.textContent = isToday
-                ? d.toLocaleTimeString()
-                : d.toLocaleString();
-            }
-          },
-          (err) => console.error(err),
-        );
-    }
+              const maf = findKey(reading, "Mass Air Flow") || reading.maf;
+              if (liveElements.maf)
+                liveElements.maf.textContent = maf
+                  ? Number(maf).toFixed(1)
+                  : "--";
 
-    // =========================
-    // ABASTECIMENTOS
-    // =========================
-    const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
+              const torque = findKey(reading, "Torque") || reading.torqueNm;
+              if (liveElements.torque)
+                liveElements.torque.textContent = torque
+                  ? Math.round(torque)
+                  : "--";
 
-    if (!abs.length) {
-      if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
-      if (el.fuelList) el.fuelList.innerHTML = "";
-      if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
-    } else {
-      if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+              const hp = findKey(reading, "Horsepower") || reading.hpWheels;
+              if (liveElements.hp)
+                liveElements.hp.textContent = hp ? Math.round(hp) : "--";
 
-      // KPIs
-      let totalLitros = 0;
-      let totalGasto = 0;
+              const boost = reading.boost;
+              if (liveElements.boost)
+                liveElements.boost.textContent =
+                  boost !== undefined && boost !== null
+                    ? Number(boost).toFixed(1)
+                    : "--";
 
-      abs.forEach((a) => {
-        const L = Number(a.litros) || 0;
-        const P = Number(a.precoPorLitro) || 0;
-        totalLitros += L;
-        totalGasto += L * P;
-      });
+              const fuelUsed = reading.fuelUsed;
+              if (liveElements.fuelUsed)
+                liveElements.fuelUsed.textContent =
+                  fuelUsed !== undefined && fuelUsed !== null
+                    ? Number(fuelUsed).toFixed(1)
+                    : "--";
 
-      if (el.kpiGasto)
-        el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
-      if (el.kpiLitros) el.kpiLitros.textContent = formatVolume(totalLitros);
-      if (el.kpiTotalReg) el.kpiTotalReg.textContent = `${abs.length} registos`;
-
-      // consumo médio e custo/km (Fuel Only)
-      const consResult = window.Analytics.calculateConsumption(abs);
-      const fuelMetrics = window.Analytics.calculateCostMetrics(v, abs, []);
-
-      if (el.kpiConsumo) {
-        el.kpiConsumo.textContent = consResult.averageL100
-          ? formatConsumption(consResult.averageL100, settings.unidadeConsumo)
-          : "—";
+              // Timestamp
+              if (liveElements.lastUpdate && data.timestamp) {
+                const d = new Date(Number(data.timestamp));
+                const now = new Date();
+                const isToday = d.toDateString() === now.toDateString();
+                liveElements.lastUpdate.textContent = isToday
+                  ? d.toLocaleTimeString()
+                  : d.toLocaleString();
+              }
+            },
+            (err) => console.error(err),
+          );
       }
 
-      if (el.kpiCustoKm) {
-        el.kpiCustoKm.textContent =
-          fuelMetrics.costPerKm > 0
-            ? fuelMetrics.costPerKm.toFixed(3) +
-              ` ${getCurrencySymbol(settings.moeda)}/${
-                settings.unidadeDistancia || "km"
-              }`
-            : "—";
-      }
+      // =========================
+      // ABASTECIMENTOS
+      // =========================
+      const abs = await getAbastecimentosDoVeiculo(veiculoId, 500);
 
-      // LISTA
-      if (el.fuelList) {
-        el.fuelList.innerHTML = "";
+      if (!abs.length) {
+        if (el.fuelEmpty) el.fuelEmpty.classList.remove("hidden");
+        if (el.fuelList) el.fuelList.innerHTML = "";
+        if (el.kpiTotalReg) el.kpiTotalReg.textContent = "0 registos";
+      } else {
+        if (el.fuelEmpty) el.fuelEmpty.classList.add("hidden");
+
+        // KPIs
+        let totalLitros = 0;
+        let totalGasto = 0;
 
         abs.forEach((a) => {
-          const litros = Number(a.litros) || 0;
-          const ppl = Number(a.precoPorLitro) || 0;
-          const custo = (litros * ppl).toFixed(2);
-          const kmTxt = `${Number(a.odometro) || 0} km`;
-          const posto = a.posto ? escapeHtml(a.posto) : "—";
+          const L = Number(a.litros) || 0;
+          const P = Number(a.precoPorLitro) || 0;
+          totalLitros += L;
+          totalGasto += L * P;
+        });
 
-          const card = document.createElement("article");
-          card.className = "record-card"; // Unified class
+        if (el.kpiGasto)
+          el.kpiGasto.textContent = formatCurrency(totalGasto, settings.moeda);
+        if (el.kpiLitros) el.kpiLitros.textContent = formatVolume(totalLitros);
+        if (el.kpiTotalReg)
+          el.kpiTotalReg.textContent = `${abs.length} registos`;
 
-          // Icon indicator for FULL TANK
-          const fullTankIcon = a.completo
-            ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
-            : "";
+        // consumo médio e custo/km (Fuel Only)
+        const consResult = window.Analytics.calculateConsumption(abs);
+        const fuelMetrics = window.Analytics.calculateCostMetrics(v, abs, []);
 
-          card.innerHTML = `
+        if (el.kpiConsumo) {
+          el.kpiConsumo.textContent = consResult.averageL100
+            ? formatConsumption(consResult.averageL100, settings.unidadeConsumo)
+            : "—";
+        }
+
+        if (el.kpiCustoKm) {
+          el.kpiCustoKm.textContent =
+            fuelMetrics.costPerKm > 0
+              ? fuelMetrics.costPerKm.toFixed(3) +
+                ` ${getCurrencySymbol(settings.moeda)}/${
+                  settings.unidadeDistancia || "km"
+                }`
+              : "—";
+        }
+
+        // LISTA
+        if (el.fuelList) {
+          el.fuelList.innerHTML = "";
+
+          abs.forEach((a) => {
+            const litros = Number(a.litros) || 0;
+            const ppl = Number(a.precoPorLitro) || 0;
+            const custo = (litros * ppl).toFixed(2);
+            const kmTxt = `${Number(a.odometro) || 0} km`;
+            const posto = a.posto ? escapeHtml(a.posto) : "—";
+
+            const card = document.createElement("article");
+            card.className = "record-card"; // Unified class
+
+            // Icon indicator for FULL TANK
+            const fullTankIcon = a.completo
+              ? `<span title="Depósito Cheio" style="color:var(--color-success); margin-left:6px;"><svg class="icon" style="width:14px;height:14px;"><use href="assets/icons-unified.svg#icon-droplet"></use></svg></span>`
+              : "";
+
+            card.innerHTML = `
         <div class="record-icon-box is-fuel">
           <svg class="icon"><use href="assets/icons-unified.svg#icon-fuel"></use></svg>
         </div>
@@ -2767,207 +2796,214 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-          el.fuelList.appendChild(card);
-        });
+            el.fuelList.appendChild(card);
+          });
 
-        // Event Delegation (mantido igual)
-        el.fuelList.addEventListener("click", async (e) => {
-          const edit = e.target.closest("[data-edit]");
-          const del = e.target.closest("[data-del]");
+          // Event Delegation (mantido igual)
+          el.fuelList.addEventListener("click", async (e) => {
+            const edit = e.target.closest("[data-edit]");
+            const del = e.target.closest("[data-del]");
 
-          if (edit) {
-            const idAbs = edit.getAttribute("data-edit");
-            openAbastecimentoForEdit(veiculoId, idAbs);
-          }
-
-          if (del) {
-            const idAbs = del.getAttribute("data-del");
-            if (!confirm("Eliminar este abastecimento?")) return;
-            await deleteAbastecimento(veiculoId, idAbs);
-            location.reload();
-          }
-        });
-      }
-    }
-
-    async function renderAnalyticsCard(veiculoId) {
-      const section = document.getElementById("section-analytics");
-      if (!section) return;
-
-      try {
-        // 1. Fetch Data
-        const analytics = await getVehicleAnalytics(veiculoId);
-
-        // If absolutely no analytics yet, we can hide or show empty state.
-        // But we want to show "A aprender..." if exists but empty.
-        // If null, it means never calculated.
-
-        // Show FAB Button (Floating Mode)
-        const btnFloat = document.getElementById("btn-float-analytics");
-        if (btnFloat) btnFloat.classList.remove("hidden");
-
-        // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
-
-        // Elements
-        const elL100 = document.getElementById("an-l100");
-        const elConf = document.getElementById("an-confidence");
-        const elRangeKm = document.getElementById("an-range-km");
-        const elRangeDays = document.getElementById("an-range-days");
-        const elBadge = document.getElementById("analytics-badge");
-        const elWarnCap = document.getElementById("an-warning-capacity");
-        const elAlertBox = document.getElementById("an-alert-box");
-
-        if (!analytics) {
-          // Initial state
-          return;
-        }
-
-        // Consumption
-        if (analytics.consumoMedioL100) {
-          elL100.textContent = analytics.consumoMedioL100.toFixed(1);
-
-          // Confidence styling
-          const confMap = {
-            alta: { text: "Confiança Alta", class: "status-green" },
-            media: { text: "Confiança Média", class: "status-yellow" },
-            baixa: { text: "Estimat. Baixa", class: "status-neutral" },
-          };
-          const confData =
-            confMap[analytics.consumoConfianca] || confMap["baixa"];
-          elConf.className = confData.class;
-          elConf.innerHTML = `<span>${confData.text}</span>`;
-
-          elBadge.textContent = "Ativo";
-          elBadge.className = "badge badge-success badge-outline";
-        } else {
-          elL100.textContent = "--";
-          elConf.textContent = "A recolher dados...";
-          elBadge.textContent = "A aprender...";
-        }
-
-        // Range
-        if (analytics.reasonUnavailable === "missing_tank_capacity") {
-          elWarnCap.classList.remove("hidden");
-          elRangeKm.textContent = "--";
-          elRangeDays.textContent = "-- dias";
-        } else {
-          elWarnCap.classList.add("hidden");
-          if (analytics.kmAteReservaEstimado !== null) {
-            elRangeKm.textContent = analytics.kmAteReservaEstimado;
-
-            if (analytics.diasAteReservaEstimado !== null) {
-              elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
-            } else {
-              elRangeDays.textContent = "-- dias";
+            if (edit) {
+              const idAbs = edit.getAttribute("data-edit");
+              openAbastecimentoForEdit(veiculoId, idAbs);
             }
-          } else {
-            elRangeKm.textContent = "--";
-          }
+
+            if (del) {
+              const idAbs = del.getAttribute("data-del");
+              if (!confirm("Eliminar este abastecimento?")) return;
+              await deleteAbastecimento(veiculoId, idAbs);
+              location.reload();
+            }
+          });
         }
-
-        // Alerts
-        if (analytics.alertaFuelNivel && analytics.alertaFuelNivel !== "none") {
-          elAlertBox.classList.remove("hidden");
-          const isCrit = analytics.alertaFuelNivel === "critical";
-
-          elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
-          elAlertBox.textContent = isCrit
-            ? `⚠️ Reserva atingida! Abasteça urgentemente.`
-            : `⚠️ Combustível baixo. Planeie abastecer.`;
-        } else {
-          elAlertBox.classList.add("hidden");
-        }
-
-        // Toggle Logic (Idempotent: Re-assigning onclick is safe)
-        const headerBtn = document.getElementById("btn-toggle-analytics");
-        const contentDiv = document.getElementById("analytics-content");
-        const iconToggle = document.getElementById("icon-analytics-toggle");
-
-        if (headerBtn && contentDiv && iconToggle) {
-          headerBtn.onclick = () => {
-            const isHidden = contentDiv.classList.toggle("hidden");
-            // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
-            iconToggle.style.transform = isHidden
-              ? "rotate(180deg)"
-              : "rotate(0deg)";
-          };
-        }
-      } catch (err) {
-        console.error("Error rendering analytics:", err);
       }
-    }
 
-    // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
-    await renderAnalyticsCard(veiculoId);
-    // 🛡️ DATA REPAIR
-    await checkAndFixCorruptedData(veiculoId, v);
+      async function renderAnalyticsCard(veiculoId) {
+        const section = document.getElementById("section-analytics");
+        if (!section) return;
 
-    initTabs();
-    setupTabsToggle(veiculoId);
+        try {
+          // 1. Fetch Data
+          const analytics = await getVehicleAnalytics(veiculoId);
 
-    // --- INTERNAL HELPER (Moved inside init to access renderAnalyticsCard) ---
-    async function checkAndFixCorruptedData(veiculoId, v) {
-      let fixed = false;
+          // If absolutely no analytics yet, we can hide or show empty state.
+          // But we want to show "A aprender..." if exists but empty.
+          // If null, it means never calculated.
 
-      // 1. Fix Abastecimentos Types (String -> Number, String -> Boolean)
-      const records = await getAbastecimentosDoVeiculo(veiculoId, 100);
-      let badCount = 0;
+          // Show FAB Button (Floating Mode)
+          const btnFloat = document.getElementById("btn-float-analytics");
+          if (btnFloat) btnFloat.classList.remove("hidden");
 
-      for (const r of records) {
-        let needsUpdate = false;
-        let update = {};
+          // section.classList.remove("hidden"); // REMOVED: Keep card hidden until toggled
 
-        // Fix Odometro
-        if (typeof r.odometro === "string") {
-          const clean = Number(r.odometro.replace(/\s+/g, ""));
-          if (!isNaN(clean) && clean > 0) {
-            update.odometro = clean;
+          // Elements
+          const elL100 = document.getElementById("an-l100");
+          const elConf = document.getElementById("an-confidence");
+          const elRangeKm = document.getElementById("an-range-km");
+          const elRangeDays = document.getElementById("an-range-days");
+          const elBadge = document.getElementById("analytics-badge");
+          const elWarnCap = document.getElementById("an-warning-capacity");
+          const elAlertBox = document.getElementById("an-alert-box");
+
+          if (!analytics) {
+            // Initial state
+            return;
+          }
+
+          // Consumption
+          if (analytics.consumoMedioL100) {
+            elL100.textContent = analytics.consumoMedioL100.toFixed(1);
+
+            // Confidence styling
+            const confMap = {
+              alta: { text: "Confiança Alta", class: "status-green" },
+              media: { text: "Confiança Média", class: "status-yellow" },
+              baixa: { text: "Estimat. Baixa", class: "status-neutral" },
+            };
+            const confData =
+              confMap[analytics.consumoConfianca] || confMap["baixa"];
+            elConf.className = confData.class;
+            elConf.innerHTML = `<span>${confData.text}</span>`;
+
+            elBadge.textContent = "Ativo";
+            elBadge.className = "badge badge-success badge-outline";
+          } else {
+            elL100.textContent = "--";
+            elConf.textContent = "A recolher dados...";
+            elBadge.textContent = "A aprender...";
+          }
+
+          // Range
+          if (analytics.reasonUnavailable === "missing_tank_capacity") {
+            elWarnCap.classList.remove("hidden");
+            elRangeKm.textContent = "--";
+            elRangeDays.textContent = "-- dias";
+          } else {
+            elWarnCap.classList.add("hidden");
+            if (analytics.kmAteReservaEstimado !== null) {
+              elRangeKm.textContent = analytics.kmAteReservaEstimado;
+
+              if (analytics.diasAteReservaEstimado !== null) {
+                elRangeDays.textContent = `~ ${analytics.diasAteReservaEstimado} dias`;
+              } else {
+                elRangeDays.textContent = "-- dias";
+              }
+            } else {
+              elRangeKm.textContent = "--";
+            }
+          }
+
+          // Alerts
+          if (
+            analytics.alertaFuelNivel &&
+            analytics.alertaFuelNivel !== "none"
+          ) {
+            elAlertBox.classList.remove("hidden");
+            const isCrit = analytics.alertaFuelNivel === "critical";
+
+            elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
+            elAlertBox.textContent = isCrit
+              ? `⚠️ Reserva atingida! Abasteça urgentemente.`
+              : `⚠️ Combustível baixo. Planeie abastecer.`;
+          } else {
+            elAlertBox.classList.add("hidden");
+          }
+
+          // Toggle Logic (Idempotent: Re-assigning onclick is safe)
+          const headerBtn = document.getElementById("btn-toggle-analytics");
+          const contentDiv = document.getElementById("analytics-content");
+          const iconToggle = document.getElementById("icon-analytics-toggle");
+
+          if (headerBtn && contentDiv && iconToggle) {
+            headerBtn.onclick = () => {
+              const isHidden = contentDiv.classList.toggle("hidden");
+              // Rotate: Default is UP (Open). If Hidden (Closed), rotate 180 (Down).
+              iconToggle.style.transform = isHidden
+                ? "rotate(180deg)"
+                : "rotate(0deg)";
+            };
+          }
+        } catch (err) {
+          console.error("Error rendering analytics:", err);
+        }
+      }
+
+      // ✅ ISTO TEM DE FICAR FORA DO IF/ELSE
+      await renderAnalyticsCard(veiculoId);
+      // 🛡️ DATA REPAIR
+      await checkAndFixCorruptedData(veiculoId, v);
+
+      initTabs();
+      setupTabsToggle(veiculoId);
+
+      // --- INTERNAL HELPER (Moved inside init to access renderAnalyticsCard) ---
+      async function checkAndFixCorruptedData(veiculoId, v) {
+        let fixed = false;
+
+        // 1. Fix Abastecimentos Types (String -> Number, String -> Boolean)
+        const records = await getAbastecimentosDoVeiculo(veiculoId, 100);
+        let badCount = 0;
+
+        for (const r of records) {
+          let needsUpdate = false;
+          let update = {};
+
+          // Fix Odometro
+          if (typeof r.odometro === "string") {
+            const clean = Number(r.odometro.replace(/\s+/g, ""));
+            if (!isNaN(clean) && clean > 0) {
+              update.odometro = clean;
+              needsUpdate = true;
+            }
+          }
+
+          // Fix Completo
+          if (typeof r.completo === "string") {
+            if (r.completo === "true") update.completo = true;
+            else if (r.completo === "false") update.completo = false;
             needsUpdate = true;
           }
+          if (r.completo === 1) {
+            update.completo = true;
+            needsUpdate = true;
+          }
+          if (r.completo === 0) {
+            update.completo = false;
+            needsUpdate = true;
+          }
+
+          if (needsUpdate) {
+            console.log("Fixing record:", r.id, update);
+            await updateAbastecimento(veiculoId, r.id, update);
+            badCount++;
+            fixed = true;
+          }
         }
 
-        // Fix Completo
-        if (typeof r.completo === "string") {
-          if (r.completo === "true") update.completo = true;
-          else if (r.completo === "false") update.completo = false;
-          needsUpdate = true;
-        }
-        if (r.completo === 1) {
-          update.completo = true;
-          needsUpdate = true;
-        }
-        if (r.completo === 0) {
-          update.completo = false;
-          needsUpdate = true;
+        // FORCE ANALYTICS REFRESH (Self-Heal Stale Data)
+        console.log("Forcing Analytics Refresh...");
+        if (typeof refreshVehicleAnalytics === "function") {
+          await refreshVehicleAnalytics(veiculoId);
+        } else {
+          console.warn(
+            "refreshVehicleAnalytics function not available globally.",
+          );
         }
 
-        if (needsUpdate) {
-          console.log("Fixing record:", r.id, update);
-          await updateAbastecimento(veiculoId, r.id, update);
-          badCount++;
-          fixed = true;
+        if (fixed) {
+          alert(
+            `Corrigidos ${badCount} registos de dados. A página vai recarregar.`,
+          );
+          location.reload();
+        } else {
+          // Now we can safe access renderAnalyticsCard
+          await renderAnalyticsCard(veiculoId);
         }
       }
-
-      // FORCE ANALYTICS REFRESH (Self-Heal Stale Data)
-      console.log("Forcing Analytics Refresh...");
-      if (typeof refreshVehicleAnalytics === "function") {
-        await refreshVehicleAnalytics(veiculoId);
-      } else {
-        console.warn(
-          "refreshVehicleAnalytics function not available globally.",
-        );
-      }
-
-      if (fixed) {
-        alert(
-          `Corrigidos ${badCount} registos de dados. A página vai recarregar.`,
-        );
-        location.reload();
-      } else {
-        // Now we can safe access renderAnalyticsCard
-        await renderAnalyticsCard(veiculoId);
-      }
+    } catch (err) {
+      console.error("[INIT] Erro fatal no carregamento:", err);
+      // Não bloqueia o uso básico da página pois os binds iniciais já correram.
     }
   } // End init scope
 

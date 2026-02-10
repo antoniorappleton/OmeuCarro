@@ -1,13 +1,13 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+if (!admin.apps.length) admin.initializeApp();
+const db = admin.firestore();
+
 const { uploadTorqueData } = require("./torque");
 const { importFuelData } = require("./import_fuel");
 const { importTorqueCsv } = require("./import_torque_csv");
 const { processOBDReading } = require("./tripDetector");
-
-admin.initializeApp();
-const db = admin.firestore();
 
 // Exportar funções principais
 exports.uploadTorqueData = uploadTorqueData;
@@ -15,11 +15,7 @@ exports.importFuelData = importFuelData;
 exports.importTorqueCsv = importTorqueCsv;
 exports.processOBDReading = processOBDReading;
 
-
 // Cleanup code removed after successful execution.
-
-
-
 
 /**
  * Função agendada para correr todos os dias às 09:00 AM.

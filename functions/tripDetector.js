@@ -1,6 +1,7 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const { sendNotificationToUser } = require("./notify_utils");
+if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 /**
@@ -48,7 +49,6 @@ exports.processOBDReading = onDocumentCreated(
     const coolant = reading.parsed?.coolant || -999;
     const tripDist = reading.parsed?.tripDistance || 0;
     const tripL100 = reading.parsed?.tripL100 || 0;
-
 
     const tripRef = db
       .collection("veiculos")
@@ -157,15 +157,19 @@ exports.processOBDReading = onDocumentCreated(
           const prevTrip = prevTripDoc.data();
 
           if (!prevTrip.notified && prevTrip.distancia > 0.1) {
-            const userIdTrip = (await db.collection("veiculos").doc(vehicleId).get()).data()?.userId;
+            const userIdTrip = (
+              await db.collection("veiculos").doc(vehicleId).get()
+            ).data()?.userId;
             const dist = prevTrip.distancia.toFixed(1);
-            const cons = prevTrip.consumoMedio ? prevTrip.consumoMedio.toFixed(1) : "--";
-            
+            const cons = prevTrip.consumoMedio
+              ? prevTrip.consumoMedio.toFixed(1)
+              : "--";
+
             await sendNotificationToUser(
               userIdTrip,
               "🏁 Viagem Concluída",
               `Percorreu ${dist} km com média de ${cons} L/100.`,
-              { url: "/veiculos.html", tripId: prevTripDoc.id }
+              { url: "/veiculos.html", tripId: prevTripDoc.id },
             );
 
             await prevTripDoc.ref.update({ notified: true });
