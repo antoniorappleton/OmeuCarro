@@ -69,6 +69,8 @@ exports.uploadTorqueData = onRequest(
       }
 
       // Tentar múltiplos nomes comuns para a key
+      // 2. Validação de Segurança (ROBUSTA)
+      const TORQUE_UPLOAD_KEY = apiKeySecret.value();
       const providedKey =
         params.key ||
         params.password ||
@@ -77,44 +79,23 @@ exports.uploadTorqueData = onRequest(
         params.auth ||
         params.token;
 
-      // Tentar Basic Auth header como fallback
       const providedKeyFromAuth = parseBasicAuth(req);
       const finalProvidedKey = providedKey || providedKeyFromAuth;
-
-      const validKey = apiKeySecret.value();
-
-      // Debug mode seguro (sem desligar auth)
-      const debug = params.debug === "1";
-      if (debug) {
-        console.log("[DEBUG] Param keys:", Object.keys(params));
-        console.log("[DEBUG] Sample:", {
-          vehicleId: params.vehicleId,
-          hasAuthHeader: !!req.get("authorization"),
-          keyLike: providedKey || providedKeyFromAuth || null,
-        });
-      }
-
-      // === TEMPORÁRIO: AUTENTICAÇÃO DESATIVADA PARA DEBUG ===
-      // TODO: Reativar depois de confirmar que os dados chegam
-      /*
-      // 2. Validação de Segurança (ROBUSTA)
-      const TORQUE_UPLOAD_KEY = defineSecret("TORQUE_UPLOAD_KEY").value();
-      const finalProvidedKey = providedKey || parseBasicAuth(req);
 
       if (!finalProvidedKey || finalProvidedKey !== TORQUE_UPLOAD_KEY) {
         console.warn("[Torque] Falha na autenticação.");
         return res.status(403).send("NO");
       }
 
-      // Remover a chave dos dados a guardar (Segurança)
+      // Remover a chave e campos sensíveis dos dados a guardar (Segurança)
       const {
-        key,
-        password,
-        pass,
-        pwd,
-        auth,
-        token,
-        debug: _,
+        key: _k,
+        password: _p,
+        pass: _pa,
+        pwd: _pw,
+        auth: _au,
+        token: _to,
+        debug: _de,
         ...safeParams
       } = params;
 
@@ -126,7 +107,6 @@ exports.uploadTorqueData = onRequest(
 
       if (!vehicleId || !vehicleIdRegex.test(vehicleId)) {
         console.warn(`[Torque] vehicleId inválido: ${vehicleId}`);
-
         return res.status(400).send("INVALID_ID");
       }
 
