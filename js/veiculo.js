@@ -3215,184 +3215,6 @@ async function renderVehicleHealth(veiculoId) {
 }
 
 // --- DIAGNOSTICS (MODE $06) ---
-/**
- * Setup Unified Import Modal (CSV + Mode 06)
- */
-function setupUnifiedImport(veiculoId) {
-  const modal = document.getElementById("modalImport");
-  const btnOpen = document.getElementById("btn-import-torque-csv-zip"); // Ensure ID exists or add one
-  const btnClose = document.getElementById("btn-close-import");
-  const btnCancel = document.getElementById("btn-cancel-import");
-  const btnRun = document.getElementById("btn-run-import");
-
-  const tabBtns = document.querySelectorAll("[data-import-tab]");
-  const tabPanels = document.querySelectorAll(".import-tab-panel");
-
-  if (!modal) return;
-
-  const close = () => modal.classList.add("hidden");
-
-  // Tab switching
-  tabBtns.forEach((btn) => {
-    btn.onclick = () => {
-      const target = btn.getAttribute("data-import-tab");
-      tabBtns.forEach((b) => {
-        b.classList.toggle("active", b === btn);
-        b.style.fontWeight = b === btn ? "700" : "400";
-        b.style.borderBottomColor =
-          b === btn ? "var(--color-primary-start)" : "transparent";
-      });
-      tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== target));
-    };
-  });
-
-  if (btnOpen) btnOpen.onclick = () => modal.classList.remove("hidden");
-  if (btnClose) btnClose.onclick = close;
-  if (btnCancel) btnCancel.onclick = close;
-
-  // File Handling & Context
-  const csvFile = document.getElementById("csvFileInput");
-  const mode06Text = document.getElementById("mode06Text");
-  const summaryBox = document.getElementById("importSummary");
-
-  if (csvFile) {
-    csvFile.onchange = () => {
-      if (csvFile.files.length) {
-        btnRun.disabled = false;
-        document.getElementById("csvPreviewStatus").textContent =
-          `Ficheiro selecionado: ${csvFile.files[0].name}`;
-      }
-    };
-  }
-
-  if (btnRun) {
-    btnRun.onclick = async () => {
-      btnRun.disabled = true;
-      btnRun.textContent = "A processar...";
-
-      try {
-        const file = csvFile.files[0];
-        const m06 = mode06Text.value.trim();
-
-        // 1. Process Trips if CSV
-        if (file) {
-          // Re-use existing importTorqueZip or similar
-          // For simplicity, let's assume we call a handler:
-          await handleTorqueImport(veiculoId, file, {
-            sampleRate: document.getElementById("sampleRate").value,
-            grouping: document.getElementById("tripGrouping").value,
-          });
-        }
-
-        // 2. Process Mode 06 if Text
-        if (m06) {
-          const diag = parseMode06Text(m06);
-          await db
-            .collection("veiculos")
-            .doc(veiculoId)
-            .collection("diagnosticos")
-            .add({
-              ...diag,
-              userId: auth.currentUser.uid,
-              importedAt: firebase.firestore.FieldValue.serverTimestamp(),
-              rawText: m06,
-            });
-        }
-
-        alert("Importação concluída com sucesso!");
-        close();
-
-        // Refresh everything
-        if (typeof renderTripsList === "function") renderTripsList(veiculoId);
-        loadDiagnostics(veiculoId);
-        renderVehicleHealth(veiculoId);
-      } catch (e) {
-        console.error(e);
-        alert("Erro no import: " + e.message);
-      } finally {
-        btnRun.disabled = false;
-        btnRun.textContent = "Importar Dados";
-      }
-    };
-  }
-}
-
-function parseTorqueMode06(text) {
-  const lines = text.split("\n").map((l) => l.trim());
-  const tests = [];
-
-  // Header Info
-  const vinLine = lines.find((l) => l.startsWith("VIN"));
-  const vin = vinLine ? vinLine.split(":")[1]?.trim() : null;
-
-  // Split by separator (handle 4 or more dashes)
-  const blocks = text.split(/-{4,}/);
-
-  for (const block of blocks) {
-    const blines = block
-      .trim()
-      .split("\n")
-      .map((l) => l.trim());
-    if (blines.length < 3) continue;
-
-    const midLine = blines.find((l) => l.startsWith("MID:"));
-    if (!midLine) continue;
-
-    // Extract MID/TID
-    // MID:$31 TID:$82
-    const midMatch = midLine.match(/MID:(\$[\da-fA-F]+)/);
-    const tidMatch = midLine.match(/TID:(\$[\da-fA-F]+)/);
-
-    // Extract Name (Line after MID?)
-    const nameIndex = blines.indexOf(midLine) + 1;
-    const component = blines[nameIndex];
-
-    // Extract Result
-    // PASS or FAIL
-    const status =
-      blines.find((l) => l === "PASS" || l === "FAIL") || "UNKNOWN";
-
-    // Extract Values
-    // Max: 2   Min: 0,9
-    // Test result value: 1
-    const limitsLine = blines.find((l) => l.startsWith("Max:"));
-    const valLine = blines.find((l) => l.startsWith("Test result value:"));
-
-    let max = null,
-      min = null,
-      val = null;
-    if (limitsLine) {
-      // Simple match, assuming format "Max: X   Min: Y"
-      const parts = limitsLine.split("Min:");
-      if (parts.length > 0) max = parts[0].replace("Max:", "").trim();
-      if (parts.length > 1) min = parts[1].trim();
-    }
-    if (valLine) {
-      val = valLine.replace("Test result value:", "").trim();
-    }
-
-    tests.push({
-      mid: midMatch ? midMatch[1] : "",
-      tid: tidMatch ? tidMatch[1] : "",
-      component: component || "",
-      value: val,
-      min,
-      max,
-      status,
-    });
-  }
-
-  return {
-    vin,
-    timestamp: Date.now(),
-    tests,
-    summary: {
-      total: tests.length,
-      passed: tests.filter((t) => t.status === "PASS").length,
-      failed: tests.filter((t) => t.status === "FAIL").length,
-    },
-  };
-}
 
 async function loadDiagnostics(veiculoId) {
   const container = document.getElementById("diagnostics-list");
@@ -3583,7 +3405,12 @@ function setupUnifiedImport(veiculoId) {
       btnRun.textContent = "A importar...";
 
       try {
-        if (file) await handleTorqueImport(veiculoId, file);
+        if (file) {
+          await handleTorqueImport(veiculoId, file, {
+            sampleRate: document.getElementById("sampleRate").value,
+            grouping: document.getElementById("tripGrouping").value,
+          });
+        }
         if (m06Text) {
           const parsed = parseMode06Text(m06Text);
           await db
@@ -3609,44 +3436,7 @@ function setupUnifiedImport(veiculoId) {
 }
 
 /**
- * Render Vehicle Health KPI on Dashboard
- */
-async function renderVehicleHealth(veiculoId) {
-  const elText = document.getElementById("kpi-health-text");
-  const elDot = document.getElementById("kpi-health-dot");
-
-  if (!elText || !elDot) return;
-
-  try {
-    const snap = await db
-      .collection("veiculos")
-      .doc(veiculoId)
-      .collection("diagnosticos")
-      .orderBy("timestamp", "desc")
-      .limit(1)
-      .get();
-
-    if (snap.empty) {
-      elText.textContent = "Sem dados";
-      return;
-    }
-
-    const report = snap.docs[0].data();
-    const estado = report.summary?.estado || "Healthy";
-
-    elText.textContent = estado;
-    elDot.className = "status-indicator-dot"; // Reset
-
-    if (estado === "Critical") elDot.classList.add("status-error");
-    else if (estado === "Warning") elDot.classList.add("status-warning");
-    else elDot.classList.add("status-success");
-  } catch (e) {
-    console.error("[Health] Error:", e);
-  }
-}
-
-/**
- * Handle Torque CSV/ZIP Import (Legacy Logic refactored)
+ * UPDATED: Handle Torque CSV/ZIP Import (Deterministic IDs & Fuel Fallback)
  */
 async function handleTorqueImport(veiculoId, file, options = {}) {
   if (!file) return;
@@ -3688,11 +3478,13 @@ async function handleTorqueImport(veiculoId, file, options = {}) {
     const fuelCol = findHeader("Fuel Level");
     const fuelRemCol = findHeader("Fuel Remaining");
     const tripL100Col = findHeader("Trip average");
+    const rangeCol = findHeader("Distance to empty");
     const latCol = findHeader("Latitude") || "Latitude";
     const lonCol = findHeader("Longitude") || "Longitude";
 
     const readings = [];
     const sampleRate = parseInt(options.sampleRate) || 1;
+    const sessionId = options.sessionId || "csv_" + Date.now();
 
     for (let i = 1; i < lines.length; i++) {
       if (i % sampleRate !== 0) continue;
@@ -3716,24 +3508,34 @@ async function handleTorqueImport(veiculoId, file, options = {}) {
         return isNaN(n) ? null : n;
       };
 
+      // FUEL FALLBACK: Use Fuel Level or Fuel Remaining (Calculated)
+      const fuelLevelRaw = getNum(fuelCol);
+      const fuelRemRaw = getNum(fuelRemCol);
+      const finalFuel = fuelLevelRaw !== null ? fuelLevelRaw : fuelRemRaw;
+
       const parsed = {
         speed: getNum(speedCol),
         rpm: getNum(rpmCol),
         odometer: getNum(odoCol),
-        fuelLevel: getNum(fuelCol),
-        fuelRemainingPct: getNum(fuelRemCol),
+        fuelLevel: finalFuel,
+        fuelRemainingPct: fuelRemRaw,
         tripL100: getNum(tripL100Col),
+        distanceToEmptyKm: getNum(rangeCol),
       };
 
       const lat = getNum(latCol);
       const lon = getNum(lonCol);
       const loc = lat && lon ? new firebase.firestore.GeoPoint(lat, lon) : null;
 
+      // DETERMINISTIC ID
+      const rid = generateDeterministicId(veiculoId, timestamp, sessionId);
+
       readings.push({
+        id: rid,
         vehicleId: veiculoId,
         timestamp,
         receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
-        sessionId: "csv_import_" + Date.now(),
+        sessionId: sessionId,
         deviceId: "csv_import",
         imported: true,
         parsed: { ...parsed, location: loc },
@@ -3745,37 +3547,51 @@ async function handleTorqueImport(veiculoId, file, options = {}) {
     readings.sort((a, b) => a.timestamp - b.timestamp);
     const trips = calculateTripsFromReadings(readings);
 
+    // DETERMINISTIC TRIPS
     if (trips.length) {
       const batch = db.batch();
       const ref = db
         .collection("veiculos")
         .doc(veiculoId)
         .collection("viagens");
-      trips.forEach((t) => batch.set(ref.doc(), t));
+      trips.forEach((t) => {
+        // Use sessionId or hash for deterministic trip ID
+        const tid = generateDeterministicId(veiculoId, t.sessionId || "trip");
+        batch.set(ref.doc(tid), t, { merge: true });
+      });
       await batch.commit();
     }
 
+    // BATCH READINGS (Deterministic set)
     const coll = db
       .collection("veiculos")
       .doc(veiculoId)
       .collection("leiturasObd");
+
     for (let i = 0; i < readings.length; i += 450) {
       const chunk = readings.slice(i, i + 450);
       const b = db.batch();
-      chunk.forEach((r) => b.set(coll.doc(), r));
+      chunk.forEach((r) => {
+        const { id, ...data } = r;
+        b.set(coll.doc(id), data, { merge: true });
+      });
       await b.commit();
       if (progressBar)
         progressBar.style.width = `${Math.round((i / readings.length) * 100)}%`;
     }
 
+    // UPDATE VEHICLE PROFILE (LATEST)
     const latest = readings[readings.length - 1];
     if (latest && latest.parsed) {
       const upd = {
         lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
       };
       if (latest.parsed.odometer) upd.odometroAtual = latest.parsed.odometer;
-      if (latest.parsed.fuelLevel)
+      if (latest.parsed.fuelLevel !== null)
         upd.nivelCombustivel = latest.parsed.fuelLevel;
+      if (latest.parsed.distanceToEmptyKm)
+        upd.autonomiaKm = latest.parsed.distanceToEmptyKm;
+
       await db.collection("veiculos").doc(veiculoId).update(upd);
     }
 

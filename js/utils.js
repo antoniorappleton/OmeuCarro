@@ -227,4 +227,13 @@ function showToast(msg, type = "info") {
   }, 3000);
 }
 
+/**
+ * Generates a simple deterministic ID for Firebase docs
+ * (Consistent string representation of inputs)
+ */
+function generateDeterministicId(...parts) {
+  return parts.map((p) => String(p).replace(/[^a-zA-Z0-9]/g, "")).join("_");
+}
+
+window.generateDeterministicId = generateDeterministicId;
 window.showToast = showToast;
