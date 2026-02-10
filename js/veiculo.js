@@ -1453,6 +1453,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // NEW: Torque Integration & Vehicle Health
+    setupTorqueIntegration(veiculoId);
     setupUnifiedImport(veiculoId);
     renderVehicleHealth(veiculoId);
 
@@ -1525,11 +1526,6 @@ document.addEventListener("DOMContentLoaded", () => {
           btnId: "btn-float-alerts",
           cardId: "section-alerts",
           closeId: "btn-close-alerts",
-        },
-        {
-          btnId: "btn-float-obd",
-          cardId: "section-obd",
-          closeId: "btn-close-obd",
         },
       ];
 
@@ -1726,12 +1722,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnCloseObd = document.getElementById("btn-close-obd");
 
       // Modal & Tab Logic
-      if (!btnObd || !modalObd) return;
+      if (!modalObd) return;
 
-      btnObd.addEventListener("click", () => {
+      const openObd = (tab = "historico") => {
         modalObd.classList.remove("hidden");
-        loadTripsHistory(veiculoId); // Load History by default
-      });
+        // Trigger tab click if needed
+        const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
+        if (tabBtn) tabBtn.click();
+        else {
+          loadTripsHistory(veiculoId); // Fallback
+        }
+      };
+
+      if (btnObd) btnObd.addEventListener("click", () => openObd("historico"));
+
+      // Bind KPI Card
+      const kpiHealth = document.getElementById("kpi-health-status");
+      if (kpiHealth) {
+        kpiHealth.style.cursor = "pointer";
+        kpiHealth.onclick = () => openObd("diagnosticos");
+      }
 
       if (btnCloseObd) {
         btnCloseObd.addEventListener("click", () =>
