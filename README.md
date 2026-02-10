@@ -107,6 +107,8 @@ Para máxima compatibilidade, configurar estes PIDs no Torque Pro:
 | `a6`     | Odometer (from ECU)        | Odómetro                       |
 | `ff1204` | Trip Distance              | **Distância da viagem** ⭐     |
 | `ff1208` | Trip average L/100 KM      | **Consumo médio da viagem** ⭐ |
+| `ff12a5` | Boost Pressure             | Pressão do Turbo               |
+| `ff1271` | Fuel used (trip)           | Combustível gasto na viagem    |
 | `ff1226` | Horsepower (At the wheels) | Potência                       |
 | `ff1225` | Torque                     | Binário                        |
 

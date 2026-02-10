@@ -26,10 +26,13 @@ const DEFAULT_PIDS = {
   engineLoad: ["k4", "04", "k04"], // %
   voltage: ["k42", "42", "kff1238"], // V
   tripDistance: ["kff1204"], // km
-  tripL100: ["kff1203"], // L/100
+  tripL100: ["kff1208", "kff1203"], // L/100 (ff1208 is user's average)
   torqueNm: ["kff1225", "kff1226"], // Nm
   hpWheels: ["kff1220", "kff1221"], // hp
-  fuelRemainingPct: ["kff126a", "kff1269"], // %
+  fuelRemainingPct: ["k2f", "2f"], // Re-using fuelLevel if specific PID missing
+  distanceToEmptyKm: ["kff126a"], // autonomy
+  fuelUsedTrip: ["kff1271"], // Liters
+  boost: ["kff12a5"], // kPa or PSI depending on Torque settings
 };
 
 /**
@@ -178,6 +181,8 @@ exports.uploadTorqueData = onRequest(
             hpWheels: ["horsepower", "wheels"],
             fuelRemainingPct: ["fuel remaining", "%"],
             distanceToEmptyKm: ["distance to empty", "km"],
+            boost: ["boost", "pressure"],
+            fuelUsedTrip: ["fuel used", "trip"],
           };
 
           const patterns = fuzzyPatterns[fieldKey];
@@ -216,6 +221,8 @@ exports.uploadTorqueData = onRequest(
           hpWheels: getVal("hpWheels"),
           fuelRemainingPct: getVal("fuelRemainingPct"),
           distanceToEmptyKm: getVal("distanceToEmptyKm"),
+          boost: getVal("boost"),
+          fuelUsed: getVal("fuelUsedTrip"),
 
           location: null,
         };

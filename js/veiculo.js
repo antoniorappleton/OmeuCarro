@@ -1950,6 +1950,8 @@ document.addEventListener("DOMContentLoaded", () => {
         maf: document.getElementById("obd-maf"),
         torque: document.getElementById("obd-torque"),
         hp: document.getElementById("obd-hp"),
+        boost: document.getElementById("obd-boost"),
+        fuelUsed: document.getElementById("obd-fuelUsed"),
         lastUpdate: document.getElementById("obd-last-update"),
         statusCoolant: document.getElementById("status-coolant"),
       };
@@ -2032,6 +2034,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const hp = findKey(reading, "Horsepower") || reading.hpWheels;
             if (liveElements.hp)
               liveElements.hp.textContent = hp ? Math.round(hp) : "--";
+
+            const boost = reading.boost;
+            if (liveElements.boost)
+              liveElements.boost.textContent = boost !== undefined && boost !== null
+                ? Number(boost).toFixed(1)
+                : "--";
+
+            const fuelUsed = reading.fuelUsed;
+            if (liveElements.fuelUsed)
+              liveElements.fuelUsed.textContent = fuelUsed !== undefined && fuelUsed !== null
+                ? Number(fuelUsed).toFixed(1)
+                : "--";
 
             // Timestamp
             if (liveElements.lastUpdate && data.timestamp) {
