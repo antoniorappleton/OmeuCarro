@@ -14,17 +14,17 @@ const apiKeySecret = defineSecret("TORQUE_UPLOAD_KEY");
 // Mapas de PIDs padrão (fallback)
 // Suporta array de strings para tentar várias opções (ordem de preferência)
 const DEFAULT_PIDS = {
-  speed: ["kd", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, GPS Bearing Speed)
-  rpm: ["kc"], // rpm
-  odometer: ["a6", "kff1201"], // km (a6 from ECU, kff1201 from GPS/Calc)
-  fuelLevel: ["2f", "k2f"], // % (2f from ECU, k2f from Torque)
+  speed: ["kd", "k0d", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, etc)
+  rpm: ["kc", "k0c"], // rpm
+  odometer: ["a6", "kff1201"], // km
+  fuelLevel: ["2f", "k2f", "k02f"], // %
   latitude: ["kff1006"],
   longitude: ["kff1005"],
-  coolant: ["k5", "05"], // °C
-  intakeTemp: ["kf", "0f"], // °C
+  coolant: ["k5", "05", "k05"], // °C
+  intakeTemp: ["kf", "0f", "k0f"], // °C
   maf: ["k10", "10"], // g/s
-  engineLoad: ["k4", "04"], // %
-  voltage: ["k42", "42", "kff1238"], // V (Control module or Adapter)
+  engineLoad: ["k4", "04", "k04"], // %
+  voltage: ["k42", "42", "kff1238"], // V
   tripDistance: ["kff1204"], // km
   tripL100: ["kff1203"], // L/100
   torqueNm: ["kff1225", "kff1226"], // Nm
@@ -42,16 +42,6 @@ exports.uploadTorqueData = onRequest(
     try {
       // 1. Unificar payload (GET ou POST)
       const params = { ...req.query, ...req.body };
-
-      // === DEBUG TEMPORÁRIO (REMOVER DEPOIS) ===
-      console.log("[DEBUG] === TORQUE REQUEST DEBUG ===");
-      console.log("[DEBUG] Method:", req.method);
-      console.log("[DEBUG] Query params:", JSON.stringify(req.query));
-      console.log("[DEBUG] Body params:", JSON.stringify(req.body));
-      console.log("[DEBUG] Merged params:", JSON.stringify(params));
-      console.log("[DEBUG] Headers:", JSON.stringify(req.headers));
-      console.log("[DEBUG] Raw URL:", req.url);
-      // === FIM DEBUG ===
 
       // 2. Validação de Segurança (ROBUSTA)
 

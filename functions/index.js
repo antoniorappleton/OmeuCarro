@@ -1,59 +1,20 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
-// ... existing code ...
-const { uploadTorqueData } = require("./torque"); // <--- Importar nova função
-
-const { importFuelData } = require("./import_fuel"); // <--- Import helper
-const { importTorqueCsv } = require("./import_torque_csv"); // <--- Bulk Import CSV
+const { uploadTorqueData } = require("./torque");
+const { importFuelData } = require("./import_fuel");
+const { importTorqueCsv } = require("./import_torque_csv");
+const { processOBDReading } = require("./tripDetector");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// Exportar a função HTTP
+// Exportar funções principais
 exports.uploadTorqueData = uploadTorqueData;
-
 exports.importFuelData = importFuelData;
 exports.importTorqueCsv = importTorqueCsv;
-const { cleanupTripsCloud } = require("./direct_cleanup");
-exports.cleanupTripsCloud = cleanupTripsCloud;
-const { deepCleanupTrips } = require("./deep_cleanup");
-exports.deepCleanupTrips = deepCleanupTrips;
-const { inspectTrips } = require("./inspect_trips");
-exports.inspectTrips = inspectTrips;
-
-const { processOBDReading } = require("./tripDetector");
-const { backfillTrips } = require("./backfill_trips");
-
 exports.processOBDReading = processOBDReading;
-exports.backfillTrips = backfillTrips;
 
-const { cleanupManualRecords } = require("./cleanup_manual");
-exports.cleanupManualRecords = cleanupManualRecords;
-
-const { analyzeData } = require("./analyze_data");
-exports.analyzeData = analyzeData;
-
-exports.triggerDeepScan = onRequest(async (req, res) => {
-    try {
-        const { deepScan } = require("./deep_scan_feb10");
-        await deepScan(db);
-        res.send("Deep scan triggered. Check deep_scan.log");
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
-});
-
-exports.triggerForceCleanup = onRequest(async (req, res) => {
-    const dryRun = req.query.dryRun !== "false";
-    try {
-        const { forceCleanup } = require("./force_cleanup_feb10");
-        await forceCleanup(db, dryRun);
-        res.send(`Force cleanup triggered (dryRun=${dryRun}). Check force_cleanup.log`);
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
-});
 
 // Cleanup code removed after successful execution.
 
