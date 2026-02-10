@@ -1322,9 +1322,14 @@ document.addEventListener("DOMContentLoaded", () => {
     el.name.textContent = v.nome;
     el.subtitle.textContent = `${v.marca} ${v.modelo}`;
     el.plate.textContent = v.matricula || "Sem matrícula";
-    el.fuel.textContent = v.combustivelPadrao || "—";
-
-    el.fuel.textContent = v.combustivelPadrao || "—";
+    const fuelType = v.combustivelPadrao || "—";
+    const fuelLevel = v.nivelCombustivel;
+    
+    if (fuelLevel !== undefined && fuelLevel !== null && fuelLevel > 0) {
+      el.fuel.textContent = `${fuelType} (${Math.round(fuelLevel)}%)`;
+    } else {
+      el.fuel.textContent = fuelType;
+    }
 
     // 🔹 ODÓMETRO
     const currentOdo = v.odometroAtual || v.odometroInicial || 0;
@@ -1466,8 +1471,14 @@ document.addEventListener("DOMContentLoaded", () => {
           // Update Fuel Badge (Hero)
           const fuelPct = data.nivelCombustivel;
           const heroFuel = document.getElementById("vehicle-fuel");
-          if (heroFuel && fuelPct !== undefined) {
-            heroFuel.textContent = `${Math.round(fuelPct)}%`;
+          const fuelType = data.combustivelPadrao || "—";
+
+          if (heroFuel) {
+            if (fuelPct !== undefined && fuelPct !== null && fuelPct > 0) {
+              heroFuel.textContent = `${fuelType} (${Math.round(fuelPct)}%)`;
+            } else {
+              heroFuel.textContent = fuelType;
+            }
           }
 
           // Update Last Trip Summary in UI (Reactivity to ultimasMetricas sync)

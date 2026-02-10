@@ -1,0 +1,19 @@
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@22 from host.
+Serving at port 8523
+
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@22 from host.
+Serving at port 8404
+
+[36m[1mi  functions:[22m[39m Loaded functions: uploadTorqueData, importFuelData, importTorqueCsv, cleanupTripsCloud, deepCleanupTrips, inspectTrips, processOBDReading, backfillTrips, cleanupManualRecords, analyzeData, triggerInspection, checkVehicleAlertsV2
+[33m[1m!  functions:[22m[39m The following emulators are not running, calls to these services will affect production: [1mfirestore, database, pubsub, storage, eventarc, tasks[22m
+firebase > Promise {
+  <pending>,
+  [Symbol(async_id_symbol)]: 7237,
+  [Symbol(trigger_async_id_symbol)]: 36
+}
+firebase > 
+ERROR SENDING REQUEST: FirebaseError: Failed to make request to http://127.0.0.1:5001/omeucarro-d3889/us-central1/triggerInspection/

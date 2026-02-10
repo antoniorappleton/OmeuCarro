@@ -1,5 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
 
 // Garantir inicialização do admin
@@ -52,7 +53,7 @@ exports.uploadTorqueData = onRequest(
       console.log("[DEBUG] Raw URL:", req.url);
       // === FIM DEBUG ===
 
-      // 2. Validação de Segurança (ROBUSTA - múltiplos formatos)
+      // 2. Validação de Segurança (ROBUSTA)
 
       // Helper: Parse Basic Auth header
       function parseBasicAuth(req) {
@@ -96,23 +97,14 @@ exports.uploadTorqueData = onRequest(
       // === TEMPORÁRIO: AUTENTICAÇÃO DESATIVADA PARA DEBUG ===
       // TODO: Reativar depois de confirmar que os dados chegam
       /*
-      if (!finalProvidedKey || finalProvidedKey !== validKey) {
-        console.warn(
-          `[Torque] Acesso negado. Key inválida: ${finalProvidedKey}`,
-        );
-        // Log útil (sem vazar segredos)
-        console.log("[Torque] Param keys recebidas:", Object.keys(params));
-        console.log(
-          "[Torque] Tem Authorization header?",
-          !!req.get("authorization"),
-        );
+      // 2. Validação de Segurança (ROBUSTA)
+      const TORQUE_UPLOAD_KEY = defineSecret("TORQUE_UPLOAD_KEY").value();
+      const finalProvidedKey = providedKey || parseBasicAuth(req);
+
+      if (!finalProvidedKey || finalProvidedKey !== TORQUE_UPLOAD_KEY) {
+        console.warn("[Torque] Falha na autenticação.");
         return res.status(403).send("NO");
       }
-      */
-      console.log(
-        "[TEMP] Autenticação desativada para debug. Key recebida:",
-        finalProvidedKey,
-      );
 
       // Remover a chave dos dados a guardar (Segurança)
       const {
@@ -126,18 +118,8 @@ exports.uploadTorqueData = onRequest(
         ...safeParams
       } = params;
 
-      // 3. Validação do Veículo (com fallback para debug)
-      let vehicleId = safeParams.vehicleId || params.vehicleId;
-
-      // Fallback: Usar vehicleId fixo temporariamente para debug
-      if (!vehicleId) {
-        console.warn(
-          "[DEBUG] vehicleId não encontrado nos params. Usando fallback fixo: DPK7LP2GXiEibKmSQUVA",
-        );
-        console.log("[DEBUG] Params disponíveis:", Object.keys(safeParams));
-        console.log("[DEBUG] Email recebido:", safeParams.eml);
-        vehicleId = "DPK7LP2GXiEibKmSQUVA"; // TEMPORÁRIO para debug
-      }
+      // 3. Validação do Veículo
+      const vehicleId = safeParams.vehicleId || params.vehicleId;
 
       // Aceitar hífens e underscores, min 3 chars
       const vehicleIdRegex = /^[A-Za-z0-9_-]{3,60}$/;
@@ -156,9 +138,11 @@ exports.uploadTorqueData = onRequest(
       const receivedAt = admin.firestore.Timestamp.now(); // Usar relógio do servidor Firestore
 
       // Normalização de Timestamp (Torque Pro pode enviar epoch em segundos)
-      let timestamp = safeParams.time
-        ? Number(safeParams.time)
-        : receivedAt.toMillis();
+      let timestamp = safeParams.time ? Number(safeParams.time) : receivedAt.toMillis();
+      if (timestamp < 10000000000) {
+        // Se o valor for pequeno, provavelmente está em segundos (ex: 1.6e9 vs 1.6e12)
+        timestamp *= 1000;
+      }
       if (timestamp && timestamp < 10000000000) {
         // Menos de 10 dígitos -> provavelmente segundos
         timestamp = timestamp * 1000;
@@ -284,9 +268,16 @@ exports.uploadTorqueData = onRequest(
           parsed: parsed,
         };
 
-        // Criar referência para novo doc na subcoleção (dentro da tx)
-        const readingRef = vehicleRef.collection("leiturasObd").doc();
-        t.set(readingRef, readingData);
+        // Criar referência determinística robusta para evitar duplicados por retry do cliente
+        const deviceId = readingData.deviceId || "nodev";
+        const sessionId = readingData.sessionId || "nosession";
+        const readingId = crypto
+          .createHash("md5")
+          .update(`${vehicleId}_${deviceId}_${sessionId}_${timestamp}`)
+          .digest("hex");
+
+        const readingRef = vehicleRef.collection("leiturasObd").doc(readingId);
+        t.set(readingRef, readingData, { merge: true });
 
         // Agregação no Veículo
         const updates = {

@@ -324,8 +324,10 @@
 
     // Fallback if still 0 (to avoid critical alerts on empty history)
     if (consumoMedioL100 <= 0) {
-      consumoMedioL100 = 6.0;
-      source = "fallback";
+      // Use a more neutral fallback, or check vehicle type if we had it.
+      // For now, let's keep a standard fallback but mark the source clearly.
+      consumoMedioL100 = 7.0; // Slightly more conservative fallback
+      source = "fallback_estimate";
     }
 
     const kmDiaMedio = Number(paceResult?.kmPerDay || 0);
@@ -423,11 +425,16 @@
 
       alertaFuelAtivo = alertaFuelNivel !== "none";
 
+      // CRITICAL: If source is fallback, we weaken the alert (never critical unless extremely low fuel)
+      if (source === "fallback_estimate" && alertaFuelNivel === "critical") {
+        alertaFuelNivel = "warning";
+      }
+
       if (kmDiaMedio > 0) {
         diasAteReservaEstimado = Number((estRange / kmDiaMedio).toFixed(1));
       }
     } else {
-      reasonUnavailable = "missing_consumption"; // Should be covered by fallback
+      reasonUnavailable = "missing_consumption"; 
     }
 
     // Final payload matches requested structure

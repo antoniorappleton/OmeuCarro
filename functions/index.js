@@ -1,5 +1,7 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+// ... existing code ...
 const { uploadTorqueData } = require("./torque"); // <--- Importar nova função
 
 const { importFuelData } = require("./import_fuel"); // <--- Import helper
@@ -31,6 +33,32 @@ exports.cleanupManualRecords = cleanupManualRecords;
 
 const { analyzeData } = require("./analyze_data");
 exports.analyzeData = analyzeData;
+
+exports.triggerDeepScan = onRequest(async (req, res) => {
+    try {
+        const { deepScan } = require("./deep_scan_feb10");
+        await deepScan(db);
+        res.send("Deep scan triggered. Check deep_scan.log");
+    } catch (e) {
+        res.status(500).send(e.toString());
+    }
+});
+
+exports.triggerForceCleanup = onRequest(async (req, res) => {
+    const dryRun = req.query.dryRun !== "false";
+    try {
+        const { forceCleanup } = require("./force_cleanup_feb10");
+        await forceCleanup(db, dryRun);
+        res.send(`Force cleanup triggered (dryRun=${dryRun}). Check force_cleanup.log`);
+    } catch (e) {
+        res.status(500).send(e.toString());
+    }
+});
+
+// Cleanup code removed after successful execution.
+
+
+
 
 /**
  * Função agendada para correr todos os dias às 09:00 AM.

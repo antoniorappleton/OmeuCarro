@@ -95,13 +95,13 @@ exports.processOBDReading = onDocumentCreated(
       const timeDiff = timestamp - lastUpdate;
       const minutesDiff = timeDiff / (1000 * 60);
 
-      // REGRA 1: Tempo (> 15 min de intervalo = nova viagem)
-      if (minutesDiff > 15) {
+      // REGRA 1: Tempo (> 15 min de intervalo)
+      // "Pro" logic: Se houver sessionId, confiamos na sessão mesmo com pausas longas (ecrã bloqueado)
+      if (minutesDiff > 15 && !reading.sessionId) {
         isNewTrip = true;
       }
 
       // REGRA 2: Reset do Torque (Trip Distance ficou menor que anterior drasticamente)
-      // Ex: Estava em 50km, passou para 0.1km
       if (
         !isNewTrip &&
         tripDist < (tripData.distanciaMax || 0) &&
@@ -109,7 +109,7 @@ exports.processOBDReading = onDocumentCreated(
         (tripData.distanciaMax || 0) > 2.0
       ) {
         console.log(
-          `[TripDetector] Reset detectado: Dist ${tripData.distanciaMax} -> ${tripDist}`,
+          `[TripDetector] Reset detectado para Sessão ${reading.sessionId}: Dist ${tripData.distanciaMax} -> ${tripDist}`,
         );
         isNewTrip = true;
       }
@@ -138,16 +138,26 @@ exports.processOBDReading = onDocumentCreated(
       // Finalizar a anterior (opcional, só para garantir consistência visual se quisermos flag 'closed')
       // Na verdade, a "Lazy" logic não precisa fechar explicitamente, só cria a nova.
 
-      // Criar NOVA
+      // Criar/Atualizar usando ID determinístico para re-juntar sessões interrompidas
+      let tripId = reading.sessionId;
+      
+      if (!tripId) {
+        // Fallback: se não houver sessão, agrupamos por Dispositivo + Dia + Janela de 1 hora
+        const dateStr = readingDate.toISOString().split("T")[0];
+        const hourBucket = readingDate.getUTCHours();
+        const deviceId = reading.deviceId || "unknown";
+        tripId = `fallback_${deviceId}_${dateStr}_H${hourBucket}`;
+      }
+
       const newTripData = {
         dataInicio: admin.firestore.Timestamp.fromMillis(timestamp),
         dataFim: admin.firestore.Timestamp.fromMillis(timestamp),
         lastUpdate: timestamp,
 
         // Totais
-        distancia: tripDist, // Valor final acumulado
-        distanciaMax: tripDist, // Auxiliar para detetar resets
-        duracao: 0, // min
+        distancia: tripDist, 
+        distanciaMax: tripDist,
+        duracao: 0, 
 
         // Médias (Inicial)
         velocidadeMedia: speed,
@@ -159,15 +169,16 @@ exports.processOBDReading = onDocumentCreated(
           rpmMax: rpm,
           velocidadeMax: speed,
           temperaturaMax: coolant > -100 ? coolant : null,
-          count: 1, // para médias ponderadas
+          count: 1, 
         },
 
         origem: "torque-auto",
         sessionId: reading.sessionId || null,
+        deviceId: reading.deviceId || null,
       };
 
-      await tripRef.add(newTripData);
-      console.log(`[TripDetector] Nova viagem criada.`);
+      await tripRef.doc(tripId).set(newTripData, { merge: true });
+      console.log(`[TripDetector] Viagem ${tripId} processada (Merge Mode).`);
 
       // Sync to Vehicle Profile
       await db
