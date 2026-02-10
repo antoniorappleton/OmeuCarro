@@ -1452,8 +1452,9 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     }
 
-    // NEW: Torque Integration
-    setupTorqueIntegration(veiculoId);
+    // NEW: Torque Integration & Vehicle Health
+    setupUnifiedImport(veiculoId);
+    renderVehicleHealth(veiculoId);
 
     // NEW: Real-time Profile Listener (Hero Odo & Fuel)
     setupVehicleListener(veiculoId);
@@ -3049,6 +3050,9 @@ function processTripBatch(batch) {
     const v = Number(p.voltage);
     const l = Number(p.engineLoad);
     const c = Number(p.tripL100);
+    const f = Number(p.fuelRemainingPct || p.fuelLevel);
+    const a = Number(p.distanceToEmptyKm || p.distanceToEmpty);
+    const g = Number(p.fuelUsedTrip || p.fuelUsed);
 
     if (s > maxSpeed) maxSpeed = s;
     if (r > maxRpm) maxRpm = r;
@@ -3075,6 +3079,11 @@ function processTripBatch(batch) {
     if (r > 4500) penaltyRpm += 2;
     if (s > 125) penaltySpeed += 1;
 
+    // Track last values for import update
+    if (f > 0) start.lastFuel = f;
+    if (a > 0) start.lastRange = a;
+    if (g > 0) start.lastFuelUsed = g;
+
     // Calc dist
     if (i > 0) {
       const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
@@ -3096,6 +3105,14 @@ function processTripBatch(batch) {
   const avgLoad = countLoad ? sumLoad / countLoad : null;
   const avgConsumo = countL100 ? sumL100 / countL100 : 0;
 
+  // Last known state from batch
+  const fuelFinal =
+    end.parsed?.fuelRemainingPct || end.parsed?.fuelLevel || start.lastFuel;
+  const autonomiaFinal =
+    end.parsed?.distanceToEmptyKm ||
+    end.parsed?.distanceToEmpty ||
+    start.lastRange;
+
   return {
     dataInicio: firebase.firestore.Timestamp.fromMillis(start.timestamp),
     dataFim: firebase.firestore.Timestamp.fromMillis(end.timestamp),
@@ -3113,73 +3130,188 @@ function processTripBatch(batch) {
       temperaturaMax: maxTemp,
       voltagemMedia: avgVoltage ? Number(avgVoltage.toFixed(1)) : null,
       cargaMedia: avgLoad ? Math.round(avgLoad) : null,
+      combustivelFinal: fuelFinal ? Number(fuelFinal.toFixed(1)) : null,
+      autonomiaKm: autonomiaFinal ? Math.round(autonomiaFinal) : null,
+      combustivelGasto: start.lastFuelUsed
+        ? Number(start.lastFuelUsed.toFixed(2))
+        : null,
     },
     source: "import_csv",
     importedAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
 }
 
+/**
+ * Render Vehicle Health KPI and potential Warning Cards
+ */
+async function renderVehicleHealth(veiculoId) {
+  const elText = document.getElementById("kpi-health-text");
+  const elDot = document.getElementById("kpi-health-dot");
+  if (!elText || !elDot) return;
+
+  try {
+    // 1. Get Latest Diagnostic
+    const diagSnap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("diagnosticos")
+      .orderBy("importedAt", "desc")
+      .limit(1)
+      .get();
+
+    // 2. Get Latest Trips for Voltage/Coolant trends
+    const tripSnap = await db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("viagens")
+      .orderBy("dataFim", "desc")
+      .limit(5)
+      .get();
+
+    let diagStatus = "Healthy";
+    let batteryStatus = "OK";
+    let coolantStatus = "OK";
+
+    if (!diagSnap.empty) {
+      const diag = diagSnap.docs[0].data();
+      diagStatus = diag.summary?.estado || "Healthy";
+    }
+
+    if (!tripSnap.empty) {
+      const trips = tripSnap.docs.map((d) => d.data());
+      const avgVolt =
+        trips.reduce((acc, t) => acc + (t.metricas?.voltagemMedia || 12.6), 0) /
+        trips.length;
+      if (avgVolt < 11.9) batteryStatus = "Fraca";
+
+      const maxTemp = Math.max(
+        ...trips.map((t) => t.metricas?.temperaturaMax || 0),
+      );
+      if (maxTemp > 105) coolantStatus = "Quente";
+    }
+
+    // Synthesis
+    let finalState = "Saudável";
+    let dotClass = "status-success";
+
+    if (
+      diagStatus === "Warning" ||
+      batteryStatus === "Fraca" ||
+      coolantStatus === "Quente"
+    ) {
+      finalState = "Atenção";
+      dotClass = "status-warning";
+    }
+    if (diagStatus === "Critical") {
+      finalState = "Crítico";
+      dotClass = "status-error";
+    }
+
+    elText.textContent = finalState;
+    elDot.className = "status-indicator-dot " + dotClass;
+  } catch (e) {
+    console.error("Error rendering health:", e);
+  }
+}
+
 // --- DIAGNOSTICS (MODE $06) ---
-function setupDiagnostics(veiculoId) {
-  const btnAdd = document.getElementById("btn-add-diagnostic");
-  const modal = document.getElementById("diagnostics-upload-modal");
-  const btnClose = document.getElementById("btn-close-diag-upload");
-  const btnCancel = document.getElementById("btn-cancel-diag");
-  const btnSave = document.getElementById("btn-save-diag");
-  const input = document.getElementById("diag-input-text");
+/**
+ * Setup Unified Import Modal (CSV + Mode 06)
+ */
+function setupUnifiedImport(veiculoId) {
+  const modal = document.getElementById("modalImport");
+  const btnOpen = document.getElementById("btn-import-torque-csv-zip"); // Ensure ID exists or add one
+  const btnClose = document.getElementById("btn-close-import");
+  const btnCancel = document.getElementById("btn-cancel-import");
+  const btnRun = document.getElementById("btn-run-import");
 
-  if (!btnAdd || !modal) return;
+  const tabBtns = document.querySelectorAll("[data-import-tab]");
+  const tabPanels = document.querySelectorAll(".import-tab-panel");
 
-  const close = () => {
-    modal.classList.add("hidden");
-    if (input) input.value = "";
-  };
+  if (!modal) return;
 
-  btnAdd.onclick = () => {
-    modal.classList.remove("hidden");
-    if (input) input.focus();
-  };
+  const close = () => modal.classList.add("hidden");
 
+  // Tab switching
+  tabBtns.forEach((btn) => {
+    btn.onclick = () => {
+      const target = btn.getAttribute("data-import-tab");
+      tabBtns.forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.style.fontWeight = b === btn ? "700" : "400";
+        b.style.borderBottomColor =
+          b === btn ? "var(--color-primary-start)" : "transparent";
+      });
+      tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== target));
+    };
+  });
+
+  if (btnOpen) btnOpen.onclick = () => modal.classList.remove("hidden");
   if (btnClose) btnClose.onclick = close;
   if (btnCancel) btnCancel.onclick = close;
 
-  if (btnSave) {
-    btnSave.onclick = async () => {
-      const text = input.value;
-      if (!text.trim()) {
-        alert("Cola o texto do relatório primeiro.");
-        return;
-      }
+  // File Handling & Context
+  const csvFile = document.getElementById("csvFileInput");
+  const mode06Text = document.getElementById("mode06Text");
+  const summaryBox = document.getElementById("importSummary");
 
-      btnSave.disabled = true;
-      btnSave.textContent = "A processar...";
+  if (csvFile) {
+    csvFile.onchange = () => {
+      if (csvFile.files.length) {
+        btnRun.disabled = false;
+        document.getElementById("csvPreviewStatus").textContent =
+          `Ficheiro selecionado: ${csvFile.files[0].name}`;
+      }
+    };
+  }
+
+  if (btnRun) {
+    btnRun.onclick = async () => {
+      btnRun.disabled = true;
+      btnRun.textContent = "A processar...";
 
       try {
-        const report = parseTorqueMode06(text);
-        if (report.tests.length === 0) {
-          throw new Error("Não foi possível detetar testes válidos no texto.");
+        const file = csvFile.files[0];
+        const m06 = mode06Text.value.trim();
+
+        // 1. Process Trips if CSV
+        if (file) {
+          // Re-use existing importTorqueZip or similar
+          // For simplicity, let's assume we call a handler:
+          await handleTorqueImport(veiculoId, file, {
+            sampleRate: document.getElementById("sampleRate").value,
+            grouping: document.getElementById("tripGrouping").value,
+          });
         }
 
-        await db
-          .collection("veiculos")
-          .doc(veiculoId)
-          .collection("diagnosticos")
-          .add({
-            ...report,
-            userId: auth.currentUser.uid, // Explicitly save userId for rules/consistency
-            importedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            rawText: text,
-          });
+        // 2. Process Mode 06 if Text
+        if (m06) {
+          const diag = parseMode06Text(m06);
+          await db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("diagnosticos")
+            .add({
+              ...diag,
+              userId: auth.currentUser.uid,
+              importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              rawText: m06,
+            });
+        }
 
-        alert("Relatório guardado com sucesso!");
+        alert("Importação concluída com sucesso!");
         close();
-        loadDiagnostics(veiculoId); // Refresh list
+
+        // Refresh everything
+        if (typeof renderTripsList === "function") renderTripsList(veiculoId);
+        loadDiagnostics(veiculoId);
+        renderVehicleHealth(veiculoId);
       } catch (e) {
         console.error(e);
-        alert("Erro ao processar: " + e.message);
+        alert("Erro no import: " + e.message);
       } finally {
-        btnSave.disabled = false;
-        btnSave.textContent = "Processar e Guardar";
+        btnRun.disabled = false;
+        btnRun.textContent = "Importar Dados";
       }
     };
   }
@@ -3289,12 +3421,20 @@ async function loadDiagnostics(veiculoId) {
       const date = data.importedAt
         ? data.importedAt.toDate().toLocaleString()
         : "Data desconhecida";
-      const failCount = data.summary?.failed || 0;
-      const contextClass = failCount > 0 ? "status-error" : "status-success";
+      const failCount = data.summary?.failCount || 0;
+      const nearLimit = data.summary?.nearLimitCount || 0;
+      const contextClass =
+        failCount > 0
+          ? "status-error"
+          : nearLimit > 0
+            ? "status-warning"
+            : "status-success";
       const statusText =
         failCount > 0
           ? `${failCount} Falhas detetadas`
-          : "Todos os testes passaram";
+          : nearLimit > 0
+            ? `${nearLimit} Alertas (Perto do limite)`
+            : "Saúde: Saudável";
 
       const card = document.createElement("div");
       card.className = "card";
@@ -3312,8 +3452,8 @@ async function loadDiagnostics(veiculoId) {
                     <table style="width:100%; font-size:0.8rem; border-collapse: collapse;">
                         <thead>
                             <tr class="muted" style="text-align:left;">
-                                <th>Componente</th>
-                                <th>Valor</th>
+                                <th>Teste</th>
+                                <th>Valor / Limites</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -3321,9 +3461,9 @@ async function loadDiagnostics(veiculoId) {
                             ${(data.tests || [])
                               .map(
                                 (t) => `
-                                <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : ""}">
-                                    <td style="padding:4px 0;">${t.component}</td>
-                                    <td style="padding:4px 0;">${t.value}</td>
+                                <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : t.marginToLimit < 0.1 ? "color: var(--color-warning);" : ""}">
+                                    <td style="padding:4px 0;">${t.name} <span class="muted" style="font-size:0.7rem;">(MID:${t.mid} TID:${t.tid})</span></td>
+                                    <td style="padding:4px 0;">${t.val} [${t.min}-${t.max}]</td>
                                     <td style="padding:4px 0;">${t.status}</td>
                                 </tr>
                             `,
@@ -3345,4 +3485,202 @@ async function loadDiagnostics(veiculoId) {
     console.error(e);
     container.innerHTML = `<div class="error-box">Erro ao carregar diagnósticos: ${e.message}</div>`;
   }
+}
+
+/**
+ * Handle Torque CSV/ZIP Import (Legacy Logic refactored)
+ */
+async function handleTorqueImport(veiculoId, file, options = {}) {
+  if (!file) return;
+
+  const progressModal = document.getElementById("upload-progress-modal");
+  const progressBar = document.getElementById("upload-progress-bar");
+  const progressText = document.getElementById("upload-progress-text");
+
+  if (progressModal) {
+    progressModal.classList.remove("hidden");
+    if (progressBar) progressBar.style.width = "5%";
+    if (progressText) progressText.textContent = "A ler ficheiro...";
+  }
+
+  try {
+    let csvText = "";
+    if (file.name.toLowerCase().endsWith(".zip")) {
+      const zip = await JSZip.loadAsync(file);
+      const csvFile = Object.values(zip.files).find(
+        (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
+      );
+      if (!csvFile) throw new Error("Nenhum CSV no ZIP.");
+      csvText = await csvFile.async("string");
+    } else {
+      csvText = await file.text();
+    }
+
+    const lines = csvText.trim().split("\n");
+    if (lines.length < 2) throw new Error("CSV vazio.");
+
+    const headers = lines[0].split(",").map((h) => h.trim());
+    const findHeader = (p) =>
+      headers.find((h) => h.toLowerCase().includes(p.toLowerCase()));
+
+    const dateCol = findHeader("Device Time") || headers[1];
+    const speedCol = findHeader("Speed (OBD)");
+    const rpmCol = findHeader("RPM");
+    const odoCol = findHeader("Odometer");
+    const fuelCol = findHeader("Fuel Level");
+    const fuelRemCol = findHeader("Fuel Remaining");
+    const tripL100Col = findHeader("Trip average");
+    const latCol = findHeader("Latitude") || "Latitude";
+    const lonCol = findHeader("Longitude") || "Longitude";
+
+    const readings = [];
+    const sampleRate = parseInt(options.sampleRate) || 1;
+
+    for (let i = 1; i < lines.length; i++) {
+      if (i % sampleRate !== 0) continue;
+      const values = lines[i].split(",");
+      const row = {};
+      headers.forEach((h, idx) => {
+        row[h] = values[idx] || null;
+      });
+
+      let dateStr = row[dateCol];
+      if (!dateStr || dateStr === "-") continue;
+
+      const timestamp = new Date(dateStr).getTime();
+      if (isNaN(timestamp)) continue;
+
+      const getNum = (col) => {
+        if (!col) return null;
+        const v = row[col];
+        if (!v || v === "-") return null;
+        const n = parseFloat(String(v).replace(",", "."));
+        return isNaN(n) ? null : n;
+      };
+
+      const parsed = {
+        speed: getNum(speedCol),
+        rpm: getNum(rpmCol),
+        odometer: getNum(odoCol),
+        fuelLevel: getNum(fuelCol),
+        fuelRemainingPct: getNum(fuelRemCol),
+        tripL100: getNum(tripL100Col),
+      };
+
+      const lat = getNum(latCol);
+      const lon = getNum(lonCol);
+      const loc = lat && lon ? new firebase.firestore.GeoPoint(lat, lon) : null;
+
+      readings.push({
+        vehicleId: veiculoId,
+        timestamp,
+        receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
+        sessionId: "csv_import_" + Date.now(),
+        deviceId: "csv_import",
+        imported: true,
+        parsed: { ...parsed, location: loc },
+      });
+    }
+
+    if (!readings.length) throw new Error("Sem dados válidos.");
+
+    readings.sort((a, b) => a.timestamp - b.timestamp);
+    const trips = calculateTripsFromReadings(readings);
+
+    if (trips.length) {
+      const batch = db.batch();
+      const ref = db
+        .collection("veiculos")
+        .doc(veiculoId)
+        .collection("viagens");
+      trips.forEach((t) => batch.set(ref.doc(), t));
+      await batch.commit();
+    }
+
+    const coll = db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .collection("leiturasObd");
+    for (let i = 0; i < readings.length; i += 450) {
+      const chunk = readings.slice(i, i + 450);
+      const b = db.batch();
+      chunk.forEach((r) => b.set(coll.doc(), r));
+      await b.commit();
+      if (progressBar)
+        progressBar.style.width = `${Math.round((i / readings.length) * 100)}%`;
+    }
+
+    const latest = readings[readings.length - 1];
+    if (latest && latest.parsed) {
+      const upd = {
+        lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+      if (latest.parsed.odometer) upd.odometroAtual = latest.parsed.odometer;
+      if (latest.parsed.fuelLevel)
+        upd.nivelCombustivel = latest.parsed.fuelLevel;
+      await db.collection("veiculos").doc(veiculoId).update(upd);
+    }
+
+    if (progressModal) progressModal.classList.add("hidden");
+    return readings.length;
+  } catch (e) {
+    console.error(e);
+    if (progressModal) progressModal.classList.add("hidden");
+    throw e;
+  }
+}
+
+/**
+ * Robust Mode $06 Parser
+ */
+function parseMode06Text(text) {
+  const lines = text.split(/\r?\n/);
+  const tests = [];
+  const rePassFail =
+    /MID:\$(?<mid>[0-9A-Fa-f]{2})\s+TID:\$(?<tid>[0-9A-Fa-f]{2})\s+-\s*(?<name>.*?)\s+Max:\s*(?<max>[-0-9.,]+)(?<unitMax>[^\s]*)\s+Min:\s*(?<min>[-0-9.,]+)(?<unitMin>[^\s]*)\s+Test result value:\s*(?<val>[-0-9.,]+)(?<unitVal>[^\s]*)\s+(?<status>PASS|FAIL)/i;
+
+  for (const line of lines) {
+    let m = line.match(rePassFail);
+    if (m && m.groups) {
+      const toNum = (s) => parseFloat(String(s).replace(",", "."));
+      const max = toNum(m.groups.max);
+      const min = toNum(m.groups.min);
+      const val = toNum(m.groups.val);
+      const span = max - min;
+      const margin = span > 0 ? Math.min(val - min, max - val) / span : null;
+      tests.push({
+        mid: m.groups.mid.toUpperCase(),
+        tid: m.groups.tid.toUpperCase(),
+        name: m.groups.name.trim(),
+        min,
+        max,
+        val,
+        unit: m.groups.unitVal || m.groups.unitMax || "",
+        status: m.groups.status.toUpperCase(),
+        marginToLimit: margin,
+      });
+    }
+  }
+
+  const failCount = tests.filter((t) => t.status === "FAIL").length;
+  const nearLimitCount = tests.filter(
+    (t) =>
+      t.status === "PASS" && t.marginToLimit !== null && t.marginToLimit < 0.1,
+  ).length;
+
+  let estado = "Healthy";
+  if (failCount > 0) estado = "Critical";
+  else if (nearLimitCount >= 3) estado = "Warning";
+
+  return {
+    summary: {
+      totalTests: tests.length,
+      passCount: tests.filter((t) => t.status === "PASS").length,
+      failCount,
+      nearLimitCount,
+      estado,
+    },
+    tests,
+    importedAt: new Date(),
+  };
 }

@@ -21,15 +21,15 @@
 
     <script defer src="js/firebase-config.js"></script>
     <script defer src="js/auth.js"></script>
-    <script defer src="js/analytics.js?v=20"></script>
-    <script defer src="js/firestore.js"></script>
+    <script defer src="js/analytics.js?v=22"></script>
+    <script defer src="js/firestore.js?v=22"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js"></script>
-    <script defer src="js/utils.js?v=22"></script>
+    <script defer src="js/notifications.js?v=22"></script>
+    <script defer src="js/utils.js?v=23"></script>
     <!-- JSZip for Torque CSV/ZIP import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=35"></script>
+    <script defer src="js/veiculo.js?v=50"></script>
   </head>
 
   <body class="app-page" data-page="vehicle-detail">
@@ -200,8 +200,23 @@
           <strong id="kpi-consumo">--</strong>
         </article>
         <article class="stats-card compact">
-          <span class="muted">Custo/Km</span>
-          <strong id="kpi-custo-km">--</strong>
+          <span class="muted">Saúde</span>
+          <div
+            id="kpi-health-status"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-weight: 700;
+            "
+          >
+            <span id="kpi-health-text">--</span>
+            <div
+              id="kpi-health-dot"
+              class="status-indicator-dot status-neutral"
+              style="width: 8px; height: 8px"
+            ></div>
+          </div>
         </article>
       </section>
 
@@ -1351,18 +1366,15 @@
                 </svg>
                 Manual
               </button>
-              <button id="btn-import-torque-csv" class="btn btn-primary btn-sm">
+              <button
+                id="btn-import-torque-csv-zip"
+                class="btn btn-primary btn-sm"
+              >
                 <svg class="icon">
                   <use href="assets/icons-unified.svg#icon-file-text"></use>
                 </svg>
-                Importar CSV
+                Importar Dados
               </button>
-              <input
-                type="file"
-                id="torque-csv-input"
-                accept=".zip,.csv"
-                style="display: none"
-              />
             </div>
 
             <div
@@ -1994,9 +2006,9 @@
       </div>
     </div>
 
-    <!-- MODAL IMPORT DIAGNOSTICS (NEW) -->
+    <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
     <div
-      id="diagnostics-upload-modal"
+      id="modalImport"
       class="modal hidden"
       style="position: fixed; inset: 0; z-index: 10001"
     >
@@ -2018,25 +2030,28 @@
           margin: 5vh auto;
           max-width: 600px;
           width: 90%;
-          border-radius: 16px;
+          border-radius: 20px;
           box-shadow: var(--shadow-xl);
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          max-height: 90vh;
+          border: 1px solid var(--border-light);
         "
       >
-        <div
+        <header
           class="modal-header"
           style="
-            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
           "
         >
-          <h3 style="margin: 0">Importar Relatório Mode $06</h3>
+          <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
           <button
-            id="btn-close-diag-upload"
+            id="btn-close-import"
             class="icon-btn-xs"
             style="background: transparent; border: none"
           >
@@ -2044,45 +2059,251 @@
               <use href="assets/icons-unified.svg#icon-close"></use>
             </svg>
           </button>
-        </div>
-        <div class="modal-body">
-          <p class="muted" style="margin-bottom: 10px; font-size: 0.9rem">
-            Cola aqui o texto do relatório gerado pelo Torque (ou partilha do
-            telemóvel).
-          </p>
-          <textarea
-            id="diag-input-text"
+        </header>
+
+        <nav
+          class="tabs"
+          style="
+            display: flex;
+            gap: 4px;
+            padding: 12px 24px 0;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-hover);
+          "
+        >
+          <button
+            class="tab-btn active"
+            data-import-tab="tabCsv"
             style="
-              width: 100%;
-              height: 200px;
-              padding: 10px;
-              border-radius: 8px;
-              border: 1px solid var(--border-light);
-              font-family: monospace;
-              font-size: 0.85rem;
-              background: var(--bg-input);
-              color: var(--color-text-main);
+              padding: 10px 16px;
+              border-bottom: 2px solid var(--color-primary-start);
+              font-weight: 700;
+              background: transparent;
             "
-            placeholder="Modo $06 - relatório generado por Torque..."
-          ></textarea>
-        </div>
+          >
+            1) CSV (Viagens)
+          </button>
+          <button
+            class="tab-btn"
+            data-import-tab="tabMode06"
+            style="
+              padding: 10px 16px;
+              border-bottom: 2px solid transparent;
+              color: var(--color-text-muted);
+              background: transparent;
+            "
+          >
+            2) Mode $06
+          </button>
+          <button
+            class="tab-btn"
+            data-import-tab="tabResumo"
+            style="
+              padding: 10px 16px;
+              border-bottom: 2px solid transparent;
+              color: var(--color-text-muted);
+              background: transparent;
+            "
+          >
+            3) Resumo
+          </button>
+        </nav>
+
         <div
+          class="modal-body"
+          style="padding: 24px; overflow-y: auto; flex: 1"
+        >
+          <!-- TAB 1: CSV -->
+          <section id="tabCsv" class="import-tab-panel">
+            <h3 style="margin-top: 0">CSV de Viagem (Torque log)</h3>
+            <input
+              type="file"
+              id="csvFileInput"
+              accept=".csv,text/csv,.zip"
+              style="margin-bottom: 20px; width: 100%"
+            />
+
+            <div
+              class="import-options"
+              style="
+                display: grid;
+                gap: 16px;
+                background: var(--bg-hover);
+                padding: 16px;
+                border-radius: 12px;
+              "
+            >
+              <label
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span class="muted">Tipo de import</span>
+                <select id="importType" class="input-sm" style="width: auto">
+                  <option value="drive">Condução</option>
+                  <option value="diagnostic">Teste/Diagnóstico</option>
+                </select>
+              </label>
+              <label
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span class="muted">Amostragem (Redução)</span>
+                <select id="sampleRate" class="input-sm" style="width: auto">
+                  <option value="1">Sem redução</option>
+                  <option value="5">Cada 5s</option>
+                  <option value="10">Cada 10s</option>
+                  <option value="30">Cada 30s</option>
+                </select>
+              </label>
+              <label
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span class="muted">Agrupar por</span>
+                <select id="tripGrouping" class="input-sm" style="width: auto">
+                  <option value="session">SessionId (Recomendado)</option>
+                  <option value="day">Dia</option>
+                  <option value="hour">Hora</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="preview" style="margin-top: 24px">
+              <h4
+                class="muted"
+                style="font-size: 0.8rem; text-transform: uppercase"
+              >
+                Pré-visualização
+              </h4>
+              <div
+                id="csvPreviewStatus"
+                class="hint muted"
+                style="font-size: 0.85rem"
+              >
+                Escolha um ficheiro CSV/ZIP para ver mapeamentos.
+              </div>
+              <div
+                id="csvMapping"
+                class="mapping-box"
+                style="margin-top: 12px; font-size: 0.85rem"
+              ></div>
+            </div>
+          </section>
+
+          <!-- TAB 2: Mode 06 -->
+          <section id="tabMode06" class="import-tab-panel hidden">
+            <h3 style="margin-top: 0">Diagnóstico Mode $06</h3>
+            <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px">
+              Importe o texto do Torque (Mode $06) para avaliar falhas e saúde
+              do motor.
+            </p>
+            <textarea
+              id="mode06Text"
+              style="
+                width: 100%;
+                height: 160px;
+                padding: 12px;
+                border-radius: 12px;
+                border: 1px solid var(--border-light);
+                background: var(--bg-input);
+                font-family: monospace;
+                font-size: 0.8rem;
+              "
+              placeholder="Cole aqui o texto do relatório Mode $06..."
+            ></textarea>
+            <div
+              id="mode06Status"
+              class="muted"
+              style="margin-top: 12px; font-size: 0.85rem"
+            ></div>
+          </section>
+
+          <!-- TAB 3: Resumo -->
+          <section id="tabResumo" class="import-tab-panel hidden">
+            <h3 style="margin-top: 0">Resumo do Import</h3>
+            <div
+              id="importSummary"
+              style="
+                background: var(--bg-hover);
+                padding: 20px;
+                border-radius: 16px;
+                margin-bottom: 24px;
+              "
+            >
+              <p class="muted">Selecione os dados para ver o resumo aqui.</p>
+            </div>
+          </section>
+        </div>
+
+        <footer
           class="modal-footer"
           style="
-            padding-top: 15px;
+            padding: 20px 24px;
             border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
           "
         >
-          <button id="btn-cancel-diag" class="btn btn-secondary">
+          <button id="btn-cancel-import" class="btn btn-secondary">
             Cancelar
           </button>
-          <button id="btn-save-diag" class="btn btn-primary">
-            Processar e Guardar
+          <button id="btn-run-import" class="btn btn-primary" disabled>
+            Importar Dados
           </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Progress Modal (for CSV/ZIP Imports) -->
+    <div
+      id="upload-progress-modal"
+      class="modal hidden"
+      style="
+        z-index: 3000;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        class="card"
+        style="width: 90%; max-width: 400px; padding: 32px; text-align: center"
+      >
+        <div class="spinner" style="margin: 0 auto 24px auto"></div>
+        <h3 style="margin-bottom: 8px">A processar dados...</h3>
+        <p id="upload-progress-text" class="muted" style="margin-bottom: 24px">
+          A preparar a importação
+        </p>
+        <div
+          style="
+            width: 100%;
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            overflow: hidden;
+          "
+        >
+          <div
+            id="upload-progress-bar"
+            style="
+              width: 0%;
+              height: 100%;
+              background: var(--color-primary-start);
+              transition: width 0.3s ease-out;
+            "
+          ></div>
         </div>
       </div>
     </div>
