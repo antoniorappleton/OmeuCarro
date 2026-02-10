@@ -2183,6 +2183,28 @@ document.addEventListener("DOMContentLoaded", () => {
         if (elTemp)
           elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
 
+        // Battery
+        const elVolt = document.getElementById("last-trip-voltage");
+        if (elVolt)
+          elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
+
+        // Score
+        const elScore = document.getElementById("last-trip-score");
+        const elScoreDot = document.getElementById("last-trip-score-dot");
+        if (elScore) {
+          const s = trip.score || 0;
+          elScore.textContent = s > 0 ? s : "--";
+          if (elScoreDot) {
+            elScoreDot.className =
+              "status-indicator-dot " +
+              (s > 85
+                ? "status-success"
+                : s > 60
+                  ? "status-warning"
+                  : "status-error");
+          }
+        }
+
         // Cost
         const cost = trip.custoEstimado || 0;
         const elCost = document.getElementById("last-trip-cost");
@@ -2453,11 +2475,14 @@ document.addEventListener("DOMContentLoaded", () => {
         el.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; gap: 8px; align-items:center;">
-                        <div class="status-indicator-dot status-neutral"></div>
+                        <div class="status-indicator-dot ${trip.score > 85 ? "status-success" : trip.score > 60 ? "status-warning" : "status-error"}"></div>
                         <strong>${date.toLocaleDateString()}</strong>
                         <span class="muted" style="font-size:0.8rem;">${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
-                    <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
+                    <div style="display:flex; gap: 6px; align-items:center;">
+                        ${trip.score ? `<span style="font-size:0.75rem; font-weight:700; color:var(--color-text-main);">${trip.score}</span>` : ""}
+                        <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
+                    </div>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
                     <div style="text-align:center;">
@@ -3002,14 +3027,28 @@ function processTripBatch(batch) {
     maxRpm = 0,
     maxTemp = 0;
   let sumSpeed = 0,
-    sumRpm = 0;
+    sumRpm = 0,
+    sumVoltage = 0,
+    sumLoad = 0,
+    sumL100 = 0;
+  let countVoltage = 0,
+    countLoad = 0,
+    countL100 = 0;
   let dist = 0;
+
+  // Score system: start 100
+  let scorePoints = 100;
+  let penaltyRpm = 0;
+  let penaltySpeed = 0;
 
   for (let i = 0; i < batch.length; i++) {
     const p = batch[i].parsed || {};
     const s = Number(p.speed) || 0;
     const r = Number(p.rpm) || 0;
-    const t = Number(p.temp);
+    const t = Number(p.temp || p.coolant);
+    const v = Number(p.voltage);
+    const l = Number(p.engineLoad);
+    const c = Number(p.tripL100);
 
     if (s > maxSpeed) maxSpeed = s;
     if (r > maxRpm) maxRpm = r;
@@ -3018,12 +3057,30 @@ function processTripBatch(batch) {
     sumSpeed += s;
     sumRpm += r;
 
-    // Calc dist (trapezoidal approx or simple rect)
+    if (v > 0) {
+      sumVoltage += v;
+      countVoltage++;
+    }
+    if (l > 0) {
+      sumLoad += l;
+      countLoad++;
+    }
+    if (c > 0) {
+      sumL100 += c;
+      countL100++;
+    }
+
+    // Penalties
+    if (r > 3500) penaltyRpm += 0.5;
+    if (r > 4500) penaltyRpm += 2;
+    if (s > 125) penaltySpeed += 1;
+
+    // Calc dist
     if (i > 0) {
       const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
       if (dt > 0 && dt < 300) {
-        const v = s / 3.6; // m/s
-        dist += v * dt;
+        const velms = s / 3.6;
+        dist += velms * dt;
       }
     }
   }
@@ -3034,6 +3091,11 @@ function processTripBatch(batch) {
     if (d > 0 && d < 2000) dist = d * 1000;
   }
 
+  scorePoints = Math.max(0, scorePoints - penaltyRpm - penaltySpeed);
+  const avgVoltage = countVoltage ? sumVoltage / countVoltage : null;
+  const avgLoad = countLoad ? sumLoad / countLoad : null;
+  const avgConsumo = countL100 ? sumL100 / countL100 : 0;
+
   return {
     dataInicio: firebase.firestore.Timestamp.fromMillis(start.timestamp),
     dataFim: firebase.firestore.Timestamp.fromMillis(end.timestamp),
@@ -3042,12 +3104,15 @@ function processTripBatch(batch) {
     velocidadeMedia: Number(
       (batch.length ? sumSpeed / batch.length : 0).toFixed(1),
     ),
-    consumoMedio: 0,
+    consumoMedio: Number(avgConsumo.toFixed(2)),
     custoEstimado: 0,
+    score: Math.round(scorePoints),
     metricas: {
       rpmMedio: batch.length ? Math.round(sumRpm / batch.length) : 0,
       velocidadeMax: Number(maxSpeed.toFixed(1)),
       temperaturaMax: maxTemp,
+      voltagemMedia: avgVoltage ? Number(avgVoltage.toFixed(1)) : null,
+      cargaMedia: avgLoad ? Math.round(avgLoad) : null,
     },
     source: "import_csv",
     importedAt: firebase.firestore.FieldValue.serverTimestamp(),

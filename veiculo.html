@@ -29,7 +29,7 @@
     <!-- JSZip for Torque CSV/ZIP import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=34"></script>
+    <script defer src="js/veiculo.js?v=35"></script>
   </head>
 
   <body class="app-page" data-page="vehicle-detail">
@@ -1158,6 +1158,42 @@
                 >
                   <span class="muted">Temp. Máxima</span>
                   <strong id="last-trip-temp">--</strong>
+                </div>
+                <div
+                  class="detail-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    font-size: 0.9rem;
+                  "
+                >
+                  <span class="muted">Bateria (Média)</span>
+                  <strong id="last-trip-voltage">--</strong>
+                </div>
+                <div
+                  class="detail-row"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                    font-size: 0.9rem;
+                  "
+                >
+                  <span class="muted">Score Condução</span>
+                  <div
+                    id="last-trip-score-container"
+                    style="display: flex; align-items: center; gap: 6px"
+                  >
+                    <span id="last-trip-score" style="font-weight: 700"
+                      >--</span
+                    >
+                    <div
+                      id="last-trip-score-dot"
+                      class="status-indicator-dot status-neutral"
+                      style="width: 8px; height: 8px"
+                    ></div>
+                  </div>
                 </div>
                 <div
                   class="detail-row"
