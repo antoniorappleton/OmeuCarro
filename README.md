@@ -179,16 +179,26 @@ O sistema cria viagens automaticamente quando:
 2. **Veículo em movimento** (Speed > 0)
 3. **Trip Distance > 0**
 
-**Agrupamento por Sessão:**
+**Deteção e Agrupamento (Nível Pro):**
 
-- Usa `sessionId` do Torque Pro para agrupar leituras
-- Mesmo que a ligação caia, a viagem continua quando reconectar
-- Fallback temporal se não houver `sessionId`
+- **Âncora de Sessão**: O sistema usa o `sessionId` do Torque Pro como identificador único da viagem.
+- **Continuidade Pro**: Pausas longas (ex: 20-30 min) com motor desligado **não** dividem a viagem se a sessão for a mesma.
+- **Resiliência a Resets**: Se o contador de distância do Torque for reiniciado (reset para 0), o sistema acumula automaticamente a nova distância sobre o total anterior da sessão.
+- **Fallback**: Se o `sessionId` for nulo, as leituras são agrupadas por Dispositivo + Dia + Hora.
 
 **Finalização de Viagem:**
 
-- Viagem é finalizada quando não há leituras por 10+ minutos
-- Ou quando o `sessionId` muda (nova sessão do Torque Pro)
+- Uma viagem é considerada concluída quando o Torque Pro inicia uma **nova sessão** (novo `sessionId`).
+- No modo de fallback (sem sessão), a viagem fecha após 15 minutos sem novas leituras.
+
+### 💡 Boas Práticas de Utilização
+
+Para obter os melhores resultados com a L100 e o Torque Pro:
+
+1. **Arranque Automático**: Configure o Torque Pro para iniciar o logging automaticamente assim que a app abrir (**Settings → Data Logging & Upload → Automatically start logging**).
+2. **Logging Contínuo**: O sistema L100 foi desenhado para consolidar toda a viagem numa única entrada. **Não pare e recomece o logging manualmente** durante paragens curtas; deixe a app gerir a sessão.
+3. **Sensores em Segundo Plano**: Garanta que o Torque Pro tem permissão para funcionar em segundo plano e que a otimização de bateria não interrompe o GPS/Logging.
+4. **Fim da Viagem**: Para garantir que a viagem aparece imediatamente como concluída, pode fechar a app Torque Pro (o que encerra a sessão) ou esperar pelo timeout automático se não usar Session IDs.
 
 ---
 
@@ -453,17 +463,6 @@ curl -X POST "https://deepcleanuptrips-5jojqy2jpa-uc.a.run.app?vehicleId=SEU_VEH
 
 ## 📝 Notas de Desenvolvimento
 
-### Workarounds Temporários Ativos
-
-⚠️ **Atenção:** Existem workarounds temporários no código de produção:
-
-1. **Autenticação Desativada** ([torque.js:L96-107](functions/torque.js#L96-L107))
-   - A validação da `key` está comentada
-   - **TODO:** Investigar porque a `key` não chega nos parâmetros
-
-2. **VehicleId Hardcoded** ([torque.js:L132-137](functions/torque.js#L132-L137))
-   - Fallback para `DPK7LP2GXiEibKmSQUVA` quando `vehicleId` não chega
-   - **TODO:** Investigar porque o Torque Pro não envia o `vehicleId`
 
 ### Próximas Funcionalidades
 
@@ -499,4 +498,4 @@ MIT License - ver [LICENSE](LICENSE)
 ---
 
 **Versão:** 1.0.0  
-**Última Atualização:** 09/02/2026
+**Última Atualização:** 10/02/2026
