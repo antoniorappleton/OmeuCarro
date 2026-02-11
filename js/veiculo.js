@@ -3450,20 +3450,67 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <tr class="muted" style="text-align:left;">
                                     <th>Teste</th>
                                     <th>Valor / Limites</th>
-                                    <th>Estado</th>
+                                    <th>Estado / Explicação</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${(data.tests || [])
-                                  .map(
-                                    (t) => `
-                                    <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : t.marginToLimit < 0.1 ? "color: var(--color-warning);" : ""}">
-                                        <td style="padding:4px 0;">${t.name} <span class="muted" style="font-size:0.7rem;">(MID:${t.mid} TID:${t.tid})</span></td>
-                                        <td style="padding:4px 0;">${t.val} [${t.min}-${t.max}]</td>
-                                        <td style="padding:4px 0;">${t.status}</td>
+                                  .map((t) => {
+                                    const testName = t.name || t.component || "Desconhecido";
+                                    const testVal = t.val !== undefined ? t.val : (t.value !== undefined ? t.value : "--");
+                                    const testMin = t.min !== undefined ? t.min : (t.minVal !== undefined ? t.minVal : "--");
+                                    const testMax = t.max !== undefined ? t.max : (t.maxVal !== undefined ? t.maxVal : "--");
+                                    const testStatus = t.status || "UNKNOWN";
+                                    
+                                    const isFail = testStatus === "FAIL";
+                                    const isNear = testStatus === "PASS" && t.marginToLimit !== null && t.marginToLimit < 0.1;
+                                    const isIgnored = testStatus === "IGNORED";
+                                    const isIncomplete = testStatus === "INCOMPLETE";
+
+                                    let statusEmoji = "⬜";
+                                    if (isFail) statusEmoji = "🟥";
+                                    else if (isIncomplete) statusEmoji = "⚪";
+                                    else if (isIgnored) statusEmoji = "🔘";
+                                    else if (isNear) statusEmoji = "🟧";
+                                    else if (testStatus === "PASS") statusEmoji = "🟩";
+
+                                    // Sparkline calculation
+                                    let sparklineHtml = "";
+                                    if (typeof testVal === "number" && typeof testMin === "number" && typeof testMax === "number") {
+                                      const range = Math.abs(testMax - testMin);
+                                      if (range > 0) {
+                                        const pct = Math.min(100, Math.max(0, ((testVal - Math.min(testMin, testMax)) / range) * 100));
+                                        const barColor = isFail ? "var(--color-error)" : isNear ? "var(--color-warning)" : "var(--color-success, #10b981)";
+                                        sparklineHtml = `
+                                          <div style="width: 100%; height: 6px; bg-color: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 8px; position: relative; background: rgba(255,255,255,0.1); overflow: hidden;">
+                                            <div style="width: ${pct}%; height: 100%; background: ${barColor}; border-radius: 3px; transition: width 0.3s ease;"></div>
+                                          </div>
+                                        `;
+                                      }
+                                    }
+
+                                    return `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 12px 8px 12px 0; vertical-align: top;">
+                                          <div style="font-weight: 700; font-size: 0.85rem; color: #fff;">${testName}</div>
+                                          <div class="muted" style="font-size: 0.7rem; margin-top: 2px;">MID:${t.mid || "-"} TID:${t.tid || "-"}</div>
+                                        </td>
+                                        <td style="padding: 12px 8px; vertical-align: top; min-width: 120px;">
+                                          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                                            <span style="font-weight: 600; font-size: 0.9rem;">${testVal}</span>
+                                            <span class="muted" style="font-size: 0.7rem;">[${testMin} - ${testMax}]</span>
+                                          </div>
+                                          ${sparklineHtml}
+                                        </td>
+                                        <td style="padding: 12px 0 12px 8px; vertical-align: top; text-align: right;">
+                                          <div style="white-space: nowrap; font-weight: 800; font-size: 0.75rem;">
+                                            ${statusEmoji} ${testStatus}
+                                          </div>
+                                          ${t.explanation ? `<div class="muted" style="font-size: 0.7rem; margin-top: 6px; line-height: 1.3; font-weight: 400; max-width: 150px; margin-left: auto;">${t.explanation}</div>` : ""}
+                                        </td>
                                     </tr>
-                                `,
-                                  )
+                                `;
+                                  })
                                   .join("")}
                             </tbody>
                         </table>
@@ -3860,33 +3907,74 @@ document.addEventListener("DOMContentLoaded", () => {
   /**
    * Robust Mode $06 Parser
    */
+  function parseValue(str) {
+    if (!str) return null;
+    return Number(
+      String(str)
+        .replace(/mg\/stroke|%/gi, "")
+        .replace(/(\d)\s+(\d)/g, "$1$2")
+        .replace(",", ".")
+        .replace(/[^\d.-]/g, ""),
+    );
+  }
+
   function parseMode06Text(text) {
-    const lines = text.split(/\r?\n/);
+    const lines = text.split(/\r?\n|----/).map((l) => l.trim()).filter(Boolean);
     const tests = [];
-    const rePassFail =
-      /MID:\$(?<mid>[0-9A-Fa-f]{2})\s+TID:\$(?<tid>[0-9A-Fa-f]{2})\s+-\s*(?<name>.*?)\s+Max:\s*(?<max>[-0-9.,]+)(?<unitMax>[^\s]*)\s+Min:\s*(?<min>[-0-9.,]+)(?<unitMin>[^\s]*)\s+Test result value:\s*(?<val>[-0-9.,]+)(?<unitVal>[^\s]*)\s+(?<status>PASS|FAIL)/i;
 
     for (const line of lines) {
-      let m = line.match(rePassFail);
-      if (m && m.groups) {
-        const toNum = (s) => parseFloat(String(s).replace(",", "."));
-        const max = toNum(m.groups.max);
-        const min = toNum(m.groups.min);
-        const val = toNum(m.groups.val);
-        const span = max - min;
-        const margin = span > 0 ? Math.min(val - min, max - val) / span : null;
-        tests.push({
-          mid: m.groups.mid.toUpperCase(),
-          tid: m.groups.tid.toUpperCase(),
-          name: m.groups.name.trim(),
-          min,
-          max,
-          val,
-          unit: m.groups.unitVal || m.groups.unitMax || "",
-          status: m.groups.status.toUpperCase(),
-          marginToLimit: margin,
-        });
+      if (!line.includes("TID:")) continue;
+
+      const incomplete = line.includes("Test incomplete");
+      
+      // Try multiple regex patterns for the component name
+      let name = "Desconhecido";
+      const nameMatch = line.match(/(?:TID:\$\w+\s+)(?:-\s*)?(.*?)\s+Max:/i) || line.match(/-(.*?)\s+Max:/i);
+      if (nameMatch) name = nameMatch[1].trim();
+
+      const mid = line.match(/MID:\$(\w+)/i)?.[1] || null;
+      const tid = line.match(/TID:\$(\w+)/i)?.[1] || null;
+
+      const maxVal = parseValue(line.match(/Max:\s*([^\s]+)/i)?.[1]);
+      const minVal = parseValue(line.match(/Min:\s*([^\s]+)/i)?.[1]);
+      const value = parseValue(line.match(/Test result value:\s*([^\s]+)/i)?.[1]);
+
+      const noiseCylinder16 = name.includes("Cylinder 16");
+      const realMin = Math.min(minVal, maxVal);
+      const realMax = Math.max(minVal, maxVal);
+
+      let status = "PASS";
+      let explanation = "";
+
+      if (incomplete) {
+        status = "INCOMPLETE";
+        explanation = `${name} não concluiu o teste ou depende de outro teste falhado.`;
+      } else if (noiseCylinder16) {
+        status = "IGNORED";
+        explanation = `Este teste refere-se ao "Cylinder 16", que não existe no motor deste veículo. É ruído do scanner e pode ser ignorado.`;
+      } else if (value >= realMin && value <= realMax) {
+        status = "PASS";
+        explanation = `${name} dentro dos limites (${value} entre ${realMin} e ${realMax}).`;
+      } else {
+        status = "FAIL";
+        explanation = `${name} fora dos limites: valor ${value}, intervalo permitido ${realMin} → ${realMax}.`;
       }
+
+      // Calculate margin to limit for highlighting
+      const span = realMax - realMin;
+      const margin = span > 0 ? Math.min(value - realMin, realMax - value) / span : null;
+
+      tests.push({
+        mid: mid ? mid.toUpperCase() : null,
+        tid: tid ? tid.toUpperCase() : null,
+        name,
+        min: realMin,
+        max: realMax,
+        val: value,
+        status,
+        explanation,
+        marginToLimit: margin,
+      });
     }
 
     const failCount = tests.filter((t) => t.status === "FAIL").length;

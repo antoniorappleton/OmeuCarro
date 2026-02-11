@@ -1,5 +1,6 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
+const { sendNotificationToUser } = require("./notify_utils");
 
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
@@ -160,39 +161,14 @@ exports.checkVehicleAlertsV2 = onSchedule(
         }
 
         if (alertas.length > 0) {
-          const tokensSnap = await userRef.collection("fcmTokens").get();
-          if (tokensSnap.empty) continue;
-
-          const tokens = tokensSnap.docs.map((t) => t.data().token);
           for (const alerta of alertas) {
-            const message = {
-              notification: { title: alerta.titulo, body: alerta.corpo },
-              data: {
+            try {
+              await sendNotificationToUser(userId, alerta.titulo, alerta.corpo, {
                 url: "/veiculos.html",
                 veiculoId: doc.id,
-                title: alerta.titulo,
-                body: alerta.corpo,
-              },
-              tokens: tokens,
-            };
-
-            try {
-              const response = await admin.messaging().sendEachForMulticast(message);
-              if (response.failureCount > 0) {
-                response.responses.forEach((resp, idx) => {
-                  if (!resp.success) {
-                    const errorInfo = resp.error;
-                    if (
-                      errorInfo.code === "messaging/registration-token-not-registered" ||
-                      errorInfo.code === "messaging/invalid-argument"
-                    ) {
-                      userRef.collection("fcmTokens").doc(tokens[idx]).delete().catch(() => {});
-                    }
-                  }
-                });
-              }
+              });
             } catch (e) {
-              console.error("Erro envio FCM:", e);
+              console.error(`Erro ao enviar alerta para user ${userId}:`, e);
             }
           }
         }
