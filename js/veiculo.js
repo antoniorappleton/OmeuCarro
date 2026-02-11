@@ -2521,7 +2521,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Prevent opening if clicking delete
           if (e.target.closest("[data-del-trip]")) return;
 
-          openTripModal(trip, tripId, vid);
+          openTripDetails(trip);
         });
 
         return el;
