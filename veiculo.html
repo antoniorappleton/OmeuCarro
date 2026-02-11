@@ -21,15 +21,15 @@
 
     <script defer src="js/firebase-config.js"></script>
     <script defer src="js/auth.js"></script>
-    <script defer src="js/analytics.js?v=22"></script>
-    <script defer src="js/firestore.js?v=22"></script>
+    <script defer src="js/analytics.js?v=75"></script>
+    <script defer src="js/firestore.js?v=75"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js?v=22"></script>
-    <script defer src="js/utils.js?v=30"></script>
+    <script defer src="js/notifications.js?v=75"></script>
+    <script defer src="js/utils.js?v=75"></script>
     <!-- JSZip for Torque CSV/ZIP import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=70"></script>
+    <script defer src="js/veiculo.js?v=75"></script>
   </head>
 
   <body class="app-page" data-page="vehicle-detail">
@@ -955,18 +955,29 @@
                     >--</span
                   >
                 </div>
-                <div
-                  class="trip-score-badge"
-                  style="
-                    background: var(--bg-hover);
-                    padding: 4px 12px;
-                    border-radius: 99px;
-                    font-weight: 700;
-                    font-size: 0.9rem;
-                  "
-                >
-                  <span id="last-trip-score">--</span>
-                  <span class="muted" style="font-weight: 400">Score</span>
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div
+                    class="trip-score-badge"
+                    style="
+                      background: var(--bg-hover);
+                      padding: 4px 12px;
+                      border-radius: 99px;
+                      font-weight: 700;
+                      font-size: 0.9rem;
+                    "
+                  >
+                    <span id="last-trip-score">--</span>
+                    <span class="muted" style="font-weight: 400">Score</span>
+                  </div>
+                  <div
+                    class="trip-header-actions"
+                    style="
+                      border-left: 1px solid var(--border-light);
+                      padding-left: 8px;
+                      display: flex;
+                      align-items: center;
+                    "
+                  ></div>
                 </div>
               </div>
 
@@ -2214,6 +2225,160 @@
               transition: width 0.3s ease-out;
             "
           ></div>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL: TRIP DETAILS (Telemetria) -->
+    <div id="trip-details-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-card" style="max-width: 600px; width: 95%">
+        <header class="modal-header">
+          <h2>
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-history"></use>
+            </svg>
+            Detalhes da Viagem
+          </h2>
+          <button id="trip-details-close" class="icon-btn">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-close"></use>
+            </svg>
+          </button>
+        </header>
+
+        <div
+          class="modal-body"
+          style="padding: 20px; overflow-y: auto; max-height: 70vh"
+        >
+          <!-- Insight Banner Specific for Trip -->
+          <div
+            id="trip-insight-container"
+            style="display: block; margin-bottom: 20px"
+          >
+            <div class="insight-banner">
+              <div class="insight-icon">💡</div>
+              <div class="insight-text" id="trip-insight-text">
+                🔥 Condução Excelente! O teu estilo é altamente eficiente.
+              </div>
+            </div>
+          </div>
+
+          <!-- Trip Summary Grid -->
+          <div
+            class="analytics-grid"
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 12px;
+              margin-bottom: 24px;
+            "
+          >
+            <div
+              class="analytics-box"
+              style="
+                background: var(--bg-hover);
+                padding: 12px;
+                border-radius: 12px;
+                text-align: center;
+              "
+            >
+              <div
+                id="trip-modal-score"
+                style="
+                  font-size: 1.5rem;
+                  font-weight: 800;
+                  color: var(--color-primary);
+                "
+              >
+                99
+              </div>
+              <div class="muted" style="font-size: 0.75rem">
+                Score de Condução
+              </div>
+            </div>
+            <div
+              class="analytics-box"
+              style="
+                background: var(--bg-hover);
+                padding: 12px;
+                border-radius: 12px;
+                text-align: center;
+              "
+            >
+              <div
+                id="trip-modal-route"
+                style="font-size: 1.1rem; font-weight: 700; margin-top: 5px"
+              >
+                Autoestrada
+              </div>
+              <div class="muted" style="font-size: 0.75rem">
+                Tipo de Percurso
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Area -->
+          <div class="chart-card card" style="margin-bottom: 20px">
+            <div class="card-header">
+              <h4>Telemetria da Viagem</h4>
+            </div>
+            <div class="card-body" style="height: 250px">
+              <canvas
+                id="chart-trip-telemetry"
+                style="
+                  box-sizing: border-box;
+                  display: block;
+                  height: 250px;
+                  width: 100%;
+                "
+              ></canvas>
+            </div>
+          </div>
+
+          <!-- Secondary Metrics -->
+          <div
+            style="display: flex; flex-direction: column; gap: 8px"
+            id="trip-modal-metrics"
+          >
+            <!-- Dynamic items will be injected here or updated if static -->
+            <div class="alert-item">
+              <span class="alert-label">Distância</span>
+              <span class="alert-value" id="trip-modal-dist">-- km</span>
+            </div>
+            <div class="alert-item">
+              <span class="alert-label">Velocidade Máxima</span>
+              <span class="alert-value" id="trip-modal-maxspeed">-- km/h</span>
+            </div>
+            <div class="alert-item">
+              <span class="alert-label">RPM Média</span>
+              <span class="alert-value" id="trip-modal-rpm">-- rpm</span>
+            </div>
+            <div class="alert-item">
+              <span class="alert-label">Temp. Máxima</span>
+              <span class="alert-value" id="trip-modal-temp">-- °C</span>
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button
+            id="trip-details-ok"
+            class="btn btn-primary btn-gradient"
+            style="width: 100%"
+          >
+            Fechar
+          </button>
+        </footer>
+        <div
+          style="
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.3;
+            margin-top: 8px;
+            margin-bottom: 8px;
+          "
+        >
+          antonioappleton
         </div>
       </div>
     </div>

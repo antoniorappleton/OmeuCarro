@@ -1057,7 +1057,7 @@ async function updateManutencaoPlaneada(veiculoId, docId, data) {
 
 async function deleteManutencaoPlaneada(veiculoId, docId) {
   const user = auth.currentUser;
-  if (!user) throw new Error("Utilizador n�o autenticado");
+  if (!user) throw new Error("Utilizador no autenticado");
 
   await db
     .collection("veiculos")
@@ -1066,3 +1066,33 @@ async function deleteManutencaoPlaneada(veiculoId, docId) {
     .doc(docId)
     .delete();
 }
+
+// =========================
+// OBD & VIAGENS
+// =========================
+
+async function deleteViagem(veiculoId, viagemId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("viagens")
+    .doc(viagemId)
+    .delete();
+}
+
+async function deleteDiagnostico(veiculoId, diagId) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Utilizador não autenticado");
+
+  return db
+    .collection("veiculos")
+    .doc(veiculoId)
+    .collection("diagnosticos")
+    .doc(diagId)
+    .delete();
+}
+window.deleteViagem = deleteViagem;
+window.deleteDiagnostico = deleteDiagnostico;
