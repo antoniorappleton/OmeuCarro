@@ -2231,3 +2231,41 @@ input:checked+.slider:before {
 .toast.info {
   border-left: 4px solid var(--color-primary-start);
 }
+
+/* ======== TRIP ANALYTICS PREMIUM ======== */
+.trip-card:hover {
+  background: var(--bg-card) !important;
+  border-color: var(--color-primary-start);
+  box-shadow: var(--shadow-md);
+}
+
+.insight-banner {
+  background: linear-gradient(135deg, rgba(49, 100, 104, 0.1), rgba(13, 227, 242, 0.1));
+  border: 1px solid rgba(49, 100, 104, 0.2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.insight-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.insight-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+.analytics-box {
+  transition: transform 0.2s ease;
+}
+
+.analytics-box:hover {
+  transform: translateY(-2px);
+}

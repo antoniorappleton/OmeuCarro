@@ -192,3 +192,111 @@ canvas {
     color: var(--color-text-main);
     line-height: 1.4;
 }
+
+/* ======== INSIGHTS PREMIUM (NOVO) ======== */
+.insights-card {
+  background: var(--color-surface-glass);
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.insights-card .card-header {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.05));
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(14, 116, 144, 0.1);
+}
+
+.insights-card .card-body {
+  padding: 18px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-main);
+}
+
+/* ======== GRELHA DE AÇÕES PREMIUM (NOVO) ======== */
+.action-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.action-card-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: white;
+  text-align: center;
+}
+
+.action-card-premium.gradient-1 {
+  background: linear-gradient(135deg, #1B9B82, #096279);
+  box-shadow: 0 10px 20px rgba(27, 155, 130, 0.25);
+}
+
+.action-card-premium.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-main);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.action-card-premium:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+.action-card-premium.glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.action-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.action-card-premium:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.action-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Ajustes responsivos para os novos gráficos */
+.telemetry-analysis-section .card {
+  height: 100%;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}

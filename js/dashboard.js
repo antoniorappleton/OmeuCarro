@@ -410,6 +410,7 @@ function gerarRankingPostos(abastecimentos, settings) {
 }
 
 // ======================================================================
+// TELEMETRIA – VIAGENS & INSIGHTS (NOVO)
 // CARREGAR DASHBOARD
 // ======================================================================
 
