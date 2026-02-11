@@ -3302,28 +3302,30 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="status-indicator-dot ${contextClass}" style="width:12px; height:12px;"></div>
                 </div>
                 <div class="diag-details hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-light);">
-                    <table style="width:100%; font-size:0.8rem; border-collapse: collapse;">
-                        <thead>
-                            <tr class="muted" style="text-align:left;">
-                                <th>Teste</th>
-                                <th>Valor / Limites</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${(data.tests || [])
-                              .map(
-                                (t) => `
-                                <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : t.marginToLimit < 0.1 ? "color: var(--color-warning);" : ""}">
-                                    <td style="padding:4px 0;">${t.name} <span class="muted" style="font-size:0.7rem;">(MID:${t.mid} TID:${t.tid})</span></td>
-                                    <td style="padding:4px 0;">${t.val} [${t.min}-${t.max}]</td>
-                                    <td style="padding:4px 0;">${t.status}</td>
+                    <div class="table-responsive">
+                        <table style="width:100%; font-size:0.8rem; border-collapse: collapse;">
+                            <thead>
+                                <tr class="muted" style="text-align:left;">
+                                    <th>Teste</th>
+                                    <th>Valor / Limites</th>
+                                    <th>Estado</th>
                                 </tr>
-                            `,
-                              )
-                              .join("")}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${(data.tests || [])
+                                  .map(
+                                    (t) => `
+                                    <tr style="${t.status === "FAIL" ? "color: var(--color-error); font-weight:bold;" : t.marginToLimit < 0.1 ? "color: var(--color-warning);" : ""}">
+                                        <td style="padding:4px 0;">${t.name} <span class="muted" style="font-size:0.7rem;">(MID:${t.mid} TID:${t.tid})</span></td>
+                                        <td style="padding:4px 0;">${t.val} [${t.min}-${t.max}]</td>
+                                        <td style="padding:4px 0;">${t.status}</td>
+                                    </tr>
+                                `,
+                                  )
+                                  .join("")}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             `;
 

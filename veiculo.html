@@ -859,10 +859,8 @@
 
         <!-- TABS NAVIGATION -->
         <nav
-          class="modal-tabs"
+          class="modal-tabs scrollable-tabs"
           style="
-            display: flex;
-            gap: 4px;
             padding: 12px 24px 0;
             border-bottom: 1px solid var(--border-light);
           "
@@ -990,7 +988,7 @@
                 class="analytics-grid"
                 style="
                   display: grid;
-                  grid-template-columns: 1fr 1fr;
+                  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                   gap: 12px;
                   margin-bottom: 24px;
                 "
@@ -1392,9 +1390,9 @@
               class="analytics-grid"
               style="
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                 gap: 12px;
-                margin-bottom: 16px;
+                margin-bottom: 24px;
               "
             >
               <!-- RPM -->
@@ -1983,11 +1981,7 @@
     </div>
 
     <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
-    <div
-      id="modalImport"
-      class="modal hidden"
-      style="position: fixed; inset: 0; z-index: 10001"
-    >
+    <div id="modalImport" class="modal hidden">
       <div class="modal-overlay"></div>
       <div class="modal-card" style="max-width: 620px; width: 95%">
         <header

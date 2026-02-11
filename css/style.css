@@ -2,6 +2,10 @@
    GLOBAL THEME – L100 Premium
    ============================= */
 
+* {
+  box-sizing: border-box;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
 
 /* ----------- ROOT VARIABLES ----------- */
@@ -833,7 +837,7 @@ footer a .icon {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 5000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -957,6 +961,7 @@ footer a .icon {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .form-label-row select,
   .form-label-row input {
     width: 100%;
@@ -978,8 +983,40 @@ footer a .icon {
 }
 
 .scrollable-tabs::-webkit-scrollbar-thumb {
-  background: var(--border-light);
   border-radius: 2px;
+}
+
+/* Card Utility */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Responsive Table Utility */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 8px;
+}
+
+.table-responsive table {
+  min-width: 400px;
+  /* Force scroll on very narrow screens if needed */
+}
+
+.table-responsive td {
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* ----------- RESPONSIBILIDADES (Grid de Alarmes) ----------- */
