@@ -915,9 +915,71 @@ footer a .icon {
 
 /* Make icons in modal header titles colored */
 .modal-header h2 .icon {
-  color: var(--color-primary-start);
   width: 24px;
   height: 24px;
+}
+
+/* Responsive Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Label Row (Side-by-side that wraps) */
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-label-row .muted {
+  flex: 1;
+  min-width: 120px;
+}
+
+.form-label-row select,
+.form-label-row input {
+  flex: 1;
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .form-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .form-label-row select,
+  .form-label-row input {
+    width: 100%;
+  }
+}
+
+/* Scrollable Tabs Utility */
+.scrollable-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollable-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollable-tabs::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 2px;
 }
 
 /* ----------- RESPONSIBILIDADES (Grid de Alarmes) ----------- */

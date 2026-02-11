@@ -821,33 +821,9 @@
     </div>
 
     <!-- 4. HEALTH & TRIP CARD (New Request) -->
-    <div id="obd-modal" class="modal hidden" style="z-index: 9999">
-      <div
-        class="modal-overlay"
-        style="
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(4px);
-        "
-      ></div>
-      <div
-        class="modal-content"
-        style="
-          position: relative;
-          background: var(--bg-card);
-          margin: 5vh auto;
-          max-width: 90%;
-          width: 500px;
-          border-radius: 16px;
-          padding: 0;
-          border: 1px solid var(--border-light);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          max-height: 90vh;
-          display: flex;
-          flex-direction: column;
-        "
-      >
+    <div id="obd-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-card" style="max-width: 600px; width: 95%">
         <!-- MODAL HEADER -->
         <div
           class="modal-header"
@@ -2012,33 +1988,8 @@
       class="modal hidden"
       style="position: fixed; inset: 0; z-index: 10001"
     >
-      <div
-        class="modal-overlay"
-        style="
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-        "
-      ></div>
-      <div
-        class="modal-content"
-        style="
-          position: relative;
-          background: var(--color-surface);
-          margin: 5vh auto;
-          max-width: 600px;
-          width: 90%;
-          border-radius: 20px;
-          box-shadow: var(--shadow-xl);
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          max-height: 90vh;
-          border: 1px solid var(--border-light);
-        "
-      >
+      <div class="modal-overlay"></div>
+      <div class="modal-card" style="max-width: 620px; width: 95%">
         <header
           class="modal-header"
           style="
@@ -2062,10 +2013,8 @@
         </header>
 
         <nav
-          class="tabs"
+          class="tabs scrollable-tabs"
           style="
-            display: flex;
-            gap: 4px;
             padding: 12px 24px 0;
             border-bottom: 1px solid var(--border-light);
             background: var(--bg-hover);
@@ -2124,35 +2073,21 @@
             />
 
             <div
-              class="import-options"
+              class="import-options form-grid"
               style="
-                display: grid;
-                gap: 16px;
                 background: var(--bg-hover);
                 padding: 16px;
                 border-radius: 12px;
               "
             >
-              <label
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                "
-              >
+              <label class="form-label-row">
                 <span class="muted">Tipo de import</span>
                 <select id="importType" class="input-sm" style="width: auto">
                   <option value="drive">Condução</option>
                   <option value="diagnostic">Teste/Diagnóstico</option>
                 </select>
               </label>
-              <label
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                "
-              >
+              <label class="form-label-row">
                 <span class="muted">Amostragem (Redução)</span>
                 <select id="sampleRate" class="input-sm" style="width: auto">
                   <option value="1">Sem redução</option>
@@ -2161,13 +2096,7 @@
                   <option value="30">Cada 30s</option>
                 </select>
               </label>
-              <label
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                "
-              >
+              <label class="form-label-row">
                 <span class="muted">Agrupar por</span>
                 <select id="tripGrouping" class="input-sm" style="width: auto">
                   <option value="session">SessionId (Recomendado)</option>

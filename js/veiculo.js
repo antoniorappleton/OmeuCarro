@@ -1794,8 +1794,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      // Setup Diagnostics Logic
-      setupDiagnostics(veiculoId);
+      // Setup Diagnostics Logic (Handled via loadDiagnostics in tabs and switchImportTab)
 
       // --- BACKFILL TRIGGER ---
       const btnScan = document.getElementById("btn-scan-trip");
@@ -3346,6 +3345,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function setupUnifiedImport(veiculoId) {
     const btnTrigger = document.getElementById("btn-import-torque-csv-zip");
+    const btnAddDiag = document.getElementById("btn-add-diagnostic");
     const modal = document.getElementById("modalImport");
     const btnClose = document.getElementById("btn-close-import");
     const btnCancel = document.getElementById("btn-cancel-import");
@@ -3355,16 +3355,26 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     const tabPanels = document.querySelectorAll(".import-tab-panel");
 
-    if (!btnTrigger || !modal) {
-      console.warn("[Import] Modal or Trigger not found");
+    if (!modal) {
+      console.warn("[Import] Modal not found");
       return;
     }
 
-    // Open Modal
-    btnTrigger.onclick = () => {
-      modal.classList.remove("hidden");
-      switchImportTab("tabCsv");
-    };
+    // Open Modal via "Importar Dados"
+    if (btnTrigger) {
+      btnTrigger.onclick = () => {
+        modal.classList.remove("hidden");
+        switchImportTab("tabCsv");
+      };
+    }
+
+    // Open Modal via "+Novo Relatório"
+    if (btnAddDiag) {
+      btnAddDiag.onclick = () => {
+        modal.classList.remove("hidden");
+        switchImportTab("tabMode06");
+      };
+    }
 
     // Close Modal
     const closeModal = () => {
@@ -3498,47 +3508,107 @@ document.addEventListener("DOMContentLoaded", () => {
         csvText = await file.text();
       }
 
-      const lines = csvText.trim().split("\n");
-      if (lines.length < 2) throw new Error("CSV vazio.");
+      const content = csvText.trim();
+      const firstLine = content.split("\n")[0];
+      // Detect separator: comma or semicolon
+      const sep = firstLine.includes(";") ? ";" : ",";
+      const lines = content.split(/\r?\n/);
 
-      const headers = lines[0].split(",").map((h) => h.trim());
-      const findHeader = (p) =>
-        headers.find((h) => h.toLowerCase().includes(p.toLowerCase()));
+      if (lines.length < 2) throw new Error("CSV vazio ou sem dados.");
 
-      const dateCol = findHeader("Device Time") || headers[1];
-      const speedCol = findHeader("Speed (OBD)");
-      const rpmCol = findHeader("RPM");
-      const odoCol = findHeader("Odometer");
-      const fuelCol = findHeader("Fuel Level");
-      const fuelRemCol = findHeader("Fuel Remaining");
-      const tripL100Col = findHeader("Trip average");
-      const rangeCol = findHeader("Distance to empty");
-      const latCol = findHeader("Latitude") || "Latitude";
-      const lonCol = findHeader("Longitude") || "Longitude";
+      const headers = lines[0]
+        .split(sep)
+        .map((h) => h.trim().replace(/"/g, ""));
+      const findHeader = (patterns) => {
+        return headers.find((h) =>
+          patterns.some((p) => h.toLowerCase().includes(p.toLowerCase())),
+        );
+      };
+
+      const dateCol = findHeader(["Device Time", "Time", "Data"]) || headers[1];
+      const speedCol = findHeader(["Speed (OBD)", "Speed", "Velocidade"]);
+      const rpmCol = findHeader(["RPM", "Rotações"]);
+      const odoCol = findHeader(["Odometer", "Odómetro", "Km"]);
+      const fuelCol = findHeader(["Fuel Level", "Nível de Combustível"]);
+      const fuelRemCol = findHeader(["Fuel Remaining", "Combustível Restante"]);
+      const tripL100Col = findHeader(["Trip average", "Média de Viagem"]);
+      const rangeCol = findHeader(["Distance to empty", "Autonomia"]);
+      const latCol = findHeader(["Latitude"]) || "Latitude";
+      const lonCol = findHeader(["Longitude"]) || "Longitude";
 
       const readings = [];
       const sampleRate = parseInt(options.sampleRate) || 1;
       const sessionId = options.sessionId || "csv_" + Date.now();
 
+      const parseDate = (str) => {
+        if (!str || str === "-") return null;
+        // Clean double quotes
+        str = str.replace(/"/g, "");
+        let d = new Date(str);
+        if (!isNaN(d.getTime())) return d.getTime();
+
+        // Fallback for dd-MMM-yyyy HH:mm:ss (Torque default in some locales)
+        // or other odd formats. Try common replacements.
+        const months = {
+          jan: 0,
+          fev: 1,
+          mar: 2,
+          abr: 3,
+          mai: 4,
+          jun: 5,
+          jul: 6,
+          ago: 7,
+          set: 8,
+          out: 9,
+          nov: 10,
+          dez: 11,
+          jan: 0,
+          feb: 1,
+          mar: 2,
+          apr: 3,
+          may: 4,
+          jun: 5,
+          jul: 6,
+          aug: 7,
+          sep: 8,
+          oct: 9,
+          nov: 10,
+          dec: 11,
+        };
+        const parts = str.split(/[\s\-\/:]+/);
+        if (parts.length >= 3) {
+          // Check for dd-MMM-yyyy or similar
+          let day = parseInt(parts[0]);
+          let month = months[parts[1].toLowerCase().substring(0, 3)];
+          let year = parseInt(parts[2]);
+          if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+            let hours = parseInt(parts[3]) || 0;
+            let mins = parseInt(parts[4]) || 0;
+            let secs = parseInt(parts[5]) || 0;
+            return new Date(year, month, day, hours, mins, secs).getTime();
+          }
+        }
+        return null;
+      };
+
       for (let i = 1; i < lines.length; i++) {
         if (i % sampleRate !== 0) continue;
-        const values = lines[i].split(",");
+        const values = lines[i].split(sep);
         const row = {};
         headers.forEach((h, idx) => {
           row[h] = values[idx] || null;
         });
 
         let dateStr = row[dateCol];
-        if (!dateStr || dateStr === "-") continue;
-
-        const timestamp = new Date(dateStr).getTime();
-        if (isNaN(timestamp)) continue;
+        const timestamp = parseDate(dateStr);
+        if (!timestamp) continue;
 
         const getNum = (col) => {
           if (!col) return null;
-          const v = row[col];
-          if (!v || v === "-") return null;
-          const n = parseFloat(String(v).replace(",", "."));
+          let v = row[col];
+          if (!v || v === "-" || v === "") return null;
+          v = String(v).replace(/"/g, "").replace(",", ".");
+          const n = parseFloat(v);
           return isNaN(n) ? null : n;
         };
 
