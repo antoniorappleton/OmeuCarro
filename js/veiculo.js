@@ -2476,15 +2476,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const el = document.createElement("article");
         el.className = "trip-card";
         el.style.cssText =
-<<<<<<< HEAD
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative;";
-=======
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;";
+          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; cursor: pointer; transition: transform 0.2s;";
 
-        el.onclick = () => openTripDetails(trip);
+        // Hover effects via JS for compatibility if CSS class missing, but kept clean
         el.onmouseenter = () => (el.style.transform = "scale(1.02)");
         el.onmouseleave = () => (el.style.transform = "scale(1)");
->>>>>>> origin/main
 
         const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
 
@@ -2498,13 +2494,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="display:flex; gap: 6px; align-items:center;">
                         ${trip.score ? `<span style="font-size:0.75rem; font-weight:700; color:var(--color-text-main);">${trip.score}</span>` : ""}
                         <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
-<<<<<<< HEAD
                         <button class="icon-btn-sm danger" data-del-trip="${tripId}" title="Eliminar Viagem" style="padding: 2px;">
                            <svg style="width:14px; height:14px; fill:currentColor;"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
                         </button>
-=======
-                        <svg class="icon" style="width:14px; height:14px; color:var(--color-primary);"><use href="assets/icons-unified.svg#icon-chevron-right"></use></svg>
->>>>>>> origin/main
+                    </div>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
@@ -2541,21 +2534,33 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!modal) return;
 
         // Fill Summary
-        document.getElementById("trip-modal-score").textContent = trip.score || "--";
-        const routeType = trip.routeType || (trip.velocidadeMedia < 25 ? "Urbano Intenso" : trip.velocidadeMedia < 50 ? "Misto" : "Autoestrada");
+        document.getElementById("trip-modal-score").textContent =
+          trip.score || "--";
+        const routeType =
+          trip.routeType ||
+          (trip.velocidadeMedia < 25
+            ? "Urbano Intenso"
+            : trip.velocidadeMedia < 50
+              ? "Misto"
+              : "Autoestrada");
         document.getElementById("trip-modal-route").textContent = routeType;
 
         // Fill Insights
-        const insightContainer = document.getElementById("trip-insight-container");
+        const insightContainer = document.getElementById(
+          "trip-insight-container",
+        );
         const insightText = document.getElementById("trip-insight-text");
         let insight = "";
 
         if (trip.metricas?.rpmMedio > 1400) {
-          insight = "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
+          insight =
+            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
         } else if (trip.consumoMedio > 7.5) {
-          insight = "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
+          insight =
+            "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
         } else if (trip.score > 90) {
-          insight = "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
+          insight =
+            "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
         }
 
         if (insight) {
@@ -2613,8 +2618,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Sample data for visualized trend (if backend data missing, we use summary)
         const labels = ["Início", "Meio", "Fim"];
-        const consumps = [trip.consumoMedio * 1.1, trip.consumoMedio, trip.consumoMedio * 0.9];
-        const rpms = [trip.metricas?.rpmMedio * 1.2 || 1500, trip.metricas?.rpmMedio || 1300, 1000];
+        const consumps = [
+          trip.consumoMedio * 1.1,
+          trip.consumoMedio,
+          trip.consumoMedio * 0.9,
+        ];
+        const rpms = [
+          trip.metricas?.rpmMedio * 1.2 || 1500,
+          trip.metricas?.rpmMedio || 1300,
+          1000,
+        ];
 
         tripTelemetryChart = new Chart(ctx, {
           type: "line",
@@ -2645,8 +2658,19 @@ document.addEventListener("DOMContentLoaded", () => {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             scales: {
-              y: { type: "linear", display: true, position: "left", title: { display: true, text: "L/100km" } },
-              y1: { type: "linear", display: true, position: "right", title: { display: true, text: "RPM" }, grid: { drawOnChartArea: false } },
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: { display: true, text: "L/100km" },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                title: { display: true, text: "RPM" },
+                grid: { drawOnChartArea: false },
+              },
             },
           },
         });
@@ -3462,31 +3486,69 @@ document.addEventListener("DOMContentLoaded", () => {
                             <tbody>
                                 ${(data.tests || [])
                                   .map((t) => {
-                                    const testName = t.name || t.component || "Desconhecido";
-                                    const testVal = t.val !== undefined ? t.val : (t.value !== undefined ? t.value : "--");
-                                    const testMin = t.min !== undefined ? t.min : (t.minVal !== undefined ? t.minVal : "--");
-                                    const testMax = t.max !== undefined ? t.max : (t.maxVal !== undefined ? t.maxVal : "--");
+                                    const testName =
+                                      t.name || t.component || "Desconhecido";
+                                    const testVal =
+                                      t.val !== undefined
+                                        ? t.val
+                                        : t.value !== undefined
+                                          ? t.value
+                                          : "--";
+                                    const testMin =
+                                      t.min !== undefined
+                                        ? t.min
+                                        : t.minVal !== undefined
+                                          ? t.minVal
+                                          : "--";
+                                    const testMax =
+                                      t.max !== undefined
+                                        ? t.max
+                                        : t.maxVal !== undefined
+                                          ? t.maxVal
+                                          : "--";
                                     const testStatus = t.status || "UNKNOWN";
-                                    
+
                                     const isFail = testStatus === "FAIL";
-                                    const isNear = testStatus === "PASS" && t.marginToLimit !== null && t.marginToLimit < 0.1;
+                                    const isNear =
+                                      testStatus === "PASS" &&
+                                      t.marginToLimit !== null &&
+                                      t.marginToLimit < 0.1;
                                     const isIgnored = testStatus === "IGNORED";
-                                    const isIncomplete = testStatus === "INCOMPLETE";
+                                    const isIncomplete =
+                                      testStatus === "INCOMPLETE";
 
                                     let statusEmoji = "⬜";
                                     if (isFail) statusEmoji = "🟥";
                                     else if (isIncomplete) statusEmoji = "⚪";
                                     else if (isIgnored) statusEmoji = "🔘";
                                     else if (isNear) statusEmoji = "🟧";
-                                    else if (testStatus === "PASS") statusEmoji = "🟩";
+                                    else if (testStatus === "PASS")
+                                      statusEmoji = "🟩";
 
                                     // Sparkline calculation
                                     let sparklineHtml = "";
-                                    if (typeof testVal === "number" && typeof testMin === "number" && typeof testMax === "number") {
+                                    if (
+                                      typeof testVal === "number" &&
+                                      typeof testMin === "number" &&
+                                      typeof testMax === "number"
+                                    ) {
                                       const range = Math.abs(testMax - testMin);
                                       if (range > 0) {
-                                        const pct = Math.min(100, Math.max(0, ((testVal - Math.min(testMin, testMax)) / range) * 100));
-                                        const barColor = isFail ? "var(--color-error)" : isNear ? "var(--color-warning)" : "var(--color-success, #10b981)";
+                                        const pct = Math.min(
+                                          100,
+                                          Math.max(
+                                            0,
+                                            ((testVal -
+                                              Math.min(testMin, testMax)) /
+                                              range) *
+                                              100,
+                                          ),
+                                        );
+                                        const barColor = isFail
+                                          ? "var(--color-error)"
+                                          : isNear
+                                            ? "var(--color-warning)"
+                                            : "var(--color-success, #10b981)";
                                         sparklineHtml = `
                                           <div style="width: 100%; height: 6px; bg-color: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 8px; position: relative; background: rgba(255,255,255,0.1); overflow: hidden;">
                                             <div style="width: ${pct}%; height: 100%; background: ${barColor}; border-radius: 3px; transition: width 0.3s ease;"></div>
@@ -4037,17 +4099,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseMode06Text(text) {
-    const lines = text.split(/\r?\n|----/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\r?\n|----/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const tests = [];
 
     for (const line of lines) {
       if (!line.includes("TID:")) continue;
 
       const incomplete = line.includes("Test incomplete");
-      
+
       // Try multiple regex patterns for the component name
       let name = "Desconhecido";
-      const nameMatch = line.match(/(?:TID:\$\w+\s+)(?:-\s*)?(.*?)\s+Max:/i) || line.match(/-(.*?)\s+Max:/i);
+      const nameMatch =
+        line.match(/(?:TID:\$\w+\s+)(?:-\s*)?(.*?)\s+Max:/i) ||
+        line.match(/-(.*?)\s+Max:/i);
       if (nameMatch) name = nameMatch[1].trim();
 
       const mid = line.match(/MID:\$(\w+)/i)?.[1] || null;
@@ -4055,7 +4122,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const maxVal = parseValue(line.match(/Max:\s*([^\s]+)/i)?.[1]);
       const minVal = parseValue(line.match(/Min:\s*([^\s]+)/i)?.[1]);
-      const value = parseValue(line.match(/Test result value:\s*([^\s]+)/i)?.[1]);
+      const value = parseValue(
+        line.match(/Test result value:\s*([^\s]+)/i)?.[1],
+      );
 
       const noiseCylinder16 = name.includes("Cylinder 16");
       const realMin = Math.min(minVal, maxVal);
@@ -4080,7 +4149,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Calculate margin to limit for highlighting
       const span = realMax - realMin;
-      const margin = span > 0 ? Math.min(value - realMin, realMax - value) / span : null;
+      const margin =
+        span > 0 ? Math.min(value - realMin, realMax - value) / span : null;
 
       tests.push({
         mid: mid ? mid.toUpperCase() : null,
