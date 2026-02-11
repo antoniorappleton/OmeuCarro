@@ -3070,6 +3070,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let scorePoints = 100;
     let penaltyRpm = 0;
     let penaltySpeed = 0;
+    let penaltyIdling = 0;
+    let penaltyLoad = 0;
+
+    let idleSeconds = 0;
 
     for (let i = 0; i < batch.length; i++) {
       const p = batch[i].parsed || {};
@@ -3097,16 +3101,32 @@ document.addEventListener("DOMContentLoaded", () => {
       if (l > 0) {
         sumLoad += l;
         countLoad++;
+        if (l > 85) penaltyLoad += 0.1; // High engine load penalty
       }
       if (c > 0) {
         sumL100 += c;
         countL100++;
       }
 
+      // Time diff for accumulation
+      const dt =
+        i > 0 ? (batch[i].timestamp - batch[i - 1].timestamp) / 1000 : 0;
+
       // Penalties
-      if (r > 3500) penaltyRpm += 0.5;
-      if (r > 4500) penaltyRpm += 2;
-      if (s > 125) penaltySpeed += 1;
+      if (r > 3000) penaltyRpm += 0.2 * Math.max(1, dt);
+      if (r > 4000) penaltyRpm += 1.0 * Math.max(1, dt);
+      if (s > 120) penaltySpeed += 0.5 * Math.max(1, dt);
+      if (s > 140) penaltySpeed += 2.0 * Math.max(1, dt);
+
+      // Idling Penalty (Speed 0, RPM > 500)
+      if (s < 1 && r > 500 && dt > 0) {
+        idleSeconds += dt;
+        if (idleSeconds > 60) {
+          penaltyIdling += 0.05 * dt; // Every second idle after 1 min
+        }
+      } else {
+        idleSeconds = 0;
+      }
 
       // Track last values for import update
       if (f > 0) start.lastFuel = f;
@@ -3114,12 +3134,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (g > 0) start.lastFuelUsed = g;
 
       // Calc dist
-      if (i > 0) {
-        const dt = (batch[i].timestamp - batch[i - 1].timestamp) / 1000;
-        if (dt > 0 && dt < 300) {
-          const velms = s / 3.6;
-          dist += velms * dt;
-        }
+      if (dt > 0 && dt < 300) {
+        const velms = s / 3.6;
+        dist += velms * dt;
       }
     }
 
@@ -3129,7 +3146,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (d > 0 && d < 2000) dist = d * 1000;
     }
 
-    scorePoints = Math.max(0, scorePoints - penaltyRpm - penaltySpeed);
+    scorePoints = Math.max(
+      0,
+      scorePoints - penaltyRpm - penaltySpeed - penaltyIdling - penaltyLoad,
+    );
     const avgVoltage = countVoltage ? sumVoltage / countVoltage : null;
     const avgLoad = countLoad ? sumLoad / countLoad : null;
     const avgConsumo = countL100 ? sumL100 / countL100 : 0;
@@ -3634,8 +3654,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const loc =
           lat && lon ? new firebase.firestore.GeoPoint(lat, lon) : null;
 
-        // DETERMINISTIC ID
-        const rid = generateDeterministicId(veiculoId, timestamp, sessionId);
+        // DETERMINISTIC ID (Reduced to vehicleId + timestamp for better deduplication if sessionId changes)
+        const rid = generateDeterministicId(veiculoId, timestamp);
 
         readings.push({
           id: rid,
@@ -3662,8 +3682,12 @@ document.addEventListener("DOMContentLoaded", () => {
           .doc(veiculoId)
           .collection("viagens");
         trips.forEach((t) => {
-          // Use sessionId or hash for deterministic trip ID
-          const tid = generateDeterministicId(veiculoId, t.sessionId || "trip");
+          // Use timestamp + sessionId for deterministic trip ID to avoid overwrites
+          const tid = generateDeterministicId(
+            veiculoId,
+            t.dataInicio.toMillis(),
+            t.sessionId || "trip",
+          );
           batch.set(ref.doc(tid), t, { merge: true });
         });
         await batch.commit();
@@ -3693,7 +3717,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const upd = {
           lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
         };
-        if (latest.parsed.odometer) upd.odometroAtual = latest.parsed.odometer;
+        // REMOVED: upd.odometroAtual update (User requested not to affect KM)
         if (latest.parsed.fuelLevel !== null)
           upd.nivelCombustivel = latest.parsed.fuelLevel;
         if (latest.parsed.distanceToEmptyKm)
