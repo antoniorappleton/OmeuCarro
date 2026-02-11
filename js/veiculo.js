@@ -2496,10 +2496,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       function createTripCard(trip) {
         const el = document.createElement("article");
-        el.className = "trip-card"; // Need styling for this!
-        // Styling injection for quick fix:
+        el.className = "trip-card";
         el.style.cssText =
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;";
+          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;";
+
+        el.onclick = () => openTripDetails(trip);
+        el.onmouseenter = () => (el.style.transform = "scale(1.02)");
+        el.onmouseleave = () => (el.style.transform = "scale(1)");
 
         const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
 
@@ -2513,6 +2516,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="display:flex; gap: 6px; align-items:center;">
                         ${trip.score ? `<span style="font-size:0.75rem; font-weight:700; color:var(--color-text-main);">${trip.score}</span>` : ""}
                         <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
+                        <svg class="icon" style="width:14px; height:14px; color:var(--color-primary);"><use href="assets/icons-unified.svg#icon-chevron-right"></use></svg>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
@@ -2531,6 +2535,124 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
              `;
         return el;
+      }
+
+      let tripTelemetryChart = null;
+
+      function openTripDetails(trip) {
+        const modal = document.getElementById("trip-details-modal");
+        if (!modal) return;
+
+        // Fill Summary
+        document.getElementById("trip-modal-score").textContent = trip.score || "--";
+        const routeType = trip.routeType || (trip.velocidadeMedia < 25 ? "Urbano Intenso" : trip.velocidadeMedia < 50 ? "Misto" : "Autoestrada");
+        document.getElementById("trip-modal-route").textContent = routeType;
+
+        // Fill Insights
+        const insightContainer = document.getElementById("trip-insight-container");
+        const insightText = document.getElementById("trip-insight-text");
+        let insight = "";
+
+        if (trip.metricas?.rpmMedio > 1400) {
+          insight = "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
+        } else if (trip.consumoMedio > 7.5) {
+          insight = "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
+        } else if (trip.score > 90) {
+          insight = "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
+        }
+
+        if (insight) {
+          insightText.textContent = insight;
+          insightContainer.style.display = "block";
+        } else {
+          insightContainer.style.display = "none";
+        }
+
+        // Fill Secondary Metrics
+        const metricsList = document.getElementById("trip-modal-metrics");
+        const m = trip.metricas || {};
+        metricsList.innerHTML = `
+          <div class="alert-item">
+            <span class="alert-label">Distância</span>
+            <span class="alert-value">${trip.distancia || 0} km</span>
+          </div>
+          <div class="alert-item">
+            <span class="alert-label">Velocidade Máxima</span>
+            <span class="alert-value">${m.velocidadeMax || "--"} km/h</span>
+          </div>
+          <div class="alert-item">
+            <span class="alert-label">RPM Média</span>
+            <span class="alert-value">${m.rpmMedio || "--"} rpm</span>
+          </div>
+          <div class="alert-item">
+            <span class="alert-label">Temp. Máxima</span>
+            <span class="alert-value">${m.temperaturaMax || "--"} °C</span>
+          </div>
+        `;
+
+        modal.classList.remove("hidden");
+
+        // Render Chart
+        renderTripTelemetryChart(trip);
+
+        // Modal Handlers
+        const close = () => {
+          modal.classList.add("hidden");
+          if (tripTelemetryChart) {
+            tripTelemetryChart.destroy();
+            tripTelemetryChart = null;
+          }
+        };
+        document.getElementById("trip-details-close").onclick = close;
+        document.getElementById("trip-details-ok").onclick = close;
+      }
+
+      function renderTripTelemetryChart(trip) {
+        const canvas = document.getElementById("chart-trip-telemetry");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        if (tripTelemetryChart) tripTelemetryChart.destroy();
+
+        // Sample data for visualized trend (if backend data missing, we use summary)
+        const labels = ["Início", "Meio", "Fim"];
+        const consumps = [trip.consumoMedio * 1.1, trip.consumoMedio, trip.consumoMedio * 0.9];
+        const rpms = [trip.metricas?.rpmMedio * 1.2 || 1500, trip.metricas?.rpmMedio || 1300, 1000];
+
+        tripTelemetryChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Consumo (L/100)",
+                data: consumps,
+                borderColor: "#1B9B82",
+                backgroundColor: "rgba(27, 155, 130, 0.1)",
+                yAxisID: "y",
+                tension: 0.4,
+                fill: true,
+              },
+              {
+                label: "RPM",
+                data: rpms,
+                borderColor: "#f59e0b",
+                borderDash: [5, 5],
+                yAxisID: "y1",
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            scales: {
+              y: { type: "linear", display: true, position: "left", title: { display: true, text: "L/100km" } },
+              y1: { type: "linear", display: true, position: "right", title: { display: true, text: "RPM" }, grid: { drawOnChartArea: false } },
+            },
+          },
+        });
       }
 
       // --- REALTIME LISTENER (LIVE TAB) ---

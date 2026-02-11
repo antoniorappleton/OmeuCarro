@@ -1,887 +1,665 @@
 <!doctype html>
 <html lang="pt">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veículo – L100</title>
 
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/home.css" />
-    <link rel="stylesheet" href="css/home.css" />
-    <script src="js/theme.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veículo – L100</title>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="css/home.css" />
+  <script src="js/theme.js"></script>
 
-    <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script defer src="js/firebase-config.js"></script>
-    <script defer src="js/auth.js"></script>
-    <script defer src="js/analytics.js?v=22"></script>
-    <script defer src="js/firestore.js?v=22"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js?v=22"></script>
-    <script defer src="js/utils.js?v=30"></script>
-    <!-- JSZip for Torque CSV/ZIP import -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=70"></script>
-  </head>
+  <!-- Firebase v9 (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <body class="app-page" data-page="vehicle-detail">
-    <!-- HEADER PREMIUM -->
-    <header class="app-header glass-header">
-      <div class="app-header-left">
-        <a
-          href="dashboard.html"
-          class="icon-btn-sm"
-          aria-label="Voltar à dashboard"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
-          </svg>
-        </a>
-        <div class="app-header-title">
-          <h1 class="header-title-text" id="vehicle-name">Veículo</h1>
-          <span class="header-subtitle-text" id="vehicle-subtitle"
-            >Detalhes</span
-          >
-        </div>
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/analytics.js?v=22"></script>
+  <script defer src="js/firestore.js?v=22"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+  <script defer src="js/notifications.js?v=22"></script>
+  <script defer src="js/utils.js?v=30"></script>
+  <!-- JSZip for Torque CSV/ZIP import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- depois os ficheiros específicos da página -->
+  <script defer src="js/veiculo.js?v=70"></script>
+</head>
+
+<body class="app-page" data-page="vehicle-detail">
+  <!-- HEADER PREMIUM -->
+  <header class="app-header glass-header">
+    <div class="app-header-left">
+      <a href="dashboard.html" class="icon-btn-sm" aria-label="Voltar à dashboard">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+        </svg>
+      </a>
+      <div class="app-header-title">
+        <h1 class="header-title-text" id="vehicle-name">Veículo</h1>
+        <span class="header-subtitle-text" id="vehicle-subtitle">Detalhes</span>
       </div>
+    </div>
 
-      <div class="app-header-actions">
-        <a
-          href="estatisticas.html"
-          class="icon-btn-sm"
-          aria-label="Estatísticas"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-dashboard"></use>
-          </svg>
-        </a>
-        <a href="perfil.html" class="icon-btn-sm" aria-label="Perfil">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-user"></use>
-          </svg>
-        </a>
-      </div>
-    </header>
+    <div class="app-header-actions">
+      <a href="estatisticas.html" class="icon-btn-sm" aria-label="Estatísticas">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-dashboard"></use>
+        </svg>
+      </a>
+      <a href="perfil.html" class="icon-btn-sm" aria-label="Perfil">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-user"></use>
+        </svg>
+      </a>
+    </div>
+  </header>
 
-    <main class="home-main has-header-offset">
-      <!-- 1. HERO PREMIUM (Odometer Focus) -->
-      <section class="vehicle-hero-premium">
-        <div class="hero-bg-accent"></div>
+  <main class="home-main has-header-offset">
+    <!-- 1. HERO PREMIUM (Odometer Focus) -->
+    <section class="vehicle-hero-premium">
+      <div class="hero-bg-accent"></div>
 
-        <div class="hero-content">
-          <!-- Center: Odometer -->
-          <div
-            class="hero-odometer-section"
-            style="
+      <div class="hero-content">
+        <!-- Center: Odometer -->
+        <div class="hero-odometer-section" style="
               margin-top: 0;
               border: none;
               background: transparent;
               box-shadow: none;
               padding: 0;
-            "
-          >
-            <span class="hero-label">Quilometragem Atual</span>
-            <div class="odometer-display-wrapper" id="vehicle-odometer-wrapper">
-              <div class="odometer-value-box">
-                <span id="vehicle-odometer-val" class="odometer-number"
-                  >--</span
-                >
-                <span class="odometer-unit">km</span>
-              </div>
-              <button
-                id="btn-edit-odo-hero"
-                class="btn-edit-odo"
-                aria-label="Editar Km"
-              >
+            ">
+          <span class="hero-label">Quilometragem Atual</span>
+          <div class="odometer-display-wrapper" id="vehicle-odometer-wrapper">
+            <div class="odometer-value-box">
+              <span id="vehicle-odometer-val" class="odometer-number">--</span>
+              <span class="odometer-unit">km</span>
+            </div>
+            <button id="btn-edit-odo-hero" class="btn-edit-odo" aria-label="Editar Km">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-edit"></use>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Hidden Edit Form -->
+          <div id="vehicle-odometer-edit-form" class="odometer-edit-form hidden">
+            <input type="number" id="odo-input-hero" class="odo-input-glass" placeholder="Novos Km..." />
+            <div class="odo-edit-actions">
+              <button id="btn-save-odo-hero" class="btn-glass-success">
                 <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-edit"></use>
+                  <use href="assets/icons-unified.svg#icon-check"></use>
+                </svg>
+              </button>
+              <button id="btn-cancel-odo-hero" class="btn-glass-danger">
+                <svg class="icon">
+                  <use href="assets/icons-unified.svg#icon-close"></use>
                 </svg>
               </button>
             </div>
-
-            <!-- Hidden Edit Form -->
-            <div
-              id="vehicle-odometer-edit-form"
-              class="odometer-edit-form hidden"
-            >
-              <input
-                type="number"
-                id="odo-input-hero"
-                class="odo-input-glass"
-                placeholder="Novos Km..."
-              />
-              <div class="odo-edit-actions">
-                <button id="btn-save-odo-hero" class="btn-glass-success">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-check"></use>
-                  </svg>
-                </button>
-                <button id="btn-cancel-odo-hero" class="btn-glass-danger">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-close"></use>
-                  </svg>
-                </button>
-              </div>
-            </div>
           </div>
-
-          <!-- Bottom: Badges Side by Side -->
-          <div class="vehicle-badges-hero centered-row">
-            <span id="vehicle-plate" class="badge-glass">--</span>
-            <span id="vehicle-fuel" class="badge-glass">--</span>
-          </div>
-
-          <p id="vehicle-message" class="form-message glass-message"></p>
         </div>
-      </section>
 
-      <!-- 2. PRIMARY ACTIONS (Premium Grid) -->
-      <section class="action-grid-premium">
-        <button id="btn-add-fuel" class="action-card-premium gradient-1">
-          <div class="action-icon">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
-            </svg>
-          </div>
-          <span class="action-label">Abastecer</span>
-        </button>
+        <!-- Bottom: Badges Side by Side -->
+        <div class="vehicle-badges-hero centered-row">
+          <span id="vehicle-plate" class="badge-glass">--</span>
+          <span id="vehicle-fuel" class="badge-glass">--</span>
+        </div>
 
-        <button id="btn-add-doc" class="action-card-premium glass">
-          <div class="action-icon">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-file"></use>
-            </svg>
-          </div>
-          <span class="action-label">Documento</span>
-        </button>
+        <p id="vehicle-message" class="form-message glass-message"></p>
+      </div>
+    </section>
 
-        <button id="btn-add-maint" class="action-card-premium glass">
-          <div class="action-icon">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-wrench"></use>
-            </svg>
-          </div>
-          <span class="action-label">Reparação</span>
-        </button>
+    <!-- 2. PRIMARY ACTIONS (Premium Grid) -->
+    <section class="action-grid-premium">
+      <button id="btn-add-fuel" class="action-card-premium gradient-1">
+        <div class="action-icon">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-fuel"></use>
+          </svg>
+        </div>
+        <span class="action-label">Abastecer</span>
+      </button>
 
-        <button id="btn-add-plan-quick" class="action-card-premium glass">
-          <div class="action-icon">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-clipboard"></use>
-            </svg>
-          </div>
-          <span class="action-label">Plano de Manutenção</span>
-        </button>
-      </section>
+      <button id="btn-add-doc" class="action-card-premium glass">
+        <div class="action-icon">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-file"></use>
+          </svg>
+        </div>
+        <span class="action-label">Documento</span>
+      </button>
 
-      <!-- 2.5 ANALYTICS (MOVED TO FAB) -->
-      <!-- Content moved to floating-fab-container -->
+      <button id="btn-add-maint" class="action-card-premium glass">
+        <div class="action-icon">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-wrench"></use>
+          </svg>
+        </div>
+        <span class="action-label">Reparação</span>
+      </button>
 
-      <!-- 3. COMPACT KPIs -->
-      <section class="stats-grid vehicle-kpis-compact">
-        <article class="stats-card compact">
-          <span class="muted">Gasto Total</span>
-          <strong id="kpi-gasto">€0</strong>
-        </article>
-        <article class="stats-card compact">
-          <span class="muted">Litros</span>
-          <strong id="kpi-litros">0 L</strong>
-        </article>
-        <article class="stats-card compact">
-          <span class="muted">Média</span>
-          <strong id="kpi-consumo">--</strong>
-        </article>
-        <article class="stats-card compact">
-          <span class="muted">Saúde</span>
-          <div
-            id="kpi-health-status"
-            style="
+      <button id="btn-add-plan-quick" class="action-card-premium glass">
+        <div class="action-icon">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-clipboard"></use>
+          </svg>
+        </div>
+        <span class="action-label">Plano de Manutenção</span>
+      </button>
+    </section>
+
+    <!-- 2.5 ANALYTICS (MOVED TO FAB) -->
+    <!-- Content moved to floating-fab-container -->
+
+    <!-- 3. COMPACT KPIs -->
+    <section class="stats-grid vehicle-kpis-compact">
+      <article class="stats-card compact">
+        <span class="muted">Gasto Total</span>
+        <strong id="kpi-gasto">€0</strong>
+      </article>
+      <article class="stats-card compact">
+        <span class="muted">Litros</span>
+        <strong id="kpi-litros">0 L</strong>
+      </article>
+      <article class="stats-card compact">
+        <span class="muted">Média</span>
+        <strong id="kpi-consumo">--</strong>
+      </article>
+      <article class="stats-card compact">
+        <span class="muted">Saúde</span>
+        <div id="kpi-health-status" style="
               display: flex;
               align-items: center;
               gap: 6px;
               font-weight: 700;
-            "
-          >
-            <span id="kpi-health-text">--</span>
-            <div
-              id="kpi-health-dot"
-              class="status-indicator-dot status-neutral"
-              style="width: 8px; height: 8px"
-            ></div>
-          </div>
-        </article>
-      </section>
+            ">
+          <span id="kpi-health-text">--</span>
+          <div id="kpi-health-dot" class="status-indicator-dot status-neutral" style="width: 8px; height: 8px"></div>
+        </div>
+      </article>
+    </section>
 
-      <!-- 4. ALERTS (MOVED TO FAB) -->
-      <!-- Content moved to floating-fab-container -->
+    <!-- 4. ALERTS (MOVED TO FAB) -->
+    <!-- Content moved to floating-fab-container -->
 
-      <!-- 5. TABS (History) -->
-      <div
-        class="tabs-header-row"
-        style="justify-content: flex-start; gap: 12px; align-items: center"
-      >
-        <h3 class="vehicle-section-title">
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-list"></use>
-          </svg>
-          Histórico
-        </h3>
-        <button
-          id="btn-toggle-tabs"
-          class="icon-btn-sm"
-          aria-label="Recolher histórico"
-          aria-expanded="true"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-chevron-up"></use>
-          </svg>
-        </button>
-      </div>
-      <nav class="section-tabs" aria-label="Histórico">
-        <button
-          class="tab-btn is-active"
-          type="button"
-          data-tab="fuel"
-          aria-controls="tab-fuel"
-        >
+    <!-- 5. TABS (History) -->
+    <div class="tabs-header-row" style="justify-content: flex-start; gap: 12px; align-items: center">
+      <h3 class="vehicle-section-title">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-list"></use>
+        </svg>
+        Histórico
+      </h3>
+      <button id="btn-toggle-tabs" class="icon-btn-sm" aria-label="Recolher histórico" aria-expanded="true">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+        </svg>
+      </button>
+    </div>
+    <nav class="section-tabs" aria-label="Histórico">
+      <button class="tab-btn is-active" type="button" data-tab="fuel" aria-controls="tab-fuel">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-fuel"></use>
+        </svg>
+        <span>Abastecimentos</span>
+      </button>
+      <button class="tab-btn" type="button" data-tab="docs" aria-controls="tab-docs">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-file"></use>
+        </svg>
+        <span>Documentos</span>
+      </button>
+      <button class="tab-btn" type="button" data-tab="maint" aria-controls="tab-maint">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-wrench"></use>
+        </svg>
+        <span>Reparações</span>
+      </button>
+    </nav>
+
+    <!-- TAB: FUEL -->
+    <section id="tab-fuel" class="tab-content" style="margin-bottom: 32px">
+      <div id="fuel-empty" class="vehicles-empty hidden">
+        <div class="vehicles-empty-icon">
           <svg class="icon">
             <use href="assets/icons-unified.svg#icon-fuel"></use>
           </svg>
-          <span>Abastecimentos</span>
-        </button>
-        <button
-          class="tab-btn"
-          type="button"
-          data-tab="docs"
-          aria-controls="tab-docs"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-file"></use>
-          </svg>
-          <span>Documentos</span>
-        </button>
-        <button
-          class="tab-btn"
-          type="button"
-          data-tab="maint"
-          aria-controls="tab-maint"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-wrench"></use>
-          </svg>
-          <span>Reparações</span>
-        </button>
-      </nav>
-
-      <!-- TAB: FUEL -->
-      <section id="tab-fuel" class="tab-content" style="margin-bottom: 32px">
-        <div id="fuel-empty" class="vehicles-empty hidden">
-          <div class="vehicles-empty-icon">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
-            </svg>
-          </div>
-          <h3>Nenhum abastecimento</h3>
-          <p>Registe o primeiro abastecimento deste veículo.</p>
         </div>
-        <div id="fuel-list" class="fuel-list"></div>
-      </section>
+        <h3>Nenhum abastecimento</h3>
+        <p>Registe o primeiro abastecimento deste veículo.</p>
+      </div>
+      <div id="fuel-list" class="fuel-list"></div>
+    </section>
 
-      <!-- TAB: DOCS -->
-      <section
-        id="tab-docs"
-        class="tab-content hidden"
-        style="margin-bottom: 80px"
-      >
-        <div class="card">
-          <div class="card-body">
-            <div
-              class="list-filters"
-              style="
+    <!-- TAB: DOCS -->
+    <section id="tab-docs" class="tab-content hidden" style="margin-bottom: 80px">
+      <div class="card">
+        <div class="card-body">
+          <div class="list-filters" style="
                 margin-bottom: 12px;
                 display: flex;
                 justify-content: flex-end;
-              "
-            >
-              <select
-                id="docs-filter"
-                style="
+              ">
+            <select id="docs-filter" style="
                   padding: 6px;
                   border-radius: 8px;
                   border: 1px solid var(--border-light);
                   background: var(--color-bg);
                   color: var(--color-text-main);
-                "
-              >
-                <option value="Todos">Todos</option>
-                <option value="Carro">Documentos do carro</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-            <div id="docs-list" style="display: grid; gap: 12px"></div>
+                ">
+              <option value="Todos">Todos</option>
+              <option value="Carro">Documentos do carro</option>
+              <option value="Outros">Outros</option>
+            </select>
           </div>
+          <div id="docs-list" style="display: grid; gap: 12px"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- TAB: MAINT (+ Planning) -->
-      <section
-        id="tab-maint"
-        class="tab-content hidden"
-        style="margin-bottom: 80px"
-      >
-        <!-- Planeamento (Integrated) -->
-        <div class="card" style="margin-bottom: 16px">
-          <header class="card-header">
-            <h3 class="vehicle-section-title">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-clipboard"></use>
-              </svg>
-              Próxima Manutenção
-            </h3>
-            <button
-              id="btn-add-plan"
-              class="icon-btn-sm"
-              aria-label="Novo Plano"
-            >
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
-              </svg>
-            </button>
-          </header>
-          <div class="card-body">
-            <div
-              id="plan-list"
-              style="
+    <!-- TAB: MAINT (+ Planning) -->
+    <section id="tab-maint" class="tab-content hidden" style="margin-bottom: 80px">
+      <!-- Planeamento (Integrated) -->
+      <div class="card" style="margin-bottom: 16px">
+        <header class="card-header">
+          <h3 class="vehicle-section-title">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-clipboard"></use>
+            </svg>
+            Próxima Manutenção
+          </h3>
+          <button id="btn-add-plan" class="icon-btn-sm" aria-label="Novo Plano">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-plus"></use>
+            </svg>
+          </button>
+        </header>
+        <div class="card-body">
+          <div id="plan-list" style="
                 display: grid;
                 gap: 12px;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-              "
-            ></div>
-            <div
-              id="plan-empty"
-              class="vehicles-empty"
-              style="display: none; margin: 0; padding: 12px"
-            >
-              <p style="font-size: 0.9rem">Nenhum plano definido.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Histórico -->
-        <div class="card">
-          <header class="card-header">
-            <h3 class="vehicle-section-title">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-wrench"></use>
-              </svg>
-              Histórico
-            </h3>
-          </header>
-          <div class="card-body">
-            <div
-              id="maint-empty"
-              class="vehicles-empty hidden"
-              style="margin: 0; padding: 20px"
-            >
-              <p>Nenhuma reparação registada.</p>
-            </div>
-            <div id="maint-list" style="display: grid; gap: 12px"></div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-      <a href="dashboard.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-home"></use>
-        </svg>
-        <span>Home</span>
-      </a>
-      <a href="veiculos.html" class="active">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-car"></use>
-        </svg>
-        <span>Veículos</span>
-      </a>
-      <a href="mapa.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-map"></use>
-        </svg>
-        <span>Mapa</span>
-      </a>
-      <a href="perfil.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-user"></use>
-        </svg>
-        <span>Perfil</span>
-      </a>
-    </footer>
-
-    <!-- FLOATING METRICS (SIDEBAR/FAB) -->
-    <div class="floating-fab-container">
-      <!-- 1. METRICS CARD -->
-      <div id="floating-metrics-card" class="floating-card hidden">
-        <div class="floating-card-header">
-          <span class="muted">Métricas Globais</span>
-          <button
-            id="btn-close-float"
-            class="icon-btn-xs"
-            style="border: none; background: transparent"
-          >
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </div>
-        <div class="floating-card-content">
-          <div class="metric-float-item">
-            <span class="label">Custo Total / km</span>
-            <strong id="float-cost-km" class="value-highlight">--</strong>
-          </div>
-          <div class="metric-float-item">
-            <span class="label">Total Gasto</span>
-            <strong id="float-total-cost">--</strong>
-          </div>
-          <div class="metric-float-item">
-            <span class="label">Km Percorridos</span>
-            <strong id="float-total-km">--</strong>
+              "></div>
+          <div id="plan-empty" class="vehicles-empty" style="display: none; margin: 0; padding: 12px">
+            <p style="font-size: 0.9rem">Nenhum plano definido.</p>
           </div>
         </div>
       </div>
 
-      <!-- 2. ANALYTICS CARD (MOVED) -->
-      <div id="section-analytics" class="floating-card hidden">
-        <div class="floating-card-header">
-          <span class="muted">Combustível & Autonomia</span>
-          <button
-            id="btn-close-analytics"
-            class="icon-btn-xs"
-            style="border: none; background: transparent"
-          >
+      <!-- Histórico -->
+      <div class="card">
+        <header class="card-header">
+          <h3 class="vehicle-section-title">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
+              <use href="assets/icons-unified.svg#icon-wrench"></use>
             </svg>
-          </button>
+            Histórico
+          </h3>
+        </header>
+        <div class="card-body">
+          <div id="maint-empty" class="vehicles-empty hidden" style="margin: 0; padding: 20px">
+            <p>Nenhuma reparação registada.</p>
+          </div>
+          <div id="maint-list" style="display: grid; gap: 12px"></div>
         </div>
-        <div class="card-body" style="padding: 0; margin-top: 12px">
-          <!-- Header removed/simplified since it's now a popup header -->
-          <div
-            style="
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="dashboard.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons-unified.svg#icon-home"></use>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="veiculos.html" class="active">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons-unified.svg#icon-car"></use>
+      </svg>
+      <span>Veículos</span>
+    </a>
+    <a href="mapa.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons-unified.svg#icon-map"></use>
+      </svg>
+      <span>Mapa</span>
+    </a>
+    <a href="perfil.html">
+      <svg class="icon" aria-hidden="true">
+        <use href="assets/icons-unified.svg#icon-user"></use>
+      </svg>
+      <span>Perfil</span>
+    </a>
+  </footer>
+
+  <!-- FLOATING METRICS (SIDEBAR/FAB) -->
+  <div class="floating-fab-container">
+    <!-- 1. METRICS CARD -->
+    <div id="floating-metrics-card" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Métricas Globais</span>
+        <button id="btn-close-float" class="icon-btn-xs" style="border: none; background: transparent">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="floating-card-content">
+        <div class="metric-float-item">
+          <span class="label">Custo Total / km</span>
+          <strong id="float-cost-km" class="value-highlight">--</strong>
+        </div>
+        <div class="metric-float-item">
+          <span class="label">Total Gasto</span>
+          <strong id="float-total-cost">--</strong>
+        </div>
+        <div class="metric-float-item">
+          <span class="label">Km Percorridos</span>
+          <strong id="float-total-km">--</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ANALYTICS CARD (MOVED) -->
+    <div id="section-analytics" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Combustível & Autonomia</span>
+        <button id="btn-close-analytics" class="icon-btn-xs" style="border: none; background: transparent">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body" style="padding: 0; margin-top: 12px">
+        <!-- Header removed/simplified since it's now a popup header -->
+        <div style="
               display: flex;
               align-items: center;
               gap: 10px;
               margin-bottom: 8px;
-            "
-          >
-            <span id="analytics-badge" class="badge badge-outline"
-              >A aprender...</span
-            >
-          </div>
+            ">
+          <span id="analytics-badge" class="badge badge-outline">A aprender...</span>
+        </div>
 
-          <div id="analytics-content" class="analytics-content-wrapper">
-            <div
-              class="analytics-grid"
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px"
-            >
-              <!-- Consumption -->
-              <div
-                class="analytics-box"
-                style="
+        <div id="analytics-content" class="analytics-content-wrapper">
+          <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <!-- Consumption -->
+            <div class="analytics-box" style="
                   background: var(--bg-hover);
                   padding: 12px;
                   border-radius: 12px;
-                "
-              >
-                <div class="muted" style="font-size: 0.85rem">
-                  Consumo Médio
-                </div>
-                <div
-                  style="
+                ">
+              <div class="muted" style="font-size: 0.85rem">
+                Consumo Médio
+              </div>
+              <div style="
                     font-size: 1.4rem;
                     font-weight: 700;
                     color: var(--color-text-main);
                     margin: 4px 0;
-                  "
-                >
-                  <span id="an-l100">--</span>
-                  <small class="muted" style="font-size: 0.9rem">L/100</small>
-                </div>
-                <div class="analytics-meta" style="font-size: 0.8rem">
-                  <span
-                    id="an-confidence"
-                    class="status-neutral"
-                    style="display: inline-flex; align-items: center; gap: 4px"
-                  >
-                    Calculando...
-                  </span>
-                </div>
+                  ">
+                <span id="an-l100">--</span>
+                <small class="muted" style="font-size: 0.9rem">L/100</small>
               </div>
-              <!-- Range -->
-              <div
-                class="analytics-box"
-                style="
+              <div class="analytics-meta" style="font-size: 0.8rem">
+                <span id="an-confidence" class="status-neutral"
+                  style="display: inline-flex; align-items: center; gap: 4px">
+                  Calculando...
+                </span>
+              </div>
+            </div>
+            <!-- Range -->
+            <div class="analytics-box" style="
                   background: var(--bg-hover);
                   padding: 12px;
                   border-radius: 12px;
-                "
-              >
-                <div class="muted" style="font-size: 0.85rem">
-                  Autonomia Est.
-                </div>
-                <div
-                  style="
+                ">
+              <div class="muted" style="font-size: 0.85rem">
+                Autonomia Est.
+              </div>
+              <div style="
                     font-size: 1.4rem;
                     font-weight: 700;
                     color: var(--color-text-main);
                     margin: 4px 0;
-                  "
-                >
-                  <span id="an-range-km">--</span>
-                  <small class="muted" style="font-size: 0.9rem">km</small>
-                </div>
-                <div
-                  class="analytics-meta"
-                  style="font-size: 0.8rem; color: var(--color-text-secondary)"
-                >
-                  <span id="an-range-days">-- dias</span>
-                </div>
+                  ">
+                <span id="an-range-km">--</span>
+                <small class="muted" style="font-size: 0.9rem">km</small>
+              </div>
+              <div class="analytics-meta" style="font-size: 0.8rem; color: var(--color-text-secondary)">
+                <span id="an-range-days">-- dias</span>
               </div>
             </div>
-
-            <div
-              id="an-warning-capacity"
-              class="form-message form-message--warning hidden"
-              style="margin-top: 12px; font-size: 0.9rem"
-            >
-              ⚠️ Defina a capacidade do depósito nas definições.
-            </div>
-            <div
-              id="an-alert-box"
-              class="form-message hidden"
-              style="margin-top: 12px; font-size: 0.9rem; font-weight: 600"
-            ></div>
           </div>
+
+          <div id="an-warning-capacity" class="form-message form-message--warning hidden"
+            style="margin-top: 12px; font-size: 0.9rem">
+            ⚠️ Defina a capacidade do depósito nas definições.
+          </div>
+          <div id="an-alert-box" class="form-message hidden"
+            style="margin-top: 12px; font-size: 0.9rem; font-weight: 600"></div>
         </div>
       </div>
+    </div>
 
-      <!-- 3. ALERTS CARD (MOVED) -->
-      <div id="section-alerts" class="floating-card hidden">
-        <div class="floating-card-header">
-          <span class="muted">Alertas e Prazos</span>
-          <button
-            id="btn-close-alerts"
-            class="icon-btn-xs"
-            style="border: none; background: transparent"
-          >
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </div>
-        <div class="card-body" style="padding: 0; margin-top: 12px">
-          <h4
-            class="muted"
-            style="font-size: 0.75rem; text-transform: uppercase"
-          >
-            Documentos
-          </h4>
-          <div
-            class="vehicle-alerts-summary"
-            style="
+    <!-- 3. ALERTS CARD (MOVED) -->
+    <div id="section-alerts" class="floating-card hidden">
+      <div class="floating-card-header">
+        <span class="muted">Alertas e Prazos</span>
+        <button id="btn-close-alerts" class="icon-btn-xs" style="border: none; background: transparent">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body" style="padding: 0; margin-top: 12px">
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase">
+          Documentos
+        </h4>
+        <div class="vehicle-alerts-summary" style="
               margin-bottom: 12px;
               display: flex;
               flex-direction: column;
               gap: 8px;
-            "
-          >
-            <div class="alert-item">
-              <div class="alert-status-indicator" id="status-seguro"></div>
-              <div class="alert-info">
-                <span class="alert-label">Seguro</span>
-                <span class="alert-value"><span id="val-seguro">--</span></span>
-              </div>
-            </div>
-            <div class="alert-item">
-              <div class="alert-status-indicator" id="status-iuc"></div>
-              <div class="alert-info">
-                <span class="alert-label">IUC</span>
-                <span class="alert-value"><span id="val-iuc">--</span></span>
-              </div>
-            </div>
-            <div class="alert-item">
-              <div class="alert-status-indicator" id="status-inspecao"></div>
-              <div class="alert-info">
-                <span class="alert-label">Inspeção</span>
-                <span class="alert-value"
-                  ><span id="val-inspecao">--</span></span
-                >
-              </div>
+            ">
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-seguro"></div>
+            <div class="alert-info">
+              <span class="alert-label">Seguro</span>
+              <span class="alert-value"><span id="val-seguro">--</span></span>
             </div>
           </div>
-
-          <h4
-            class="muted"
-            style="font-size: 0.75rem; text-transform: uppercase"
-          >
-            Manutenção
-          </h4>
-          <div
-            id="alerts-maintenance-list"
-            class="vehicle-alerts-summary"
-            style="margin-bottom: 12px"
-          >
-            <div class="muted" style="font-size: 0.9rem">Tudo em dia.</div>
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-iuc"></div>
+            <div class="alert-info">
+              <span class="alert-label">IUC</span>
+              <span class="alert-value"><span id="val-iuc">--</span></span>
+            </div>
           </div>
+          <div class="alert-item">
+            <div class="alert-status-indicator" id="status-inspecao"></div>
+            <div class="alert-info">
+              <span class="alert-label">Inspeção</span>
+              <span class="alert-value"><span id="val-inspecao">--</span></span>
+            </div>
+          </div>
+        </div>
 
-          <!-- Edit button shortcut -->
-          <!-- Config (Restored) -->
-          <details
-            id="alerts-config-details"
-            class="alerts-config-details"
-            style="width: 100%; margin-top: 12px"
-          >
-            <summary
-              class="btn btn-secondary btn-sm full-width"
-              style="list-style: none"
-            >
-              <span
-                style="
+        <h4 class="muted" style="font-size: 0.75rem; text-transform: uppercase">
+          Manutenção
+        </h4>
+        <div id="alerts-maintenance-list" class="vehicle-alerts-summary" style="margin-bottom: 12px">
+          <div class="muted" style="font-size: 0.9rem">Tudo em dia.</div>
+        </div>
+
+        <!-- Edit button shortcut -->
+        <!-- Config (Restored) -->
+        <details id="alerts-config-details" class="alerts-config-details" style="width: 100%; margin-top: 12px">
+          <summary class="btn btn-secondary btn-sm full-width" style="list-style: none">
+            <span style="
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   gap: 8px;
-                "
-              >
-                <svg class="icon-sm" style="width: 16px; height: 16px">
-                  <use href="assets/icons-unified.svg#icon-settings"></use>
-                </svg>
-                Configurar
-              </span>
-            </summary>
+                ">
+              <svg class="icon-sm" style="width: 16px; height: 16px">
+                <use href="assets/icons-unified.svg#icon-settings"></use>
+              </svg>
+              Configurar
+            </span>
+          </summary>
 
-            <div
-              id="alerts-config-panel"
-              class="alerts-config-panel"
-              style="
+          <div id="alerts-config-panel" class="alerts-config-panel" style="
                 margin-top: 16px;
                 border-top: 1px solid var(--border-light);
                 padding-top: 12px;
-              "
-            >
-              <h4 class="muted" style="margin: 0 0 12px; font-size: 0.8rem">
-                Notificações Ativas
-              </h4>
+              ">
+            <h4 class="muted" style="margin: 0 0 12px; font-size: 0.8rem">
+              Notificações Ativas
+            </h4>
 
-              <div
-                class="config-row"
-                style="
+            <div class="config-row" style="
                   display: flex;
                   justify-content: space-between;
                   margin-bottom: 8px;
                   font-size: 0.9rem;
-                "
-              >
-                <span>Seguro</span>
-                <label class="switch"
-                  ><input type="checkbox" id="toggle-alert-seguro" /><span
-                    class="slider"
-                  ></span
-                ></label>
-              </div>
-              <div
-                class="config-row"
-                style="
+                ">
+              <span>Seguro</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-seguro" /><span
+                  class="slider"></span></label>
+            </div>
+            <div class="config-row" style="
                   display: flex;
                   justify-content: space-between;
                   margin-bottom: 8px;
                   font-size: 0.9rem;
-                "
-              >
-                <span>IUC</span>
-                <label class="switch"
-                  ><input type="checkbox" id="toggle-alert-iuc" /><span
-                    class="slider"
-                  ></span
-                ></label>
-              </div>
-              <div
-                class="config-row"
-                style="
+                ">
+              <span>IUC</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-iuc" /><span class="slider"></span></label>
+            </div>
+            <div class="config-row" style="
                   display: flex;
                   justify-content: space-between;
                   margin-bottom: 12px;
                   font-size: 0.9rem;
-                "
-              >
-                <span>Inspeção</span>
-                <label class="switch"
-                  ><input type="checkbox" id="toggle-alert-inspecao" /><span
-                    class="slider"
-                  ></span
-                ></label>
-              </div>
+                ">
+              <span>Inspeção</span>
+              <label class="switch"><input type="checkbox" id="toggle-alert-inspecao" /><span
+                  class="slider"></span></label>
+            </div>
 
-              <label
-                class="config-select-row"
-                style="display: block; margin-bottom: 12px; font-size: 0.9rem"
-              >
-                <span style="display: block; margin-bottom: 4px"
-                  >Avisar com antecedência:</span
-                >
-                <select
-                  id="select-alert-antecedencia"
-                  style="
+            <label class="config-select-row" style="display: block; margin-bottom: 12px; font-size: 0.9rem">
+              <span style="display: block; margin-bottom: 4px">Avisar com antecedência:</span>
+              <select id="select-alert-antecedencia" style="
                     width: 100%;
                     padding: 6px;
                     border-radius: 6px;
                     background: var(--color-bg);
                     border: 1px solid var(--border-light);
-                  "
-                >
-                  <option value="7">7 dias</option>
-                  <option value="15">15 dias</option>
-                  <option value="30">30 dias</option>
-                </select>
-              </label>
+                  ">
+                <option value="7">7 dias</option>
+                <option value="15">15 dias</option>
+                <option value="30">30 dias</option>
+              </select>
+            </label>
 
-              <div class="config-actions">
-                <button
-                  id="btn-save-alert-settings"
-                  class="btn btn-primary btn-sm full-width"
-                >
-                  Guardar
-                </button>
-              </div>
+            <div class="config-actions">
+              <button id="btn-save-alert-settings" class="btn btn-primary btn-sm full-width">
+                Guardar
+              </button>
             </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- BUTTONS STACK -->
-      <div
-        class="floating-buttons-stack"
-        style="display: flex; flex-direction: column; gap: 12px"
-      >
-        <button
-          id="btn-float-analytics"
-          class="fab-right hidden"
-          aria-label="Analytics"
-          style="
-            background: var(--color-surface);
-            color: var(--color-primary-start);
-          "
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
-          </svg>
-        </button>
-
-        <button
-          id="btn-float-alerts"
-          class="fab-right hidden"
-          aria-label="Alertas"
-          style="background: var(--color-surface); color: var(--color-warning)"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-bell"></use>
-          </svg>
-        </button>
-
-        <button
-          id="btn-float-obd"
-          class="fab-right"
-          aria-label="Torque OBD"
-          style="background: var(--color-surface); color: #00d2ff"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-activity"></use>
-          </svg>
-        </button>
-
-        <button
-          id="btn-float-toggle"
-          class="fab-right"
-          aria-label="Ver métricas"
-        >
-          <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-dashboard"></use>
-          </svg>
-        </button>
+          </div>
+        </details>
       </div>
     </div>
 
-    <!-- 4. HEALTH & TRIP CARD (New Request) -->
-    <div id="obd-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card" style="max-width: 600px; width: 95%">
-        <!-- MODAL HEADER -->
-        <div class="modal-header">
-          <span
-            class="muted"
-            style="
+    <!-- BUTTONS STACK -->
+    <div class="floating-buttons-stack" style="display: flex; flex-direction: column; gap: 12px">
+      <button id="btn-float-analytics" class="fab-right hidden" aria-label="Analytics" style="
+            background: var(--color-surface);
+            color: var(--color-primary-start);
+          ">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-fuel"></use>
+        </svg>
+      </button>
+
+      <button id="btn-float-alerts" class="fab-right hidden" aria-label="Alertas"
+        style="background: var(--color-surface); color: var(--color-warning)">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-bell"></use>
+        </svg>
+      </button>
+
+      <button id="btn-float-obd" class="fab-right" aria-label="Torque OBD"
+        style="background: var(--color-surface); color: #00d2ff">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-activity"></use>
+        </svg>
+      </button>
+
+      <button id="btn-float-toggle" class="fab-right" aria-label="Ver métricas">
+        <svg class="icon">
+          <use href="assets/icons-unified.svg#icon-dashboard"></use>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. HEALTH & TRIP CARD (New Request) -->
+  <div id="obd-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 600px; width: 95%">
+      <!-- MODAL HEADER -->
+      <div class="modal-header">
+        <span class="muted" style="
               display: flex;
               align-items: center;
               gap: 8px;
               font-weight: 600;
-            "
-          >
-            <svg class="icon-sm">
-              <use href="assets/icons-unified.svg#icon-activity"></use>
-            </svg>
-            Saúde & Viagens
-          </span>
-          <button
-            id="btn-close-obd"
-            class="icon-btn-xs"
-            style="border: none; background: transparent"
-          >
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </div>
+            ">
+          <svg class="icon-sm">
+            <use href="assets/icons-unified.svg#icon-activity"></use>
+          </svg>
+          Saúde & Viagens
+        </span>
+        <button id="btn-close-obd" class="icon-btn-xs" style="border: none; background: transparent">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </div>
 
-        <!-- TABS NAVIGATION -->
-        <nav class="modal-tabs scrollable-tabs">
-          <button
-            class="tab-btn active"
-            data-tab="ultima"
-            style="
+      <!-- TABS NAVIGATION -->
+      <nav class="modal-tabs scrollable-tabs">
+        <button class="tab-btn active" data-tab="ultima" style="
               padding-bottom: 12px;
               border-bottom: 2px solid var(--color-primary-start);
               font-weight: 700;
               color: var(--color-text-main);
               background: transparent;
-            "
-          >
-            Última
-          </button>
-          <button
-            class="tab-btn"
-            data-tab="historico"
-            style="
+            ">
+          Última
+        </button>
+        <button class="tab-btn" data-tab="historico" style="
               padding-bottom: 12px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
-            "
-          >
-            Histórico
-          </button>
-          <button
-            class="tab-btn"
-            data-tab="live"
-            style="
+            ">
+          Histórico
+        </button>
+        <button class="tab-btn" data-tab="live" style="
               padding-bottom: 12px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
@@ -889,1041 +667,766 @@
               display: flex;
               align-items: center;
               gap: 6px;
-            "
-          >
-            <span
-              class="status-indicator-dot pulse"
-              style="width: 6px; height: 6px"
-            ></span>
-            Ao Vivo
-          </button>
-          <button
-            class="tab-btn"
-            data-tab="diagnosticos"
-            style="
+            ">
+          <span class="status-indicator-dot pulse" style="width: 6px; height: 6px"></span>
+          Ao Vivo
+        </button>
+        <button class="tab-btn" data-tab="diagnosticos" style="
               padding-bottom: 12px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
-            "
-          >
-            Diagnósticos Mode $06
-          </button>
-        </nav>
+            ">
+          Diagnósticos Mode $06
+        </button>
+      </nav>
 
-        <div class="modal-body">
-          <!-- TAB 1: ÚLTIMA VIAGEM -->
-          <div id="tab-ultima" class="tab-panel active">
-            <!-- Empty State for Last Trip -->
-            <div
-              id="last-trip-empty"
-              class="vehicles-empty hidden"
-              style="padding: 20px 0"
-            >
-              <p>Nenhuma viagem recente encontrada.</p>
-              <button
-                id="btn-scan-trip"
-                class="btn btn-secondary btn-sm"
-                style="margin-top: 12px"
-              >
-                Procurar registos
-              </button>
-            </div>
+      <div class="modal-body">
+        <!-- TAB 1: ÚLTIMA VIAGEM -->
+        <div id="tab-ultima" class="tab-panel active">
+          <!-- Empty State for Last Trip -->
+          <div id="last-trip-empty" class="vehicles-empty hidden" style="padding: 20px 0">
+            <p>Nenhuma viagem recente encontrada.</p>
+            <button id="btn-scan-trip" class="btn btn-secondary btn-sm" style="margin-top: 12px">
+              Procurar registos
+            </button>
+          </div>
 
-            <!-- CONTENT -->
-            <div id="last-trip-content">
-              <div
-                class="trip-summary-header"
-                style="
+          <!-- CONTENT -->
+          <div id="last-trip-content">
+            <div class="trip-summary-header" style="
                   display: flex;
                   justify-content: space-between;
                   align-items: center;
                   margin-bottom: 24px;
-                "
-              >
-                <div>
-                  <h2
-                    id="last-trip-date"
-                    style="font-size: 1.5rem; margin: 0; line-height: 1.2"
-                  >
-                    --
-                  </h2>
-                  <span
-                    id="last-trip-time"
-                    class="muted"
-                    style="font-size: 0.9rem"
-                    >--</span
-                  >
-                </div>
-                <div
-                  class="trip-score-badge"
-                  style="
+                ">
+              <div>
+                <h2 id="last-trip-date" style="font-size: 1.5rem; margin: 0; line-height: 1.2">
+                  --
+                </h2>
+                <span id="last-trip-time" class="muted" style="font-size: 0.9rem">--</span>
+              </div>
+              <div class="trip-score-badge" style="
                     background: var(--bg-hover);
                     padding: 4px 12px;
                     border-radius: 99px;
                     font-weight: 700;
                     font-size: 0.9rem;
-                  "
-                >
-                  <span id="last-trip-score">--</span>
-                  <span class="muted" style="font-weight: 400">Score</span>
-                </div>
+                  ">
+                <span id="last-trip-score">--</span>
+                <span class="muted" style="font-weight: 400">Score</span>
               </div>
+            </div>
 
-              <!-- PRIMARY METRICS GRID -->
-              <div
-                class="analytics-grid"
-                style="
+            <!-- PRIMARY METRICS GRID -->
+            <div class="analytics-grid" style="
                   display: grid;
                   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                   gap: 12px;
                   margin-bottom: 24px;
-                "
-              >
-                <div
-                  class="analytics-box"
-                  style="
+                ">
+              <div class="analytics-box" style="
                     background: var(--bg-hover);
                     padding: 16px;
                     border-radius: 12px;
-                  "
-                >
-                  <div
-                    class="muted"
-                    style="font-size: 0.8rem; margin-bottom: 4px"
-                  >
-                    Distância
-                  </div>
-                  <div
-                    style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    "
-                  >
-                    <span id="last-trip-dist">--</span>
-                    <small
-                      style="font-size: 0.9rem; font-weight: 500"
-                      class="muted"
-                      >km</small
-                    >
-                  </div>
+                  ">
+                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                  Distância
                 </div>
-                <div
-                  class="analytics-box"
-                  style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  "
-                >
-                  <div
-                    class="muted"
-                    style="font-size: 0.8rem; margin-bottom: 4px"
-                  >
-                    Consumo
-                  </div>
-                  <div
-                    style="
+                <div style="
                       font-size: 1.6rem;
                       font-weight: 700;
                       color: var(--color-text-main);
                       line-height: 1;
-                    "
-                  >
-                    <span id="last-trip-consumo">--</span>
-                    <small
-                      style="font-size: 0.9rem; font-weight: 500"
-                      class="muted"
-                      >L/100</small
-                    >
-                  </div>
-                </div>
-                <div
-                  class="analytics-box"
-                  style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  "
-                >
-                  <div
-                    class="muted"
-                    style="font-size: 0.8rem; margin-bottom: 4px"
-                  >
-                    Vel. Média
-                  </div>
-                  <div
-                    style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    "
-                  >
-                    <span id="last-trip-speed">--</span>
-                    <small
-                      style="font-size: 0.9rem; font-weight: 500"
-                      class="muted"
-                      >km/h</small
-                    >
-                  </div>
-                </div>
-                <div
-                  class="analytics-box"
-                  style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  "
-                >
-                  <div
-                    class="muted"
-                    style="font-size: 0.8rem; margin-bottom: 4px"
-                  >
-                    Duração
-                  </div>
-                  <div
-                    style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    "
-                  >
-                    <span id="last-trip-duration">--</span>
-                    <small
-                      style="font-size: 0.9rem; font-weight: 500"
-                      class="muted"
-                      >min</small
-                    >
-                  </div>
+                    ">
+                  <span id="last-trip-dist">--</span>
+                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">km</small>
                 </div>
               </div>
+              <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                  Consumo
+                </div>
+                <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                  <span id="last-trip-consumo">--</span>
+                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">L/100</small>
+                </div>
+              </div>
+              <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                  Vel. Média
+                </div>
+                <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                  <span id="last-trip-speed">--</span>
+                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">km/h</small>
+                </div>
+              </div>
+              <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                  Duração
+                </div>
+                <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                  <span id="last-trip-duration">--</span>
+                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">min</small>
+                </div>
+              </div>
+            </div>
 
-              <!-- SECONDARY DETAILS -->
-              <div
-                class="trip-details-list"
-                style="
+            <!-- SECONDARY DETAILS -->
+            <div class="trip-details-list" style="
                   background: var(--bg-hover);
                   border-radius: 12px;
                   padding: 16px;
-                "
-              >
-                <div
-                  class="detail-row"
-                  style="
+                ">
+              <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
-                  "
-                >
-                  <span class="muted">RPM Médio</span>
-                  <strong id="last-trip-rpm">--</strong>
-                </div>
-                <div
-                  class="detail-row"
-                  style="
+                  ">
+                <span class="muted">RPM Médio</span>
+                <strong id="last-trip-rpm">--</strong>
+              </div>
+              <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
-                  "
-                >
-                  <span class="muted">Temp. Máxima</span>
-                  <strong id="last-trip-temp">--</strong>
-                </div>
-                <div
-                  class="detail-row"
-                  style="
+                  ">
+                <span class="muted">Temp. Máxima</span>
+                <strong id="last-trip-temp">--</strong>
+              </div>
+              <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
-                  "
-                >
-                  <span class="muted">Bateria (Média)</span>
-                  <strong id="last-trip-voltage">--</strong>
-                </div>
-                <div
-                  class="detail-row"
-                  style="
+                  ">
+                <span class="muted">Bateria (Média)</span>
+                <strong id="last-trip-voltage">--</strong>
+              </div>
+              <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
-                  "
-                >
-                  <span class="muted">Score Condução</span>
-                  <div
-                    id="last-trip-score-container"
-                    style="display: flex; align-items: center; gap: 6px"
-                  >
-                    <span id="last-trip-score" style="font-weight: 700"
-                      >--</span
-                    >
-                    <div
-                      id="last-trip-score-dot"
-                      class="status-indicator-dot status-neutral"
-                      style="width: 8px; height: 8px"
-                    ></div>
-                  </div>
-                </div>
-                <div
-                  class="detail-row"
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 0.9rem;
-                  "
-                >
-                  <span class="muted">Custo Estimado</span>
-                  <strong id="last-trip-cost">--</strong>
+                  ">
+                <span class="muted">Score Condução</span>
+                <div id="last-trip-score-container" style="display: flex; align-items: center; gap: 6px">
+                  <span id="last-trip-score" style="font-weight: 700">--</span>
+                  <div id="last-trip-score-dot" class="status-indicator-dot status-neutral"
+                    style="width: 8px; height: 8px"></div>
                 </div>
               </div>
+              <div class="detail-row" style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                  ">
+                <span class="muted">Custo Estimado</span>
+                <strong id="last-trip-cost">--</strong>
+              </div>
+            </div>
 
-              <!-- CHARTS SECTION (NEW) -->
-              <div
-                class="charts-section"
-                style="margin-top: 20px; text-align: center"
-              >
-                <button id="btn-load-charts" class="btn btn-secondary btn-sm">
-                  <svg class="icon icon-left">
-                    <use href="assets/icons-unified.svg#icon-trend-up"></use>
-                  </svg>
-                  Ver Gráficos Detalhados
-                </button>
+            <!-- CHARTS SECTION (NEW) -->
+            <div class="charts-section" style="margin-top: 20px; text-align: center">
+              <button id="btn-load-charts" class="btn btn-secondary btn-sm">
+                <svg class="icon icon-left">
+                  <use href="assets/icons-unified.svg#icon-trend-up"></use>
+                </svg>
+                Ver Gráficos Detalhados
+              </button>
 
-                <div
-                  id="trip-charts-container"
-                  class="hidden"
-                  style="margin-top: 20px"
-                >
-                  <!-- SUMMARY CARDS (NEW) -->
-                  <div
-                    class="summary-cards"
-                    style="
+              <div id="trip-charts-container" class="hidden" style="margin-top: 20px">
+                <!-- SUMMARY CARDS (NEW) -->
+                <div class="summary-cards" style="
                       display: grid;
                       grid-template-columns: 1fr 1fr;
                       gap: 10px;
                       margin-bottom: 20px;
-                    "
-                  >
-                    <div
-                      class="card-mini"
-                      style="
+                    ">
+                  <div class="card-mini" style="
                         background: var(--bg-hover);
                         padding: 12px;
                         border-radius: 12px;
                         text-align: center;
-                      "
-                    >
-                      <div class="muted" style="font-size: 0.75rem">
-                        Vel. Máx
-                      </div>
-                      <div
-                        id="trip-max-speed"
-                        style="
+                      ">
+                    <div class="muted" style="font-size: 0.75rem">
+                      Vel. Máx
+                    </div>
+                    <div id="trip-max-speed" style="
                           font-size: 1.2rem;
                           font-weight: 700;
                           color: #3b82f6;
-                        "
-                      >
-                        --
-                      </div>
-                      <div style="font-size: 0.75rem">km/h</div>
+                        ">
+                      --
                     </div>
-                    <div
-                      class="card-mini"
-                      style="
+                    <div style="font-size: 0.75rem">km/h</div>
+                  </div>
+                  <div class="card-mini" style="
                         background: var(--bg-hover);
                         padding: 12px;
                         border-radius: 12px;
                         text-align: center;
-                      "
-                    >
-                      <div class="muted" style="font-size: 0.75rem">
-                        RPM Máx
-                      </div>
-                      <div
-                        id="trip-max-rpm"
-                        style="
+                      ">
+                    <div class="muted" style="font-size: 0.75rem">
+                      RPM Máx
+                    </div>
+                    <div id="trip-max-rpm" style="
                           font-size: 1.2rem;
                           font-weight: 700;
                           color: #ef4444;
-                        "
-                      >
-                        --
-                      </div>
-                      <div style="font-size: 0.75rem">rpm</div>
+                        ">
+                      --
                     </div>
+                    <div style="font-size: 0.75rem">rpm</div>
                   </div>
+                </div>
 
-                  <!-- Speed & RPM -->
-                  <div
-                    class="chart-card"
-                    style="
+                <!-- Speed & RPM -->
+                <div class="chart-card" style="
                       background: var(--bg-hover);
                       padding: 10px;
                       border-radius: 12px;
                       margin-bottom: 20px;
-                    "
-                  >
-                    <h4
-                      style="
+                    ">
+                  <h4 style="
                         margin: 0 0 10px 0;
                         font-size: 0.9rem;
                         text-align: left;
-                      "
-                    >
-                      Velocidade & RPM
-                    </h4>
-                    <div style="height: 200px">
-                      <canvas id="chart-trip-speed-rpm"></canvas>
-                    </div>
+                      ">
+                    Velocidade & RPM
+                  </h4>
+                  <div style="height: 200px">
+                    <canvas id="chart-trip-speed-rpm"></canvas>
                   </div>
+                </div>
 
-                  <!-- Fuel & Alt -->
-                  <div
-                    class="chart-card"
-                    style="
+                <!-- Fuel & Alt -->
+                <div class="chart-card" style="
                       background: var(--bg-hover);
                       padding: 10px;
                       border-radius: 12px;
-                    "
-                  >
-                    <h4
-                      style="
+                    ">
+                  <h4 style="
                         margin: 0 0 10px 0;
                         font-size: 0.9rem;
                         text-align: left;
-                      "
-                    >
-                      Combustível (%)
-                    </h4>
-                    <div style="height: 150px">
-                      <canvas id="chart-trip-fuel"></canvas>
-                    </div>
+                      ">
+                    Combustível (%)
+                  </h4>
+                  <div style="height: 150px">
+                    <canvas id="chart-trip-fuel"></canvas>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- TAB 2: HISTÓRICO -->
-          <div id="tab-historico" class="tab-panel hidden">
-            <div
-              style="
+        <!-- TAB 2: HISTÓRICO -->
+        <div id="tab-historico" class="tab-panel hidden">
+          <div style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 12px;
-              "
-            >
-              <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-plus"></use>
-                </svg>
-                Manual
-              </button>
-              <button
-                id="btn-import-torque-csv-zip"
-                class="btn btn-primary btn-sm"
-              >
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-file-text"></use>
-                </svg>
-                Importar Dados
-              </button>
-            </div>
-
-            <div
-              id="trips-list"
-              style="display: flex; flex-direction: column; gap: 12px"
-            >
-              <!-- Filled via JS -->
-              <div class="spinner"></div>
-            </div>
-
-            <div id="trips-empty" class="vehicles-empty hidden">
-              <p>Sem registo de viagens.</p>
-            </div>
+              ">
+            <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              Manual
+            </button>
+            <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-file-text"></use>
+              </svg>
+              Importar Dados
+            </button>
           </div>
 
-          <!-- TAB 3: AO VIVO -->
-          <div id="tab-live" class="tab-panel hidden">
-            <!-- Header for Live Status -->
-            <div
-              class="live-status-header"
-              style="
+          <div id="trips-list" style="display: flex; flex-direction: column; gap: 12px">
+            <!-- Filled via JS -->
+            <div class="spinner"></div>
+          </div>
+
+          <div id="trips-empty" class="vehicles-empty hidden">
+            <p>Sem registo de viagens.</p>
+          </div>
+        </div>
+
+        <!-- TAB 3: AO VIVO -->
+        <div id="tab-live" class="tab-panel hidden">
+          <!-- Header for Live Status -->
+          <div class="live-status-header" style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
-              "
-            >
-              <span
-                class="status-indicator-dot pulse"
-                style="background: #00d2ff"
-              ></span>
-              <span id="obd-last-update" class="muted" style="font-size: 0.8rem"
-                >A aguardar dados...</span
-              >
-            </div>
+              ">
+            <span class="status-indicator-dot pulse" style="background: #00d2ff"></span>
+            <span id="obd-last-update" class="muted" style="font-size: 0.8rem">A aguardar dados...</span>
+          </div>
 
-            <!-- LIVE METRICS GRID -->
-            <div
-              class="analytics-grid"
-              style="
+          <!-- LIVE METRICS GRID -->
+          <div class="analytics-grid" style="
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                 gap: 12px;
                 margin-bottom: 24px;
-              "
-            >
-              <!-- RPM -->
-              <div
-                class="analytics-box"
-                style="
+              ">
+            <!-- RPM -->
+            <div class="analytics-box" style="
                   background: var(--bg-hover);
                   padding: 16px;
                   border-radius: 12px;
                   text-align: center;
-                "
-              >
-                <div
-                  style="
+                ">
+              <div style="
                     font-size: 2rem;
                     font-weight: 800;
                     color: var(--color-primary);
-                  "
-                >
-                  <span id="obd-rpm">--</span>
-                </div>
-                <div class="muted" style="font-size: 0.8rem">RPM</div>
+                  ">
+                <span id="obd-rpm">--</span>
               </div>
-              <!-- SPEED -->
-              <div
-                class="analytics-box"
-                style="
-                  background: var(--bg-hover);
-                  padding: 16px;
-                  border-radius: 12px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    font-size: 2rem;
-                    font-weight: 800;
-                    color: var(--color-primary);
-                  "
-                >
-                  <span id="obd-speed">--</span>
-                </div>
-                <div class="muted" style="font-size: 0.8rem">km/h</div>
-              </div>
+              <div class="muted" style="font-size: 0.8rem">RPM</div>
             </div>
-
-            <!-- SECONDARY LIVE METRICS -->
-            <div
-              class="vehicle-alerts-summary"
-              style="display: flex; flex-direction: column; gap: 8px"
-            >
-              <!-- Coolant -->
-              <div class="alert-item">
-                <div
-                  id="status-coolant"
-                  class="alert-status-indicator status-neutral"
-                ></div>
-                <div class="alert-info">
-                  <span class="alert-label">Temperatura Motor</span>
-                  <span class="alert-value"
-                    ><span id="obd-coolant">--</span> °C</span
-                  >
-                </div>
+            <!-- SPEED -->
+            <div class="analytics-box" style="
+                  background: var(--bg-hover);
+                  padding: 16px;
+                  border-radius: 12px;
+                  text-align: center;
+                ">
+              <div style="
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: var(--color-primary);
+                  ">
+                <span id="obd-speed">--</span>
               </div>
-              <!-- Load -->
-              <div class="alert-item">
-                <div class="alert-status-indicator status-neutral"></div>
-                <div class="alert-info">
-                  <span class="alert-label">Carga Motor</span>
-                  <span class="alert-value"
-                    ><span id="obd-load">--</span> %</span
-                  >
-                </div>
-              </div>
-              <!-- Volts -->
-              <div class="alert-item">
-                <div
-                  class="alert-status-indicator status-neutral"
-                  style="background: transparent"
-                ></div>
-                <div class="alert-info">
-                  <span class="alert-label">Bateria</span>
-                  <span class="alert-value"
-                    ><span id="obd-voltage">--</span> V</span
-                  >
-                </div>
-              </div>
-              <!-- MAF -->
-              <div class="alert-item">
-                <div
-                  class="alert-status-indicator status-neutral"
-                  style="background: transparent"
-                ></div>
-                <div class="alert-info">
-                  <span class="alert-label">MAF</span>
-                  <span class="alert-value"
-                    ><span id="obd-maf">--</span> g/s</span
-                  >
-                </div>
-              </div>
-              <!-- Torque -->
-              <div class="alert-item">
-                <div
-                  class="alert-status-indicator status-neutral"
-                  style="background: transparent"
-                ></div>
-                <div class="alert-info">
-                  <span class="alert-label">Binário (Torque)</span>
-                  <span class="alert-value"
-                    ><span id="obd-torque">--</span> Nm</span
-                  >
-                </div>
-              </div>
-              <!-- HP -->
-              <div class="alert-item">
-                <div
-                  class="alert-status-indicator status-neutral"
-                  style="background: transparent"
-                ></div>
-                <div class="alert-info">
-                  <span class="alert-label">Potência (HP)</span>
-                  <span class="alert-value"
-                    ><span id="obd-hp">--</span> hp</span
-                  >
-                </div>
-              </div>
+              <div class="muted" style="font-size: 0.8rem">km/h</div>
             </div>
           </div>
 
-          <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
-          <div id="tab-diagnosticos" class="tab-panel hidden">
-            <div
-              style="
+          <!-- SECONDARY LIVE METRICS -->
+          <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px">
+            <!-- Coolant -->
+            <div class="alert-item">
+              <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
+              <div class="alert-info">
+                <span class="alert-label">Temperatura Motor</span>
+                <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
+              </div>
+            </div>
+            <!-- Load -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral"></div>
+              <div class="alert-info">
+                <span class="alert-label">Carga Motor</span>
+                <span class="alert-value"><span id="obd-load">--</span> %</span>
+              </div>
+            </div>
+            <!-- Volts -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Bateria</span>
+                <span class="alert-value"><span id="obd-voltage">--</span> V</span>
+              </div>
+            </div>
+            <!-- MAF -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">MAF</span>
+                <span class="alert-value"><span id="obd-maf">--</span> g/s</span>
+              </div>
+            </div>
+            <!-- Torque -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Binário (Torque)</span>
+                <span class="alert-value"><span id="obd-torque">--</span> Nm</span>
+              </div>
+            </div>
+            <!-- HP -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Potência (HP)</span>
+                <span class="alert-value"><span id="obd-hp">--</span> hp</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
+        <div id="tab-diagnosticos" class="tab-panel hidden">
+          <div style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 15px;
-              "
-            >
-              <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
-                <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-plus"></use>
-                </svg>
-                Novo Relatório
-              </button>
-            </div>
+              ">
+            <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              Novo Relatório
+            </button>
+          </div>
 
-            <div
-              id="diagnostics-list"
-              style="display: flex; flex-direction: column; gap: 10px"
-            >
-              <div class="vehicles-empty">
-                <p>Nenhum relatório de diagnóstico encontrado.</p>
-              </div>
+          <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
+            <div class="vehicles-empty">
+              <p>Nenhum relatório de diagnóstico encontrado.</p>
             </div>
           </div>
         </div>
-        <!-- End Modal Body -->
       </div>
+      <!-- End Modal Body -->
     </div>
+  </div>
 
-    <!-- MODAL: NOVA REPARAÇÃO -->
-    <div id="maint-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
+  <!-- MODAL: NOVA REPARAÇÃO -->
+  <div id="maint-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
 
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-wrench"></use>
-            </svg>
-            Nova reparação
-          </h2>
-          <button id="maint-close" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-wrench"></use>
+          </svg>
+          Nova reparação
+        </h2>
+        <button id="maint-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-        <div class="modal-body">
-          <div class="form-grid">
-            <label>
-              <span class="muted">Descrição</span>
-              <input
-                id="rep-desc"
-                type="text"
-                placeholder="Ex.: Troca de óleo"
-              />
-            </label>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Descrição</span>
+            <input id="rep-desc" type="text" placeholder="Ex.: Troca de óleo" />
+          </label>
 
-            <label>
-              <span class="muted">Data</span>
-              <input id="rep-date" type="date" />
-            </label>
+          <label>
+            <span class="muted">Data</span>
+            <input id="rep-date" type="date" />
+          </label>
 
-            <label>
-              <span class="muted">Quilómetros</span>
-              <input id="rep-km" type="number" placeholder="123456" />
-            </label>
+          <label>
+            <span class="muted">Quilómetros</span>
+            <input id="rep-km" type="number" placeholder="123456" />
+          </label>
 
-            <label>
-              <span class="muted">Custo (€)</span>
-              <input
-                id="rep-cost"
-                type="number"
-                step="0.01"
-                placeholder="89.90"
-              />
-            </label>
+          <label>
+            <span class="muted">Custo (€)</span>
+            <input id="rep-cost" type="number" step="0.01" placeholder="89.90" />
+          </label>
 
-            <label style="grid-column: 1/-1">
-              <span class="muted">Oficina</span>
-              <input
-                id="rep-shop"
-                type="text"
-                placeholder="Nome da oficina (opcional)"
-              />
-            </label>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Oficina</span>
+            <input id="rep-shop" type="text" placeholder="Nome da oficina (opcional)" />
+          </label>
 
-            <label style="grid-column: 1/-1">
-              <span class="muted">Link do documento (opcional)</span>
-              <input
-                id="rep-link"
-                type="url"
-                placeholder="https://drive.google.com/... ou https://..."
-                inputmode="url"
-              />
-            </label>
-          </div>
-
-          <p id="rep-msg" class="muted"></p>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Link do documento (opcional)</span>
+            <input id="rep-link" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
+          </label>
         </div>
 
-        <footer class="modal-footer">
-          <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="rep-save" class="btn btn-primary btn-gradient">
-            Guardar reparação
-          </button>
-        </footer>
-        <div
-          style="
+        <p id="rep-msg" class="muted"></p>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="rep-save" class="btn btn-primary btn-gradient">
+          Guardar reparação
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
-          "
-        >
-          antonioappleton
-        </div>
+          ">
+        antonioappleton
       </div>
     </div>
+  </div>
 
-    <!-- MODAL: NOVO DOCUMENTO -->
-    <div id="doc-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
+  <!-- MODAL: NOVO DOCUMENTO -->
+  <div id="doc-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
 
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-file"></use>
-            </svg>
-            Novo documento
-          </h2>
-          <button id="doc-close" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-file"></use>
+          </svg>
+          Novo documento
+        </h2>
+        <button id="doc-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-        <div class="modal-body">
-          <div class="form-grid">
-            <label>
-              <span class="muted">Tipo</span>
-              <select id="doc-tipo">
-                <option value="DUA">DUA</option>
-                <option value="Seguro">Seguro</option>
-                <option value="Inspeção">Inspeção</option>
-                <option value="IUC">IUC</option>
-                <option value="Fatura">Fatura</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </label>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Tipo</span>
+            <select id="doc-tipo">
+              <option value="DUA">DUA</option>
+              <option value="Seguro">Seguro</option>
+              <option value="Inspeção">Inspeção</option>
+              <option value="IUC">IUC</option>
+              <option value="Fatura">Fatura</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
 
-            <label>
-              <span class="muted">Nome do documento</span>
-              <input
-                id="doc-titulo"
-                type="text"
-                placeholder="Ex.: Apólice Seguro 2025"
-              />
-            </label>
+          <label>
+            <span class="muted">Nome do documento</span>
+            <input id="doc-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
+          </label>
 
-            <label style="grid-column: 1/-1">
-              <span class="muted">Link do documento</span>
-              <input
-                id="doc-url"
-                type="url"
-                placeholder="https://drive.google.com/... ou https://..."
-                inputmode="url"
-              />
-            </label>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Link do documento</span>
+            <input id="doc-url" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
+          </label>
 
-            <label style="grid-column: 1/-1">
-              <span class="muted">Nota (opcional)</span>
-              <input id="doc-nota" type="text" />
-            </label>
-          </div>
-
-          <p id="doc-msg" class="muted"></p>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Nota (opcional)</span>
+            <input id="doc-nota" type="text" />
+          </label>
         </div>
 
-        <footer class="modal-footer">
-          <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="doc-save" class="btn btn-primary btn-gradient">
-            Guardar documento
-          </button>
-        </footer>
-        <div
-          style="
+        <p id="doc-msg" class="muted"></p>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="doc-save" class="btn btn-primary btn-gradient">
+          Guardar documento
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
-          "
-        >
-          antonioappleton
-        </div>
+          ">
+        antonioappleton
       </div>
     </div>
+  </div>
 
-    <!-- MODAL: NOVO ABASTECIMENTO -->
-    <div id="fuel-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
+  <!-- MODAL: NOVO ABASTECIMENTO -->
+  <div id="fuel-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
 
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
-            </svg>
-            Novo abastecimento
-          </h2>
-          <button id="fuel-close" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-fuel"></use>
+          </svg>
+          Novo abastecimento
+        </h2>
+        <button id="fuel-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-        <div class="modal-body">
-          <div class="form-grid">
-            <label>
-              <span class="muted">Data</span>
-              <input id="fuel-date" type="date" />
-            </label>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Data</span>
+            <input id="fuel-date" type="date" />
+          </label>
 
-            <label>
-              <span class="muted">Tipo de combustível</span>
-              <select id="fuel-type">
-                <option value="Gasolina">Gasolina</option>
-                <option value="Gasóleo">Gasóleo</option>
-                <option value="GPL">GPL</option>
-                <option value="Elétrico">Elétrico</option>
-              </select>
-            </label>
+          <label>
+            <span class="muted">Tipo de combustível</span>
+            <select id="fuel-type">
+              <option value="Gasolina">Gasolina</option>
+              <option value="Gasóleo">Gasóleo</option>
+              <option value="GPL">GPL</option>
+              <option value="Elétrico">Elétrico</option>
+            </select>
+          </label>
 
-            <label>
-              <span class="muted">Litros</span>
-              <input id="fuel-liters" type="number" step="0.01" />
-            </label>
+          <label>
+            <span class="muted">Litros</span>
+            <input id="fuel-liters" type="number" step="0.01" />
+          </label>
 
-            <label>
-              <span class="muted">Preço por litro (€)</span>
-              <input id="fuel-price" type="number" step="0.001" />
-            </label>
+          <label>
+            <span class="muted">Preço por litro (€)</span>
+            <input id="fuel-price" type="number" step="0.001" />
+          </label>
 
-            <label>
-              <span class="muted">Quilómetros</span>
-              <input id="fuel-km" type="number" />
-            </label>
+          <label>
+            <span class="muted">Quilómetros</span>
+            <input id="fuel-km" type="number" />
+          </label>
 
-            <label>
-              <span class="muted">Posto</span>
-              <input
-                id="fuel-station"
-                type="text"
-                placeholder="Ex.: Galp, BP…"
-              />
-            </label>
+          <label>
+            <span class="muted">Posto</span>
+            <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
+          </label>
 
-            <!-- CHECKBOX CHEIO -->
-            <label
-              class="checkbox-label"
-              style="
+          <!-- CHECKBOX CHEIO -->
+          <label class="checkbox-label" style="
                 grid-column: 1/-1;
                 display: flex;
                 align-items: center;
                 gap: 10px;
                 cursor: pointer;
-              "
-            >
-              <input
-                type="checkbox"
-                id="fuel-full"
-                style="width: auto; margin: 0; cursor: pointer"
-              />
-              <span>Depósito Cheio (para cálculo exato de médias)</span>
-            </label>
+              ">
+            <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer" />
+            <span>Depósito Cheio (para cálculo exato de médias)</span>
+          </label>
 
-            <label style="grid-column: 1/-1">
-              <span class="muted">Observações</span>
-              <input id="fuel-notes" type="text" placeholder="Opcional" />
-            </label>
-          </div>
-
-          <p id="fuel-msg" class="muted"></p>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Observações</span>
+            <input id="fuel-notes" type="text" placeholder="Opcional" />
+          </label>
         </div>
 
-        <footer class="modal-footer">
-          <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="fuel-save" class="btn btn-primary btn-gradient">
-            Guardar abastecimento
-          </button>
-        </footer>
-        <div
-          style="
+        <p id="fuel-msg" class="muted"></p>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="fuel-save" class="btn btn-primary btn-gradient">
+          Guardar abastecimento
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
-          "
-        >
-          antonioappleton
-        </div>
+          ">
+        antonioappleton
       </div>
     </div>
+  </div>
 
-    <!-- MODAL: PLANO MANUTENÇÃO -->
-    <div id="plan-modal" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card">
-        <header class="modal-header">
-          <h2>Plano de Manutenção</h2>
-          <button id="plan-close" class="icon-btn">
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
-        <div class="modal-body">
-          <div class="form-grid">
-            <label>
-              <span class="muted">Serviço</span>
-              <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
-            </label>
-            <label>
-              <span class="muted">Intervalo (Km)</span>
-              <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
-              <small
-                class="muted"
-                style="display: block; font-size: 0.65rem; margin-top: 2px"
-                >Aviso aos 1000 km de antecedência.</small
-              >
-            </label>
-            <label>
-              <span class="muted">Intervalo (Meses)</span>
-              <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
-              <small
-                class="muted"
-                style="display: block; font-size: 0.65rem; margin-top: 2px"
-                >Aviso aos 30 dias de antecedência.</small
-              >
-            </label>
+  <!-- MODAL: PLANO MANUTENÇÃO -->
+  <div id="plan-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>Plano de Manutenção</h2>
+        <button id="plan-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Serviço</span>
+            <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
+          </label>
+          <label>
+            <span class="muted">Intervalo (Km)</span>
+            <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
+            <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 1000 km de
+              antecedência.</small>
+          </label>
+          <label>
+            <span class="muted">Intervalo (Meses)</span>
+            <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
+            <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 30 dias de
+              antecedência.</small>
+          </label>
 
-            <div
-              class="vehicle-divider"
-              style="grid-column: 1/-1; margin: 8px 0"
-            ></div>
+          <div class="vehicle-divider" style="grid-column: 1/-1; margin: 8px 0"></div>
 
-            <label>
-              <span class="muted">Último Registo (Km)</span>
-              <input
-                id="plan-last-km"
-                type="number"
-                placeholder="Km atuais..."
-              />
-            </label>
-            <label>
-              <span class="muted">Última Data</span>
-              <input id="plan-last-date" type="date" />
-            </label>
-          </div>
-          <p id="plan-msg" class="form-message"></p>
+          <label>
+            <span class="muted">Último Registo (Km)</span>
+            <input id="plan-last-km" type="number" placeholder="Km atuais..." />
+          </label>
+          <label>
+            <span class="muted">Última Data</span>
+            <input id="plan-last-date" type="date" />
+          </label>
         </div>
-        <footer class="modal-footer">
-          <button
-            id="plan-delete"
-            class="btn btn-ghost danger hidden"
-            style="margin-right: auto"
-          >
-            Apagar
-          </button>
-          <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="plan-save" class="btn btn-primary btn-gradient">
-            Guardar
-          </button>
-        </footer>
-        <div
-          style="
+        <p id="plan-msg" class="form-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button id="plan-delete" class="btn btn-ghost danger hidden" style="margin-right: auto">
+          Apagar
+        </button>
+        <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="plan-save" class="btn btn-primary btn-gradient">
+          Guardar
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
-          "
-        >
-          antonioappleton
-        </div>
+          ">
+        antonioappleton
       </div>
     </div>
-    <!-- MODAL PROGRESSO UPLOAD -->
-    <div
-      id="upload-progress-modal"
-      class="modal hidden"
-      style="position: fixed; inset: 0; z-index: 10000"
-    >
-      <div
-        class="modal-overlay"
-        style="
+  </div>
+  <!-- MODAL PROGRESSO UPLOAD -->
+  <div id="upload-progress-modal" class="modal hidden" style="position: fixed; inset: 0; z-index: 10000">
+    <div class="modal-overlay" style="
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.5);
           backdrop-filter: blur(5px);
           -webkit-backdrop-filter: blur(5px);
-        "
-      ></div>
-      <div
-        class="modal-content"
-        style="
+        "></div>
+    <div class="modal-content" style="
           position: relative;
           z-index: 2;
           background: var(--bg-card);
@@ -1932,193 +1435,136 @@
           text-align: center;
           max-width: 300px;
           margin: 20vh auto;
-        "
-      >
-        <div class="spinner" style="margin: 0 auto 1rem auto"></div>
-        <h3 id="upload-progress-title" style="margin-bottom: 0.5rem">
-          A processar...
-        </h3>
-        <p
-          id="upload-progress-text"
-          class="muted"
-          style="font-size: 0.9rem; margin-bottom: 1rem"
-        >
-          A ler ficheiro...
-        </p>
-        <div
-          class="progress-bar-container"
-          style="
+        ">
+      <div class="spinner" style="margin: 0 auto 1rem auto"></div>
+      <h3 id="upload-progress-title" style="margin-bottom: 0.5rem">
+        A processar...
+      </h3>
+      <p id="upload-progress-text" class="muted" style="font-size: 0.9rem; margin-bottom: 1rem">
+        A ler ficheiro...
+      </p>
+      <div class="progress-bar-container" style="
             background: var(--bg-hover);
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
-          "
-        >
-          <div
-            id="upload-progress-bar"
-            style="
+          ">
+        <div id="upload-progress-bar" style="
               width: 0%;
               height: 100%;
               background: var(--color-primary-start);
               transition: width 0.3s ease;
-            "
-          ></div>
-        </div>
+            "></div>
       </div>
     </div>
+  </div>
 
-    <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
-    <div id="modalImport" class="modal hidden">
-      <div class="modal-overlay"></div>
-      <div class="modal-card" style="max-width: 620px; width: 95%">
-        <header
-          class="modal-header"
-          style="
+  <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
+  <div id="modalImport" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 620px; width: 95%">
+      <header class="modal-header" style="
             padding: 20px 24px;
             border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
-          "
-        >
-          <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
-          <button
-            id="btn-close-import"
-            class="icon-btn-xs"
-            style="background: transparent; border: none"
-          >
-            <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
-            </svg>
-          </button>
-        </header>
+          ">
+        <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
+        <button id="btn-close-import" class="icon-btn-xs" style="background: transparent; border: none">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-        <nav
-          class="tabs scrollable-tabs"
-          style="
+      <nav class="tabs scrollable-tabs" style="
             padding: 12px 24px 0;
             border-bottom: 1px solid var(--border-light);
             background: var(--bg-hover);
-          "
-        >
-          <button
-            class="tab-btn active"
-            data-import-tab="tabCsv"
-            style="
+          ">
+        <button class="tab-btn active" data-import-tab="tabCsv" style="
               padding: 10px 16px;
               border-bottom: 2px solid var(--color-primary-start);
               font-weight: 700;
               background: transparent;
-            "
-          >
-            1) CSV (Viagens)
-          </button>
-          <button
-            class="tab-btn"
-            data-import-tab="tabMode06"
-            style="
+            ">
+          1) CSV (Viagens)
+        </button>
+        <button class="tab-btn" data-import-tab="tabMode06" style="
               padding: 10px 16px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
-            "
-          >
-            2) Mode $06
-          </button>
-          <button
-            class="tab-btn"
-            data-import-tab="tabResumo"
-            style="
+            ">
+          2) Mode $06
+        </button>
+        <button class="tab-btn" data-import-tab="tabResumo" style="
               padding: 10px 16px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
-            "
-          >
-            3) Resumo
-          </button>
-        </nav>
+            ">
+          3) Resumo
+        </button>
+      </nav>
 
-        <div
-          class="modal-body"
-          style="padding: 24px; overflow-y: auto; flex: 1"
-        >
-          <!-- TAB 1: CSV -->
-          <section id="tabCsv" class="import-tab-panel">
-            <h3 style="margin-top: 0">CSV de Viagem (Torque log)</h3>
-            <input
-              type="file"
-              id="csvFileInput"
-              accept=".csv,text/csv,.zip"
-              style="margin-bottom: 20px; width: 100%"
-            />
+      <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1">
+        <!-- TAB 1: CSV -->
+        <section id="tabCsv" class="import-tab-panel">
+          <h3 style="margin-top: 0">CSV de Viagem (Torque log)</h3>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv,.zip" style="margin-bottom: 20px; width: 100%" />
 
-            <div
-              class="import-options form-grid"
-              style="
+          <div class="import-options form-grid" style="
                 background: var(--bg-hover);
                 padding: 16px;
                 border-radius: 12px;
-              "
-            >
-              <label class="form-label-row">
-                <span class="muted">Tipo de import</span>
-                <select id="importType" class="input-sm" style="width: auto">
-                  <option value="drive">Condução</option>
-                  <option value="diagnostic">Teste/Diagnóstico</option>
-                </select>
-              </label>
-              <label class="form-label-row">
-                <span class="muted">Amostragem (Redução)</span>
-                <select id="sampleRate" class="input-sm" style="width: auto">
-                  <option value="1">Sem redução</option>
-                  <option value="5">Cada 5s</option>
-                  <option value="10">Cada 10s</option>
-                  <option value="30">Cada 30s</option>
-                </select>
-              </label>
-              <label class="form-label-row">
-                <span class="muted">Agrupar por</span>
-                <select id="tripGrouping" class="input-sm" style="width: auto">
-                  <option value="session">SessionId (Recomendado)</option>
-                  <option value="day">Dia</option>
-                  <option value="hour">Hora</option>
-                </select>
-              </label>
-            </div>
+              ">
+            <label class="form-label-row">
+              <span class="muted">Tipo de import</span>
+              <select id="importType" class="input-sm" style="width: auto">
+                <option value="drive">Condução</option>
+                <option value="diagnostic">Teste/Diagnóstico</option>
+              </select>
+            </label>
+            <label class="form-label-row">
+              <span class="muted">Amostragem (Redução)</span>
+              <select id="sampleRate" class="input-sm" style="width: auto">
+                <option value="1">Sem redução</option>
+                <option value="5">Cada 5s</option>
+                <option value="10">Cada 10s</option>
+                <option value="30">Cada 30s</option>
+              </select>
+            </label>
+            <label class="form-label-row">
+              <span class="muted">Agrupar por</span>
+              <select id="tripGrouping" class="input-sm" style="width: auto">
+                <option value="session">SessionId (Recomendado)</option>
+                <option value="day">Dia</option>
+                <option value="hour">Hora</option>
+              </select>
+            </label>
+          </div>
 
-            <div class="preview" style="margin-top: 24px">
-              <h4
-                class="muted"
-                style="font-size: 0.8rem; text-transform: uppercase"
-              >
-                Pré-visualização
-              </h4>
-              <div
-                id="csvPreviewStatus"
-                class="hint muted"
-                style="font-size: 0.85rem"
-              >
-                Escolha um ficheiro CSV/ZIP para ver mapeamentos.
-              </div>
-              <div
-                id="csvMapping"
-                class="mapping-box"
-                style="margin-top: 12px; font-size: 0.85rem"
-              ></div>
+          <div class="preview" style="margin-top: 24px">
+            <h4 class="muted" style="font-size: 0.8rem; text-transform: uppercase">
+              Pré-visualização
+            </h4>
+            <div id="csvPreviewStatus" class="hint muted" style="font-size: 0.85rem">
+              Escolha um ficheiro CSV/ZIP para ver mapeamentos.
             </div>
-          </section>
+            <div id="csvMapping" class="mapping-box" style="margin-top: 12px; font-size: 0.85rem"></div>
+          </div>
+        </section>
 
-          <!-- TAB 2: Mode 06 -->
-          <section id="tabMode06" class="import-tab-panel hidden">
-            <h3 style="margin-top: 0">Diagnóstico Mode $06</h3>
-            <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px">
-              Importe o texto do Torque (Mode $06) para avaliar falhas e saúde
-              do motor.
-            </p>
-            <textarea
-              id="mode06Text"
-              style="
+        <!-- TAB 2: Mode 06 -->
+        <section id="tabMode06" class="import-tab-panel hidden">
+          <h3 style="margin-top: 0">Diagnóstico Mode $06</h3>
+          <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px">
+            Importe o texto do Torque (Mode $06) para avaliar falhas e saúde
+            do motor.
+          </p>
+          <textarea id="mode06Text" style="
                 width: 100%;
                 height: 160px;
                 padding: 12px;
@@ -2127,95 +1573,140 @@
                 background: var(--bg-input);
                 font-family: monospace;
                 font-size: 0.8rem;
-              "
-              placeholder="Cole aqui o texto do relatório Mode $06..."
-            ></textarea>
-            <div
-              id="mode06Status"
-              class="muted"
-              style="margin-top: 12px; font-size: 0.85rem"
-            ></div>
-          </section>
+              " placeholder="Cole aqui o texto do relatório Mode $06..."></textarea>
+          <div id="mode06Status" class="muted" style="margin-top: 12px; font-size: 0.85rem"></div>
+        </section>
 
-          <!-- TAB 3: Resumo -->
-          <section id="tabResumo" class="import-tab-panel hidden">
-            <h3 style="margin-top: 0">Resumo do Import</h3>
-            <div
-              id="importSummary"
-              style="
+        <!-- TAB 3: Resumo -->
+        <section id="tabResumo" class="import-tab-panel hidden">
+          <h3 style="margin-top: 0">Resumo do Import</h3>
+          <div id="importSummary" style="
                 background: var(--bg-hover);
                 padding: 20px;
                 border-radius: 16px;
                 margin-bottom: 24px;
-              "
-            >
-              <p class="muted">Selecione os dados para ver o resumo aqui.</p>
-            </div>
-          </section>
-        </div>
+              ">
+            <p class="muted">Selecione os dados para ver o resumo aqui.</p>
+          </div>
+        </section>
+      </div>
 
-        <footer
-          class="modal-footer"
-          style="
+      <footer class="modal-footer" style="
             padding: 20px 24px;
             border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-          "
-        >
-          <button id="btn-cancel-import" class="btn btn-secondary">
-            Cancelar
-          </button>
-          <button id="btn-run-import" class="btn btn-primary" disabled>
-            Importar Dados
-          </button>
-        </footer>
+          ">
+        <button id="btn-cancel-import" class="btn btn-secondary">
+          Cancelar
+        </button>
+        <button id="btn-run-import" class="btn btn-primary" disabled>
+          Importar Dados
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALHES DA VIAGEM (NEW) -->
+  <div id="trip-details-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 600px; width: 95%;">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-history"></use>
+          </svg>
+          Detalhes da Viagem
+        </h2>
+        <button id="trip-details-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 70vh;">
+        <!-- Insight Banner Specific for Trip -->
+        <div id="trip-insight-container" style="display: none; margin-bottom: 20px;">
+          <div class="insight-banner">
+            <div class="insight-icon">💡</div>
+            <div class="insight-text" id="trip-insight-text"></div>
+          </div>
+        </div>
+
+        <!-- Trip Summary Grid -->
+        <div class="analytics-grid"
+          style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+          <div class="analytics-box"
+            style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+            <div id="trip-modal-score" style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">--
+            </div>
+            <div class="muted" style="font-size: 0.75rem;">Score de Condução</div>
+          </div>
+          <div class="analytics-box"
+            style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+            <div id="trip-modal-route" style="font-size: 1.1rem; font-weight: 700; margin-top: 5px;">--</div>
+            <div class="muted" style="font-size: 0.75rem;">Tipo de Percurso</div>
+          </div>
+        </div>
+
+        <!-- Chart Area -->
+        <div class="chart-card card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <h4>Telemetria da Viagem</h4>
+          </div>
+          <div class="card-body" style="height: 250px;">
+            <canvas id="chart-trip-telemetry"></canvas>
+          </div>
+        </div>
+
+        <!-- Secondary Metrics -->
+        <div style="display: flex; flex-direction: column; gap: 8px;" id="trip-modal-metrics">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+
+      <footer class="modal-footer">
+        <button id="trip-details-ok" class="btn btn-primary btn-gradient" style="width: 100%;">Fechar</button>
+      </footer>
+      <div style="text-align: center; font-size: 0.75rem; opacity: 0.3; margin-top: 8px; margin-bottom: 8px;">
+        antonioappleton
       </div>
     </div>
+  </div>
 
-    <!-- Progress Modal (for CSV/ZIP Imports) -->
-    <div
-      id="upload-progress-modal"
-      class="modal hidden"
-      style="
+  <!-- Progress Modal (for CSV/ZIP Imports) -->
+  <div id="upload-progress-modal" class="modal hidden" style="
         z-index: 3000;
         background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
         justify-content: center;
-      "
-    >
-      <div
-        class="card"
-        style="width: 90%; max-width: 400px; padding: 32px; text-align: center"
-      >
-        <div class="spinner" style="margin: 0 auto 24px auto"></div>
-        <h3 style="margin-bottom: 8px">A processar dados...</h3>
-        <p id="upload-progress-text" class="muted" style="margin-bottom: 24px">
-          A preparar a importação
-        </p>
-        <div
-          style="
+      ">
+    <div class="card" style="width: 90%; max-width: 400px; padding: 32px; text-align: center">
+      <div class="spinner" style="margin: 0 auto 24px auto"></div>
+      <h3 style="margin-bottom: 8px">A processar dados...</h3>
+      <p id="upload-progress-text" class="muted" style="margin-bottom: 24px">
+        A preparar a importação
+      </p>
+      <div style="
             width: 100%;
             height: 8px;
             background: var(--bg-hover);
             border-radius: 4px;
             overflow: hidden;
-          "
-        >
-          <div
-            id="upload-progress-bar"
-            style="
+          ">
+        <div id="upload-progress-bar" style="
               width: 0%;
               height: 100%;
               background: var(--color-primary-start);
               transition: width 0.3s ease-out;
-            "
-          ></div>
-        </div>
+            "></div>
       </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>
