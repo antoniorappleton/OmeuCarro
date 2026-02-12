@@ -1791,6 +1791,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (target === "historico") loadTripsHistory(veiculoId);
           if (target === "ultima") loadLastTrip(veiculoId);
           if (target === "diagnosticos") loadDiagnostics(veiculoId);
+          if (target === "tendencias") loadTrends(veiculoId);
         });
       });
 
@@ -1832,6 +1833,165 @@ document.addEventListener("DOMContentLoaded", () => {
             btnScan.textContent = originalText;
           }
         };
+      }
+
+      // --- TRENDS LOGIC ---
+      let cachedTrendsData = null;
+      let trendsChart = null;
+
+      async function loadTrends(vid) {
+        const container = document.getElementById("trends-chart-container");
+        const emptyMsg = document.getElementById("trends-empty");
+        const switcher = document.getElementById("trends-metrics-switcher");
+
+        if (!container) return;
+
+        // If already cached, just render (active metric)
+        if (cachedTrendsData) {
+          const activeBtn = switcher?.querySelector(".segment-btn.active");
+          const metric = activeBtn?.dataset.metric || "voltagemMedia";
+          // Small delay to ensure container layout is updated
+          setTimeout(() => renderTrendsChart(metric), 50);
+          return;
+        }
+
+        try {
+          emptyMsg?.classList.add("hidden");
+          container.style.opacity = "0.5";
+          console.log("Fetching trends for vehicle:", vid);
+
+          // Fetch last 30 trips
+          const snapshot = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("viagens")
+            .orderBy("dataFim", "desc")
+            .limit(30)
+            .get();
+
+          if (snapshot.empty || snapshot.size < 2) {
+            container.classList.add("hidden");
+            emptyMsg?.classList.remove("hidden");
+            switcher?.classList.add("hidden");
+            return;
+          }
+
+          container.classList.remove("hidden");
+          switcher?.classList.remove("hidden");
+
+          // Map and reverse (chronological)
+          cachedTrendsData = snapshot.docs
+            .map((doc) => {
+              const d = doc.data();
+              const date = d.dataFim?.toDate ? d.dataFim.toDate() : new Date();
+              return {
+                label: date.toLocaleDateString("pt-PT", {
+                  day: "2-digit",
+                  month: "2-digit",
+                }),
+                voltagemMedia: d.metricas?.voltagemMedia || null,
+                rpmMedio: d.metricas?.rpmMedio || null,
+                temperaturaMax: d.metricas?.temperaturaMax || null,
+                consumoMedio: d.consumoMedio || null,
+              };
+            })
+            .reverse();
+
+          container.style.opacity = "1";
+          setTimeout(() => renderTrendsChart("voltagemMedia"), 100);
+        } catch (err) {
+          console.error("Erro loadTrends:", err);
+          alert("Erro ao carregar tendências: " + err.message);
+        }
+      }
+
+      function renderTrendsChart(metric) {
+        const canvas = document.getElementById("chart-obd-trends");
+        if (!canvas || !cachedTrendsData) return;
+
+        const ctx = canvas.getContext("2d");
+        if (trendsChart) trendsChart.destroy();
+
+        const labels = cachedTrendsData.map((d) => d.label);
+        const values = cachedTrendsData.map((d) => d[metric]);
+
+        const metricLabels = {
+          voltagemMedia: "Bateria (V)",
+          rpmMedio: "RPM Média",
+          temperaturaMax: "Temp. Máx (ºC)",
+          consumoMedio: "Consumo (L/100)",
+        };
+
+        const metricColors = {
+          voltagemMedia: "#3b82f6",
+          rpmMedio: "#f59e0b",
+          temperaturaMax: "#ef4444",
+          consumoMedio: "#10b981",
+        };
+
+        trendsChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: metricLabels[metric],
+                data: values,
+                borderColor: metricColors[metric],
+                backgroundColor: metricColors[metric] + "20",
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: metricColors[metric],
+                tension: 0.3,
+                fill: true,
+                spanGaps: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                backgroundColor: "rgba(0,0,0,0.8)",
+                padding: 10,
+                cornerRadius: 8,
+              },
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: { font: { size: 10 } },
+              },
+              y: {
+                beginAtZero: false,
+                grid: { color: "rgba(0,0,0,0.05)" },
+                ticks: { font: { size: 10 } },
+              },
+            },
+          },
+        });
+      }
+
+      // Metric Switcher Listener
+      const trendsSwitcher = document.getElementById("trends-metrics-switcher");
+      if (trendsSwitcher) {
+        trendsSwitcher.addEventListener("click", (e) => {
+          const btn = e.target.closest(".segment-btn");
+          if (!btn) return;
+
+          // Update UI
+          trendsSwitcher
+            .querySelectorAll(".segment-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Update Chart
+          renderTrendsChart(btn.dataset.metric);
+        });
       }
 
       // --- TORQUE CSV/ZIP IMPORT ---
@@ -2554,8 +2714,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (trip.metricas?.rpmMedio > 1400) {
           insight =
-            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
-        } else if (trip.consumoMedio > 7.5) {
+            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo até 10%.";
+        } else if (trip.consumoMedio > 6.5) {
           insight =
             "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
         } else if (trip.score > 90) {

@@ -999,6 +999,69 @@ footer a .icon {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* VEHICLE TRENDS (OBD MODAL) */
+/* -------------------------------------------------------------------------- */
+.segmented-control {
+  display: flex;
+  background: var(--border-light); /* Defined */
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.segment-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.segment-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-main);
+}
+
+.segment-btn.active {
+  background: var(--color-surface) !important; /* Defined */
+  color: var(--color-primary-solid) !important; /* Defined */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.segment-btn .icon-xs {
+  width: 14px;
+  height: 14px;
+}
+
+.trends-chart-wrapper {
+  background: var(--color-surface) !important; /* Defined */
+  border-radius: 16px !important;
+  padding: 12px !important;
+  border: 1px solid var(--border-light) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  min-height: 240px; /* Ensure space for chart on mobile */
+}
+
+@media (max-width: 400px) { /* Only hide text on very small screens */
+  .segment-btn span {
+    display: none;
+  }
+  .segment-btn {
+    padding: 10px 4px;
+  }
+}
+
 /* Scrollable Tabs Utility */
 .scrollable-tabs {
   display: flex;

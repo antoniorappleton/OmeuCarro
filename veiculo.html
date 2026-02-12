@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veículo – L100</title>
 
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/home.css" />
-  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/style.css?v=78" />
+  <link rel="stylesheet" href="css/home.css?v=78" />
+  <script src="js/theme.js?v=78"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,17 +19,17 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <script defer src="js/firebase-config.js"></script>
-  <script defer src="js/auth.js"></script>
-  <script defer src="js/analytics.js?v=76"></script>
-  <script defer src="js/firestore.js?v=76"></script>
+  <script defer src="js/firebase-config.js?v=78"></script>
+  <script defer src="js/auth.js?v=78"></script>
+  <script defer src="js/analytics.js?v=78"></script>
+  <script defer src="js/firestore.js?v=78"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-  <script defer src="js/notifications.js?v=76"></script>
-  <script defer src="js/utils.js?v=76"></script>
+  <script defer src="js/notifications.js?v=78"></script>
+  <script defer src="js/utils.js?v=78"></script>
   <!-- JSZip for Torque CSV/ZIP import -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- depois os ficheiros específicos da página -->
-  <script defer src="js/veiculo.js?v=76"></script>
+  <script defer src="js/veiculo.js?v=78"></script>
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
@@ -622,11 +622,11 @@
       <!-- MODAL HEADER -->
       <div class="modal-header">
         <span class="muted" style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              font-weight: 600;
-            ">
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 600;
+              ">
           <svg class="icon-sm">
             <use href="assets/icons-unified.svg#icon-activity"></use>
           </svg>
@@ -638,7 +638,6 @@
           </svg>
         </button>
       </div>
-
       <!-- TABS NAVIGATION -->
       <nav class="modal-tabs scrollable-tabs">
         <button class="tab-btn active" data-tab="ultima" style="
@@ -676,7 +675,15 @@
               color: var(--color-text-muted);
               background: transparent;
             ">
-          Diagnósticos Mode $06
+          Diagnósticos
+        </button>
+        <button class="tab-btn" data-tab="tendencias" style="
+              padding-bottom: 12px;
+              border-bottom: 2px solid transparent;
+              color: var(--color-text-muted);
+              background: transparent;
+            ">
+          Tendências
         </button>
       </nav>
 
@@ -1096,7 +1103,7 @@
           </div>
         </div>
 
-        <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
+        <!-- TAB 4: DIAGNÓSTICOS (NEW) -->
         <div id="tab-diagnosticos" class="tab-panel hidden">
           <div style="
                 display: flex;
@@ -1114,6 +1121,53 @@
           <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
             <div class="vehicles-empty">
               <p>Nenhum relatório de diagnóstico encontrado.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: TENDÊNCIAS -->
+        <div id="tab-tendencias" class="tab-panel hidden">
+          <div class="trends-container" style="padding: 10px 0;">
+            <!-- Metric Switcher -->
+            <div class="segmented-control" id="trends-metrics-switcher">
+              <button class="segment-btn active" data-metric="voltagemMedia" title="Bateria">
+                <svg class="icon-xs">
+                  <use href="assets/icons-unified.svg#icon-zap"></use>
+                </svg>
+                <span>V</span>
+              </button>
+              <button class="segment-btn" data-metric="rpmMedio" title="RPM">
+                <svg class="icon-xs">
+                  <use href="assets/icons-unified.svg#icon-activity"></use>
+                </svg>
+                <span>RPM</span>
+              </button>
+              <button class="segment-btn" data-metric="temperaturaMax" title="Temperatura">
+                <svg class="icon-xs">
+                  <use href="assets/icons-unified.svg#icon-thermometer"></use>
+                </svg>
+                <span>ºC</span>
+              </button>
+              <button class="segment-btn" data-metric="consumoMedio" title="Consumo">
+                <svg class="icon-xs">
+                  <use href="assets/icons-unified.svg#icon-fuel"></use>
+                </svg>
+                <span>L/100</span>
+              </button>
+            </div>
+
+            <!-- Chart Area -->
+            <div class="trends-chart-wrapper" style="margin-top: 20px; position: relative;">
+              <div id="trends-chart-container" style="height: 220px; width: 100%;">
+                <canvas id="chart-obd-trends"></canvas>
+              </div>
+              <div id="trends-empty" class="muted hidden" style="text-align:center; padding: 40px 20px;">
+                Sem viagens suficientes para analisar tendências.
+              </div>
+            </div>
+
+            <div class="trends-footer muted" style="text-align: center; margin-top: 15px; font-size: 0.8rem;">
+              <small>Dados baseados nas últimas 30 viagens.</small>
             </div>
           </div>
         </div>
