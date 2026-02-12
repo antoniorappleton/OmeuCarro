@@ -1853,7 +1853,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const file = e.target.files[0];
           if (!file) return;
 
-          // Modal Progresso
           const progressModal = document.getElementById(
             "upload-progress-modal",
           );
@@ -1877,266 +1876,23 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           try {
-            let csvText = "";
-
-            // 1. Handle ZIP or CSV
-            if (file.name.toLowerCase().endsWith(".zip")) {
-              if (typeof JSZip === "undefined") {
-                throw new Error("JSZip não carregado. Recarrega a página.");
-              }
-              const zip = await JSZip.loadAsync(file);
-              const csvFile = Object.values(zip.files).find(
-                (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
-              );
-              if (!csvFile) {
-                throw new Error(
-                  "Nenhum ficheiro CSV encontrado dentro do ZIP.",
-                );
-              }
-              csvText = await csvFile.async("string");
-              console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
-            } else {
-              csvText = await file.text();
-            }
-
-            // 2. Parse CSV
-            const lines = csvText.trim().split("\n");
-            if (lines.length < 2) {
-              throw new Error("CSV vazio ou sem dados.");
-            }
-
-            const headers = lines[0].split(",").map((h) => h.trim());
-            console.log(`[Import] Headers: ${headers.length} colunas`);
-
-            // Portuguese month mapping
-            const ptMonths = {
-              "jan.": "Jan",
-              "fev.": "Feb",
-              "mar.": "Mar",
-              "abr.": "Apr",
-              "mai.": "May",
-              "jun.": "Jun",
-              "jul.": "Jul",
-              "ago.": "Aug",
-              "set.": "Sep",
-              "out.": "Oct",
-              "nov.": "Nov",
-              "dez.": "Dec",
-            };
-
-            // Fuzzy header finder
-            const findHeader = (part) =>
-              headers.find((h) => h.toLowerCase().includes(part.toLowerCase()));
-
-            // Locate key columns
-            const dateCol = findHeader("Device Time") || headers[1]; // fallback
-            const speedCol = findHeader("Speed (OBD)");
-            const rpmCol = findHeader("RPM");
-            const odoCol = findHeader("Odometer");
-            const fuelCol = findHeader("Fuel Level");
-            const coolantCol = findHeader("Coolant");
-            const loadCol = findHeader("Engine Load");
-            const latCol = findHeader("Latitude") || "Latitude";
-            const lonCol = findHeader("Longitude") || "Longitude";
-            const mafCol = findHeader("Mass air flow");
-            const voltageCol = findHeader("Voltage");
-            const torqueCol = findHeader("Torque(Nm)") || findHeader("Torque");
-            const hpCol = findHeader("Horsepower");
-            const tripDistCol = findHeader("Trip Distance");
-            const tripL100Col = findHeader("Trip average");
-            const intakeCol = findHeader("Intake Air");
-            const fuelRemCol = findHeader("Fuel Remaining");
-
-            // 3. Map rows to readings
-            const readings = [];
-            let skipped = 0;
-
-            for (let i = 1; i < lines.length; i++) {
-              const line = lines[i].trim();
-              if (!line || line.startsWith("---")) continue;
-
-              const values = line.split(",");
-              const row = {};
-              headers.forEach((h, idx) => {
-                row[h] = values[idx] || null;
-              });
-
-              // Parse date
-              let dateStr = row[dateCol];
-              if (!dateStr || dateStr === "-") {
-                skipped++;
-                continue;
-              }
-
-              // Replace Portuguese months
-              for (const [pt, en] of Object.entries(ptMonths)) {
-                if (dateStr.toLowerCase().includes(pt)) {
-                  dateStr = dateStr.toLowerCase().replace(pt, en);
-                  break;
-                }
-              }
-
-              const timestamp = new Date(dateStr).getTime();
-              if (isNaN(timestamp)) {
-                skipped++;
-                continue;
-              }
-
-              // Parse numeric value helper
-              const getNum = (col) => {
-                if (!col) return null;
-                const val = row[col];
-                if (!val || val === "-") return null;
-                const n = parseFloat(String(val).replace(",", "."));
-                return isNaN(n) ? null : n;
-              };
-
-              const lat = getNum(latCol);
-              const lon = getNum(lonCol);
-
-              const parsed = {
-                speed: getNum(speedCol),
-                rpm: getNum(rpmCol),
-                odometer: getNum(odoCol),
-                fuelLevel: getNum(fuelCol),
-                coolant: getNum(coolantCol),
-                engineLoad: getNum(loadCol),
-                intake: getNum(intakeCol),
-                maf: getNum(mafCol),
-                voltage: getNum(voltageCol),
-                torqueNm: getNum(torqueCol),
-                hpWheels: getNum(hpCol),
-                tripDistance: getNum(tripDistCol),
-                tripL100: getNum(tripL100Col),
-                fuelRemainingPct: getNum(fuelRemCol),
-                location: null,
-              };
-
-              if (lat && lon && (lat !== 0 || lon !== 0)) {
-                parsed.location = new firebase.firestore.GeoPoint(lat, lon);
-              }
-
-              readings.push({
-                vehicleId: veiculoId,
-                timestamp,
-                receivedAt: firebase.firestore.Timestamp.fromMillis(timestamp),
-                sessionId:
-                  "csv_import_" + new Date().toISOString().split("T")[0],
-                deviceId: "csv_import",
-                email: "csv@import",
-                imported: true, // Flag to skip Cloud Function
-                raw: { ...row },
-                parsed,
-              });
-            }
-
-            if (readings.length === 0) {
-              throw new Error(
-                `Nenhum registo válido encontrado (${skipped} linhas ignoradas).`,
-              );
-            }
-
-            console.log(
-              `[Import] ${readings.length} registos válidos, ${skipped} ignorados`,
-            );
-
-            if (progressText)
-              progressText.textContent = `A preparar ${readings.length} registos...`;
-            if (progressBar) progressBar.style.width = "20%";
-
-            // 4. Calculate Trips (Client-Side)
-            // Sort first to ensure order
-            readings.sort((a, b) => a.timestamp - b.timestamp);
-
-            const tripsToCreate = calculateTripsFromReadings(readings);
-            console.log(`[Import] Generated ${tripsToCreate.length} trips.`);
-
-            // 5. Batch write to Firestore (Readings + Trips)
-            const collRef = db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("leiturasObd");
-
-            // Write Trips first
-            const tripsRef = db
-              .collection("veiculos")
-              .doc(veiculoId)
-              .collection("viagens");
-
-            if (tripsToCreate.length > 0) {
-              const tripBatch = db.batch();
-              tripsToCreate.forEach((trip) => {
-                tripBatch.set(tripsRef.doc(), trip);
-              });
-              await tripBatch.commit();
-              console.log("[Import] Trips saved.");
-            }
-
-            const BATCH_SIZE = 450;
-            let written = 0;
-            const total = readings.length;
-
-            for (let i = 0; i < total; i += BATCH_SIZE) {
-              const chunk = readings.slice(i, i + BATCH_SIZE);
-              const batch = db.batch();
-
-              for (const r of chunk) {
-                batch.set(collRef.doc(), r);
-              }
-
-              await batch.commit();
-              written += chunk.length;
-
-              // Update progress
-              const pct = Math.round(20 + (written / total) * 70);
-              if (progressBar) progressBar.style.width = `${pct}%`;
-              if (progressText)
-                progressText.textContent = `A enviar ${written}/${total}...`;
-            }
-
-            // 5. Update vehicle state with latest reading
-            readings.sort((a, b) => b.timestamp - a.timestamp);
-            const latest = readings[0];
-
-            if (latest && latest.parsed) {
-              const vehicleUpdate = {
-                lastObdUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-              };
-
-              if (latest.parsed.odometer && latest.parsed.odometer > 0) {
-                vehicleUpdate.odometroAtual = latest.parsed.odometer;
-              }
-              if (latest.parsed.fuelLevel && latest.parsed.fuelLevel > 0) {
-                vehicleUpdate.nivelCombustivel = latest.parsed.fuelLevel;
-              }
-
-              await db
-                .collection("veiculos")
-                .doc(veiculoId)
-                .update(vehicleUpdate);
-            }
-
-            // 6. Success!
+            const count = await handleTorqueImport(veiculoId, file);
             alert(
-              `✅ Importação concluída!\n${written} registos importados com sucesso.`,
+              `✅ Importação concluída!\n${count} registos importados com sucesso.`,
             );
 
-            // Close Modals & Go to History
-            if (progressModal) progressModal.classList.add("hidden");
-            const btnHistory = document.querySelector(
-              '.tab-btn[data-tab="historico"]',
-            );
-            if (btnHistory) btnHistory.click(); // Switches tab and reloads history
-
-            // Reload trip data
+            // Reload UI
             loadLastTrip(veiculoId);
             loadTripsHistory(veiculoId);
+            if (typeof renderVehicleHealth === "function")
+              renderVehicleHealth(veiculoId);
           } catch (err) {
             console.error("[Import] Error:", err);
             alert(`❌ Erro na importação:\n${err.message}`);
           } finally {
+            if (progressModal) progressModal.classList.add("hidden");
             btnImportCsv.disabled = false;
-            btnImportCsv.textContent = originalText;
+            btnImportCsv.textContent = "Importar CSV/ZIP";
             csvInput.value = ""; // Reset file input
           }
         });
@@ -2163,17 +1919,15 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          if (empty) empty.classList.add("hidden");
           if (content) content.classList.remove("hidden");
-
-          const trip = snap.docs[0].data();
-          renderTripDetails(trip);
+          if (empty) empty.classList.add("hidden");
+          renderTripDetails(snap.docs[0].data(), snap.docs[0].id, vid);
         } catch (e) {
           console.error("Error loading last trip:", e);
         }
       }
 
-      function renderTripDetails(trip) {
+      function renderTripDetails(trip, tripId, vehicleId) {
         // Dates
         const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
         const elDate = document.getElementById("last-trip-date");
@@ -2185,6 +1939,33 @@ document.addEventListener("DOMContentLoaded", () => {
             hour: "2-digit",
             minute: "2-digit",
           });
+
+        // --- NEW: DELETE BUTTON FOR LAST TRIP ---
+        const headerActions = document.querySelector(
+          "#tab-ultima .trip-header-actions",
+        );
+        if (headerActions) {
+          headerActions.innerHTML = `
+            <button class="icon-btn-sm danger" id="btn-del-last-trip" title="Eliminar Viagem">
+              <svg style="width:16px; height:16px; fill:currentColor;"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+            </button>
+          `;
+          const btn = headerActions.querySelector("#btn-del-last-trip");
+          if (btn) {
+            btn.onclick = async () => {
+              if (!confirm("Eliminar este registo de viagem (o mais recente)?"))
+                return;
+              try {
+                await deleteViagem(vehicleId, tripId);
+                await loadLastTrip(vehicleId);
+                await loadTripsHistory(vehicleId);
+              } catch (err) {
+                console.error(err);
+                alert("Erro ao eliminar a viagem.");
+              }
+            };
+          }
+        }
 
         // Metrics
         const elDist = document.getElementById("last-trip-dist");
@@ -2458,6 +2239,185 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
+      // --- NEW: TRIP DETAILS MODAL (Telemetria) ---
+      let tripTelemetriaChart = null;
+
+      async function openTripModal(trip, tripId, vid) {
+        const modal = document.getElementById("trip-details-modal");
+        if (!modal) return;
+
+        // 1. Populate Scalar Metrics
+        const elScore = document.getElementById("trip-modal-score");
+        const elRoute = document.getElementById("trip-modal-route");
+        const elInsight = document.getElementById("trip-insight-text");
+
+        // Metrics
+        const elDist = document.getElementById("trip-modal-dist");
+        const elMaxSpeed = document.getElementById("trip-modal-maxspeed");
+        const elRpm = document.getElementById("trip-modal-rpm");
+        const elTemp = document.getElementById("trip-modal-temp");
+
+        if (elScore) elScore.textContent = trip.score || "--";
+
+        // Infer Route Type (Simple heuristic or stored)
+        if (elRoute) {
+          const avgSpeed = trip.velocidadeMedia || 0;
+          if (avgSpeed > 80) elRoute.textContent = "Autoestrada";
+          else if (avgSpeed > 40) elRoute.textContent = "Misto / Estrada";
+          else elRoute.textContent = "Urbano";
+        }
+
+        // Generate Insight
+        if (elInsight) {
+          const s = trip.score || 0;
+          if (s > 90)
+            elInsight.textContent =
+              "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
+          else if (s > 75)
+            elInsight.textContent =
+              "👍 Boa condução. Estás a poupar combustível.";
+          else if (s > 50)
+            elInsight.textContent =
+              "⚠️ Estilo agressivo. Tenta suavizar as acelerações.";
+          else
+            elInsight.textContent =
+              "🛑 Condução ineficiente. Verifica a tua condução.";
+        }
+
+        if (elDist)
+          elDist.textContent = (trip.distancia?.toFixed(1) || "--") + " km";
+        if (elMaxSpeed)
+          elMaxSpeed.textContent =
+            (Math.round(trip.metricas?.velocidadeMax || 0) || "--") + " km/h";
+        if (elRpm)
+          elRpm.textContent =
+            (Math.round(trip.metricas?.rpmMedio || 0) || "--") + " rpm";
+        if (elTemp)
+          elTemp.textContent =
+            (Math.round(trip.metricas?.temperaturaMax || 0) || "--") + " °C";
+
+        // 2. Show Modal
+        modal.classList.remove("hidden");
+
+        // 3. Fetch & Render Chart
+        await renderTelemetriaChart(trip, vid);
+      }
+
+      async function renderTelemetriaChart(trip, vid) {
+        const canvas = document.getElementById("chart-trip-telemetry");
+        if (!canvas) return;
+
+        // Limpar anterior
+        if (tripTelemetriaChart) tripTelemetriaChart.destroy();
+
+        // Show loading state on canvas? For now just wait.
+
+        try {
+          // Parse dates
+          const start = trip.dataInicio.toDate
+            ? trip.dataInicio.toDate()
+            : new Date(trip.dataInicio);
+          const end = trip.dataFim.toDate
+            ? trip.dataFim.toDate()
+            : new Date(trip.dataFim);
+
+          // Fetch Readings
+          const snapshot = await db
+            .collection("veiculos")
+            .doc(vid)
+            .collection("leiturasObd")
+            .where("timestamp", ">=", start.getTime())
+            .where("timestamp", "<=", end.getTime())
+            .orderBy("timestamp", "asc")
+            .limit(1000)
+            .get();
+
+          if (snapshot.empty) {
+            // Render empty state or just leave blank?
+            return;
+          }
+
+          const readings = snapshot.docs.map((d) => d.data());
+
+          // Prepare Data
+          const labels = readings.map((r) => {
+            const d = new Date(r.timestamp);
+            return d.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          });
+          const speed = readings.map((r) => r.parsed?.speed || 0);
+          const rpm = readings.map((r) => r.parsed?.rpm || 0);
+
+          const ctx = canvas.getContext("2d");
+
+          // Gradients
+          const gradSpeed = ctx.createLinearGradient(0, 0, 0, 300);
+          gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.4)");
+          gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
+          tripTelemetriaChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Velocidade",
+                  data: speed,
+                  borderColor: "#3b82f6",
+                  backgroundColor: gradSpeed,
+                  borderWidth: 2,
+                  tension: 0.4,
+                  fill: true,
+                  pointRadius: 0,
+                  yAxisID: "y",
+                },
+                {
+                  label: "RPM",
+                  data: rpm,
+                  borderColor: "#ef4444",
+                  borderWidth: 1,
+                  borderDash: [5, 5],
+                  tension: 0.4,
+                  pointRadius: 0,
+                  fill: false,
+                  yAxisID: "y1",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: "index", intersect: false },
+              plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true },
+              },
+              scales: {
+                x: { display: false },
+                y: { display: false, min: 0 },
+                y1: { display: false, min: 0 },
+              },
+            },
+          });
+        } catch (e) {
+          console.error("Error rendering telemetry chart:", e);
+        }
+      }
+
+      // Close handlers
+      document
+        .getElementById("trip-details-close")
+        ?.addEventListener("click", () => {
+          document.getElementById("trip-details-modal").classList.add("hidden");
+        });
+      document
+        .getElementById("trip-details-ok")
+        ?.addEventListener("click", () => {
+          document.getElementById("trip-details-modal").classList.add("hidden");
+        });
+
       async function loadTripsHistory(vid) {
         const list = document.getElementById("trips-list");
         if (!list) return;
@@ -2485,8 +2445,26 @@ document.addEventListener("DOMContentLoaded", () => {
           list.innerHTML = "";
 
           snap.forEach((doc) => {
-            list.appendChild(createTripCard(doc.data()));
+            list.appendChild(createTripCard(doc.data(), doc.id, vid));
           });
+
+          // Event Delegation for Deletion
+          list.onclick = async (e) => {
+            const delBtn = e.target.closest("[data-del-trip]");
+            if (delBtn) {
+              const tripId = delBtn.dataset.delTrip;
+              if (!confirm("Eliminar este registo de viagem?")) return;
+
+              try {
+                await deleteViagem(vid, tripId);
+                await loadTripsHistory(vid); // Refresh list
+                await loadLastTrip(vid); // Refresh last trip card too
+              } catch (err) {
+                console.error("Erro ao eliminar viagem:", err);
+                alert("Erro ao eliminar a viagem.");
+              }
+            }
+          };
         } catch (e) {
           console.error("Error loading history:", e);
           list.innerHTML =
@@ -2494,13 +2472,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      function createTripCard(trip) {
+      function createTripCard(trip, tripId, vid) {
         const el = document.createElement("article");
         el.className = "trip-card";
         el.style.cssText =
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: transform 0.2s;";
+          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; cursor: pointer; transition: transform 0.2s;";
 
-        el.onclick = () => openTripDetails(trip);
+        // Hover effects via JS for compatibility if CSS class missing, but kept clean
         el.onmouseenter = () => (el.style.transform = "scale(1.02)");
         el.onmouseleave = () => (el.style.transform = "scale(1)");
 
@@ -2516,7 +2494,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="display:flex; gap: 6px; align-items:center;">
                         ${trip.score ? `<span style="font-size:0.75rem; font-weight:700; color:var(--color-text-main);">${trip.score}</span>` : ""}
                         <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
-                        <svg class="icon" style="width:14px; height:14px; color:var(--color-primary);"><use href="assets/icons-unified.svg#icon-chevron-right"></use></svg>
+                        <button class="icon-btn-sm danger" data-del-trip="${tripId}" title="Eliminar Viagem" style="padding: 2px;">
+                           <svg style="width:14px; height:14px; fill:currentColor;"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+                        </button>
+                    </div>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
@@ -2534,6 +2515,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
              `;
+
+        // Add CLick Listener to open Modal
+        el.addEventListener("click", (e) => {
+          // Prevent opening if clicking delete
+          if (e.target.closest("[data-del-trip]")) return;
+
+          openTripDetails(trip);
+        });
+
         return el;
       }
 
@@ -2544,21 +2534,33 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!modal) return;
 
         // Fill Summary
-        document.getElementById("trip-modal-score").textContent = trip.score || "--";
-        const routeType = trip.routeType || (trip.velocidadeMedia < 25 ? "Urbano Intenso" : trip.velocidadeMedia < 50 ? "Misto" : "Autoestrada");
+        document.getElementById("trip-modal-score").textContent =
+          trip.score || "--";
+        const routeType =
+          trip.routeType ||
+          (trip.velocidadeMedia < 25
+            ? "Urbano Intenso"
+            : trip.velocidadeMedia < 50
+              ? "Misto"
+              : "Autoestrada");
         document.getElementById("trip-modal-route").textContent = routeType;
 
         // Fill Insights
-        const insightContainer = document.getElementById("trip-insight-container");
+        const insightContainer = document.getElementById(
+          "trip-insight-container",
+        );
         const insightText = document.getElementById("trip-insight-text");
         let insight = "";
 
         if (trip.metricas?.rpmMedio > 1400) {
-          insight = "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
+          insight =
+            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo em até 10%.";
         } else if (trip.consumoMedio > 7.5) {
-          insight = "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
+          insight =
+            "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
         } else if (trip.score > 90) {
-          insight = "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
+          insight =
+            "🔥 Condução Excelente! O teu estilo é altamente eficiente.";
         }
 
         if (insight) {
@@ -2616,8 +2618,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Sample data for visualized trend (if backend data missing, we use summary)
         const labels = ["Início", "Meio", "Fim"];
-        const consumps = [trip.consumoMedio * 1.1, trip.consumoMedio, trip.consumoMedio * 0.9];
-        const rpms = [trip.metricas?.rpmMedio * 1.2 || 1500, trip.metricas?.rpmMedio || 1300, 1000];
+        const consumps = [
+          trip.consumoMedio * 1.1,
+          trip.consumoMedio,
+          trip.consumoMedio * 0.9,
+        ];
+        const rpms = [
+          trip.metricas?.rpmMedio * 1.2 || 1500,
+          trip.metricas?.rpmMedio || 1300,
+          1000,
+        ];
 
         tripTelemetryChart = new Chart(ctx, {
           type: "line",
@@ -2648,8 +2658,19 @@ document.addEventListener("DOMContentLoaded", () => {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             scales: {
-              y: { type: "linear", display: true, position: "left", title: { display: true, text: "L/100km" } },
-              y1: { type: "linear", display: true, position: "right", title: { display: true, text: "RPM" }, grid: { drawOnChartArea: false } },
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: { display: true, text: "L/100km" },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                title: { display: true, text: "RPM" },
+                grid: { drawOnChartArea: false },
+              },
             },
           },
         });
@@ -2776,6 +2797,10 @@ document.addEventListener("DOMContentLoaded", () => {
           },
           (err) => console.error(err),
         );
+
+      // Auto-load data for the active tab (usually historico or ultima)
+      loadLastTrip(veiculoId);
+      loadTripsHistory(veiculoId);
     }
 
     // =========================
@@ -3441,7 +3466,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div style="font-weight:600;">${statusText}</div>
                         <div style="font-size:0.85rem;" class="muted">${data.tests?.length || 0} testes executados</div>
                     </div>
-                    <div class="status-indicator-dot ${contextClass}" style="width:12px; height:12px;"></div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="icon-btn-sm danger btn-del-diag" data-id="${doc.id}" title="Eliminar Relatório" style="padding: 4px;">
+                           <svg style="width:14px; height:14px; fill:currentColor;"><use href="assets/icons-unified.svg#icon-trash"></use></svg>
+                        </button>
+                        <div class="status-indicator-dot ${contextClass}" style="width:12px; height:12px;"></div>
+                    </div>
                 </div>
                 <div class="diag-details hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-light);">
                     <div class="table-responsive">
@@ -3456,31 +3486,69 @@ document.addEventListener("DOMContentLoaded", () => {
                             <tbody>
                                 ${(data.tests || [])
                                   .map((t) => {
-                                    const testName = t.name || t.component || "Desconhecido";
-                                    const testVal = t.val !== undefined ? t.val : (t.value !== undefined ? t.value : "--");
-                                    const testMin = t.min !== undefined ? t.min : (t.minVal !== undefined ? t.minVal : "--");
-                                    const testMax = t.max !== undefined ? t.max : (t.maxVal !== undefined ? t.maxVal : "--");
+                                    const testName =
+                                      t.name || t.component || "Desconhecido";
+                                    const testVal =
+                                      t.val !== undefined
+                                        ? t.val
+                                        : t.value !== undefined
+                                          ? t.value
+                                          : "--";
+                                    const testMin =
+                                      t.min !== undefined
+                                        ? t.min
+                                        : t.minVal !== undefined
+                                          ? t.minVal
+                                          : "--";
+                                    const testMax =
+                                      t.max !== undefined
+                                        ? t.max
+                                        : t.maxVal !== undefined
+                                          ? t.maxVal
+                                          : "--";
                                     const testStatus = t.status || "UNKNOWN";
-                                    
+
                                     const isFail = testStatus === "FAIL";
-                                    const isNear = testStatus === "PASS" && t.marginToLimit !== null && t.marginToLimit < 0.1;
+                                    const isNear =
+                                      testStatus === "PASS" &&
+                                      t.marginToLimit !== null &&
+                                      t.marginToLimit < 0.1;
                                     const isIgnored = testStatus === "IGNORED";
-                                    const isIncomplete = testStatus === "INCOMPLETE";
+                                    const isIncomplete =
+                                      testStatus === "INCOMPLETE";
 
                                     let statusEmoji = "⬜";
                                     if (isFail) statusEmoji = "🟥";
                                     else if (isIncomplete) statusEmoji = "⚪";
                                     else if (isIgnored) statusEmoji = "🔘";
                                     else if (isNear) statusEmoji = "🟧";
-                                    else if (testStatus === "PASS") statusEmoji = "🟩";
+                                    else if (testStatus === "PASS")
+                                      statusEmoji = "🟩";
 
                                     // Sparkline calculation
                                     let sparklineHtml = "";
-                                    if (typeof testVal === "number" && typeof testMin === "number" && typeof testMax === "number") {
+                                    if (
+                                      typeof testVal === "number" &&
+                                      typeof testMin === "number" &&
+                                      typeof testMax === "number"
+                                    ) {
                                       const range = Math.abs(testMax - testMin);
                                       if (range > 0) {
-                                        const pct = Math.min(100, Math.max(0, ((testVal - Math.min(testMin, testMax)) / range) * 100));
-                                        const barColor = isFail ? "var(--color-error)" : isNear ? "var(--color-warning)" : "var(--color-success, #10b981)";
+                                        const pct = Math.min(
+                                          100,
+                                          Math.max(
+                                            0,
+                                            ((testVal -
+                                              Math.min(testMin, testMax)) /
+                                              range) *
+                                              100,
+                                          ),
+                                        );
+                                        const barColor = isFail
+                                          ? "var(--color-error)"
+                                          : isNear
+                                            ? "var(--color-warning)"
+                                            : "var(--color-success, #10b981)";
                                         sparklineHtml = `
                                           <div style="width: 100%; height: 6px; bg-color: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 8px; position: relative; background: rgba(255,255,255,0.1); overflow: hidden;">
                                             <div style="width: ${pct}%; height: 100%; background: ${barColor}; border-radius: 3px; transition: width 0.3s ease;"></div>
@@ -3517,6 +3585,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
             `;
+
+        const delBtn = card.querySelector(".btn-del-diag");
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (!confirm("Eliminar este relatório de diagnóstico?")) return;
+          try {
+            await deleteDiagnostico(veiculoId, doc.id);
+            await loadDiagnostics(veiculoId);
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao eliminar diagnóstico.");
+          }
+        };
 
         card.onclick = () => {
           const det = card.querySelector(".diag-details");
@@ -3690,11 +3771,22 @@ document.addEventListener("DOMContentLoaded", () => {
       let csvText = "";
       if (file.name.toLowerCase().endsWith(".zip")) {
         const zip = await JSZip.loadAsync(file);
-        const csvFile = Object.values(zip.files).find(
-          (f) => f.name.toLowerCase().endsWith(".csv") && !f.dir,
-        );
-        if (!csvFile) throw new Error("Nenhum CSV no ZIP.");
+        // Look for any .csv file, prioritizing trackLog and ignoring system folders
+        const files = Object.values(zip.files);
+        let csvFile = files.find((f) => {
+          const name = f.name.toLowerCase();
+          return name.endsWith(".csv") && !f.dir && !name.includes("__macosx");
+        });
+
+        if (!csvFile) {
+          console.error("[Import] ZIP Content:", Object.keys(zip.files));
+          throw new Error(
+            "Nenhum ficheiro CSV encontrado dentro do ZIP. Verifique se o ficheiro exportado contém os dados.",
+          );
+        }
+
         csvText = await csvFile.async("string");
+        console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
       } else {
         csvText = await file.text();
       }
@@ -3710,22 +3802,89 @@ document.addEventListener("DOMContentLoaded", () => {
       const headers = lines[0]
         .split(sep)
         .map((h) => h.trim().replace(/"/g, ""));
-      const findHeader = (patterns) => {
-        return headers.find((h) =>
-          patterns.some((p) => h.toLowerCase().includes(p.toLowerCase())),
-        );
+      const findHeaderPriority = (exactList, fallbackList) => {
+        // 1º tenta match quase exato
+        for (const exact of exactList) {
+          const found = headers.find(
+            (h) => h.toLowerCase().trim() === exact.toLowerCase(),
+          );
+          if (found) return found;
+        }
+        // 2º fallback fuzzy controlado
+        for (const fb of fallbackList) {
+          const found = headers.find((h) =>
+            h.toLowerCase().includes(fb.toLowerCase()),
+          );
+          if (found) return found;
+        }
+        return null;
       };
 
-      const dateCol = findHeader(["Device Time", "Time", "Data"]) || headers[1];
-      const speedCol = findHeader(["Speed (OBD)", "Speed", "Velocidade"]);
-      const rpmCol = findHeader(["RPM", "Rotações"]);
-      const odoCol = findHeader(["Odometer", "Odómetro", "Km"]);
-      const fuelCol = findHeader(["Fuel Level", "Nível de Combustível"]);
-      const fuelRemCol = findHeader(["Fuel Remaining", "Combustível Restante"]);
-      const tripL100Col = findHeader(["Trip average", "Média de Viagem"]);
-      const rangeCol = findHeader(["Distance to empty", "Autonomia"]);
-      const latCol = findHeader(["Latitude"]) || "Latitude";
-      const lonCol = findHeader(["Longitude"]) || "Longitude";
+      const dateCol =
+        findHeaderPriority(
+          ["Device Time", "Time", "Data"],
+          ["Device Time", "Time", "Data"],
+        ) || headers[1];
+      const speedObdCol = findHeaderPriority(
+        ["Speed (OBD)(km/h)", "Speed (OBB)(km/h)"],
+        ["Speed (OBD)"],
+      );
+      const speedGpsCol = findHeaderPriority(
+        [
+          "Speed (GPS)(km/h)",
+          "GPS Speed (Meters/second)",
+          "Speed (GPS)(Meters/second)",
+        ],
+        ["Speed (GPS)", "GPS Speed"],
+      );
+      const rpmCol = findHeaderPriority(
+        ["Engine RPM(rpm)", "Engine RPM (rpm)"],
+        ["RPM", "Rotações"],
+      );
+      const odoCol = findHeaderPriority(
+        ["Odometer(from ECU)(km)", "Odometer (from ECU)(km)", "Odometer (km)"],
+        ["Odometer"],
+      );
+      const fuelCol = findHeaderPriority(
+        ["Fuel Level (From Engine ECU)(%)", "Fuel Level"],
+        ["Fuel Level"],
+      );
+      const fuelRemCol = findHeaderPriority(
+        ["Fuel Remaining (Calculated from vehicle profile)(%)"],
+        ["Fuel Remaining"],
+      );
+      const tripL100Col = findHeaderPriority(
+        ["Trip average Litres/100 KM(l/100km)", "Trip average"],
+        ["Trip average", "Média de Viagem"],
+      );
+      const rangeCol = findHeaderPriority(
+        ["Distance to empty (Estimated)(km)", "Distance to empty"],
+        ["Distance to empty", "Autonomia"],
+      );
+      const coolantCol = findHeaderPriority(
+        ["Engine Coolant Temperature(°C)", "Engine Coolant Temperature"],
+        ["Coolant", "Temperatura"],
+      );
+      const loadCol = findHeaderPriority(
+        ["Engine Load(%)", "Engine Load", "Engine Load(Absolute)(%)"],
+        ["Load", "Carga"],
+      );
+      const intakeCol = findHeaderPriority(
+        ["Intake Air Temperature(°C)", "Intake Air Temperature"],
+        ["Intake", "Admissão"],
+      );
+      const mafCol = findHeaderPriority(
+        ["Mass air flow(g/s)", "Mass air flow"],
+        ["MAF", "Fluxo de Ar"],
+      );
+      const voltageCol = findHeaderPriority(
+        ["Voltage (Control Module)(V)", "Voltage"],
+        ["Voltage", "Voltagem"],
+      );
+      const latCol =
+        findHeaderPriority(["Latitude"], ["Latitude"]) || "Latitude";
+      const lonCol =
+        findHeaderPriority(["Longitude"], ["Longitude"]) || "Longitude";
 
       const readings = [];
       const sampleRate = parseInt(options.sampleRate) || 1;
@@ -3808,14 +3967,35 @@ document.addEventListener("DOMContentLoaded", () => {
         const fuelRemRaw = getNum(fuelRemCol);
         const finalFuel = fuelLevelRaw !== null ? fuelLevelRaw : fuelRemRaw;
 
+        // SPEED LOGIC: Priority OBD > GPS
+        const sObd = getNum(speedObdCol);
+        const sGps = getNum(speedGpsCol);
+        let finalSpeed = sObd;
+        if (finalSpeed === null && sGps !== null) {
+          // Check if GPS speed needs conversion (m/s to km/h)
+          if (
+            speedGpsCol &&
+            speedGpsCol.toLowerCase().includes("meters/second")
+          ) {
+            finalSpeed = sGps * 3.6;
+          } else {
+            finalSpeed = sGps;
+          }
+        }
+
         const parsed = {
-          speed: getNum(speedCol),
+          speed: finalSpeed,
           rpm: getNum(rpmCol),
           odometer: getNum(odoCol),
           fuelLevel: finalFuel,
           fuelRemainingPct: fuelRemRaw,
           tripL100: getNum(tripL100Col),
           distanceToEmptyKm: getNum(rangeCol),
+          coolant: getNum(coolantCol),
+          engineLoad: getNum(loadCol),
+          intake: getNum(intakeCol),
+          maf: getNum(mafCol),
+          voltage: getNum(voltageCol),
         };
 
         const lat = getNum(latCol);
@@ -3919,17 +4099,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseMode06Text(text) {
-    const lines = text.split(/\r?\n|----/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\r?\n|----/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const tests = [];
 
     for (const line of lines) {
       if (!line.includes("TID:")) continue;
 
       const incomplete = line.includes("Test incomplete");
-      
+
       // Try multiple regex patterns for the component name
       let name = "Desconhecido";
-      const nameMatch = line.match(/(?:TID:\$\w+\s+)(?:-\s*)?(.*?)\s+Max:/i) || line.match(/-(.*?)\s+Max:/i);
+      const nameMatch =
+        line.match(/(?:TID:\$\w+\s+)(?:-\s*)?(.*?)\s+Max:/i) ||
+        line.match(/-(.*?)\s+Max:/i);
       if (nameMatch) name = nameMatch[1].trim();
 
       const mid = line.match(/MID:\$(\w+)/i)?.[1] || null;
@@ -3937,7 +4122,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const maxVal = parseValue(line.match(/Max:\s*([^\s]+)/i)?.[1]);
       const minVal = parseValue(line.match(/Min:\s*([^\s]+)/i)?.[1]);
-      const value = parseValue(line.match(/Test result value:\s*([^\s]+)/i)?.[1]);
+      const value = parseValue(
+        line.match(/Test result value:\s*([^\s]+)/i)?.[1],
+      );
 
       const noiseCylinder16 = name.includes("Cylinder 16");
       const realMin = Math.min(minVal, maxVal);
@@ -3962,7 +4149,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Calculate margin to limit for highlighting
       const span = realMax - realMin;
-      const margin = span > 0 ? Math.min(value - realMin, realMax - value) / span : null;
+      const margin =
+        span > 0 ? Math.min(value - realMin, realMax - value) / span : null;
 
       tests.push({
         mid: mid ? mid.toUpperCase() : null,

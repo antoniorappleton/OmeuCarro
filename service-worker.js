@@ -3,10 +3,10 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
+
 // Aumenta a versão sempre que fizeres deploy
-// Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v25";
-const RUNTIME_CACHE = "l100-runtime-v25";
+const STATIC_CACHE = "l100-static-v26";
+const RUNTIME_CACHE = "l100-runtime-v26";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -75,7 +75,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v25");
+  console.log("[SW] Activate v26");
 
   event.waitUntil(
     caches.keys().then((names) =>
