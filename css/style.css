@@ -873,7 +873,7 @@ footer a .icon {
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
-  max-height: 90vh;
+  max-height: 90vh; /* Keep it from being taller than the screen */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -883,53 +883,14 @@ footer a .icon {
   animation: zoomIn 0.2s ease-out;
 }
 
-@media (max-width: 639px) {
-  .modal-card {
-    max-height: calc(100% - 40px);
-    border-radius: 24px 24px 0 0;
-    margin-top: auto;
-  }
-}
-
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0;
-  padding: 20px 24px;
-  flex-shrink: 0;
+  padding: 24px 24px 20px;
+  flex-shrink: 0; /* LOCK HEADER */
   background: var(--color-surface);
-  z-index: 10;
-  border-bottom: 1px solid var(--border-light);
-}
-
-/* HIGH SPECIFICITY OVERRIDES FOR VEHICLE OBD MODAL */
-#obd-modal .modal-card {
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-}
-
-#obd-modal .modal-header {
-  flex-shrink: 0 !important;
-  padding: 16px 20px !important;
-  background: var(--color-surface) !important;
-}
-
-#obd-modal .modal-tabs {
-  flex-shrink: 0 !important;
-  background: var(--color-surface) !important;
-  margin-bottom: 0 !important;
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-}
-
-#obd-modal .modal-body {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
-  padding: 16px 20px !important;
-  -webkit-overflow-scrolling: touch !important;
 }
 
 .modal-header h2 {
@@ -942,12 +903,11 @@ footer a .icon {
 }
 
 .modal-body {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
+  flex: 1; /* TAKE REMAINING SPACE */
+  overflow-y: auto; /* ENABLE SCROLL */
+  min-height: 0; /* CRITICAL FOR FLEX SCROLL */
   padding: 0 24px 24px;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .modal-footer {
@@ -1027,10 +987,10 @@ footer a .icon {
   gap: 8px;
   overflow-x: auto;
   white-space: nowrap;
-  padding: 0 24px 12px;
+  padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0; /* LOCK TABS */
+  background: var(--color-surface);
 }
 
 .scrollable-tabs::-webkit-scrollbar {

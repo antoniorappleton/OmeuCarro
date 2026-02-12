@@ -8,30 +8,29 @@
 
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/home.css" />
-  <link rel="stylesheet" href="css/home.css" />
   <script src="js/theme.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- Firebase v9 (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-    <script defer src="js/firebase-config.js"></script>
-    <script defer src="js/auth.js"></script>
-    <script defer src="js/analytics.js?v=76"></script>
-    <script defer src="js/firestore.js?v=76"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js?v=76"></script>
-    <script defer src="js/utils.js?v=76"></script>
-    <!-- JSZip for Torque CSV/ZIP import -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- depois os ficheiros específicos da página -->
-    <script defer src="js/veiculo.js?v=76"></script>
-  </head>
+  <script defer src="js/firebase-config.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/analytics.js?v=76"></script>
+  <script defer src="js/firestore.js?v=76"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
+  <script defer src="js/notifications.js?v=76"></script>
+  <script defer src="js/utils.js?v=76"></script>
+  <!-- JSZip for Torque CSV/ZIP import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- depois os ficheiros específicos da página -->
+  <script defer src="js/veiculo.js?v=76"></script>
+</head>
 
 <body class="app-page" data-page="vehicle-detail">
   <!-- HEADER PREMIUM -->
@@ -699,444 +698,429 @@
                   justify-content: space-between;
                   align-items: center;
                   margin-bottom: 24px;
-                  "
-                >
-                  <div>
-                    <h2
-                      id="last-trip-date"
-                      style="font-size: 1.5rem; margin: 0; line-height: 1.2"
-                    >
-                      --
-                    </h2>
-                    <span
-                      id="last-trip-time"
-                      class="muted"
-                      style="font-size: 0.9rem"
-                      >--</span
-                    >
-                  </div>
-                  <div style="display: flex; align-items: center; gap: 12px">
-                    <div
-                      class="trip-score-badge"
-                      style="
+                  ">
+              <div>
+                <h2 id="last-trip-date" style="font-size: 1.5rem; margin: 0; line-height: 1.2">
+                  --
+                </h2>
+                <span id="last-trip-time" class="muted" style="font-size: 0.9rem">--</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px">
+                <div class="trip-score-badge" style="
                         background: var(--bg-hover);
                         padding: 4px 12px;
                         border-radius: 99px;
                         font-weight: 700;
                         font-size: 0.9rem;
-                      "
-                    >
-                      <span id="last-trip-score">--</span>
-                      <span class="muted" style="font-weight: 400">Score</span>
-                    </div>
-                    <div
-                      class="trip-header-actions"
-                      style="
+                      ">
+                  <span id="last-trip-score">--</span>
+                  <span class="muted" style="font-weight: 400">Score</span>
+                </div>
+                <div class="trip-header-actions" style="
                         border-left: 1px solid var(--border-light);
                         padding-left: 8px;
                         display: flex;
                         align-items: center;
-                      "
-                    ></div>
-                  </div>
+                      "></div>
               </div>
             </div>
+          </div>
 
-            <!-- PRIMARY METRICS GRID -->
-            <div class="analytics-grid" style="
+          <!-- PRIMARY METRICS GRID -->
+          <div class="analytics-grid" style="
                   display: grid;
                   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                   gap: 12px;
                   margin-bottom: 24px;
                 ">
-              <div class="analytics-box" style="
+            <div class="analytics-box" style="
                     background: var(--bg-hover);
                     padding: 16px;
                     border-radius: 12px;
                   ">
-                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
-                  Distância
-                </div>
-                <div style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    ">
-                  <span id="last-trip-dist">--</span>
-                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">km</small>
-                </div>
+              <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                Distância
               </div>
-              <div class="analytics-box" style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  ">
-                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
-                  Consumo
-                </div>
-                <div style="
+              <div style="
                       font-size: 1.6rem;
                       font-weight: 700;
                       color: var(--color-text-main);
                       line-height: 1;
                     ">
-                  <span id="last-trip-consumo">--</span>
-                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">L/100</small>
-                </div>
-              </div>
-              <div class="analytics-box" style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  ">
-                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
-                  Vel. Média
-                </div>
-                <div style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    ">
-                  <span id="last-trip-speed">--</span>
-                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">km/h</small>
-                </div>
-              </div>
-              <div class="analytics-box" style="
-                    background: var(--bg-hover);
-                    padding: 16px;
-                    border-radius: 12px;
-                  ">
-                <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
-                  Duração
-                </div>
-                <div style="
-                      font-size: 1.6rem;
-                      font-weight: 700;
-                      color: var(--color-text-main);
-                      line-height: 1;
-                    ">
-                  <span id="last-trip-duration">--</span>
-                  <small style="font-size: 0.9rem; font-weight: 500" class="muted">min</small>
-                </div>
+                <span id="last-trip-dist">--</span>
+                <small style="font-size: 0.9rem; font-weight: 500" class="muted">km</small>
               </div>
             </div>
+            <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+              <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                Consumo
+              </div>
+              <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                <span id="last-trip-consumo">--</span>
+                <small style="font-size: 0.9rem; font-weight: 500" class="muted">L/100</small>
+              </div>
+            </div>
+            <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+              <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                Vel. Média
+              </div>
+              <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                <span id="last-trip-speed">--</span>
+                <small style="font-size: 0.9rem; font-weight: 500" class="muted">km/h</small>
+              </div>
+            </div>
+            <div class="analytics-box" style="
+                    background: var(--bg-hover);
+                    padding: 16px;
+                    border-radius: 12px;
+                  ">
+              <div class="muted" style="font-size: 0.8rem; margin-bottom: 4px">
+                Duração
+              </div>
+              <div style="
+                      font-size: 1.6rem;
+                      font-weight: 700;
+                      color: var(--color-text-main);
+                      line-height: 1;
+                    ">
+                <span id="last-trip-duration">--</span>
+                <small style="font-size: 0.9rem; font-weight: 500" class="muted">min</small>
+              </div>
+            </div>
+          </div>
 
-            <!-- SECONDARY DETAILS -->
-            <div class="trip-details-list" style="
+          <!-- SECONDARY DETAILS -->
+          <div class="trip-details-list" style="
                   background: var(--bg-hover);
                   border-radius: 12px;
                   padding: 16px;
                 ">
-              <div class="detail-row" style="
+            <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
                   ">
-                <span class="muted">RPM Médio</span>
-                <strong id="last-trip-rpm">--</strong>
-              </div>
-              <div class="detail-row" style="
+              <span class="muted">RPM Médio</span>
+              <strong id="last-trip-rpm">--</strong>
+            </div>
+            <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
                   ">
-                <span class="muted">Temp. Máxima</span>
-                <strong id="last-trip-temp">--</strong>
-              </div>
-              <div class="detail-row" style="
+              <span class="muted">Temp. Máxima</span>
+              <strong id="last-trip-temp">--</strong>
+            </div>
+            <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
                   ">
-                <span class="muted">Bateria (Média)</span>
-                <strong id="last-trip-voltage">--</strong>
-              </div>
-              <div class="detail-row" style="
+              <span class="muted">Bateria (Média)</span>
+              <strong id="last-trip-voltage">--</strong>
+            </div>
+            <div class="detail-row" style="
                     display: flex;
                     justify-content: space-between;
                     margin-bottom: 8px;
                     font-size: 0.9rem;
                   ">
-                <span class="muted">Score Condução</span>
-                <div id="last-trip-score-container" style="display: flex; align-items: center; gap: 6px">
-                  <span id="last-trip-score" style="font-weight: 700">--</span>
-                  <div id="last-trip-score-dot" class="status-indicator-dot status-neutral"
-                    style="width: 8px; height: 8px"></div>
-                </div>
-              </div>
-              <div class="detail-row" style="
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 0.9rem;
-                  ">
-                <span class="muted">Custo Estimado</span>
-                <strong id="last-trip-cost">--</strong>
+              <span class="muted">Score Condução</span>
+              <div id="last-trip-score-container" style="display: flex; align-items: center; gap: 6px">
+                <span id="last-trip-score" style="font-weight: 700">--</span>
+                <div id="last-trip-score-dot" class="status-indicator-dot status-neutral"
+                  style="width: 8px; height: 8px"></div>
               </div>
             </div>
+            <div class="detail-row" style="
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9rem;
+                  ">
+              <span class="muted">Custo Estimado</span>
+              <strong id="last-trip-cost">--</strong>
+            </div>
+          </div>
 
-            <!-- CHARTS SECTION (NEW) -->
-            <div class="charts-section" style="margin-top: 20px; text-align: center">
-              <button id="btn-load-charts" class="btn btn-secondary btn-sm">
-                <svg class="icon icon-left">
-                  <use href="assets/icons-unified.svg#icon-trend-up"></use>
-                </svg>
-                Ver Gráficos Detalhados
-              </button>
+          <!-- CHARTS SECTION (NEW) -->
+          <div class="charts-section" style="margin-top: 20px; text-align: center">
+            <button id="btn-load-charts" class="btn btn-secondary btn-sm">
+              <svg class="icon icon-left">
+                <use href="assets/icons-unified.svg#icon-trend-up"></use>
+              </svg>
+              Ver Gráficos Detalhados
+            </button>
 
-              <div id="trip-charts-container" class="hidden" style="margin-top: 20px">
-                <!-- SUMMARY CARDS (NEW) -->
-                <div class="summary-cards" style="
+            <div id="trip-charts-container" class="hidden" style="margin-top: 20px">
+              <!-- SUMMARY CARDS (NEW) -->
+              <div class="summary-cards" style="
                       display: grid;
                       grid-template-columns: 1fr 1fr;
                       gap: 10px;
                       margin-bottom: 20px;
                     ">
-                  <div class="card-mini" style="
+                <div class="card-mini" style="
                         background: var(--bg-hover);
                         padding: 12px;
                         border-radius: 12px;
                         text-align: center;
                       ">
-                    <div class="muted" style="font-size: 0.75rem">
-                      Vel. Máx
-                    </div>
-                    <div id="trip-max-speed" style="
+                  <div class="muted" style="font-size: 0.75rem">
+                    Vel. Máx
+                  </div>
+                  <div id="trip-max-speed" style="
                           font-size: 1.2rem;
                           font-weight: 700;
                           color: #3b82f6;
                         ">
-                      --
-                    </div>
-                    <div style="font-size: 0.75rem">km/h</div>
+                    --
                   </div>
-                  <div class="card-mini" style="
+                  <div style="font-size: 0.75rem">km/h</div>
+                </div>
+                <div class="card-mini" style="
                         background: var(--bg-hover);
                         padding: 12px;
                         border-radius: 12px;
                         text-align: center;
                       ">
-                    <div class="muted" style="font-size: 0.75rem">
-                      RPM Máx
-                    </div>
-                    <div id="trip-max-rpm" style="
+                  <div class="muted" style="font-size: 0.75rem">
+                    RPM Máx
+                  </div>
+                  <div id="trip-max-rpm" style="
                           font-size: 1.2rem;
                           font-weight: 700;
                           color: #ef4444;
                         ">
-                      --
-                    </div>
-                    <div style="font-size: 0.75rem">rpm</div>
+                    --
                   </div>
+                  <div style="font-size: 0.75rem">rpm</div>
                 </div>
+              </div>
 
-                <!-- Speed & RPM -->
-                <div class="chart-card" style="
+              <!-- Speed & RPM -->
+              <div class="chart-card" style="
                       background: var(--bg-hover);
                       padding: 10px;
                       border-radius: 12px;
                       margin-bottom: 20px;
                     ">
-                  <h4 style="
+                <h4 style="
                         margin: 0 0 10px 0;
                         font-size: 0.9rem;
                         text-align: left;
                       ">
-                    Velocidade & RPM
-                  </h4>
-                  <div style="height: 200px">
-                    <canvas id="chart-trip-speed-rpm"></canvas>
-                  </div>
+                  Velocidade & RPM
+                </h4>
+                <div style="height: 200px">
+                  <canvas id="chart-trip-speed-rpm"></canvas>
                 </div>
+              </div>
 
-                <!-- Fuel & Alt -->
-                <div class="chart-card" style="
+              <!-- Fuel & Alt -->
+              <div class="chart-card" style="
                       background: var(--bg-hover);
                       padding: 10px;
                       border-radius: 12px;
                     ">
-                  <h4 style="
+                <h4 style="
                         margin: 0 0 10px 0;
                         font-size: 0.9rem;
                         text-align: left;
                       ">
-                    Combustível (%)
-                  </h4>
-                  <div style="height: 150px">
-                    <canvas id="chart-trip-fuel"></canvas>
-                  </div>
+                  Combustível (%)
+                </h4>
+                <div style="height: 150px">
+                  <canvas id="chart-trip-fuel"></canvas>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- TAB 2: HISTÓRICO -->
-        <div id="tab-historico" class="tab-panel hidden">
-          <div style="
+      <!-- TAB 2: HISTÓRICO -->
+      <div id="tab-historico" class="tab-panel hidden">
+        <div style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 12px;
               ">
-            <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
-              </svg>
-              Manual
-            </button>
-            <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-file-text"></use>
-              </svg>
-              Importar Dados
-            </button>
-          </div>
-
-          <div id="trips-list" style="display: flex; flex-direction: column; gap: 12px">
-            <!-- Filled via JS -->
-            <div class="spinner"></div>
-          </div>
-
-          <div id="trips-empty" class="vehicles-empty hidden">
-            <p>Sem registo de viagens.</p>
-          </div>
+          <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-plus"></use>
+            </svg>
+            Manual
+          </button>
+          <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-file-text"></use>
+            </svg>
+            Importar Dados
+          </button>
         </div>
 
-        <!-- TAB 3: AO VIVO -->
-        <div id="tab-live" class="tab-panel hidden">
-          <!-- Header for Live Status -->
-          <div class="live-status-header" style="
+        <div id="trips-list" style="display: flex; flex-direction: column; gap: 12px">
+          <!-- Filled via JS -->
+          <div class="spinner"></div>
+        </div>
+
+        <div id="trips-empty" class="vehicles-empty hidden">
+          <p>Sem registo de viagens.</p>
+        </div>
+      </div>
+
+      <!-- TAB 3: AO VIVO -->
+      <div id="tab-live" class="tab-panel hidden">
+        <!-- Header for Live Status -->
+        <div class="live-status-header" style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
               ">
-            <span class="status-indicator-dot pulse" style="background: #00d2ff"></span>
-            <span id="obd-last-update" class="muted" style="font-size: 0.8rem">A aguardar dados...</span>
-          </div>
+          <span class="status-indicator-dot pulse" style="background: #00d2ff"></span>
+          <span id="obd-last-update" class="muted" style="font-size: 0.8rem">A aguardar dados...</span>
+        </div>
 
-          <!-- LIVE METRICS GRID -->
-          <div class="analytics-grid" style="
+        <!-- LIVE METRICS GRID -->
+        <div class="analytics-grid" style="
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                 gap: 12px;
                 margin-bottom: 24px;
               ">
-            <!-- RPM -->
-            <div class="analytics-box" style="
+          <!-- RPM -->
+          <div class="analytics-box" style="
                   background: var(--bg-hover);
                   padding: 16px;
                   border-radius: 12px;
                   text-align: center;
                 ">
-              <div style="
+            <div style="
                     font-size: 2rem;
                     font-weight: 800;
                     color: var(--color-primary);
                   ">
-                <span id="obd-rpm">--</span>
-              </div>
-              <div class="muted" style="font-size: 0.8rem">RPM</div>
+              <span id="obd-rpm">--</span>
             </div>
-            <!-- SPEED -->
-            <div class="analytics-box" style="
-                  background: var(--bg-hover);
-                  padding: 16px;
-                  border-radius: 12px;
-                  text-align: center;
-                ">
-              <div style="
-                    font-size: 2rem;
-                    font-weight: 800;
-                    color: var(--color-primary);
-                  ">
-                <span id="obd-speed">--</span>
-              </div>
-              <div class="muted" style="font-size: 0.8rem">km/h</div>
-            </div>
+            <div class="muted" style="font-size: 0.8rem">RPM</div>
           </div>
-
-          <!-- SECONDARY LIVE METRICS -->
-          <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px">
-            <!-- Coolant -->
-            <div class="alert-item">
-              <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
-              <div class="alert-info">
-                <span class="alert-label">Temperatura Motor</span>
-                <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
-              </div>
+          <!-- SPEED -->
+          <div class="analytics-box" style="
+                  background: var(--bg-hover);
+                  padding: 16px;
+                  border-radius: 12px;
+                  text-align: center;
+                ">
+            <div style="
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: var(--color-primary);
+                  ">
+              <span id="obd-speed">--</span>
             </div>
-            <!-- Load -->
-            <div class="alert-item">
-              <div class="alert-status-indicator status-neutral"></div>
-              <div class="alert-info">
-                <span class="alert-label">Carga Motor</span>
-                <span class="alert-value"><span id="obd-load">--</span> %</span>
-              </div>
-            </div>
-            <!-- Volts -->
-            <div class="alert-item">
-              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-              <div class="alert-info">
-                <span class="alert-label">Bateria</span>
-                <span class="alert-value"><span id="obd-voltage">--</span> V</span>
-              </div>
-            </div>
-            <!-- MAF -->
-            <div class="alert-item">
-              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-              <div class="alert-info">
-                <span class="alert-label">MAF</span>
-                <span class="alert-value"><span id="obd-maf">--</span> g/s</span>
-              </div>
-            </div>
-            <!-- Torque -->
-            <div class="alert-item">
-              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-              <div class="alert-info">
-                <span class="alert-label">Binário (Torque)</span>
-                <span class="alert-value"><span id="obd-torque">--</span> Nm</span>
-              </div>
-            </div>
-            <!-- HP -->
-            <div class="alert-item">
-              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-              <div class="alert-info">
-                <span class="alert-label">Potência (HP)</span>
-                <span class="alert-value"><span id="obd-hp">--</span> hp</span>
-              </div>
-            </div>
+            <div class="muted" style="font-size: 0.8rem">km/h</div>
           </div>
         </div>
 
-        <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
-        <div id="tab-diagnosticos" class="tab-panel hidden">
-          <div style="
-                display: flex;
-                justify-content: flex-end;
-                margin-bottom: 15px;
-              ">
-            <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
-              </svg>
-              Novo Relatório
-            </button>
+        <!-- SECONDARY LIVE METRICS -->
+        <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px">
+          <!-- Coolant -->
+          <div class="alert-item">
+            <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
+            <div class="alert-info">
+              <span class="alert-label">Temperatura Motor</span>
+              <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
+            </div>
           </div>
-
-          <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
-            <div class="vehicles-empty">
-              <p>Nenhum relatório de diagnóstico encontrado.</p>
+          <!-- Load -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral"></div>
+            <div class="alert-info">
+              <span class="alert-label">Carga Motor</span>
+              <span class="alert-value"><span id="obd-load">--</span> %</span>
+            </div>
+          </div>
+          <!-- Volts -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+            <div class="alert-info">
+              <span class="alert-label">Bateria</span>
+              <span class="alert-value"><span id="obd-voltage">--</span> V</span>
+            </div>
+          </div>
+          <!-- MAF -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+            <div class="alert-info">
+              <span class="alert-label">MAF</span>
+              <span class="alert-value"><span id="obd-maf">--</span> g/s</span>
+            </div>
+          </div>
+          <!-- Torque -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+            <div class="alert-info">
+              <span class="alert-label">Binário (Torque)</span>
+              <span class="alert-value"><span id="obd-torque">--</span> Nm</span>
+            </div>
+          </div>
+          <!-- HP -->
+          <div class="alert-item">
+            <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+            <div class="alert-info">
+              <span class="alert-label">Potência (HP)</span>
+              <span class="alert-value"><span id="obd-hp">--</span> hp</span>
             </div>
           </div>
         </div>
       </div>
-      <!-- End Modal Body -->
+
+      <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
+      <div id="tab-diagnosticos" class="tab-panel hidden">
+        <div style="
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 15px;
+              ">
+          <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
+            <svg class="icon">
+              <use href="assets/icons-unified.svg#icon-plus"></use>
+            </svg>
+            Novo Relatório
+          </button>
+        </div>
+
+        <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
+          <div class="vehicles-empty">
+            <p>Nenhum relatório de diagnóstico encontrado.</p>
+          </div>
+        </div>
+      </div>
     </div>
+    <!-- End Modal Body -->
+  </div>
   </div>
 
   <!-- MODAL: NOVA REPARAÇÃO -->
