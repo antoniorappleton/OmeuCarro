@@ -954,486 +954,485 @@
                   <canvas id="chart-trip-fuel"></canvas>
                 </div>
               </div>
-            </div>
+            </div> <!-- Close trip-charts-container -->
+          </div> <!-- Close charts-section -->
+        </div> <!-- Close tab-ultima -->
 
-            <!-- TAB 2: HISTÓRICO -->
-            <div id="tab-historico" class="tab-panel hidden">
-              <div style="
+        <!-- TAB 2: HISTÓRICO -->
+        <div id="tab-historico" class="tab-panel hidden">
+          <div style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 12px;
               ">
-                <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-plus"></use>
-                  </svg>
-                  Manual
-                </button>
-                <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-file-text"></use>
-                  </svg>
-                  Importar Dados
-                </button>
-              </div>
+            <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              Manual
+            </button>
+            <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-file-text"></use>
+              </svg>
+              Importar Dados
+            </button>
+          </div>
 
-              <div id="trips-list" style="display: flex; flex-direction: column; gap: 12px">
-                <!-- Filled via JS -->
-                <div class="spinner"></div>
-              </div>
+          <div id="trips-list" style="display: flex; flex-direction: column; gap: 12px">
+            <!-- Filled via JS -->
+            <div class="spinner"></div>
+          </div>
 
-              <div id="trips-empty" class="vehicles-empty hidden">
-                <p>Sem registo de viagens.</p>
-              </div>
-            </div>
+          <div id="trips-empty" class="vehicles-empty hidden">
+            <p>Sem registo de viagens.</p>
+          </div>
+        </div>
 
-            <!-- TAB 3: AO VIVO -->
-            <div id="tab-live" class="tab-panel hidden">
-              <!-- Header for Live Status -->
-              <div class="live-status-header" style="
+        <!-- TAB 3: AO VIVO -->
+        <div id="tab-live" class="tab-panel hidden">
+          <!-- Header for Live Status -->
+          <div class="live-status-header" style="
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 16px;
               ">
-                <span class="status-indicator-dot pulse" style="background: #00d2ff"></span>
-                <span id="obd-last-update" class="muted" style="font-size: 0.8rem">A aguardar dados...</span>
-              </div>
+            <span class="status-indicator-dot pulse" style="background: #00d2ff"></span>
+            <span id="obd-last-update" class="muted" style="font-size: 0.8rem">A aguardar dados...</span>
+          </div>
 
-              <!-- LIVE METRICS GRID -->
-              <div class="analytics-grid" style="
+          <!-- LIVE METRICS GRID -->
+          <div class="analytics-grid" style="
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                 gap: 12px;
                 margin-bottom: 24px;
               ">
-                <!-- RPM -->
-                <div class="analytics-box" style="
+            <!-- RPM -->
+            <div class="analytics-box" style="
                   background: var(--bg-hover);
                   padding: 16px;
                   border-radius: 12px;
                   text-align: center;
                 ">
-                  <div style="
+              <div style="
                     font-size: 2rem;
                     font-weight: 800;
                     color: var(--color-primary);
                   ">
-                    <span id="obd-rpm">--</span>
-                  </div>
-                  <div class="muted" style="font-size: 0.8rem">RPM</div>
-                </div>
-                <!-- SPEED -->
-                <div class="analytics-box" style="
-                  background: var(--bg-hover);
-                  padding: 16px;
-                  border-radius: 12px;
-                  text-align: center;
-                ">
-                  <div style="
-                    font-size: 2rem;
-                    font-weight: 800;
-                    color: var(--color-primary);
-                  ">
-                    <span id="obd-speed">--</span>
-                  </div>
-                  <div class="muted" style="font-size: 0.8rem">km/h</div>
-                </div>
+                <span id="obd-rpm">--</span>
               </div>
+              <div class="muted" style="font-size: 0.8rem">RPM</div>
+            </div>
+            <!-- SPEED -->
+            <div class="analytics-box" style="
+                  background: var(--bg-hover);
+                  padding: 16px;
+                  border-radius: 12px;
+                  text-align: center;
+                ">
+              <div style="
+                    font-size: 2rem;
+                    font-weight: 800;
+                    color: var(--color-primary);
+                  ">
+                <span id="obd-speed">--</span>
+              </div>
+              <div class="muted" style="font-size: 0.8rem">km/h</div>
+            </div>
+          </div>
 
-              <!-- SECONDARY LIVE METRICS -->
-              <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px">
-                <!-- Coolant -->
-                <div class="alert-item">
-                  <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">Temperatura Motor</span>
-                    <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
-                  </div>
-                </div>
-                <!-- Load -->
-                <div class="alert-item">
-                  <div class="alert-status-indicator status-neutral"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">Carga Motor</span>
-                    <span class="alert-value"><span id="obd-load">--</span> %</span>
-                  </div>
-                </div>
-                <!-- Volts -->
-                <div class="alert-item">
-                  <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">Bateria</span>
-                    <span class="alert-value"><span id="obd-voltage">--</span> V</span>
-                  </div>
-                </div>
-                <!-- MAF -->
-                <div class="alert-item">
-                  <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">MAF</span>
-                    <span class="alert-value"><span id="obd-maf">--</span> g/s</span>
-                  </div>
-                </div>
-                <!-- Torque -->
-                <div class="alert-item">
-                  <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">Binário (Torque)</span>
-                    <span class="alert-value"><span id="obd-torque">--</span> Nm</span>
-                  </div>
-                </div>
-                <!-- HP -->
-                <div class="alert-item">
-                  <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
-                  <div class="alert-info">
-                    <span class="alert-label">Potência (HP)</span>
-                    <span class="alert-value"><span id="obd-hp">--</span> hp</span>
-                  </div>
-                </div>
+          <!-- SECONDARY LIVE METRICS -->
+          <div class="vehicle-alerts-summary" style="display: flex; flex-direction: column; gap: 8px">
+            <!-- Coolant -->
+            <div class="alert-item">
+              <div id="status-coolant" class="alert-status-indicator status-neutral"></div>
+              <div class="alert-info">
+                <span class="alert-label">Temperatura Motor</span>
+                <span class="alert-value"><span id="obd-coolant">--</span> °C</span>
               </div>
             </div>
+            <!-- Load -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral"></div>
+              <div class="alert-info">
+                <span class="alert-label">Carga Motor</span>
+                <span class="alert-value"><span id="obd-load">--</span> %</span>
+              </div>
+            </div>
+            <!-- Volts -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Bateria</span>
+                <span class="alert-value"><span id="obd-voltage">--</span> V</span>
+              </div>
+            </div>
+            <!-- MAF -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">MAF</span>
+                <span class="alert-value"><span id="obd-maf">--</span> g/s</span>
+              </div>
+            </div>
+            <!-- Torque -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Binário (Torque)</span>
+                <span class="alert-value"><span id="obd-torque">--</span> Nm</span>
+              </div>
+            </div>
+            <!-- HP -->
+            <div class="alert-item">
+              <div class="alert-status-indicator status-neutral" style="background: transparent"></div>
+              <div class="alert-info">
+                <span class="alert-label">Potência (HP)</span>
+                <span class="alert-value"><span id="obd-hp">--</span> hp</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
-            <div id="tab-diagnosticos" class="tab-panel hidden">
-              <div style="
+        <!-- TAB 2: DIAGNÓSTICOS (NEW) -->
+        <div id="tab-diagnosticos" class="tab-panel hidden">
+          <div style="
                 display: flex;
                 justify-content: flex-end;
                 margin-bottom: 15px;
               ">
-                <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
-                  <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-plus"></use>
-                  </svg>
-                  Novo Relatório
-                </button>
-              </div>
+            <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
+              <svg class="icon">
+                <use href="assets/icons-unified.svg#icon-plus"></use>
+              </svg>
+              Novo Relatório
+            </button>
+          </div>
 
-              <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
-                <div class="vehicles-empty">
-                  <p>Nenhum relatório de diagnóstico encontrado.</p>
-                </div>
-              </div>
+          <div id="diagnostics-list" style="display: flex; flex-direction: column; gap: 10px">
+            <div class="vehicles-empty">
+              <p>Nenhum relatório de diagnóstico encontrado.</p>
             </div>
           </div>
-          <!-- End Modal Body -->
         </div>
+      </div> <!-- Close modal-body -->
+    </div> <!-- Close modal-card -->
+  </div> <!-- Close obd-modal -->
+
+  <!-- MODAL: NOVA REPARAÇÃO -->
+  <div id="maint-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-wrench"></use>
+          </svg>
+          Nova reparação
+        </h2>
+        <button id="maint-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Descrição</span>
+            <input id="rep-desc" type="text" placeholder="Ex.: Troca de óleo" />
+          </label>
+
+          <label>
+            <span class="muted">Data</span>
+            <input id="rep-date" type="date" />
+          </label>
+
+          <label>
+            <span class="muted">Quilómetros</span>
+            <input id="rep-km" type="number" placeholder="123456" />
+          </label>
+
+          <label>
+            <span class="muted">Custo (€)</span>
+            <input id="rep-cost" type="number" step="0.01" placeholder="89.90" />
+          </label>
+
+          <label style="grid-column: 1/-1">
+            <span class="muted">Oficina</span>
+            <input id="rep-shop" type="text" placeholder="Nome da oficina (opcional)" />
+          </label>
+
+          <label style="grid-column: 1/-1">
+            <span class="muted">Link do documento (opcional)</span>
+            <input id="rep-link" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
+          </label>
+        </div>
+
+        <p id="rep-msg" class="muted"></p>
       </div>
 
-      <!-- MODAL: NOVA REPARAÇÃO -->
-      <div id="maint-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-
-        <div class="modal-card">
-          <header class="modal-header">
-            <h2>
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-wrench"></use>
-              </svg>
-              Nova reparação
-            </h2>
-            <button id="maint-close" class="icon-btn">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
-
-          <div class="modal-body">
-            <div class="form-grid">
-              <label>
-                <span class="muted">Descrição</span>
-                <input id="rep-desc" type="text" placeholder="Ex.: Troca de óleo" />
-              </label>
-
-              <label>
-                <span class="muted">Data</span>
-                <input id="rep-date" type="date" />
-              </label>
-
-              <label>
-                <span class="muted">Quilómetros</span>
-                <input id="rep-km" type="number" placeholder="123456" />
-              </label>
-
-              <label>
-                <span class="muted">Custo (€)</span>
-                <input id="rep-cost" type="number" step="0.01" placeholder="89.90" />
-              </label>
-
-              <label style="grid-column: 1/-1">
-                <span class="muted">Oficina</span>
-                <input id="rep-shop" type="text" placeholder="Nome da oficina (opcional)" />
-              </label>
-
-              <label style="grid-column: 1/-1">
-                <span class="muted">Link do documento (opcional)</span>
-                <input id="rep-link" type="url" placeholder="https://drive.google.com/... ou https://..."
-                  inputmode="url" />
-              </label>
-            </div>
-
-            <p id="rep-msg" class="muted"></p>
-          </div>
-
-          <footer class="modal-footer">
-            <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
-            <button id="rep-save" class="btn btn-primary btn-gradient">
-              Guardar reparação
-            </button>
-          </footer>
-          <div style="
+      <footer class="modal-footer">
+        <button id="rep-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="rep-save" class="btn btn-primary btn-gradient">
+          Guardar reparação
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
           ">
-            antonioappleton
-          </div>
+        antonioappleton
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO DOCUMENTO -->
+  <div id="doc-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-file"></use>
+          </svg>
+          Novo documento
+        </h2>
+        <button id="doc-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Tipo</span>
+            <select id="doc-tipo">
+              <option value="DUA">DUA</option>
+              <option value="Seguro">Seguro</option>
+              <option value="Inspeção">Inspeção</option>
+              <option value="IUC">IUC</option>
+              <option value="Fatura">Fatura</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+
+          <label>
+            <span class="muted">Nome do documento</span>
+            <input id="doc-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
+          </label>
+
+          <label style="grid-column: 1/-1">
+            <span class="muted">Link do documento</span>
+            <input id="doc-url" type="url" placeholder="https://drive.google.com/... ou https://..." inputmode="url" />
+          </label>
+
+          <label style="grid-column: 1/-1">
+            <span class="muted">Nota (opcional)</span>
+            <input id="doc-nota" type="text" />
+          </label>
         </div>
+
+        <p id="doc-msg" class="muted"></p>
       </div>
 
-      <!-- MODAL: NOVO DOCUMENTO -->
-      <div id="doc-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-
-        <div class="modal-card">
-          <header class="modal-header">
-            <h2>
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-file"></use>
-              </svg>
-              Novo documento
-            </h2>
-            <button id="doc-close" class="icon-btn">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
-
-          <div class="modal-body">
-            <div class="form-grid">
-              <label>
-                <span class="muted">Tipo</span>
-                <select id="doc-tipo">
-                  <option value="DUA">DUA</option>
-                  <option value="Seguro">Seguro</option>
-                  <option value="Inspeção">Inspeção</option>
-                  <option value="IUC">IUC</option>
-                  <option value="Fatura">Fatura</option>
-                  <option value="Outro">Outro</option>
-                </select>
-              </label>
-
-              <label>
-                <span class="muted">Nome do documento</span>
-                <input id="doc-titulo" type="text" placeholder="Ex.: Apólice Seguro 2025" />
-              </label>
-
-              <label style="grid-column: 1/-1">
-                <span class="muted">Link do documento</span>
-                <input id="doc-url" type="url" placeholder="https://drive.google.com/... ou https://..."
-                  inputmode="url" />
-              </label>
-
-              <label style="grid-column: 1/-1">
-                <span class="muted">Nota (opcional)</span>
-                <input id="doc-nota" type="text" />
-              </label>
-            </div>
-
-            <p id="doc-msg" class="muted"></p>
-          </div>
-
-          <footer class="modal-footer">
-            <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
-            <button id="doc-save" class="btn btn-primary btn-gradient">
-              Guardar documento
-            </button>
-          </footer>
-          <div style="
+      <footer class="modal-footer">
+        <button id="doc-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="doc-save" class="btn btn-primary btn-gradient">
+          Guardar documento
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
           ">
-            antonioappleton
-          </div>
-        </div>
+        antonioappleton
       </div>
+    </div>
+  </div>
 
-      <!-- MODAL: NOVO ABASTECIMENTO -->
-      <div id="fuel-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
+  <!-- MODAL: NOVO ABASTECIMENTO -->
+  <div id="fuel-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
 
-        <div class="modal-card">
-          <header class="modal-header">
-            <h2>
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
-              </svg>
-              Novo abastecimento
-            </h2>
-            <button id="fuel-close" class="icon-btn">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-fuel"></use>
+          </svg>
+          Novo abastecimento
+        </h2>
+        <button id="fuel-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-          <div class="modal-body">
-            <div class="form-grid">
-              <label>
-                <span class="muted">Data</span>
-                <input id="fuel-date" type="date" />
-              </label>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Data</span>
+            <input id="fuel-date" type="date" />
+          </label>
 
-              <label>
-                <span class="muted">Tipo de combustível</span>
-                <select id="fuel-type">
-                  <option value="Gasolina">Gasolina</option>
-                  <option value="Gasóleo">Gasóleo</option>
-                  <option value="GPL">GPL</option>
-                  <option value="Elétrico">Elétrico</option>
-                </select>
-              </label>
+          <label>
+            <span class="muted">Tipo de combustível</span>
+            <select id="fuel-type">
+              <option value="Gasolina">Gasolina</option>
+              <option value="Gasóleo">Gasóleo</option>
+              <option value="GPL">GPL</option>
+              <option value="Elétrico">Elétrico</option>
+            </select>
+          </label>
 
-              <label>
-                <span class="muted">Litros</span>
-                <input id="fuel-liters" type="number" step="0.01" />
-              </label>
+          <label>
+            <span class="muted">Litros</span>
+            <input id="fuel-liters" type="number" step="0.01" />
+          </label>
 
-              <label>
-                <span class="muted">Preço por litro (€)</span>
-                <input id="fuel-price" type="number" step="0.001" />
-              </label>
+          <label>
+            <span class="muted">Preço por litro (€)</span>
+            <input id="fuel-price" type="number" step="0.001" />
+          </label>
 
-              <label>
-                <span class="muted">Quilómetros</span>
-                <input id="fuel-km" type="number" />
-              </label>
+          <label>
+            <span class="muted">Quilómetros</span>
+            <input id="fuel-km" type="number" />
+          </label>
 
-              <label>
-                <span class="muted">Posto</span>
-                <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
-              </label>
+          <label>
+            <span class="muted">Posto</span>
+            <input id="fuel-station" type="text" placeholder="Ex.: Galp, BP…" />
+          </label>
 
-              <!-- CHECKBOX CHEIO -->
-              <label class="checkbox-label" style="
+          <!-- CHECKBOX CHEIO -->
+          <label class="checkbox-label" style="
                 grid-column: 1/-1;
                 display: flex;
                 align-items: center;
                 gap: 10px;
                 cursor: pointer;
               ">
-                <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer" />
-                <span>Depósito Cheio (para cálculo exato de médias)</span>
-              </label>
+            <input type="checkbox" id="fuel-full" style="width: auto; margin: 0; cursor: pointer" />
+            <span>Depósito Cheio (para cálculo exato de médias)</span>
+          </label>
 
-              <label style="grid-column: 1/-1">
-                <span class="muted">Observações</span>
-                <input id="fuel-notes" type="text" placeholder="Opcional" />
-              </label>
-            </div>
+          <label style="grid-column: 1/-1">
+            <span class="muted">Observações</span>
+            <input id="fuel-notes" type="text" placeholder="Opcional" />
+          </label>
+        </div>
 
-            <p id="fuel-msg" class="muted"></p>
-          </div>
+        <p id="fuel-msg" class="muted"></p>
+      </div>
 
-          <footer class="modal-footer">
-            <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
-            <button id="fuel-save" class="btn btn-primary btn-gradient">
-              Guardar abastecimento
-            </button>
-          </footer>
-          <div style="
+      <footer class="modal-footer">
+        <button id="fuel-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="fuel-save" class="btn btn-primary btn-gradient">
+          Guardar abastecimento
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
           ">
-            antonioappleton
-          </div>
-        </div>
+        antonioappleton
       </div>
+    </div>
+  </div>
 
-      <!-- MODAL: PLANO MANUTENÇÃO -->
-      <div id="plan-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-card">
-          <header class="modal-header">
-            <h2>Plano de Manutenção</h2>
-            <button id="plan-close" class="icon-btn">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
-          <div class="modal-body">
-            <div class="form-grid">
-              <label>
-                <span class="muted">Serviço</span>
-                <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
-              </label>
-              <label>
-                <span class="muted">Intervalo (Km)</span>
-                <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
-                <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 1000 km de
-                  antecedência.</small>
-              </label>
-              <label>
-                <span class="muted">Intervalo (Meses)</span>
-                <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
-                <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 30 dias de
-                  antecedência.</small>
-              </label>
+  <!-- MODAL: PLANO MANUTENÇÃO -->
+  <div id="plan-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card">
+      <header class="modal-header">
+        <h2>Plano de Manutenção</h2>
+        <button id="plan-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label>
+            <span class="muted">Serviço</span>
+            <input id="plan-type" type="text" placeholder="Ex.: Mudar Óleo" />
+          </label>
+          <label>
+            <span class="muted">Intervalo (Km)</span>
+            <input id="plan-int-km" type="number" placeholder="Ex.: 10000" />
+            <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 1000 km de
+              antecedência.</small>
+          </label>
+          <label>
+            <span class="muted">Intervalo (Meses)</span>
+            <input id="plan-int-months" type="number" placeholder="Ex.: 12" />
+            <small class="muted" style="display: block; font-size: 0.65rem; margin-top: 2px">Aviso aos 30 dias de
+              antecedência.</small>
+          </label>
 
-              <div class="vehicle-divider" style="grid-column: 1/-1; margin: 8px 0"></div>
+          <div class="vehicle-divider" style="grid-column: 1/-1; margin: 8px 0"></div>
 
-              <label>
-                <span class="muted">Último Registo (Km)</span>
-                <input id="plan-last-km" type="number" placeholder="Km atuais..." />
-              </label>
-              <label>
-                <span class="muted">Última Data</span>
-                <input id="plan-last-date" type="date" />
-              </label>
-            </div>
-            <p id="plan-msg" class="form-message"></p>
-          </div>
-          <footer class="modal-footer">
-            <button id="plan-delete" class="btn btn-ghost danger hidden" style="margin-right: auto">
-              Apagar
-            </button>
-            <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
-            <button id="plan-save" class="btn btn-primary btn-gradient">
-              Guardar
-            </button>
-          </footer>
-          <div style="
+          <label>
+            <span class="muted">Último Registo (Km)</span>
+            <input id="plan-last-km" type="number" placeholder="Km atuais..." />
+          </label>
+          <label>
+            <span class="muted">Última Data</span>
+            <input id="plan-last-date" type="date" />
+          </label>
+        </div>
+        <p id="plan-msg" class="form-message"></p>
+      </div>
+      <footer class="modal-footer">
+        <button id="plan-delete" class="btn btn-ghost danger hidden" style="margin-right: auto">
+          Apagar
+        </button>
+        <button id="plan-cancel" class="btn btn-secondary">Cancelar</button>
+        <button id="plan-save" class="btn btn-primary btn-gradient">
+          Guardar
+        </button>
+      </footer>
+      <div style="
             text-align: center;
             font-size: 0.75rem;
             opacity: 0.3;
             margin-top: 8px;
             margin-bottom: 8px;
           ">
-            antonioappleton
-          </div>
-        </div>
+        antonioappleton
       </div>
-      <!-- MODAL PROGRESSO UPLOAD -->
-      <div id="upload-progress-modal" class="modal hidden" style="position: fixed; inset: 0; z-index: 10000">
-        <div class="modal-overlay" style="
+    </div>
+  </div>
+  <!-- MODAL PROGRESSO UPLOAD -->
+  <div id="upload-progress-modal" class="modal hidden" style="position: fixed; inset: 0; z-index: 10000">
+    <div class="modal-overlay" style="
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.5);
           backdrop-filter: blur(5px);
           -webkit-backdrop-filter: blur(5px);
         "></div>
-        <div class="modal-content" style="
+    <div class="modal-content" style="
           position: relative;
           z-index: 2;
           background: var(--bg-card);
@@ -1443,136 +1442,135 @@
           max-width: 300px;
           margin: 20vh auto;
         ">
-          <div class="spinner" style="margin: 0 auto 1rem auto"></div>
-          <h3 id="upload-progress-title" style="margin-bottom: 0.5rem">
-            A processar...
-          </h3>
-          <p id="upload-progress-text" class="muted" style="font-size: 0.9rem; margin-bottom: 1rem">
-            A ler ficheiro...
-          </p>
-          <div class="progress-bar-container" style="
+      <div class="spinner" style="margin: 0 auto 1rem auto"></div>
+      <h3 id="upload-progress-title" style="margin-bottom: 0.5rem">
+        A processar...
+      </h3>
+      <p id="upload-progress-text" class="muted" style="font-size: 0.9rem; margin-bottom: 1rem">
+        A ler ficheiro...
+      </p>
+      <div class="progress-bar-container" style="
             background: var(--bg-hover);
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
           ">
-            <div id="upload-progress-bar" style="
+        <div id="upload-progress-bar" style="
               width: 0%;
               height: 100%;
               background: var(--color-primary-start);
               transition: width 0.3s ease;
             "></div>
-          </div>
-        </div>
       </div>
+    </div>
+  </div>
 
-      <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
-      <div id="modalImport" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-card" style="max-width: 620px; width: 95%">
-          <header class="modal-header" style="
+  <!-- MODAL: UNIFIED IMPORT (CSV + MODE 06) -->
+  <div id="modalImport" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 620px; width: 95%">
+      <header class="modal-header" style="
             padding: 20px 24px;
             border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
           ">
-            <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
-            <button id="btn-close-import" class="icon-btn-xs" style="background: transparent; border: none">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
+        <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
+        <button id="btn-close-import" class="icon-btn-xs" style="background: transparent; border: none">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
 
-          <nav class="tabs scrollable-tabs" style="
+      <nav class="tabs scrollable-tabs" style="
             padding: 12px 24px 0;
             border-bottom: 1px solid var(--border-light);
             background: var(--bg-hover);
           ">
-            <button class="tab-btn active" data-import-tab="tabCsv" style="
+        <button class="tab-btn active" data-import-tab="tabCsv" style="
               padding: 10px 16px;
               border-bottom: 2px solid var(--color-primary-start);
               font-weight: 700;
               background: transparent;
             ">
-              1) CSV (Viagens)
-            </button>
-            <button class="tab-btn" data-import-tab="tabMode06" style="
+          1) CSV (Viagens)
+        </button>
+        <button class="tab-btn" data-import-tab="tabMode06" style="
               padding: 10px 16px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
             ">
-              2) Mode $06
-            </button>
-            <button class="tab-btn" data-import-tab="tabResumo" style="
+          2) Mode $06
+        </button>
+        <button class="tab-btn" data-import-tab="tabResumo" style="
               padding: 10px 16px;
               border-bottom: 2px solid transparent;
               color: var(--color-text-muted);
               background: transparent;
             ">
-              3) Resumo
-            </button>
-          </nav>
+          3) Resumo
+        </button>
+      </nav>
 
-          <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1">
-            <!-- TAB 1: CSV -->
-            <section id="tabCsv" class="import-tab-panel">
-              <h3 style="margin-top: 0">CSV de Viagem (Torque log)</h3>
-              <input type="file" id="csvFileInput" accept=".csv,text/csv,.zip"
-                style="margin-bottom: 20px; width: 100%" />
+      <div class="modal-body" style="padding: 24px; overflow-y: auto; flex: 1">
+        <!-- TAB 1: CSV -->
+        <section id="tabCsv" class="import-tab-panel">
+          <h3 style="margin-top: 0">CSV de Viagem (Torque log)</h3>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv,.zip" style="margin-bottom: 20px; width: 100%" />
 
-              <div class="import-options form-grid" style="
+          <div class="import-options form-grid" style="
                 background: var(--bg-hover);
                 padding: 16px;
                 border-radius: 12px;
               ">
-                <label class="form-label-row">
-                  <span class="muted">Tipo de import</span>
-                  <select id="importType" class="input-sm" style="width: auto">
-                    <option value="drive">Condução</option>
-                    <option value="diagnostic">Teste/Diagnóstico</option>
-                  </select>
-                </label>
-                <label class="form-label-row">
-                  <span class="muted">Amostragem (Redução)</span>
-                  <select id="sampleRate" class="input-sm" style="width: auto">
-                    <option value="1">Sem redução</option>
-                    <option value="5">Cada 5s</option>
-                    <option value="10">Cada 10s</option>
-                    <option value="30">Cada 30s</option>
-                  </select>
-                </label>
-                <label class="form-label-row">
-                  <span class="muted">Agrupar por</span>
-                  <select id="tripGrouping" class="input-sm" style="width: auto">
-                    <option value="session">SessionId (Recomendado)</option>
-                    <option value="day">Dia</option>
-                    <option value="hour">Hora</option>
-                  </select>
-                </label>
-              </div>
+            <label class="form-label-row">
+              <span class="muted">Tipo de import</span>
+              <select id="importType" class="input-sm" style="width: auto">
+                <option value="drive">Condução</option>
+                <option value="diagnostic">Teste/Diagnóstico</option>
+              </select>
+            </label>
+            <label class="form-label-row">
+              <span class="muted">Amostragem (Redução)</span>
+              <select id="sampleRate" class="input-sm" style="width: auto">
+                <option value="1">Sem redução</option>
+                <option value="5">Cada 5s</option>
+                <option value="10">Cada 10s</option>
+                <option value="30">Cada 30s</option>
+              </select>
+            </label>
+            <label class="form-label-row">
+              <span class="muted">Agrupar por</span>
+              <select id="tripGrouping" class="input-sm" style="width: auto">
+                <option value="session">SessionId (Recomendado)</option>
+                <option value="day">Dia</option>
+                <option value="hour">Hora</option>
+              </select>
+            </label>
+          </div>
 
-              <div class="preview" style="margin-top: 24px">
-                <h4 class="muted" style="font-size: 0.8rem; text-transform: uppercase">
-                  Pré-visualização
-                </h4>
-                <div id="csvPreviewStatus" class="hint muted" style="font-size: 0.85rem">
-                  Escolha um ficheiro CSV/ZIP para ver mapeamentos.
-                </div>
-                <div id="csvMapping" class="mapping-box" style="margin-top: 12px; font-size: 0.85rem"></div>
-              </div>
-            </section>
+          <div class="preview" style="margin-top: 24px">
+            <h4 class="muted" style="font-size: 0.8rem; text-transform: uppercase">
+              Pré-visualização
+            </h4>
+            <div id="csvPreviewStatus" class="hint muted" style="font-size: 0.85rem">
+              Escolha um ficheiro CSV/ZIP para ver mapeamentos.
+            </div>
+            <div id="csvMapping" class="mapping-box" style="margin-top: 12px; font-size: 0.85rem"></div>
+          </div>
+        </section>
 
-            <!-- TAB 2: Mode 06 -->
-            <section id="tabMode06" class="import-tab-panel hidden">
-              <h3 style="margin-top: 0">Diagnóstico Mode $06</h3>
-              <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px">
-                Importe o texto do Torque (Mode $06) para avaliar falhas e saúde
-                do motor.
-              </p>
-              <textarea id="mode06Text" style="
+        <!-- TAB 2: Mode 06 -->
+        <section id="tabMode06" class="import-tab-panel hidden">
+          <h3 style="margin-top: 0">Diagnóstico Mode $06</h3>
+          <p class="muted" style="font-size: 0.9rem; margin-bottom: 16px">
+            Importe o texto do Torque (Mode $06) para avaliar falhas e saúde
+            do motor.
+          </p>
+          <textarea id="mode06Text" style="
                 width: 100%;
                 height: 160px;
                 padding: 12px;
@@ -1582,110 +1580,110 @@
                 font-family: monospace;
                 font-size: 0.8rem;
               " placeholder="Cole aqui o texto do relatório Mode $06..."></textarea>
-              <div id="mode06Status" class="muted" style="margin-top: 12px; font-size: 0.85rem"></div>
-            </section>
+          <div id="mode06Status" class="muted" style="margin-top: 12px; font-size: 0.85rem"></div>
+        </section>
 
-            <!-- TAB 3: Resumo -->
-            <section id="tabResumo" class="import-tab-panel hidden">
-              <h3 style="margin-top: 0">Resumo do Import</h3>
-              <div id="importSummary" style="
+        <!-- TAB 3: Resumo -->
+        <section id="tabResumo" class="import-tab-panel hidden">
+          <h3 style="margin-top: 0">Resumo do Import</h3>
+          <div id="importSummary" style="
                 background: var(--bg-hover);
                 padding: 20px;
                 border-radius: 16px;
                 margin-bottom: 24px;
               ">
-                <p class="muted">Selecione os dados para ver o resumo aqui.</p>
-              </div>
-            </section>
+            <p class="muted">Selecione os dados para ver o resumo aqui.</p>
           </div>
+        </section>
+      </div>
 
-          <footer class="modal-footer" style="
+      <footer class="modal-footer" style="
             padding: 20px 24px;
             border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: flex-end;
             gap: 12px;
           ">
-            <button id="btn-cancel-import" class="btn btn-secondary">
-              Cancelar
-            </button>
-            <button id="btn-run-import" class="btn btn-primary" disabled>
-              Importar Dados
-            </button>
-          </footer>
+        <button id="btn-cancel-import" class="btn btn-secondary">
+          Cancelar
+        </button>
+        <button id="btn-run-import" class="btn btn-primary" disabled>
+          Importar Dados
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALHES DA VIAGEM (NEW) -->
+  <div id="trip-details-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 600px; width: 95%;">
+      <header class="modal-header">
+        <h2>
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-history"></use>
+          </svg>
+          Detalhes da Viagem
+        </h2>
+        <button id="trip-details-close" class="icon-btn">
+          <svg class="icon">
+            <use href="assets/icons-unified.svg#icon-close"></use>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 70vh;">
+        <!-- Insight Banner Specific for Trip -->
+        <div id="trip-insight-container" style="display: none; margin-bottom: 20px;">
+          <div class="insight-banner">
+            <div class="insight-icon">💡</div>
+            <div class="insight-text" id="trip-insight-text"></div>
+          </div>
+        </div>
+
+        <!-- Trip Summary Grid -->
+        <div class="analytics-grid"
+          style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+          <div class="analytics-box"
+            style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+            <div id="trip-modal-score" style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">--
+            </div>
+            <div class="muted" style="font-size: 0.75rem;">Score de Condução</div>
+          </div>
+          <div class="analytics-box"
+            style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
+            <div id="trip-modal-route" style="font-size: 1.1rem; font-weight: 700; margin-top: 5px;">--</div>
+            <div class="muted" style="font-size: 0.75rem;">Tipo de Percurso</div>
+          </div>
+        </div>
+
+        <!-- Chart Area -->
+        <div class="chart-card card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <h4>Telemetria da Viagem</h4>
+          </div>
+          <div class="card-body" style="height: 250px;">
+            <canvas id="chart-trip-telemetry"></canvas>
+          </div>
+        </div>
+
+        <!-- Secondary Metrics -->
+        <div style="display: flex; flex-direction: column; gap: 8px;" id="trip-modal-metrics">
+          <!-- Dynamically filled -->
         </div>
       </div>
 
-      <!-- MODAL: DETALHES DA VIAGEM (NEW) -->
-      <div id="trip-details-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-card" style="max-width: 600px; width: 95%;">
-          <header class="modal-header">
-            <h2>
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-history"></use>
-              </svg>
-              Detalhes da Viagem
-            </h2>
-            <button id="trip-details-close" class="icon-btn">
-              <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-close"></use>
-              </svg>
-            </button>
-          </header>
-
-          <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 70vh;">
-            <!-- Insight Banner Specific for Trip -->
-            <div id="trip-insight-container" style="display: none; margin-bottom: 20px;">
-              <div class="insight-banner">
-                <div class="insight-icon">💡</div>
-                <div class="insight-text" id="trip-insight-text"></div>
-              </div>
-            </div>
-
-            <!-- Trip Summary Grid -->
-            <div class="analytics-grid"
-              style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
-              <div class="analytics-box"
-                style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
-                <div id="trip-modal-score" style="font-size: 1.5rem; font-weight: 800; color: var(--color-primary);">--
-                </div>
-                <div class="muted" style="font-size: 0.75rem;">Score de Condução</div>
-              </div>
-              <div class="analytics-box"
-                style="background: var(--bg-hover); padding: 12px; border-radius: 12px; text-align: center;">
-                <div id="trip-modal-route" style="font-size: 1.1rem; font-weight: 700; margin-top: 5px;">--</div>
-                <div class="muted" style="font-size: 0.75rem;">Tipo de Percurso</div>
-              </div>
-            </div>
-
-            <!-- Chart Area -->
-            <div class="chart-card card" style="margin-bottom: 20px;">
-              <div class="card-header">
-                <h4>Telemetria da Viagem</h4>
-              </div>
-              <div class="card-body" style="height: 250px;">
-                <canvas id="chart-trip-telemetry"></canvas>
-              </div>
-            </div>
-
-            <!-- Secondary Metrics -->
-            <div style="display: flex; flex-direction: column; gap: 8px;" id="trip-modal-metrics">
-              <!-- Dynamically filled -->
-            </div>
-          </div>
-
-          <footer class="modal-footer">
-            <button id="trip-details-ok" class="btn btn-primary btn-gradient" style="width: 100%;">Fechar</button>
-          </footer>
-          <div style="text-align: center; font-size: 0.75rem; opacity: 0.3; margin-top: 8px; margin-bottom: 8px;">
-            antonioappleton
-          </div>
-        </div>
+      <footer class="modal-footer">
+        <button id="trip-details-ok" class="btn btn-primary btn-gradient" style="width: 100%;">Fechar</button>
+      </footer>
+      <div style="text-align: center; font-size: 0.75rem; opacity: 0.3; margin-top: 8px; margin-bottom: 8px;">
+        antonioappleton
       </div>
+    </div>
+  </div>
 
-      <!-- Progress Modal (for CSV/ZIP Imports) -->
-      <div id="upload-progress-modal" class="modal hidden" style="
+  <!-- Progress Modal (for CSV/ZIP Imports) -->
+  <div id="upload-progress-modal" class="modal hidden" style="
         z-index: 3000;
         background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
@@ -1693,28 +1691,28 @@
         align-items: center;
         justify-content: center;
       ">
-        <div class="card" style="width: 90%; max-width: 400px; padding: 32px; text-align: center">
-          <div class="spinner" style="margin: 0 auto 24px auto"></div>
-          <h3 style="margin-bottom: 8px">A processar dados...</h3>
-          <p id="upload-progress-text" class="muted" style="margin-bottom: 24px">
-            A preparar a importação
-          </p>
-          <div style="
+    <div class="card" style="width: 90%; max-width: 400px; padding: 32px; text-align: center">
+      <div class="spinner" style="margin: 0 auto 24px auto"></div>
+      <h3 style="margin-bottom: 8px">A processar dados...</h3>
+      <p id="upload-progress-text" class="muted" style="margin-bottom: 24px">
+        A preparar a importação
+      </p>
+      <div style="
             width: 100%;
             height: 8px;
             background: var(--bg-hover);
             border-radius: 4px;
             overflow: hidden;
           ">
-            <div id="upload-progress-bar" style="
+        <div id="upload-progress-bar" style="
               width: 0%;
               height: 100%;
               background: var(--color-primary-start);
               transition: width 0.3s ease-out;
             "></div>
-          </div>
-        </div>
       </div>
+    </div>
+  </div>
 </body>
 
 </html>
