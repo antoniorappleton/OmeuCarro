@@ -880,10 +880,10 @@ footer a .icon {
   width: 100%;
   max-width: 520px;
   border-radius: 14px;
-  max-height: 85vh !important; /* Constrain height */
-  display: flex !important; /* Force flex */
-  flex-direction: column !important;
-  overflow: hidden !important;
+  max-height: 90vh; /* Standard max height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   z-index: 101;
   background: var(--color-surface);
@@ -921,12 +921,11 @@ footer a .icon {
 }
 
 .modal-body {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  min-height: 0; /* Fix for flex children scroll */
-  padding: 18px 18px 80px !important; /* Extra bottom space */
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 18px;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .modal-footer {
