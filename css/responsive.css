@@ -1,0 +1,144 @@
+/* =========================================
+   RESPONSIVE & DESKTOP OPTIMIZATIONS
+   ========================================= */
+
+/* --- 1. GLOBAL LAYOUT --- */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1100px !important; /* Allow more space on big screens */
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .home-main, .dashboard-container {
+    padding-top: 2rem;
+  }
+}
+
+/* --- 2. BUTTONS TOUCH TARGETS --- */
+.btn {
+  min-height: 48px; /* Accessible mobile height */
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 1024px) {
+  .btn {
+    min-height: 40px; /* Slimmer for desktop */
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* --- 3. MODALS (DESKTOP VS MOBILE) --- */
+/* Mobile: Bottom Sheet (Default) */
+.fuel-modal-overlay, .modal-overlay, .modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: flex-end; /* Bottom sheet by default */
+  justify-content: center;
+}
+
+.fuel-modal-overlay.is-open, .modal-backdrop.visible {
+  display: flex !important;
+}
+
+.fuel-modal, .modal-card, .trip-modal-card {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: 24px 24px 0 0;
+  padding: 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+  transform: translateY(0);
+}
+
+/* Desktop: Centered Card */
+@media (min-width: 768px) {
+  .fuel-modal-overlay, .modal-overlay, .modal-backdrop {
+    align-items: center; /* Center on desktop */
+  }
+
+  .fuel-modal, .modal-card, .trip-modal-card {
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    margin: 20px;
+    box-shadow: var(--shadow-xl);
+    transform: scale(1);
+    animation: modalAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* --- 4. GRIDS --- */
+@media (min-width: 768px) {
+  /* Dashboard Stats Grid */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 24px !important;
+  }
+
+  /* Vehicle Detail KPIs */
+  .vehicle-kpis-compact {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  /* Action Grids */
+  .action-grid-premium {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1rem !important;
+  }
+}
+
+/* --- 5. CARDS RADIUS & SPACING --- */
+.card, .stats-card, .vehicle-card, .vehicle-card-modern {
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@media (min-width: 1024px) {
+  .card:hover, .stats-card:hover, .vehicle-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* --- 6. FORMS --- */
+input, select, textarea {
+  min-height: 48px;
+  font-size: 1rem !important; /* Prevent iOS zoom */
+}
+
+@media (min-width: 1024px) {
+  input, select, textarea {
+    min-height: 42px;
+    font-size: 0.95rem !important;
+  }
+}
+
+/* --- 7. AUTH PAGE --- */
+@media (min-width: 768px) {
+  .auth-container {
+    max-width: 440px !important;
+  }
+  .auth-card {
+    padding: 3rem !important;
+  }
+}
