@@ -435,9 +435,9 @@ document.addEventListener("DOMContentLoaded", () => {
         location.reload();
       } catch (err) {
         console.error(err);
-        alert("Erro ao guardar preferíªncias.");
+        alert("Erro ao guardar preferências.");
         btnSave.disabled = false;
-        btnSave.textContent = "Guardar Preferíªncias";
+        btnSave.textContent = "Guardar Preferências";
       }
     });
   }
@@ -683,7 +683,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .join("");
 
-    // Um íºnico handler para tudo (abre/editar/apagar)
+    // Um único handler para tudo (abre/editar/apagar)
     list.onclick = async (e) => {
       const card = e.target.closest(".doc-card");
 
@@ -1049,7 +1049,7 @@ document.addEventListener("DOMContentLoaded", () => {
           let badgeClass = "badge-success";
           let label = "OK";
 
-          // Calcular urgíªncia para ordenação (menor diffKm ou menor diffDays)
+          // Calcular urgência para ordenação (menor diffKm ou menor diffDays)
           // Vamos priorizar Km para sorting se existir, senão dias.
           if (status.nextKm) {
             urgency = status.diffKm;
@@ -1065,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
             label = "PRí“XIMA";
           }
 
-          // Override label com detalhe se possí­vel
+          // Override label com detalhe se possível
           if (status.status !== "ok") {
             if (status.diffKm < 0)
               label = `Passou ${Math.abs(status.diffKm).toFixed(1)} km`;
@@ -1302,7 +1302,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function init() {
     const veiculoId = getParam("id");
     if (!veiculoId) {
-      showMessage("Nenhum veí­culo indicado.", "error");
+      showMessage("Nenhum veículo indicado.", "error");
       return;
     }
 
@@ -1335,7 +1335,7 @@ document.addEventListener("DOMContentLoaded", () => {
       v = veiculos.find((x) => x.id === veiculoId);
 
       if (!v) {
-        showMessage("Veí­culo não encontrado.", "error");
+        showMessage("Veículo não encontrado.", "error");
         return;
       }
 
@@ -1345,7 +1345,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       el.name.textContent = v.nome;
       el.subtitle.textContent = `${v.marca} ${v.modelo}`;
-      el.plate.textContent = v.matricula || "Sem matrí­cula";
+      el.plate.textContent = v.matricula || "Sem matrícula";
       const fuelType = v.combustivelPadrao || "â€”";
       const fuelLevel = v.nivelCombustivel;
 
@@ -1456,9 +1456,9 @@ document.addEventListener("DOMContentLoaded", () => {
           // Como o modal de edição completo está na veiculos.html,
           // podemos redirecionar para lá com um param para abrir o modal,
           // ou simplesmente informar. Vamos tentar ser prestáveis:
-          // "Por favor edite os dados na lista de veí­culos."
+          // "Por favor edite os dados na lista de veículos."
           alert(
-            "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veí­culos.",
+            "Para editar estas datas, utilize o botão 'Editar' no topo da lista de veículos.",
           );
           window.location.href = "veiculos.html";
         };
@@ -1901,7 +1901,7 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(() => renderTrendsChart("voltagemMedia"), 100);
         } catch (err) {
           console.error("Erro loadTrends:", err);
-          alert("Erro ao carregar tendíªncias: " + err.message);
+          alert("Erro ao carregar tendências: " + err.message);
         }
       }
 
@@ -2002,7 +2002,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnAddManual = document.getElementById("btn-add-trip-manual");
       if (btnAddManual) {
         btnAddManual.addEventListener("click", () => {
-          alert("Funcionalidade em desenvolvimento. Brevemente disponí­vel!");
+          alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
         });
       }
 
@@ -2038,7 +2038,7 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             const count = await handleTorqueImport(veiculoId, file);
             alert(
-              `âœ… Importação concluí­da!\n${count} registos importados com sucesso.`,
+              `âœ… Importação concluída!\n${count} registos importados com sucesso.`,
             );
 
             // Reload UI
@@ -2153,7 +2153,7 @@ document.addEventListener("DOMContentLoaded", () => {
               ? Number(trip.metricas.rpmMedio).toFixed(1)
               : "--") + " rpm";
         if (elTemp)
-          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " Â°C";
+          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
 
         // Battery
         const elVolt = document.getElementById("last-trip-voltage");
@@ -2377,7 +2377,7 @@ document.addEventListener("DOMContentLoaded", () => {
             labels: labels,
             datasets: [
               {
-                label: "Ní­vel Combustí­vel (%)",
+                label: "Nível Combustível (%)",
                 data: fuelData,
                 borderColor: "#10b981", // green-500
                 backgroundColor: "rgba(16, 185, 129, 0.1)",
@@ -2435,10 +2435,10 @@ document.addEventListener("DOMContentLoaded", () => {
               "ðŸ”¥ Condução Excelente! O teu estilo é altamente eficiente.";
           else if (s > 75)
             elInsight.textContent =
-              "ðŸ‘ Boa condução. Estás a poupar combustí­vel.";
+              "ðŸ‘ Boa condução. Estás a poupar combustível.";
           else if (s > 50)
             elInsight.textContent =
-              "âš ï¸ Estilo agressivo. Tenta suavizar as acelerações.";
+              "⚠️ Estilo agressivo. Tenta suavizar as acelerações.";
           else
             elInsight.textContent =
               "ðŸ›‘ Condução ineficiente. Verifica a tua condução.";
@@ -2454,7 +2454,7 @@ document.addEventListener("DOMContentLoaded", () => {
             (Math.round(trip.metricas?.rpmMedio || 0) || "--") + " rpm";
         if (elTemp)
           elTemp.textContent =
-            (Math.round(trip.metricas?.temperaturaMax || 0) || "--") + " Â°C";
+            (Math.round(trip.metricas?.temperaturaMax || 0) || "--") + " °C";
 
         // 2. Show Modal
         modal.classList.remove("hidden");
@@ -2714,10 +2714,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (trip.metricas?.rpmMedio > 1400) {
           insight =
-            "ðŸ’¡ Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo até 10%.";
+            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo até 10%.";
         } else if (trip.consumoMedio > 6.5) {
           insight =
-            "âš ï¸ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
+            "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
         } else if (trip.score > 90) {
           insight =
             "ðŸ”¥ Condução Excelente! O teu estilo é altamente eficiente.";
@@ -2748,7 +2748,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="alert-item">
             <span class="alert-label">Temp. Máxima</span>
-            <span class="alert-value">${m.temperaturaMax || "--"} Â°C</span>
+            <span class="alert-value">${m.temperaturaMax || "--"} °C</span>
           </div>
         `;
 
@@ -2777,7 +2777,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tripTelemetryChart) tripTelemetryChart.destroy();
 
         // Sample data for visualized trend (if backend data missing, we use summary)
-        const labels = ["Iní­cio", "Meio", "Fim"];
+        const labels = ["Início", "Meio", "Fim"];
         const consumps = [
           trip.consumoMedio * 1.1,
           trip.consumoMedio,
@@ -3199,8 +3199,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
           elAlertBox.className = `form-message ${isCrit ? "form-message--error" : "form-message--warning"}`;
           elAlertBox.textContent = isCrit
-            ? `âš ï¸ Reserva atingida! Abasteça urgentemente.`
-            : `âš ï¸ Combustí­vel baixo. Planeie abastecer.`;
+            ? `⚠️ Reserva atingida! Abasteça urgentemente.`
+            : `⚠️ Combustível baixo. Planeie abastecer.`;
         } else {
           elAlertBox.classList.add("hidden");
         }
@@ -3317,7 +3317,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if ("Notification" in window && Notification.permission === "granted") {
       getUserSettings().then((settings) => {
         if (settings && settings.notificacoesAtivas !== false) {
-          console.log("[Veí­culo] A atualizar token FCM...");
+          console.log("[Veículo] A atualizar token FCM...");
           window
             .requestNotificationPermissionAndSaveToken()
             .catch(console.error);
@@ -3561,7 +3561,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dotClass = "status-warning";
       }
       if (diagStatus === "Critical") {
-        finalState = "Crí­tico";
+        finalState = "Crítico";
         dotClass = "status-error";
       }
 
@@ -3614,7 +3614,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `${failCount} Falhas detetadas`
             : nearLimit > 0
               ? `${nearLimit} Alertas (Perto do limite)`
-              : "Saíºde: Saudável";
+              : "Saúde: Saudável";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -3946,7 +3946,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         csvText = await csvFile.async("string");
-        console.log(`[Import] Extraí­do CSV do ZIP: ${csvFile.name}`);
+        console.log(`[Import] Extraído CSV do ZIP: ${csvFile.name}`);
       } else {
         csvText = await file.text();
       }
@@ -4022,7 +4022,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ["Distance to empty", "Autonomia"],
       );
       const coolantCol = findHeaderPriority(
-        ["Engine Coolant Temperature(Â°C)", "Engine Coolant Temperature"],
+        ["Engine Coolant Temperature(°C)", "Engine Coolant Temperature"],
         ["Coolant", "Temperatura"],
       );
       const loadCol = findHeaderPriority(
@@ -4030,7 +4030,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ["Load", "Carga"],
       );
       const intakeCol = findHeaderPriority(
-        ["Intake Air Temperature(Â°C)", "Intake Air Temperature"],
+        ["Intake Air Temperature(°C)", "Intake Air Temperature"],
         ["Intake", "Admissão"],
       );
       const mafCol = findHeaderPriority(
@@ -4298,13 +4298,13 @@ document.addEventListener("DOMContentLoaded", () => {
         explanation = `${name} não concluiu o teste ou depende de outro teste falhado.`;
       } else if (noiseCylinder16) {
         status = "IGNORED";
-        explanation = `Este teste refere-se ao "Cylinder 16", que não existe no motor deste veí­culo. É ruí­do do scanner e pode ser ignorado.`;
+        explanation = `Este teste refere-se ao "Cylinder 16", que não existe no motor deste veículo. É ruído do scanner e pode ser ignorado.`;
       } else if (value >= realMin && value <= realMax) {
         status = "PASS";
         explanation = `${name} dentro dos limites (${value} entre ${realMin} e ${realMax}).`;
       } else {
         status = "FAIL";
-        explanation = `${name} fora dos limites: valor ${value}, intervalo permitido ${realMin} â†’ ${realMax}.`;
+        explanation = `${name} fora dos limites: valor ${value}, intervalo permitido ${realMin} ←’ ${realMax}.`;
       }
 
       // Calculate margin to limit for highlighting

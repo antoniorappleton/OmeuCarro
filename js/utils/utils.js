@@ -69,7 +69,7 @@ function formatNumber(value, decimals = 1) {
   // Se for inteiro, não precisa de casas decimais?
   // O utilizador pediu "todos os valores NíƒO-INTEIROS... arredondar a 1 casa".
   // Se for inteiro (ex: 100), deve converter para 100.0 ou ficar 100?
-  // Geralmente em apps, consistíªncia visual prefere 100.0 se for métrica contí­nua.
+  // Geralmente em apps, consistência visual prefere 100.0 se for métrica contínua.
   // Contudo, "non-integer" implies check.
 
   if (Number.isInteger(n)) return n.toString();
@@ -90,7 +90,7 @@ function formatVolume(value, unit = "L") {
 }
 
 /**
- * Calcula a eficiíªncia com base na unidade preferida.
+ * Calcula a eficiência com base na unidade preferida.
  * - L/100km: (Litros / km) * 100
  * - km/L: km / Litros
  * - mpg (US): (km * 0.621371) / (Litros * 0.264172) -> simplificando: (km / Litros) * 2.35215
@@ -98,7 +98,7 @@ function formatVolume(value, unit = "L") {
  * @param {number} km Distância percorrida
  * @param {number} liters Litros consumidos
  * @param {string} unit Unidade preferida ('L/100km', 'km/L', 'mpg')
- * @returns {number} Valor da eficiíªncia (ou null se inválido)
+ * @returns {number} Valor da eficiência (ou null se inválido)
  */
 function calculateEfficiency(km, liters, unit = "L/100km") {
   if (!km || !liters || liters <= 0) return null;

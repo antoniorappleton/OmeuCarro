@@ -2,7 +2,7 @@
 //   veiculos.js – Lógica da página "veiculos.html"
 // ================================================
 
-// REFERíŠNCIAS DOS ELEMENTOS
+// REFERÊNCIAS DOS ELEMENTOS
 const listEl = document.getElementById("vehicles-list");
 const emptyEl = document.getElementById("vehicles-empty");
 const btnAddVehicle = document.getElementById("btn-add-vehicle");
@@ -20,7 +20,7 @@ const inputFuel = document.getElementById("vehicle-fuel");
 const inputOdometer = document.getElementById("vehicle-odometer");
 const modalMsg = document.getElementById("vehicle-modal-message");
 
-let editingVehicleId = null; // null â†’ criar; id â†’ editar
+let editingVehicleId = null; // null ←’ criar; id ←’ editar
 
 // ================ MODAL ================
 function openModal(editing = false, data = null) {
@@ -30,13 +30,13 @@ function openModal(editing = false, data = null) {
   modalMsg.textContent = "";
 
   if (!editing) {
-    modalTitle.textContent = "Adicionar veí­culo";
+    modalTitle.textContent = "Adicionar veículo";
     modalForm.reset();
     editingVehicleId = null;
     return;
   }
 
-  modalTitle.textContent = "Editar veí­culo";
+  modalTitle.textContent = "Editar veículo";
   editingVehicleId = data.id;
 
   // ===== CAMPOS EXISTENTES =====
@@ -127,7 +127,7 @@ async function carregarVeiculos() {
   // ðŸ”¹ carregar TODOS os abastecimentos (subcoleções)
   const abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
 
-  // ðŸ”¹ mapear estatí­sticas por veí­culo
+  // ðŸ”¹ mapear estatísticas por veículo
   const statsPorVeiculo = {};
 
   abastecimentos.forEach((abs) => {
@@ -152,7 +152,7 @@ async function carregarVeiculos() {
     const card = document.createElement("article");
     card.className = "vehicle-card vehicle-card-modern";
     card.dataset.veiculoId = v.id;
-    const matricula = v.matricula || "Sem matrí­cula";
+    const matricula = v.matricula || "Sem matrícula";
     const combustivel = v.combustivelPadrao || "â€”";
 
     // Se tiveres ano no documento (ex: v.ano), mostramos. Se não, não aparece.
@@ -212,7 +212,7 @@ async function carregarVeiculos() {
           </div>
 
           <div class="vehicle-text">
-            <h3 class="vehicle-title">${v.nome || "Veí­culo"}</h3>
+            <h3 class="vehicle-title">${v.nome || "Veículo"}</h3>
 
             <p class="vehicle-subtitle">${v.marca || ""} ${v.modelo || ""}</p>
             
@@ -277,7 +277,7 @@ async function carregarVeiculos() {
         <div class="vehicle-actions">
           <button class="icon-btn-sm" type="button" data-edit="${
             v.id
-          }" aria-label="Editar veí­culo">
+          }" aria-label="Editar veículo">
             <svg class="icon" aria-hidden="true">
               <use href="../assets/icons/icons-unified.svg#icon-edit"></use>
             </svg>
@@ -285,7 +285,7 @@ async function carregarVeiculos() {
 
           <button class="icon-btn-sm danger" type="button" data-del="${
             v.id
-          }" aria-label="Eliminar veí­culo">
+          }" aria-label="Eliminar veículo">
             <svg class="icon" aria-hidden="true">
               <use href="../assets/icons/icons-unified.svg#icon-trash"></use>
             </svg>
@@ -346,7 +346,7 @@ listEl.addEventListener("click", async (e) => {
   if (delBtn) {
     e.stopPropagation();
     const id = delBtn.getAttribute("data-del");
-    if (!confirm("Eliminar este veí­culo? (isto não apaga abastecimentos)"))
+    if (!confirm("Eliminar este veículo? (isto não apaga abastecimentos)"))
       return;
     await deleteVeiculo(id);
     await carregarVeiculos();

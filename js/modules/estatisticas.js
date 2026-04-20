@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if ("Notification" in window && Notification.permission === "granted") {
       getUserSettings().then((settings) => {
         if (settings && settings.notificacoesAtivas !== false) {
-          console.log("[Estatí­sticas] A atualizar token FCM...");
+          console.log("[Estatísticas] A atualizar token FCM...");
           window
             .requestNotificationPermissionAndSaveToken()
             .catch(console.error);
@@ -36,7 +36,7 @@ async function initFilter() {
 
   try {
     const veiculos = await getVeiculosDoUtilizador();
-    select.innerHTML = '<option value="">Todos os veí­culos</option>';
+    select.innerHTML = '<option value="">Todos os veículos</option>';
 
     veiculos.forEach((v) => {
       const opt = document.createElement("option");
@@ -106,7 +106,7 @@ async function carregarEstatisticas(filterVeiculoId = null) {
       registersByVehicle[vid].push(a);
     });
 
-    // 1. Processar cada veí­culo separadamente para garantir consistíªncia de odómetros
+    // 1. Processar cada veículo separadamente para garantir consistência de odómetros
     Object.values(registersByVehicle).forEach((listaVeiculo) => {
       // Ordenar esta sub-lista
       listaVeiculo.sort((a, b) => (a.data || "").localeCompare(b.data || ""));
@@ -151,7 +151,7 @@ async function carregarEstatisticas(filterVeiculoId = null) {
         porPosto[posto].totalGasto += custo;
         porPosto[posto].litros += litros;
 
-        // Odometro (Min/Max apenas faz sentido se for UM veí­culo)
+        // Odometro (Min/Max apenas faz sentido se for UM veículo)
         if (!isNaN(odo)) {
           if (minOdo === null || odo < minOdo) minOdo = odo;
           if (maxOdo === null || odo > maxOdo) maxOdo = odo;
@@ -252,14 +252,14 @@ async function carregarEstatisticas(filterVeiculoId = null) {
 
     // Price trend check (vs 2 months ago roughly, or simple vs prev)
     // We already have "trend" percentage in existing code (that usually sets kpi-trend).
-    // We want to add a text context like "Mais caro que há 2 meses" or "Média: X/míªs".
+    // We want to add a text context like "Mais caro que há 2 meses" or "Média: X/mês".
 
-    const contextoGasto = `Média: ~${formatCurrency(avgSpend, settings.moeda)}/míªs`;
-    const contextoLitros = `Média: ~${formatVolume(avgLiters)}/míªs`;
+    const contextoGasto = `Média: ~${formatCurrency(avgSpend, settings.moeda)}/mês`;
+    const contextoLitros = `Média: ~${formatVolume(avgLiters)}/mês`;
 
     // Efficiency Context
     // Simple heuristic: compare with user's avg or just say "Global avg"
-    const contextoEficiencia = "Média do perí­odo selecionado";
+    const contextoEficiencia = "Média do período selecionado";
 
     // Price Context
     const contextoPreco = "Média por litro (Global)";
@@ -276,23 +276,23 @@ async function carregarEstatisticas(filterVeiculoId = null) {
 
       if (spendDiff > 0 && kmDiff < 0) {
         insightText =
-          "Conduziste menos km este míªs, mas gastaste mais em combustí­vel.";
+          "Conduziste menos km este mês, mas gastaste mais em combustível.";
       } else if (spendDiff < 0 && kmDiff > 0) {
         insightText =
-          "í“timo! Conduziste mais km e gastaste menos que no míªs anterior.";
+          "í“timo! Conduziste mais km e gastaste menos que no mês anterior.";
       } else if (spendDiff > 0 && kmDiff > 0) {
         // Both up
         const costPerKmCurr = curr.gasto / (curr.kmPercorridos || 1);
         const costPerKmPrev = prev.gasto / (prev.kmPercorridos || 1);
         if (costPerKmCurr > costPerKmPrev) {
           insightText =
-            "Aumentou o gasto e o custo por km. Verifica o preço do combustí­vel ou a eficiíªncia.";
+            "Aumentou o gasto e o custo por km. Verifica o preço do combustível ou a eficiência.";
         } else {
           insightText =
             "Gastaste mais, mas foi porque conduziste mais. O custo por km manteve-se estável.";
         }
       } else {
-        insightText = "Gasto e distância reduziram face ao míªs anterior.";
+        insightText = "Gasto e distância reduziram face ao mês anterior.";
       }
     } else {
       insightText = "Continua a registar para ver insights de evolução.";
@@ -579,7 +579,7 @@ async function carregarEstatisticas(filterVeiculoId = null) {
 
     // 7.1 EFICIENCIA MENSAL (NOVO)
     const unitLabel = settings.unidadeConsumo || "L/100km";
-    // NOTE: Se unidade for km/L, terí­amos de converter dataEficienciaMensal
+    // NOTE: Se unidade for km/L, teríamos de converter dataEficienciaMensal
     // O array dataEficienciaMensal está em L/100km (base)
 
     let chartDataEfic = dataEficienciaMensal;

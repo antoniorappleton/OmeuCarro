@@ -154,7 +154,7 @@ auth.onAuthStateChanged(async (user) => {
               }
             } catch (err) {
               console.error("Erro ao pedir permissão:", err);
-              alert("Não foi possí­vel ativar as notificações: " + err.message);
+              alert("Não foi possível ativar as notificações: " + err.message);
               e.target.checked = false; // reverte se falhar
             }
           }
@@ -352,8 +352,8 @@ if (btnExportCsv) {
       // Convert to CSV
       const headers = [
         "Data",
-        "Veí­culo",
-        "Combustí­vel",
+        "Veículo",
+        "Combustível",
         "Litros",
         "Preço/L",
         "Total",
@@ -380,7 +380,7 @@ if (btnExportCsv) {
           // but vehicles have docs. The prompt says "Opção de incluir documentos (links)" in "Dados & Exportação".
           // Maybe it means exporting the document list itself? Or linking docs to fueling?
           // Given the context is "Abastecimentos" usually for CSV, but maybe "Dados" implies everything.
-          // Let's assume it wants "Exportar dados em CSV por perí­odo" (Requirements).
+          // Let's assume it wants "Exportar dados em CSV por período" (Requirements).
           // Since I am doing "All Data", I will focus on refueling.
           // If "Incluir documentos" means exporting a separate CSV of documents or adding a column, I'll assume adding a column if applicable.
           // But Wait, `js/firestore.js` has `getDocumentosDoVeiculo`.

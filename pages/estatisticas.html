@@ -1,236 +1,234 @@
-﻿<!doctype html>
-<html lang="pt">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>L100 – Estatísticas</title>
-
-    <!-- Tema global -->
-    <link rel="stylesheet" href="../css/style.css?v=28" />
-    <!-- CSS específico de estatísticas -->
-    <link rel="stylesheet" href="../css/dashboard.css?v=28" />
-    <script src="../js/core/theme.js?v=28"></script>
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=28"></script>
-
-    <!-- Firebase v9 -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=28"></script>
-
-    <script defer src="../js/core/firebase-config.js?v=28"></script>
-    <script defer src="../js/core/auth.js?v=28"></script>
-    <script defer src="../js/core/firestore.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=28"></script>
-    <script defer src="../js/utils/notifications.js?v=28"></script>
-    <script defer src="../js/utils/utils.js?v=21"></script>
-    <script defer src="../js/modules/analytics.js?v=28"></script>
-    <!-- depois os ficheiros específicos da página -->
-    <script defer src="../js/modules/estatisticas.js?v=28"></script>
-  </head>
-  <body>
-    <!-- HEADER -->
-    <header class="top-header">
-      <button
-        type="button"
-        class="back-btn"
-        onclick="window.location.href = 'dashboard.html'"
-      >
-        â†
-      </button>
-      <div
-        style="
-          flex: 1;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-        "
-      >
-        <div>
-          <h1>Estatísticas</h1>
-          <p>Análise detalhada dos seus abastecimentos</p>
-        </div>
-        <select
-          id="filter-vehicle"
-          style="
-            max-width: 200px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            background: var(--color-surface);
-            color: var(--color-text);
-          "
-        >
-          <option value="">A carregar...</option>
-        </select>
-      </div>
-    </header>
-
-    <main class="dashboard-container">
-      <!-- INSIGHT BANNER -->
-      <section class="insight-banner" id="insight-banner" style="display: none">
-        <div class="insight-icon">ðŸ’¡</div>
-        <div class="insight-text" id="insight-text">A analisar dados...</div>
-      </section>
-
-      <!-- KPIs -->
-      <section class="kpi-grid">
-        <!-- Total gasto -->
-        <article class="kpi-card">
-          <div class="kpi-header">
-            <span>Total Gasto</span>
-            <span>€</span>
-          </div>
-          <h2 id="kpi-total-gasto">€0.00</h2>
-          <p class="kpi-sub" id="kpi-total-gasto-context">--</p>
-          <p class="kpi-trend kpi-trend-down" id="kpi-total-gasto-trend">--</p>
-        </article>
-
-        <!-- Custo por Km (NOVO) -->
-        <article class="kpi-card">
-          <div class="kpi-header">
-            <span>Custo por Km</span>
-            <span>€/km</span>
-          </div>
-          <h2 id="kpi-custo-km">0.00 €/km</h2>
-          <p class="kpi-sub">Custo real de rodagem</p>
-        </article>
-
-        <!-- Litros consumidos -->
-        <article class="kpi-card">
-          <div class="kpi-header">
-            <span>Litros Consumidos</span>
-            <span>
-              <svg class="icon" aria-hidden="true">
-                <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
-              </svg>
-            </span>
-          </div>
-          <h2 id="kpi-total-litros">0L</h2>
-          <p class="kpi-sub" id="kpi-total-litros-context">--</p>
-          <p class="kpi-trend kpi-trend-down" id="kpi-total-litros-trend">--</p>
-        </article>
-
-        <!-- Preço médio -->
-        <article class="kpi-card">
-          <div class="kpi-header">
-            <span>Preço Médio</span>
-            <span>
-              <svg class="icon" aria-hidden="true">
-                <use href="../assets/icons/icons-unified.svg#icon-trend-up"></use>
-              </svg>
-            </span>
-          </div>
-          <h2 id="kpi-preco-medio">€0.000</h2>
-          <p class="kpi-sub" id="kpi-preco-medio-context">--</p>
-          <p class="kpi-trend kpi-trend-up" id="kpi-preco-medio-trend">--</p>
-        </article>
-
-        <!-- Eficiência média -->
-        <article class="kpi-card">
-          <div class="kpi-header">
-            <span>Eficiência Média</span>
-            <span>
-              <svg class="icon" aria-hidden="true">
-                <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
-              </svg>
-            </span>
-          </div>
-          <h2 id="kpi-eficiencia">0 km/L</h2>
-          <p class="kpi-sub" id="kpi-eficiencia-context">--</p>
-          <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">--</p>
-        </article>
-      </section>
-
-      <!-- GRID DE GRíFICOS -->
-      <section class="charts-grid">
-        <!-- 1. Gastos mensais (PRINCIPAL - WIDE) -->
-        <article class="chart-card chart-card-wide">
-          <h3>Gastos Mensais</h3>
-          <canvas id="chart-gastos-mensais"></canvas>
-        </article>
-
-        <!-- 2. Consumo Mensal (Litros) -->
-        <article class="chart-card">
-          <h3>Consumo (Litros)</h3>
-          <canvas id="chart-litros-mensais"></canvas>
-        </article>
-
-        <!-- 3. Distância Mensal -->
-        <article class="chart-card">
-          <h3>Distância (km)</h3>
-          <canvas id="chart-km-mensais"></canvas>
-        </article>
-
-        <!-- 4a. Eficiência Mensal (L/100km) -->
-        <article class="chart-card">
-          <h3>Consumo Médio (L/100km)</h3>
-          <canvas id="chart-eficiencia-mensal"></canvas>
-        </article>
-
-        <!-- 4b. Custo por 100km (NOVO LADO A LADO) -->
-        <article class="chart-card">
-          <h3>Custo por 100km (€)</h3>
-          <canvas id="chart-custo-100km"></canvas>
-        </article>
-
-        <!-- 5. Evolução do preço -->
-        <article class="chart-card">
-          <h3>Evolução do Preço</h3>
-          <canvas id="chart-preco"></canvas>
-        </article>
-
-        <!-- 6. Distribuição por tipo -->
-        <article class="chart-card">
-          <h3>Distribuição por Tipo</h3>
-          <canvas id="chart-tipos"></canvas>
-        </article>
-
-        <!-- 7. Postos Mais Visitados -->
-        <article class="chart-card">
-          <h3>Postos Mais Visitados</h3>
-          <canvas id="chart-postos"></canvas>
-        </article>
-
-        <!-- 8. Postos Mais Baratos -->
-        <article class="chart-card">
-          <h3>Postos Mais Baratos</h3>
-          <canvas id="chart-postos-baratos"></canvas>
-        </article>
-      </section>
-    </main>
-    <!-- FOOTER -->
-    <footer>
-      <a href="dashboard.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
-        </svg>
-        <span>Home</span>
-      </a>
-      <a href="veiculos.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
-        </svg>
-        <span>Veículos</span>
-      </a>
-      <a href="mapa.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
-        </svg>
-        <span>Mapa</span>
-      </a>
-      <a href="perfil.html">
-        <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
-        </svg>
-        <span>Perfil</span>
-      </a>
-    </footer>
-  </body>
-</html>
-
-
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L100 – Estatísticas</title>
+
+    <!-- Tema global -->
+    <link rel="stylesheet" href="../css/style.css?v=28" />
+    <!-- CSS específico de estatísticas -->
+    <link rel="stylesheet" href="../css/dashboard.css?v=28" />
+    <script src="../js/core/theme.js?v=28"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=28"></script>
+
+    <!-- Firebase v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=28"></script>
+
+    <script defer src="../js/core/firebase-config.js?v=28"></script>
+    <script defer src="../js/core/auth.js?v=28"></script>
+    <script defer src="../js/core/firestore.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=28"></script>
+    <script defer src="../js/utils/notifications.js?v=28"></script>
+    <script defer src="../js/utils/utils.js?v=21"></script>
+    <script defer src="../js/modules/analytics.js?v=28"></script>
+    <!-- depois os ficheiros específicos da página -->
+    <script defer src="../js/modules/estatisticas.js?v=28"></script>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="top-header">
+      <button
+        type="button"
+        class="back-btn"
+        onclick="window.location.href = 'dashboard.html'"
+      >
+        ←
+      </button>
+      <div
+        style="
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        "
+      >
+        <div>
+          <h1>Estatísticas</h1>
+          <p>Análise detalhada dos seus abastecimentos</p>
+        </div>
+        <select
+          id="filter-vehicle"
+          style="
+            max-width: 200px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--color-surface);
+            color: var(--color-text);
+          "
+        >
+          <option value="">A carregar...</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="dashboard-container">
+      <!-- INSIGHT BANNER -->
+      <section class="insight-banner" id="insight-banner" style="display: none">
+        <div class="insight-icon">💡</div>
+        <div class="insight-text" id="insight-text">A analisar dados...</div>
+      </section>
+
+      <!-- KPIs -->
+      <section class="kpi-grid">
+        <!-- Total gasto -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Total Gasto</span>
+            <span>€</span>
+          </div>
+          <h2 id="kpi-total-gasto">€0.00</h2>
+          <p class="kpi-sub" id="kpi-total-gasto-context">--</p>
+          <p class="kpi-trend kpi-trend-down" id="kpi-total-gasto-trend">--</p>
+        </article>
+
+        <!-- Custo por Km (NOVO) -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Custo por Km</span>
+            <span>€/km</span>
+          </div>
+          <h2 id="kpi-custo-km">0.00 €/km</h2>
+          <p class="kpi-sub">Custo real de rodagem</p>
+        </article>
+
+        <!-- Litros consumidos -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Litros Consumidos</span>
+            <span>
+              <svg class="icon" aria-hidden="true">
+                <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
+              </svg>
+            </span>
+          </div>
+          <h2 id="kpi-total-litros">0L</h2>
+          <p class="kpi-sub" id="kpi-total-litros-context">--</p>
+          <p class="kpi-trend kpi-trend-down" id="kpi-total-litros-trend">--</p>
+        </article>
+
+        <!-- Preço médio -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Preço Médio</span>
+            <span>
+              <svg class="icon" aria-hidden="true">
+                <use href="../assets/icons/icons-unified.svg#icon-trend-up"></use>
+              </svg>
+            </span>
+          </div>
+          <h2 id="kpi-preco-medio">€0.000</h2>
+          <p class="kpi-sub" id="kpi-preco-medio-context">--</p>
+          <p class="kpi-trend kpi-trend-up" id="kpi-preco-medio-trend">--</p>
+        </article>
+
+        <!-- Eficiência média -->
+        <article class="kpi-card">
+          <div class="kpi-header">
+            <span>Eficiência Média</span>
+            <span>
+              <svg class="icon" aria-hidden="true">
+                <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
+              </svg>
+            </span>
+          </div>
+          <h2 id="kpi-eficiencia">0 km/L</h2>
+          <p class="kpi-sub" id="kpi-eficiencia-context">--</p>
+          <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">--</p>
+        </article>
+      </section>
+
+      <!-- GRID DE GRÁFICOS -->
+      <section class="charts-grid">
+        <!-- 1. Gastos mensais (PRINCIPAL - WIDE) -->
+        <article class="chart-card chart-card-wide">
+          <h3>Gastos Mensais</h3>
+          <canvas id="chart-gastos-mensais"></canvas>
+        </article>
+
+        <!-- 2. Consumo Mensal (Litros) -->
+        <article class="chart-card">
+          <h3>Consumo (Litros)</h3>
+          <canvas id="chart-litros-mensais"></canvas>
+        </article>
+
+        <!-- 3. Distância Mensal -->
+        <article class="chart-card">
+          <h3>Distância (km)</h3>
+          <canvas id="chart-km-mensais"></canvas>
+        </article>
+
+        <!-- 4a. Eficiência Mensal (L/100km) -->
+        <article class="chart-card">
+          <h3>Consumo Médio (L/100km)</h3>
+          <canvas id="chart-eficiencia-mensal"></canvas>
+        </article>
+
+        <!-- 4b. Custo por 100km (NOVO LADO A LADO) -->
+        <article class="chart-card">
+          <h3>Custo por 100km (€)</h3>
+          <canvas id="chart-custo-100km"></canvas>
+        </article>
+
+        <!-- 5. Evolução do preço -->
+        <article class="chart-card">
+          <h3>Evolução do Preço</h3>
+          <canvas id="chart-preco"></canvas>
+        </article>
+
+        <!-- 6. Distribuição por tipo -->
+        <article class="chart-card">
+          <h3>Distribuição por Tipo</h3>
+          <canvas id="chart-tipos"></canvas>
+        </article>
+
+        <!-- 7. Postos Mais Visitados -->
+        <article class="chart-card">
+          <h3>Postos Mais Visitados</h3>
+          <canvas id="chart-postos"></canvas>
+        </article>
+
+        <!-- 8. Postos Mais Baratos -->
+        <article class="chart-card">
+          <h3>Postos Mais Baratos</h3>
+          <canvas id="chart-postos-baratos"></canvas>
+        </article>
+      </section>
+    </main>
+    <!-- FOOTER -->
+    <footer>
+      <a href="dashboard.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="veiculos.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="perfil.html">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </footer>
+  </body>
+</html>

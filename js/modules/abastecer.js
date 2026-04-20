@@ -42,7 +42,7 @@ async function loadVehicles() {
   try {
     const vehicles = await getVeiculosDoUtilizador();
 
-    vehicleSelect.innerHTML = `<option disabled selected value="">Selecione um veí­culo</option>`;
+    vehicleSelect.innerHTML = `<option disabled selected value="">Selecione um veículo</option>`;
 
     vehicles.forEach((v) => {
       const opt = document.createElement("option");
@@ -72,7 +72,7 @@ async function loadVehicles() {
           ? lastLog.km
           : selectedVehicle.odometroInicial || 0;
 
-        lastOdometerText.textContent = `íšltima leitura: ${lastKm} km`;
+        lastOdometerText.textContent = `Última leitura: ${lastKm} km`;
         inputOdometer.placeholder = Number(lastKm) + 1;
         inputOdometer.value = ""; // Clear for user input
       }
@@ -87,14 +87,14 @@ async function loadVehicles() {
     }
   } catch (error) {
     console.error("Error loading vehicles:", error);
-    alert("Erro ao carregar veí­culos.");
+    alert("Erro ao carregar veículos.");
   }
 }
 
 // SAVE
 btnSave.onclick = async () => {
   const vid = vehicleSelect.value;
-  if (!vid) return alert("Selecione um veí­culo.");
+  if (!vid) return alert("Selecione um veículo.");
 
   const km = Number(inputOdometer.value);
   const liters = Number(inputLiters.value);

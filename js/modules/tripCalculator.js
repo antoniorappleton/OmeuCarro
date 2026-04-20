@@ -53,11 +53,11 @@
         div.id = "trip-vehicle-select-container";
         div.className = "mt-2 mb-4";
         div.innerHTML = `
-            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Veí­culo</h3>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3">Veículo</h3>
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden p-4">
                  <div class="trip-input-group">
                     <select id="trip-vehicle-select" class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0" style="background:none;">
-                        <option value="">Selecionar Veí­culo...</option>
+                        <option value="">Selecionar Veículo...</option>
                     </select>
                  </div>
             </div>

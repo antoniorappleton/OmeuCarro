@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // stats por veí­culo
+      // stats por veículo
       const statsPorVeiculo = {};
 
       abastecimentos.forEach((abs) => {
@@ -86,10 +86,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const level = analytics.alertaFuelNivel; // warning | critical | none
             if (level === "critical") {
                 statusClass = "border-status-critical"; // We will need to define this CSS or use inline style
-                statusBadge = `<span class="badge" style="background:var(--color-error); color:white; border:none;">âš ï¸ Reserva</span>`;
+                statusBadge = `<span class="badge" style="background:var(--color-error); color:white; border:none;">⚠️ Reserva</span>`;
             } else if (level === "warning") {
                 statusClass = "border-status-warning";
-                statusBadge = `<span class="badge" style="background:var(--color-warning); color:var(--text-on-warning, #000); border:none;">Combustí­vel Baixo</span>`;
+                statusBadge = `<span class="badge" style="background:var(--color-warning); color:var(--text-on-warning, #000); border:none;">Combustível Baixo</span>`;
             }
         }
         
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
         card.dataset.veiculoId = v.id;
         if (borderStyle) card.setAttribute("style", borderStyle);
 
-        const matricula = v.matricula || "Sem matrí­cula";
+        const matricula = v.matricula || "Sem matrícula";
         const combustivel = v.combustivelPadrao || "N/D";
         const ano = v.ano || "";
         
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch (err) {
       console.error(err);
-      showMessage("Erro ao carregar veí­culos.", "error");
+      showMessage("Erro ao carregar veículos.", "error");
     }
   }
 
@@ -203,12 +203,12 @@ document.addEventListener("DOMContentLoaded", () => {
           odometroInicial,
         });
 
-        showMessage("Veí­culo guardado com sucesso! âœ…", "success");
+        showMessage("Veículo guardado com sucesso! âœ…", "success");
         form.reset();
         loadVeiculos();
       } catch (err) {
         console.error(err);
-        showMessage(err.message || "Erro ao guardar veí­culo.", "error");
+        showMessage(err.message || "Erro ao guardar veículo.", "error");
       }
     });
   }
@@ -220,12 +220,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // botão no header
   if (btnAddVehicle) {
     btnAddVehicle.addEventListener("click", () => {
-      // leva para o ecrã de gestão/adicionar veí­culos
+      // leva para o ecrã de gestão/adicionar veículos
       window.location.href = "veiculos.html";
     });
   }
 
-  // botão no estado vazio "Adicionar primeiro veí­culo"
+  // botão no estado vazio "Adicionar primeiro veículo"
   if (btnAddFirstVehicle) {
     btnAddFirstVehicle.addEventListener("click", () => {
       window.location.href = "veiculos.html";
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -------------------------------------------------------------------
-  // AUTENTICAí‡íƒO â†’ Sí“ CARREGA VEíCULOS QUANDO auth.currentUser EXISTE
+  // AUTENTICAí‡íƒO ←’ Sí“ CARREGA VEíCULOS QUANDO auth.currentUser EXISTE
   // -------------------------------------------------------------------
   if (
     typeof auth !== "undefined" &&
@@ -242,12 +242,12 @@ document.addEventListener("DOMContentLoaded", () => {
   ) {
     auth.onAuthStateChanged((user) => {
       if (!user) {
-        // não autenticado â†’ mostra estado vazio
+        // não autenticado ←’ mostra estado vazio
         if (listEl) listEl.innerHTML = "";
         if (emptyEl) emptyEl.classList.remove("hidden");
         return;
       }
-      // utilizador autenticado â†’ carregar veí­culos
+      // utilizador autenticado ←’ carregar veículos
       loadVeiculos();
     });
   } else {

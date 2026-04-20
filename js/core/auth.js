@@ -54,7 +54,7 @@ if (logoutBtn) {
 
 
   // =================================================
-  // A PARTIR DAQUI â†’ Sí“ PíGINA AUTH (LOGIN / SIGNUP)
+  // A PARTIR DAQUI ←’ Sí“ PíGINA AUTH (LOGIN / SIGNUP)
   // =================================================
   if (!isAuthPage) return;
 
@@ -126,7 +126,7 @@ if (logoutBtn) {
           throw new Error("Preencha email e password.");
         }
 
-        // Persistíªncia LOCAL (PWA / browser)
+        // Persistência LOCAL (PWA / browser)
         await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         await auth.signInWithEmailAndPassword(email, password);
@@ -151,10 +151,10 @@ if (logoutBtn) {
           "auth/network-request-failed":
             "Falha de rede (offline/adblock/proxy).",
           "auth/unauthorized-domain":
-            "Domí­nio não autorizado no Firebase Auth.",
+            "Domínio não autorizado no Firebase Auth.",
           "auth/invalid-api-key": "Config/API key inválida (firebase-config).",
           "auth/app-not-authorized":
-            "App não autorizada (firebase-config/domí­nio).",
+            "App não autorizada (firebase-config/domínio).",
         };
 
         showLoginMessage(
@@ -187,7 +187,7 @@ if (logoutBtn) {
           throw new Error("A password deve ter pelo menos 6 caracteres.");
         }
 
-        // Persistíªncia LOCAL
+        // Persistência LOCAL
         await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         const cred = await auth.createUserWithEmailAndPassword(email, password);
@@ -216,9 +216,9 @@ if (logoutBtn) {
         const map = {
           "auth/email-already-in-use": "Este email já está registado.",
           "auth/invalid-email": "Email inválido.",
-          "auth/weak-password": "Password fraca (mí­n. 6).",
+          "auth/weak-password": "Password fraca (mín. 6).",
           "auth/unauthorized-domain":
-            "Domí­nio não autorizado no Firebase Auth.",
+            "Domínio não autorizado no Firebase Auth.",
           "auth/network-request-failed":
             "Falha de rede (offline/adblock/proxy).",
         };

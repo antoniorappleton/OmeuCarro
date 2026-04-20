@@ -88,7 +88,7 @@ function mapRowToReading(row) {
   // Engine RPM(rpm)
   // Odometer(from ECU)(km)
   // Fuel Level (From Engine ECU)(%)
-  // Engine Coolant Temperature(Â°C) -> careful with encoding, might just search for 'Coolant'
+  // Engine Coolant Temperature(°C) -> careful with encoding, might just search for 'Coolant'
   // Latitude, Longitude
 
   const findHeaderPriority = (exactList, fallbackList) => {

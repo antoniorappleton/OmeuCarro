@@ -50,13 +50,13 @@ async function requestNotificationPermissionAndSaveToken() {
   });
 
   if (!token) {
-    throw new Error("Não foi possí­vel obter o token FCM.");
+    throw new Error("Não foi possível obter o token FCM.");
   }
 
   console.log("Token FCM obtido:", token);
 
   // Guardar no Firestore
-  // Guardamos numa subcoleção 'fcmTokens' para suportar míºltiplos dispositivos por user
+  // Guardamos numa subcoleção 'fcmTokens' para suportar múltiplos dispositivos por user
   const db = firebase.firestore();
   const tokenRef = db
     .collection("users")
@@ -132,7 +132,7 @@ async function testLocalNotification() {
 
   console.log("ðŸ“ [Diagnostics] Permissão atual:", Notification.permission);
   if (Notification.permission !== "granted") {
-    console.warn("âš ï¸ [Diagnostics] Permissão não concedida. A pedir agora...");
+    console.warn("⚠️ [Diagnostics] Permissão não concedida. A pedir agora...");
     const p = await Notification.requestPermission();
     if (p !== "granted") {
       return alert("Precisas de dar permissão nas definições do browser.");

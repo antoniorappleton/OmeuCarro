@@ -38,7 +38,7 @@ async function carregarVeiculosNoFiltro() {
   const select = document.getElementById("filtro-veiculo");
   if (!select) return;
 
-  select.innerHTML = `<option value="">Todos os veí­culos</option>`;
+  select.innerHTML = `<option value="">Todos os veículos</option>`;
 
   const veiculos = await getVeiculosDoUtilizador();
   veiculos.forEach((v) => {
@@ -63,7 +63,7 @@ async function obterAbastecimentosFiltrados() {
 
   let abastecimentos = await getTodosAbastecimentosDoUtilizador(500);
 
-  // filtrar por veí­culo
+  // filtrar por veículo
   if (veiculoId) {
     abastecimentos = abastecimentos.filter((a) => a.veiculoId === veiculoId);
   }
@@ -114,7 +114,7 @@ function destroyChartIfExists(ref) {
 // ======================================================================
 
 function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
-  // 1ï¸âƒ£ Filtrar por veí­culo
+  // 1ï¸âƒ£ Filtrar por veículo
   const filtrados = veiculoSelecionadoId
     ? abastecimentos.filter((a) => a.veiculoId === veiculoSelecionadoId)
     : abastecimentos;
@@ -127,7 +127,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
   let aggValidLiters = 0; // From Analytics (Cleaned)
   let aggRawDist = 0; // From Max-Min Odo (Period actual)
 
-  // Agrupar por veí­culo
+  // Agrupar por veículo
   const porVeiculo = {};
   filtrados.forEach((a) => {
     // Sum Raw Totals
@@ -185,7 +185,7 @@ function calcularKPIs(abastecimentos, veiculoSelecionadoId = null, settings) {
 // ======================================================================
 // GRíFICOS
 // ======================================================================
-// (As funções de gráficos mantíªm-se exatamente como estavam)
+// (As funções de gráficos mantêm-se exatamente como estavam)
 // Apenas foram removidos erros e mantidas limpas.
 // ======================================================================
 
@@ -329,7 +329,7 @@ function gerarGraficoLitrosMensais(abastecimentos) {
   });
 }
 
-/* --- GRíFICO 5: Tipos de combustí­vel --- */
+/* --- GRíFICO 5: Tipos de combustível --- */
 function gerarGraficoTiposCombustivel(abastecimentos) {
   const canvas = document.getElementById("chart-tipos");
   if (!canvas) return;
@@ -436,10 +436,10 @@ async function carregarDashboard() {
       periodSelect.dispatchEvent(new Event("change"));
     }
 
-    // Usar a função de obter filtrados (já líª o DOM, então o update acima afeta)
+    // Usar a função de obter filtrados (já lê o DOM, então o update acima afeta)
     const abastecimentos = await obterAbastecimentosFiltrados();
 
-    // Sem dados â†’ limpar
+    // Sem dados ←’ limpar
     if (!abastecimentos.length) {
       gastosEl.textContent = formatCurrency(0, settings.moeda);
       litrosEl.textContent = "0 L";
@@ -485,7 +485,7 @@ async function carregarDashboard() {
     }
 
     // Gráficos e ranking
-    // Para gráficos, poderí­amos passar a moeda também, mas vou simplificar
+    // Para gráficos, poderíamos passar a moeda também, mas vou simplificar
     gerarGraficoConsumo(abastecimentos, settings);
     gerarGraficoPreco(abastecimentos, settings);
     gerarGraficoGastosMensais(abastecimentos, settings);
@@ -567,7 +567,7 @@ function initDashboardRefuelModal() {
       const veiculos = await getVeiculosDoUtilizador();
 
       if (!veiculos.length) {
-        vehicleSelect.innerHTML = `<option value="">Sem veí­culos registados</option>`;
+        vehicleSelect.innerHTML = `<option value="">Sem veículos registados</option>`;
         return;
       }
 
@@ -644,7 +644,7 @@ function initDashboardRefuelModal() {
     try {
       const vid = vehicleSelect.value;
       if (!vid) {
-        msg.textContent = "Selecione um veí­culo.";
+        msg.textContent = "Selecione um veículo.";
         return;
       }
       if (!dateEl.value || !litersEl.value || !priceEl.value || !kmEl.value) {

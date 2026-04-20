@@ -94,17 +94,17 @@ self.addEventListener("activate", (event) => {
 });
 
 // ================================================================
-// FETCH HANDLER – Estrategias por tipo de conteíºdo
+// FETCH HANDLER – Estrategias por tipo de conteúdo
 // ================================================================
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Apenas tratar pedidos deste domí­nio
+  // Apenas tratar pedidos deste domínio
   if (url.origin !== location.origin) return;
 
   // -------------------------------------
-  // HTML â†’ NETWORK FIRST (para garantir que recebes atualizações)
+  // HTML ←’ NETWORK FIRST (para garantir que recebes atualizações)
   // -------------------------------------
   if (request.mode === "navigate") {
     event.respondWith(
@@ -117,7 +117,7 @@ self.addEventListener("fetch", (event) => {
           });
         })
         .catch(async () => {
-          // Offline â†’ tenta cache
+          // Offline ←’ tenta cache
           const cached = await caches.match(request);
           if (cached) return cached;
 
@@ -129,7 +129,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // -------------------------------------
-  // CSS / JS â†’ STALE WHILE REVALIDATE
+  // CSS / JS ←’ STALE WHILE REVALIDATE
   // -------------------------------------
   if (request.destination === "style" || request.destination === "script") {
     event.respondWith(
@@ -149,7 +149,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // -------------------------------------
-  // IMAGENS â†’ CACHE FIRST
+  // IMAGENS ←’ CACHE FIRST
   // -------------------------------------
   if (request.destination === "image") {
     event.respondWith(

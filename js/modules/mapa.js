@@ -405,7 +405,7 @@ if (window.__L100_MAP_INIT__) {
           } catch (err) {
             console.error(err);
             window.showToast(
-              "Não foi possí­vel encontrar o local. Edite.",
+              "Não foi possível encontrar o local. Edite.",
               "error",
             );
             // Fallback to Edit Mode
