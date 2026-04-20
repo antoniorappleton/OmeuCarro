@@ -1,4 +1,4 @@
-﻿/* =============================
+/* =============================
    GLOBAL THEME – L100 Premium
    ============================= */
 
@@ -305,7 +305,35 @@ a {
   border-color: rgba(14, 116, 144, 0.2);
 }
 
-/* ----------- COMPONENTS: FORMS ----------- */
+/* ----------- COMPONENTS: FORMS ----------- */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  padding-right: 44px !important;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 4px;
+  background: transparent;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--color-text-light);
+  display: flex;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.toggle-password .icon {
+  width: 20px;
+  height: 20px;
+}
+
 .form-field {
   margin-bottom: 1.25rem;
 }
