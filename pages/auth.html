@@ -11,8 +11,8 @@
 
   <!-- CSS global -->
   <link rel="stylesheet" href="./css/style.css" />
-  <script src="./js/theme.js"></script>
-  <script src="./js/pwa-install.js" defer></script>
+  <script src="./../js/core/theme.js"></script>
+  <script src="./../js/utils/pwa-install.js" defer></script>
   <link rel="icon" type="image/png" sizes="192x192" href="./images/logo-icon192.png">
   <link rel="apple-touch-icon" href="./images/logo-icon512.png">
 
@@ -22,13 +22,13 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <!-- Config Firebase (inicializa firebase, cria auth e db) -->
-  <script defer src="./js/firebase-config.js"></script>
+  <script defer src="./../js/core/firebase-config.js"></script>
 
   <!-- Lógica de autenticação -->
-  <script defer src="./js/auth.js"></script>
+  <script defer src="./../js/core/auth.js"></script>
 
   <!-- Registo do service worker -->
-  <script defer src="./js/service-worker-register.js"></script>
+  <script defer src="./../js/utils/service-worker-register.js"></script>
 </head>
 
 <!-- data-page="auth" para o JS saber que esta é a página de login -->
@@ -100,3 +100,5 @@
   </main>
 </body>
 </html>
+
+

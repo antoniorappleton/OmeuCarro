@@ -6,10 +6,10 @@
     <title>L100 – Estatísticas</title>
 
     <!-- Tema global -->
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="../css/style.css" />
     <!-- CSS específico de estatísticas -->
-    <link rel="stylesheet" href="css/dashboard.css" />
-    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="../css/dashboard.css" />
+    <script src="../js/core/theme.js"></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,15 +20,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-    <script defer src="js/firebase-config.js"></script>
-    <script defer src="js/auth.js"></script>
-    <script defer src="js/firestore.js"></script>
+    <script defer src="../js/core/firebase-config.js"></script>
+    <script defer src="../js/core/auth.js"></script>
+    <script defer src="../js/core/firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js"></script>
-    <script defer src="js/utils.js?v=21"></script>
-    <script defer src="js/analytics.js"></script>
+    <script defer src="../js/utils/notifications.js"></script>
+    <script defer src="../js/utils/utils.js?v=21"></script>
+    <script defer src="../js/modules/analytics.js"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="./js/estatisticas.js"></script>
+    <script defer src="./../js/modules/estatisticas.js"></script>
   </head>
   <body>
     <!-- HEADER -->
@@ -106,7 +106,7 @@
             <span>Litros Consumidos</span>
             <span>
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
               </svg>
             </span>
           </div>
@@ -121,7 +121,7 @@
             <span>Preço Médio</span>
             <span>
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-trend-up"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-trend-up"></use>
               </svg>
             </span>
           </div>
@@ -136,7 +136,7 @@
             <span>Eficiência Média</span>
             <span>
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-dashboard"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
               </svg>
             </span>
           </div>
@@ -207,28 +207,30 @@
     <footer>
       <a href="dashboard.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-home"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
         </svg>
         <span>Home</span>
       </a>
       <a href="veiculos.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-car"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
         </svg>
         <span>Veículos</span>
       </a>
       <a href="mapa.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-pin"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
         </svg>
         <span>Mapa</span>
       </a>
       <a href="perfil.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-user"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
         </svg>
         <span>Perfil</span>
       </a>
     </footer>
   </body>
 </html>
+
+

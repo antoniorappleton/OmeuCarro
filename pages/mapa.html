@@ -8,10 +8,10 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/home.css" />
-    <link rel="stylesheet" href="css/mapa.css" />
-    <link rel="stylesheet" href="css/trip-calculator.css" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/home.css" />
+    <link rel="stylesheet" href="../css/mapa.css" />
+    <link rel="stylesheet" href="../css/trip-calculator.css" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -58,21 +58,21 @@
       crossorigin=""
     ></script>
 
-    <script src="js/theme.js"></script>
+    <script src="../js/core/theme.js"></script>
 
     <!-- Firebase v9 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="js/notifications.js"></script>
+    <script defer src="../js/utils/notifications.js"></script>
 
-    <script defer src="js/firebase-config.js"></script>
-    <script defer src="js/auth.js"></script>
-    <script defer src="js/firestore.js"></script>
-    <script defer src="js/utils.js"></script>
-    <script defer src="js/tripCalculator.js"></script>
-    <script type="module" src="js/mapa.js"></script>
+    <script defer src="../js/core/firebase-config.js"></script>
+    <script defer src="../js/core/auth.js"></script>
+    <script defer src="../js/core/firestore.js"></script>
+    <script defer src="../js/utils/utils.js"></script>
+    <script defer src="../js/modules/tripCalculator.js"></script>
+    <script type="module" src="../js/modules/mapa.js"></script>
   </head>
 
   <body class="map-page-standalone">
@@ -126,20 +126,20 @@
         aria-label="Minha Localização"
       >
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-location"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-location"></use>
         </svg>
       </button>
 
       <div class="zoom-group">
         <button class="zoom-btn" id="btn-zoom-in" aria-label="Aumentar Zoom">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-plus"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
           </svg>
         </button>
         <div class="zoom-divider"></div>
         <button class="zoom-btn" id="btn-zoom-out" aria-label="Diminuir Zoom">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-minus"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-minus"></use>
           </svg>
         </button>
       </div>
@@ -148,7 +148,7 @@
     <!-- FAB ADD -->
     <button class="fab-add" id="fab-add" aria-label="Adicionar Favorito">
       <svg class="icon">
-        <use href="assets/icons-unified.svg#icon-plus"></use>
+        <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
       </svg>
     </button>
 
@@ -183,7 +183,7 @@
               "
             >
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-station"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-station"></use>
               </svg>
             </a>
           </div>
@@ -215,7 +215,7 @@
               style="text-decoration: none"
             >
               <svg class="icon u-mr-xs">
-                <use href="assets/icons-unified.svg#icon-navigation"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-navigation"></use>
               </svg>
               Navegar
             </a>
@@ -237,7 +237,7 @@
           <div class="form-header">
             <button class="map-header-btn" id="btn-cancel-form">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-arrow-left"></use>
               </svg>
             </button>
             <h3 class="form-title" id="form-heading">Editar Local</h3>
@@ -260,7 +260,7 @@
                 />
                 <div class="input-icon-right">
                   <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-edit"></use>
+                    <use href="../assets/icons/icons-unified.svg#icon-edit"></use>
                   </svg>
                 </div>
               </div>
@@ -280,7 +280,7 @@
                 />
                 <div class="input-icon-right">
                   <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-location"></use>
+                    <use href="../assets/icons/icons-unified.svg#icon-location"></use>
                   </svg>
                 </div>
               </div>
@@ -289,7 +289,7 @@
             <!-- Map Adjust Tip -->
             <div class="form-map-tip">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-arrow-up"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-arrow-up"></use>
               </svg>
               <span>Arraste o mapa para ajustar a posição</span>
             </div>
@@ -302,19 +302,19 @@
               <div class="type-chips-row" id="type-chips-container">
                 <button class="type-chip" data-value="Casa">
                   <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-home"></use>
+                    <use href="../assets/icons/icons-unified.svg#icon-home"></use>
                   </svg>
                   Casa
                 </button>
                 <button class="type-chip" data-value="Trabalho">
                   <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-car"></use>
+                    <use href="../assets/icons/icons-unified.svg#icon-car"></use>
                   </svg>
                   Trabalho
                 </button>
                 <button class="type-chip active" data-value="Outro">
                   <svg class="icon">
-                    <use href="assets/icons-unified.svg#icon-pin"></use>
+                    <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
                   </svg>
                   Outro
                 </button>
@@ -375,7 +375,7 @@
             style="background: transparent; border: none; cursor: pointer"
           >
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-close"></use>
             </svg>
           </button>
         </div>
@@ -620,7 +620,7 @@
       <div class="search-header">
         <button class="map-header-btn" id="btn-search-close">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-arrow-left"></use>
           </svg>
         </button>
         <input
@@ -658,28 +658,30 @@
     <footer>
       <a href="dashboard.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-home"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
         </svg>
         <span>Home</span>
       </a>
       <a href="veiculos.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-car"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
         </svg>
         <span>Veículos</span>
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg?v=2#icon-map"></use>
+          <use href="../assets/icons/icons-unified.svg?v=2#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>
       <a href="perfil.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-user"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
         </svg>
         <span>Perfil</span>
       </a>
     </footer>
   </body>
 </html>
+
+

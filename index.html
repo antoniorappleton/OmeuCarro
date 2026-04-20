@@ -10,7 +10,7 @@
     <!-- Manifest + PWA -->
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#102122" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./images/logo-icon192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/img/logo-icon192.png">
 
     <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -25,9 +25,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <!-- Config Firebase -->
-    <script defer src="./js/firebase-config.js"></script>
+    <script defer src="./js/core/firebase-config.js"></script>
 
-    <script src="./js/pwa-install.js" defer></script>
+    <script src="./js/utils/pwa-install.js" defer></script>
 
     <script>
         tailwind.config = {
@@ -204,10 +204,10 @@
 
                             // Redirect
                             if (authResolved && userIsLoggedIn) {
-                                window.location.replace("./dashboard.html");
+                                window.location.replace("./pages/dashboard.html");
                             } else {
                                 // Default to auth page (login)
-                                window.location.replace("./auth.html");
+                                window.location.replace("./pages/auth.html");
                             }
                         }
                     }, 100);

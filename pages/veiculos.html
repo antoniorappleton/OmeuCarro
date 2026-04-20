@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Veículos – L100</title>
 
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/home.css" />
-    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/home.css" />
+    <script src="../js/core/theme.js"></script>
 
     <!-- Firebase v9 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -15,14 +15,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-    <script defer src="js/firebase-config.js"></script>
-    <script defer src="js/auth.js"></script>
-    <script defer src="js/analytics.js?v=76"></script>
-    <script defer src="js/firestore.js?v=76"></script>
-    <script defer src="js/notifications.js?v=76"></script>
-    <script defer src="js/utils.js?v=76"></script>
+    <script defer src="../js/core/firebase-config.js"></script>
+    <script defer src="../js/core/auth.js"></script>
+    <script defer src="../js/modules/analytics.js?v=76"></script>
+    <script defer src="../js/core/firestore.js?v=76"></script>
+    <script defer src="../js/utils/notifications.js?v=76"></script>
+    <script defer src="../js/utils/utils.js?v=76"></script>
     <!-- Página específica -->
-    <script defer src="js/veiculos.js?v=76"></script>
+    <script defer src="../js/modules/veiculos.js?v=76"></script>
   </head>
 
   <body class="app-page" data-page="veiculos">
@@ -31,7 +31,7 @@
       <div class="app-header-left">
         <div class="app-logo">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-car"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-car"></use>
           </svg>
         </div>
         <div class="app-logo-text">
@@ -43,17 +43,17 @@
       <div class="app-header-actions">
         <a href="estatisticas.html" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-dashboard"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
           </svg>
         </a>
         <a href="perfil.html" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-user"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-user"></use>
           </svg>
         </a>
         <button id="btn-logout" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-logout"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-logout"></use>
           </svg>
         </button>
       </div>
@@ -70,7 +70,7 @@
 
           <button type="button" id="btn-add-vehicle" class="btn btn-primary">
             <svg class="icon icon-left">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
             </svg>
             <span>Adicionar</span>
           </button>
@@ -83,7 +83,7 @@
         <div id="vehicles-empty" class="vehicles-empty hidden">
           <div class="vehicles-empty-icon">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-car"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-car"></use>
             </svg>
           </div>
           <h3>Nenhum veículo registado</h3>
@@ -95,7 +95,7 @@
             class="btn btn-primary"
           >
             <svg class="icon icon-left">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
             </svg>
             <span>Novo veículo</span>
           </button>
@@ -107,25 +107,25 @@
     <footer>
       <a href="dashboard.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-home"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
         </svg>
         <span>Dashboard</span>
       </a>
       <a href="veiculos.html" class="active">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-car"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
         </svg>
         <span>Veículos</span>
       </a>
       <a href="mapa.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-pin"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
         </svg>
         <span>Mapa</span>
       </a>
       <a href="perfil.html">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-user"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
         </svg>
         <span>Perfil</span>
       </a>
@@ -137,7 +137,7 @@
         <div class="fuel-modal-header">
           <div class="fuel-modal-title-wrap">
             <svg class="icon icon-title">
-              <use href="assets/icons-unified.svg#icon-car"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-car"></use>
             </svg>
             <div>
               <h2 id="vehicle-modal-title">Adicionar veículo</h2>
@@ -149,7 +149,7 @@
 
           <button class="icon-button" id="btn-close-vehicle-modal">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-close"></use>
             </svg>
           </button>
         </div>
@@ -292,7 +292,7 @@
             </button>
             <button type="submit" class="btn btn-primary btn-gradient">
               <svg class="icon icon-left">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
               </svg>
               <span>Guardar</span>
             </button>
@@ -302,3 +302,5 @@
     </div>
   </body>
 </html>
+
+

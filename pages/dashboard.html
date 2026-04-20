@@ -10,11 +10,11 @@
     />
 
     <!-- Tema global -->
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="../css/style.css" />
     <!-- CSS específico desta página -->
-    <link rel="stylesheet" href="css/home.css" />
-    <script src="js/theme.js"></script>
-    <script src="js/pwa-install.js" defer></script>
+    <link rel="stylesheet" href="../css/home.css" />
+    <script src="../../js/core/theme.js"></script>
+    <script src="../../js/utils/pwa-install.js" defer></script>
 
     <!-- Firebase v9 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -22,18 +22,18 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-    <script defer src="./js/firebase-config.js"></script>
-    <script defer src="./js/auth.js"></script>
-    <script defer src="js/analytics.js?v=76"></script>
-    <script defer src="./js/firestore.js?v=76"></script>
+    <script defer src="../../js/core/firebase-config.js"></script>
+    <script defer src="../../js/core/auth.js"></script>
+    <script defer src="../../js/modules/analytics.js?v=76"></script>
+    <script defer src="../../js/core/firestore.js?v=76"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
     <!-- FCM -->
-    <script defer src="./js/notifications.js?v=76"></script>
+    <script defer src="../../js/utils/notifications.js?v=76"></script>
     <!-- Lógica Push -->
-    <script defer src="js/utils.js?v=76"></script>
+    <script defer src="../../js/utils/utils.js?v=76"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="./js/home.js?v=76"></script>
-    <script defer src="./js/dashboard.js?v=76"></script>
+    <script defer src="../../js/modules/home.js?v=76"></script>
+    <script defer src="../../js/modules/dashboard.js?v=76"></script>
   </head>
 
   <body class="app-page" data-page="home">
@@ -42,7 +42,7 @@
       <div class="app-header-left">
         <div class="app-logo">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
           </svg>
         </div>
         <div class="app-logo-text">
@@ -55,21 +55,21 @@
         <!-- Estatísticas (pode mais tarde ir para outra página de gráficos) -->
         <a href="estatisticas.html" class="icon-btn" title="Estatísticas">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-dashboard"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
           </svg>
         </a>
 
         <!-- Definições (placeholder – podes ligar para perfil / settings) -->
         <a href="perfil.html" class="icon-btn" title="Perfil / Definições">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-user"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-user"></use>
           </svg>
         </a>
 
         <!-- Logout -->
         <button type="button" id="btn-logout" class="icon-btn" title="Sair">
           <svg class="icon" aria-hidden="true">
-            <use href="assets/icons-unified.svg#icon-logout"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-logout"></use>
           </svg>
         </button>
       </div>
@@ -94,7 +94,7 @@
           <div class="stats-card-header">
             <span class="stats-card-icon">
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-wallet"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-wallet"></use>
               </svg>
             </span>
             <h2>Total Gasto</h2>
@@ -108,7 +108,7 @@
           <div class="stats-card-header">
             <span class="stats-card-icon">
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-fuel"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
               </svg>
             </span>
             <h2>Litros Consumidos</h2>
@@ -122,7 +122,7 @@
           <div class="stats-card-header">
             <span class="stats-card-icon">
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-trend-up"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-trend-up"></use>
               </svg>
             </span>
             <h2>Preço Médio</h2>
@@ -136,7 +136,7 @@
           <div class="stats-card-header">
             <span class="stats-card-icon">
               <svg class="icon" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-dashboard"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
               </svg>
             </span>
             <h2>Eficiência</h2>
@@ -155,7 +155,7 @@
           </div>
           <button type="button" id="btn-add-vehicle" class="btn btn-primary">
             <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
             </svg>
             <span>Adicionar veículo</span>
           </button>
@@ -169,7 +169,7 @@
         <div id="vehicles-empty" class="vehicles-empty hidden">
           <div class="vehicles-empty-icon">
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-car"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-car"></use>
             </svg>
           </div>
           <h3>Nenhum veículo registado</h3>
@@ -180,7 +180,7 @@
             class="btn btn-primary"
           >
             <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
             </svg>
             <span>Adicionar primeiro veículo</span>
           </button>
@@ -208,7 +208,7 @@
               id="icon-quick-toggle"
               style="transition: transform 0.3s"
             >
-              <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-chevron-up"></use>
             </svg>
           </button>
         </header>
@@ -219,19 +219,19 @@
         >
           <a href="#" id="btn-quick-refuel" class="btn btn-outline">
             <svg class="icon icon-left">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
             </svg>
             <span>Novo abastecimento</span>
           </a>
           <a href="estatisticas.html" class="btn btn-outline">
             <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-dashboard"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
             </svg>
             <span>Ver estatísticas</span>
           </a>
           <a href="veiculos.html" class="btn btn-outline">
             <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-car"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-car"></use>
             </svg>
             <span>Gerir veículos</span>
           </a>
@@ -242,7 +242,7 @@
             rel="noopener noreferrer"
           >
             <svg class="icon icon-left" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-station"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-station"></use>
             </svg>
             <span>MaisGasolina</span>
           </a>
@@ -266,7 +266,7 @@
         <div class="fuel-modal-header">
           <div class="fuel-modal-title-wrap">
             <svg class="icon icon-title" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-car"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-car"></use>
             </svg>
             <div>
               <h2 id="vehicle-modal-title">Adicionar veículo</h2>
@@ -283,7 +283,7 @@
             aria-label="Fechar"
           >
             <svg class="icon" aria-hidden="true">
-              <use href="assets/icons-unified.svg#icon-close"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-close"></use>
             </svg>
           </button>
         </div>
@@ -365,7 +365,7 @@
 
             <button type="submit" class="btn btn-primary btn-gradient">
               <svg class="icon icon-left" aria-hidden="true">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
               </svg>
               <span>Guardar veículo</span>
             </button>
@@ -392,13 +392,13 @@
         <header class="modal-header">
           <h2>
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-fuel"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
             </svg>
             Novo abastecimento
           </h2>
           <button id="fuel-close" class="icon-btn">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-close"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-close"></use>
             </svg>
           </button>
         </header>
@@ -503,28 +503,30 @@
     <footer>
       <a href="dashboard.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-home"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
         </svg>
         <span>Home</span>
       </a>
       <a href="veiculos.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-car"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
         </svg>
         <span>Veículos</span>
       </a>
       <a href="mapa.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-pin"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
         </svg>
         <span>Mapa</span>
       </a>
       <a href="perfil.html">
         <svg class="icon" aria-hidden="true">
-          <use href="assets/icons-unified.svg#icon-user"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
         </svg>
         <span>Perfil</span>
       </a>
     </footer>
   </body>
 </html>
+
+

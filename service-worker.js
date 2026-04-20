@@ -12,32 +12,32 @@ const RUNTIME_CACHE = "l100-runtime-v28";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./dashboard.html",
-  "./abastecer.html",
-  "./estatisticas.html",
-  "./veiculos.html",
-  "./veiculo.html",
-  "./mapa.html",
-  "./auth.html",
-  "./perfil.html",
+  "./pages/dashboard.html",
+  "./pages/abastecer.html",
+  "./pages/estatisticas.html",
+  "./pages/veiculos.html",
+  "./pages/veiculo.html",
+  "./pages/mapa.html",
+  "./pages/auth.html",
+  "./pages/perfil.html",
   "./css/style.css",
   "./css/dashboard.css",
   "./css/mapa.css",
   "./css/trip-calculator.css",
-  "./js/firebase-config.js",
-  "./js/auth.js",
-  "./js/firestore.js",
-  "./js/notifications.js",
-  "./js/dashboard.js",
-  "./js/estatisticas.js",
-  "./js/veiculos.js",
-  "./js/veiculo.js",
-  "./js/mapa.js",
-  "./js/tripCalculator.js",
-  "./js/utils.js",
-  "./js/service-worker-register.js",
-  "./images/logo-icon192.png",
-  "./images/logo-icon512.png",
+  "./js/core/firebase-config.js",
+  "./js/core/auth.js",
+  "./js/core/firestore.js",
+  "./js/utils/notifications.js",
+  "./js/modules/dashboard.js",
+  "./js/modules/estatisticas.js",
+  "./js/modules/veiculos.js",
+  "./js/modules/veiculo.js",
+  "./js/modules/mapa.js",
+  "./js/modules/tripCalculator.js",
+  "./js/utils/utils.js",
+  "./js/utils/service-worker-register.js",
+  "./assets/img/logo-icon192.png",
+  "./assets/img/logo-icon512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
 ];
 
@@ -162,7 +162,7 @@ self.addEventListener("fetch", (event) => {
           cache.put(request, response.clone());
           return response;
         } catch {
-          return caches.match("./images/logo-icon192.png");
+          return caches.match("./assets/img/logo-icon192.png");
         }
       }),
     );
@@ -208,11 +208,11 @@ messaging.onBackgroundMessage((payload) => {
     icon:
       payload.notification?.icon ||
       dataOptions.icon ||
-      "/images/logo-icon192.png",
+      "/assets/img/logo-icon192.png",
     badge:
       payload.notification?.badge ||
       dataOptions.badge ||
-      "/images/logo-icon192.png",
+      "/assets/img/logo-icon192.png",
     tag: payload.notification?.tag || dataOptions.tag || "l100-alert",
     vibrate: [200, 100, 200],
     data: dataOptions, // Passar todos os dados para o click handler
@@ -227,7 +227,7 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || "/dashboard.html";
+  const urlToOpen = event.notification.data?.url || "/pages/dashboard.html";
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })

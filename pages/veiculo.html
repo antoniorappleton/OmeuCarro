@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veículo – L100</title>
 
-  <link rel="stylesheet" href="css/style.css?v=78" />
-  <link rel="stylesheet" href="css/home.css?v=78" />
-  <script src="js/theme.js?v=78"></script>
+  <link rel="stylesheet" href="../css/style.css?v=78" />
+  <link rel="stylesheet" href="../css/home.css?v=78" />
+  <script src="../js/core/theme.js?v=78"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,17 +19,17 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <script defer src="js/firebase-config.js?v=78"></script>
-  <script defer src="js/auth.js?v=78"></script>
-  <script defer src="js/analytics.js?v=78"></script>
-  <script defer src="js/firestore.js?v=78"></script>
+  <script defer src="../js/core/firebase-config.js?v=78"></script>
+  <script defer src="../js/core/auth.js?v=78"></script>
+  <script defer src="../js/modules/analytics.js?v=78"></script>
+  <script defer src="../js/core/firestore.js?v=78"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-  <script defer src="js/notifications.js?v=78"></script>
-  <script defer src="js/utils.js?v=78"></script>
+  <script defer src="../js/utils/notifications.js?v=78"></script>
+  <script defer src="../js/utils/utils.js?v=78"></script>
   <!-- JSZip for Torque CSV/ZIP import -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- depois os ficheiros específicos da página -->
-  <script defer src="js/veiculo.js?v=78"></script>
+  <script defer src="../js/modules/veiculo.js?v=78"></script>
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
@@ -38,7 +38,7 @@
     <div class="app-header-left">
       <a href="dashboard.html" class="icon-btn-sm" aria-label="Voltar à dashboard">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-arrow-left"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-arrow-left"></use>
         </svg>
       </a>
       <div class="app-header-title">
@@ -50,12 +50,12 @@
     <div class="app-header-actions">
       <a href="estatisticas.html" class="icon-btn-sm" aria-label="Estatísticas">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-dashboard"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
         </svg>
       </a>
       <a href="perfil.html" class="icon-btn-sm" aria-label="Perfil">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-user"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
         </svg>
       </a>
     </div>
@@ -83,7 +83,7 @@
             </div>
             <button id="btn-edit-odo-hero" class="btn-edit-odo" aria-label="Editar Km">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-edit"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-edit"></use>
               </svg>
             </button>
           </div>
@@ -94,12 +94,12 @@
             <div class="odo-edit-actions">
               <button id="btn-save-odo-hero" class="btn-glass-success">
                 <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-check"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-check"></use>
                 </svg>
               </button>
               <button id="btn-cancel-odo-hero" class="btn-glass-danger">
                 <svg class="icon">
-                  <use href="assets/icons-unified.svg#icon-close"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-close"></use>
                 </svg>
               </button>
             </div>
@@ -121,7 +121,7 @@
       <button id="btn-add-fuel" class="action-card-premium gradient-1">
         <div class="action-icon">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
           </svg>
         </div>
         <span class="action-label">Abastecer</span>
@@ -130,7 +130,7 @@
       <button id="btn-add-doc" class="action-card-premium glass">
         <div class="action-icon">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-file"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-file"></use>
           </svg>
         </div>
         <span class="action-label">Documento</span>
@@ -139,7 +139,7 @@
       <button id="btn-add-maint" class="action-card-premium glass">
         <div class="action-icon">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-wrench"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-wrench"></use>
           </svg>
         </div>
         <span class="action-label">Reparação</span>
@@ -148,7 +148,7 @@
       <button id="btn-add-plan-quick" class="action-card-premium glass">
         <div class="action-icon">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-clipboard"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-clipboard"></use>
           </svg>
         </div>
         <span class="action-label">Plano de Manutenção</span>
@@ -193,32 +193,32 @@
     <div class="tabs-header-row" style="justify-content: flex-start; gap: 12px; align-items: center">
       <h3 class="vehicle-section-title">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-list"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-list"></use>
         </svg>
         Histórico
       </h3>
       <button id="btn-toggle-tabs" class="icon-btn-sm" aria-label="Recolher histórico" aria-expanded="true">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-chevron-up"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-chevron-up"></use>
         </svg>
       </button>
     </div>
     <nav class="section-tabs" aria-label="Histórico">
       <button class="tab-btn is-active" type="button" data-tab="fuel" aria-controls="tab-fuel">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-fuel"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
         </svg>
         <span>Abastecimentos</span>
       </button>
       <button class="tab-btn" type="button" data-tab="docs" aria-controls="tab-docs">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-file"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-file"></use>
         </svg>
         <span>Documentos</span>
       </button>
       <button class="tab-btn" type="button" data-tab="maint" aria-controls="tab-maint">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-wrench"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-wrench"></use>
         </svg>
         <span>Reparações</span>
       </button>
@@ -229,7 +229,7 @@
       <div id="fuel-empty" class="vehicles-empty hidden">
         <div class="vehicles-empty-icon">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
           </svg>
         </div>
         <h3>Nenhum abastecimento</h3>
@@ -271,13 +271,13 @@
         <header class="card-header">
           <h3 class="vehicle-section-title">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-clipboard"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-clipboard"></use>
             </svg>
             Próxima Manutenção
           </h3>
           <button id="btn-add-plan" class="icon-btn-sm" aria-label="Novo Plano">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-plus"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
             </svg>
           </button>
         </header>
@@ -298,7 +298,7 @@
         <header class="card-header">
           <h3 class="vehicle-section-title">
             <svg class="icon">
-              <use href="assets/icons-unified.svg#icon-wrench"></use>
+              <use href="../assets/icons/icons-unified.svg#icon-wrench"></use>
             </svg>
             Histórico
           </h3>
@@ -317,25 +317,25 @@
   <footer>
     <a href="dashboard.html">
       <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-home"></use>
+        <use href="../assets/icons/icons-unified.svg#icon-home"></use>
       </svg>
       <span>Home</span>
     </a>
     <a href="veiculos.html" class="active">
       <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-car"></use>
+        <use href="../assets/icons/icons-unified.svg#icon-car"></use>
       </svg>
       <span>Veículos</span>
     </a>
     <a href="mapa.html">
       <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-map"></use>
+        <use href="../assets/icons/icons-unified.svg#icon-map"></use>
       </svg>
       <span>Mapa</span>
     </a>
     <a href="perfil.html">
       <svg class="icon" aria-hidden="true">
-        <use href="assets/icons-unified.svg#icon-user"></use>
+        <use href="../assets/icons/icons-unified.svg#icon-user"></use>
       </svg>
       <span>Perfil</span>
     </a>
@@ -349,7 +349,7 @@
         <span class="muted">Métricas Globais</span>
         <button id="btn-close-float" class="icon-btn-xs" style="border: none; background: transparent">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </div>
@@ -375,7 +375,7 @@
         <span class="muted">Combustível & Autonomia</span>
         <button id="btn-close-analytics" class="icon-btn-xs" style="border: none; background: transparent">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </div>
@@ -457,7 +457,7 @@
         <span class="muted">Alertas e Prazos</span>
         <button id="btn-close-alerts" class="icon-btn-xs" style="border: none; background: transparent">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </div>
@@ -512,7 +512,7 @@
                   gap: 8px;
                 ">
               <svg class="icon-sm" style="width: 16px; height: 16px">
-                <use href="assets/icons-unified.svg#icon-settings"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-settings"></use>
               </svg>
               Configurar
             </span>
@@ -589,27 +589,27 @@
             color: var(--color-primary-start);
           ">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-fuel"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
         </svg>
       </button>
 
       <button id="btn-float-alerts" class="fab-right hidden" aria-label="Alertas"
         style="background: var(--color-surface); color: var(--color-warning)">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-bell"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-bell"></use>
         </svg>
       </button>
 
       <button id="btn-float-obd" class="fab-right" aria-label="Torque OBD"
         style="background: var(--color-surface); color: #00d2ff">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-activity"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-activity"></use>
         </svg>
       </button>
 
       <button id="btn-float-toggle" class="fab-right" aria-label="Ver métricas">
         <svg class="icon">
-          <use href="assets/icons-unified.svg#icon-dashboard"></use>
+          <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
         </svg>
       </button>
     </div>
@@ -628,13 +628,13 @@
                 font-weight: 600;
               ">
           <svg class="icon-sm">
-            <use href="assets/icons-unified.svg#icon-activity"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-activity"></use>
           </svg>
           Saúde & Viagens
         </span>
         <button id="btn-close-obd" class="icon-btn-xs" style="border: none; background: transparent">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </div>
@@ -874,7 +874,7 @@
           <div class="charts-section" style="margin-top: 20px; text-align: center">
             <button id="btn-load-charts" class="btn btn-secondary btn-sm">
               <svg class="icon icon-left">
-                <use href="assets/icons-unified.svg#icon-trend-up"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-trend-up"></use>
               </svg>
               Ver Gráficos Detalhados
             </button>
@@ -974,13 +974,13 @@
               ">
             <button id="btn-add-trip-manual" class="btn btn-secondary btn-sm">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
               </svg>
               Manual
             </button>
             <button id="btn-import-torque-csv-zip" class="btn btn-primary btn-sm">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-file-text"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-file-text"></use>
               </svg>
               Importar Dados
             </button>
@@ -1112,7 +1112,7 @@
               ">
             <button id="btn-add-diagnostic" class="btn btn-primary btn-sm">
               <svg class="icon">
-                <use href="assets/icons-unified.svg#icon-plus"></use>
+                <use href="../assets/icons/icons-unified.svg#icon-plus"></use>
               </svg>
               Novo Relatório
             </button>
@@ -1132,25 +1132,25 @@
             <div class="segmented-control" id="trends-metrics-switcher">
               <button class="segment-btn active" data-metric="voltagemMedia" title="Bateria">
                 <svg class="icon-xs">
-                  <use href="assets/icons-unified.svg#icon-zap"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-zap"></use>
                 </svg>
                 <span>V</span>
               </button>
               <button class="segment-btn" data-metric="rpmMedio" title="RPM">
                 <svg class="icon-xs">
-                  <use href="assets/icons-unified.svg#icon-activity"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-activity"></use>
                 </svg>
                 <span>RPM</span>
               </button>
               <button class="segment-btn" data-metric="temperaturaMax" title="Temperatura">
                 <svg class="icon-xs">
-                  <use href="assets/icons-unified.svg#icon-thermometer"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-thermometer"></use>
                 </svg>
                 <span>ºC</span>
               </button>
               <button class="segment-btn" data-metric="consumoMedio" title="Consumo">
                 <svg class="icon-xs">
-                  <use href="assets/icons-unified.svg#icon-fuel"></use>
+                  <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
                 </svg>
                 <span>L/100</span>
               </button>
@@ -1183,13 +1183,13 @@
       <header class="modal-header">
         <h2>
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-wrench"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-wrench"></use>
           </svg>
           Nova reparação
         </h2>
         <button id="maint-close" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1256,13 +1256,13 @@
       <header class="modal-header">
         <h2>
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-file"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-file"></use>
           </svg>
           Novo documento
         </h2>
         <button id="doc-close" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1326,13 +1326,13 @@
       <header class="modal-header">
         <h2>
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-fuel"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-fuel"></use>
           </svg>
           Novo abastecimento
         </h2>
         <button id="fuel-close" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1421,7 +1421,7 @@
         <h2>Plano de Manutenção</h2>
         <button id="plan-close" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1533,7 +1533,7 @@
         <h2 style="margin: 0; font-size: 1.25rem">Importar Dados Torque</h2>
         <button id="btn-close-import" class="icon-btn-xs" style="background: transparent; border: none">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1675,13 +1675,13 @@
       <header class="modal-header">
         <h2>
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-history"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-history"></use>
           </svg>
           Detalhes da Viagem
         </h2>
         <button id="trip-details-close" class="icon-btn">
           <svg class="icon">
-            <use href="assets/icons-unified.svg#icon-close"></use>
+            <use href="../assets/icons/icons-unified.svg#icon-close"></use>
           </svg>
         </button>
       </header>
@@ -1770,3 +1770,4 @@
 </body>
 
 </html>
+
