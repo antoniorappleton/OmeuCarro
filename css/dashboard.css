@@ -1,302 +1,302 @@
-/* ======== BODY (Background) ======== */
-body {
-  margin: 0;
-  min-height: 100vh;
-  /* Lighter overlay */
-  background-image: linear-gradient(to bottom, rgba(18, 20, 23, 0.4), rgba(18, 20, 23, 0.7)), url("../images/offroad01.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  color: var(--color-text-main);
-  padding-bottom: 80px;
-}
-
-/* ======== HEADER ======== */
-.top-header {
-  background: linear-gradient(135deg, #096279, #1B9B82);
-  color: white;
-  padding: 25px 20px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.back-btn {
-  background: transparent;
-  border: none;
-  font-size: 22px;
-  color: white;
-  cursor: pointer;
-}
-
-.top-header h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.top-header p {
-  margin: 0;
-  opacity: .8;
-}
-
-/* ======== CONTAINER ======== */
-.dashboard-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: auto;
-  background: transparent;
-}
-
-/* ======== FILTERS ======== */
-.filters-card {
-  background: var(--color-surface-glass);
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  margin-bottom: 25px;
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.filter-group label {
-  font-size: 14px;
-  margin-bottom: 4px;
-  color: #333;
-}
-
-.custom-dates.hidden {
-  display: none;
-}
-
-/* ======== KPI GRID ======== */
-.kpi-grid {
-  display: grid;
-  /* Allow smaller minimum width to fit 2 cols on mobile (360px+ screens) */
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 25px;
-}
-
-.kpi-card {
-  background: var(--color-surface-glass);
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  transition: .2s;
-  border: 1px solid var(--border-light);
-}
-
-.kpi-card:hover {
-  transform: translateY(-3px);
-}
-
-.kpi-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.kpi-card h2 {
-  font-size: 26px;
-  margin: 5px 0;
-}
-
-.kpi-sub {
-  font-size: 12px;
-  color: #666;
-}
-
-/* ======== CHART CARDS ======== */
-.chart-card {
-  background: var(--color-surface-glass);
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 25px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-light);
-}
-
-.chart-card h3 {
-  margin-bottom: 10px;
-}
-
-/* Chart canvas should stretch */
-canvas {
-  width: 100% !important;
-  height: 300px !important;
-}
-
-/* ======== KPI TRENDS ======== */
-.kpi-trend {
-  font-size: 12px;
-  margin-top: 6px;
-}
-
-.kpi-trend-up {
-  color: #27ae60;
-}
-
-.kpi-trend-down {
-  color: #e74c3c;
-}
-
-/* ======== GRID DE GRÁFICOS ======== */
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.chart-card-wide {
-  grid-column: 1 / -1;
-}
-
-/* ícone pequenino dentro de headers */
-.kpi-header .icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* ======== INSIGHT BANNER ======== */
-.insight-banner {
-    background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.1));
-    border: 1px solid rgba(14, 116, 144, 0.2);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    backdrop-filter: blur(4px);
-}
-
-.insight-icon {
-    font-size: 24px;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-}
-
-.insight-text {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--color-text-main);
-    line-height: 1.4;
-}
-
-/* ======== INSIGHTS PREMIUM (NOVO) ======== */
-.insights-card {
-  background: var(--color-surface-glass);
-  border: 1px solid rgba(14, 116, 144, 0.2);
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.insights-card .card-header {
-  background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.05));
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(14, 116, 144, 0.1);
-}
-
-.insights-card .card-body {
-  padding: 18px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--color-text-main);
-}
-
-/* ======== GRELHA DE AÇÕES PREMIUM (NOVO) ======== */
-.action-grid-premium {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.action-card-premium {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px 12px;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-decoration: none;
-  color: white;
-  text-align: center;
-}
-
-.action-card-premium.gradient-1 {
-  background: linear-gradient(135deg, #1B9B82, #096279);
-  box-shadow: 0 10px 20px rgba(27, 155, 130, 0.25);
-}
-
-.action-card-premium.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-text-main);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.action-card-premium:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
-}
-
-.action-card-premium.glass:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.action-icon {
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
-}
-
-.action-card-premium:hover .action-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.action-label {
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-/* Ajustes responsivos para os novos gráficos */
-.telemetry-analysis-section .card {
-  height: 100%;
-}
-
-.section-header {
-  margin-bottom: 20px;
-}
-
-.section-header h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
-}
+﻿/* ======== BODY (Background) ======== */
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Lighter overlay */
+  background-image: linear-gradient(to bottom, rgba(18, 20, 23, 0.4), rgba(18, 20, 23, 0.7)), url("../assets/img/offroad01.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-text-main);
+  padding-bottom: 80px;
+}
+
+/* ======== HEADER ======== */
+.top-header {
+  background: linear-gradient(135deg, #096279, #1B9B82);
+  color: white;
+  padding: 25px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: white;
+  cursor: pointer;
+}
+
+.top-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.top-header p {
+  margin: 0;
+  opacity: .8;
+}
+
+/* ======== CONTAINER ======== */
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+  background: transparent;
+}
+
+/* ======== FILTERS ======== */
+.filters-card {
+  background: var(--color-surface-glass);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.custom-dates.hidden {
+  display: none;
+}
+
+/* ======== KPI GRID ======== */
+.kpi-grid {
+  display: grid;
+  /* Allow smaller minimum width to fit 2 cols on mobile (360px+ screens) */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.kpi-card {
+  background: var(--color-surface-glass);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transition: .2s;
+  border: 1px solid var(--border-light);
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.kpi-card h2 {
+  font-size: 26px;
+  margin: 5px 0;
+}
+
+.kpi-sub {
+  font-size: 12px;
+  color: #666;
+}
+
+/* ======== CHART CARDS ======== */
+.chart-card {
+  background: var(--color-surface-glass);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
+}
+
+.chart-card h3 {
+  margin-bottom: 10px;
+}
+
+/* Chart canvas should stretch */
+canvas {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+/* ======== KPI TRENDS ======== */
+.kpi-trend {
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.kpi-trend-up {
+  color: #27ae60;
+}
+
+.kpi-trend-down {
+  color: #e74c3c;
+}
+
+/* ======== GRID DE GRíFICOS ======== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.chart-card-wide {
+  grid-column: 1 / -1;
+}
+
+/* í­cone pequenino dentro de headers */
+.kpi-header .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ======== INSIGHT BANNER ======== */
+.insight-banner {
+    background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.1));
+    border: 1px solid rgba(14, 116, 144, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(4px);
+}
+
+.insight-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.insight-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-text-main);
+    line-height: 1.4;
+}
+
+/* ======== INSIGHTS PREMIUM (NOVO) ======== */
+.insights-card {
+  background: var(--color-surface-glass);
+  border: 1px solid rgba(14, 116, 144, 0.2);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.insights-card .card-header {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.1), rgba(6, 182, 212, 0.05));
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(14, 116, 144, 0.1);
+}
+
+.insights-card .card-body {
+  padding: 18px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-main);
+}
+
+/* ======== GRELHA DE Aí‡í•ES PREMIUM (NOVO) ======== */
+.action-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.action-card-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: white;
+  text-align: center;
+}
+
+.action-card-premium.gradient-1 {
+  background: linear-gradient(135deg, #1B9B82, #096279);
+  box-shadow: 0 10px 20px rgba(27, 155, 130, 0.25);
+}
+
+.action-card-premium.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-main);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.action-card-premium:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+.action-card-premium.glass:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.action-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.action-card-premium:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.action-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Ajustes responsivos para os novos gráficos */
+.telemetry-analysis-section .card {
+  height: 100%;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}

@@ -1,27 +1,42 @@
 # 🚗 L100 - Gestão Inteligente de Veículos
 
-O **L100** é uma Progressive Web App (PWA) desenhada para simplificar a gestão total do seu veículo. Desde o controlo de abastecimentos e manutenções até à monitorização em tempo real via OBD-II, o L100 coloca o estado do seu carro na palma da sua mão.
+O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para simplificar a gestão total do seu veículo. Combinando um design premium glassmórfico com funcionalidades avançadas de geolocalização e PWA, o L100 coloca o controlo total do seu carro na palma da sua mão.
 
 ---
 
-## ✨ Funcionalidades Principais
+## ✨ Funcionalidades Principais (v2.8)
 
-- **📊 Monitorização OBD-II em Tempo Real**: Integração direta com o Torque Pro para ler RPM, velocidade, temperaturas e nível de combustível.
-- **🚀 Deteção Automática de Viagens**: Criação automática de trajectos com análise de consumo (L/100km), distância e duração.
-- **🔋 Saúde do Veículo**: Alertas de bateria fraca, temperatura excessiva e score de condução baseado no seu desempenho.
-- **🛠️ Manutenções e Alertas**: Planos de revisão personalizados com notificações push para nunca esquecer uma muda de óleo ou o selo (IUC).
-- **⛽ Controlo de Abastecimentos**: Histórico detalhado de gastos e consumos médios reais.
-- **📱 PWA Ready**: Instale no seu telemóvel como uma app nativa e use offline.
+- **💎 Design Premium Glassmórfico**: Interface moderna e fluida com suporte total nativo para **Modo Escuro** e **Modo Claro**, focada na facilidade de uso em dispositivos móveis.
+- **🗺️ Mapa & Localização Avançada**:
+  - Favoritos com geocoding automático (Nominatim API).
+  - Sugestões inteligentes de nomes de locais e autocomplete de moradas.
+  - Simulador de custos de viagem direto no mapa.
+- **📊 Monitorização Real (OBD-II)**: Integração via Torque Pro para leitura de telemetria em tempo real (RPM, velocidade, combustível).
+- **🛠️ Gestão de Manutenções**: Controlo de prazos de Seguro, IUC e IPO com notificações inteligentes.
+- **⛽ Histórico de Abastecimentos**: Análise detalhada de consumos (L/100km) e gastos acumulados por veículo.
+- **📱 PWA de Última Geração**:
+  - Instalação como App nativa.
+  - Suporte Offline robusto com Service Worker v28.
+  - Cache versionado para atualizações instantâneas.
+
+---
+
+## 🏗️ Estrutura do Projeto
+
+O projeto foi recentemente reestruturado para maior escalabilidade e performance:
+- `/pages`: Templates HTML organizados.
+- `/js`: Lógica modular (Core, Modules, Utils).
+- `/css`: Sistema de design baseado em variáveis e utilitários premium.
+- `/assets`: Ícones unificados em SVG e recursos estáticos.
 
 ---
 
 ## 🔌 Integração com Torque Pro
 
-Para tirar o máximo partido do L100, configure o seu **Torque Pro** para enviar dados para a app:
-
+Para monitorização em tempo real, configure o seu **Torque Pro**:
 1. Vá a **Settings → Data Logging & Upload**.
 2. Ative **Upload to webserver**.
-3. Use o URL configurado com o seu `vehicleId` e a chave de acesso.
+3. Configure o URL da sua instância Firebase com a chave de acesso do veículo.
 
 ---
 
@@ -35,6 +50,6 @@ Para tirar o máximo partido do L100, configure o seu **Torque Pro** para enviar
 
 ## 🌐 Aceder à App
 
-Pronto para gerir o seu carro de forma inteligente?
+Disponível em qualquer dispositivo através do link:
 
-👉 **[Abrir L100 App](https://omeucarro-d3889.web.app)**
+👉 **[Abrir L100 App (Produção)](https://omeucarro-d3889.web.app)**

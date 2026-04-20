@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
@@ -6,32 +6,31 @@
   <title>L100 – Entrar</title>
 
   <!-- Manifest + PWA -->
-  <link rel="manifest" href="./manifest.json" />
+  <link rel="manifest" href="../manifest.json?v=28" />
   <meta name="theme-color" content="#007bff" />
 
   <!-- CSS global -->
-  <link rel="stylesheet" href="./css/style.css" />
-  <script src="./../js/core/theme.js"></script>
-  <script src="./../js/utils/pwa-install.js" defer></script>
-  <link rel="icon" type="image/png" sizes="192x192" href="./images/logo-icon192.png">
-  <link rel="apple-touch-icon" href="./images/logo-icon512.png">
+  <link rel="stylesheet" href="../css/style.css?v=28" />
+  <script src="../js/core/theme.js?v=28"></script>
+  <script src="../js/utils/pwa-install.js?v=28" defer></script>
+  <link rel="icon" type="image/png" sizes="192x192" href="../assets/img/logo-icon192.png">
+  <link rel="apple-touch-icon" href="../assets/img/logo-icon512.png">
 
   <!-- Firebase SDK v8 (global firebase.*) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js?v=28"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js?v=28"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js?v=28"></script>
 
   <!-- Config Firebase (inicializa firebase, cria auth e db) -->
-  <script defer src="./../js/core/firebase-config.js"></script>
+  <script defer src="../js/core/firebase-config.js?v=28"></script>
 
-  <!-- Lógica de autenticação -->
-  <script defer src="./../js/core/auth.js"></script>
+  <!-- Lógica de autenticaçío -->
+  <script defer src="../js/core/auth.js?v=28"></script>
 
   <!-- Registo do service worker -->
-  <script defer src="./../js/utils/service-worker-register.js"></script>
+  <script defer src="../js/utils/service-worker-register.js?v=28"></script>
 </head>
 
-<!-- data-page="auth" para o JS saber que esta é a página de login -->
 <body data-page="auth" class="auth-page">
   <main class="auth-container">
     <section class="auth-card">
@@ -100,5 +99,3 @@
   </main>
 </body>
 </html>
-
-

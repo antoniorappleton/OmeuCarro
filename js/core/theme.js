@@ -1,4 +1,4 @@
-// js/theme.js
+﻿// js/theme.js
 
 /**
  * L100 Theme Manager

@@ -42,10 +42,10 @@ body.map-page-standalone {
     left: 0;
     right: 0;
     height: var(--map-header-height);
-    background: var(--glass-bg);
+    background: var(--color-surface-glass);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-light);
     z-index: var(--z-controls);
     display: flex;
     align-items: center;
@@ -166,19 +166,19 @@ body.map-page-standalone {
 
 .pin-label {
     margin-top: 8px;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--color-surface);
     padding: 4px 10px;
     border-radius: 8px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    color: #334155;
-    /* Slate-700 for readability on white */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: var(--color-text-main);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     opacity: 0;
     transform: translateY(4px);
     transition: all 0.2s;
     pointer-events: none;
     white-space: nowrap;
+    border: 1px solid var(--border-light);
 }
 
 .map-pin:hover .pin-label,
@@ -249,7 +249,7 @@ body.map-page-standalone {
 
 .zoom-divider {
     height: 1px;
-    background: #e2e8f0;
+    background: var(--border-light);
     width: 100%;
 }
 
@@ -300,16 +300,23 @@ body.map-page-standalone {
     left: 0;
     right: 0;
     bottom: var(--map-footer-height);
-    /* Sits above footer */
-    background: var(--color-surface);
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.12);
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+    border-top: 1px solid var(--border-light);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
     z-index: var(--z-sheet);
-    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+[data-theme="dark"] .sheet-container {
+    background: rgba(24, 26, 27, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* States */
@@ -426,9 +433,10 @@ body.map-page-standalone {
 }
 
 .filter-pill.active {
-    background: var(--color-text-main);
-    color: var(--color-bg);
-    border-color: var(--color-text-main);
+    background: var(--color-primary-start);
+    color: #ffffff;
+    border-color: var(--color-primary-start);
+    box-shadow: 0 4px 10px rgba(49, 100, 104, 0.3);
 }
 
 .chip {
@@ -451,26 +459,10 @@ body.map-page-standalone {
     border-color: var(--color-primary-start);
 }
 
-.chip-skeleton {
-    width: 80px;
-    height: 32px;
-    background: #e2e8f0;
+.chip.skeleton {
+    width: 100px;
+    height: 36px;
     border-radius: 99px;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.5;
-    }
 }
 
 .chip.warning {
@@ -521,13 +513,18 @@ body.map-page-standalone {
 }
 
 .btn-action-secondary {
-    background: var(--border-light);
+    background: var(--color-bg);
     color: var(--color-text-main);
     padding: 14px;
     border-radius: 16px;
-    font-weight: 600;
-    border: none;
+    font-weight: 700;
+    border: 1px solid var(--border-light);
     cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-action-secondary:active {
+    transform: scale(0.98);
 }
 
 /* FORM VIEW UPGRADE */
@@ -584,25 +581,24 @@ body.map-page-standalone {
 
 .form-input-clean {
     width: 100%;
-    height: 56px;
-    padding: 0 16px;
-    padding-right: 48px;
-    /* Space for icon */
-    border-radius: 12px;
-    border: 1px solid var(--border-light);
+    height: 60px;
+    padding: 0 20px;
+    padding-right: 52px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border-light);
     background: var(--color-bg);
-    /* Or white in light mode? keeps consistent */
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-text-main);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-input-clean:focus {
     outline: none;
     border-color: var(--color-primary-start);
     background: var(--color-surface);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 14, 116, 144), 0.15);
+    transform: translateY(-2px);
 }
 
 .input-icon-right {
@@ -633,6 +629,55 @@ body.map-page-standalone {
     outline: none;
     border-color: var(--color-primary-start);
     background: var(--color-surface);
+}
+
+/* Autocomplete Suggestions */
+.addr-suggestions-container {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    border: 1.5px solid var(--border-light);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    max-height: 240px;
+    overflow-y: auto;
+    animation: fadeIn 0.2s ease;
+}
+
+.addr-suggestions-container.hidden {
+    display: none;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+    color: var(--color-text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: var(--color-bg);
+}
+
+.suggestion-name {
+    font-weight: 700;
+}
+
+.suggestion-addr {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
 }
 
 /* Type Chips */
@@ -668,9 +713,11 @@ body.map-page-standalone {
 }
 
 .type-chip.active {
-    background: var(--color-primary-start);
-    border-color: var(--color-primary-start);
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    border-color: transparent;
     color: white;
+    box-shadow: 0 4px 12px rgba(14, 116, 144, 0.3);
+    transform: scale(1.05);
 }
 
 .type-chip.active .icon {

@@ -8,10 +8,10 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="../css/style.css" />
-    <link rel="stylesheet" href="../css/home.css" />
-    <link rel="stylesheet" href="../css/mapa.css" />
-    <link rel="stylesheet" href="../css/trip-calculator.css" />
+    <link rel="stylesheet" href="../css/style.css?v=28" />
+    <link rel="stylesheet" href="../css/home.css?v=28" />
+    <link rel="stylesheet" href="../css/mapa.css?v=28" />
+    <link rel="stylesheet" href="../css/trip-calculator.css?v=28" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -47,32 +47,32 @@
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=28"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
     <!-- Leaflet JS -->
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=28"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
 
-    <script src="../js/core/theme.js"></script>
+    <script src="../js/core/theme.js?v=28"></script>
 
     <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-    <script defer src="../js/utils/notifications.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=28"></script>
+    <script defer src="../js/utils/notifications.js?v=28"></script>
 
-    <script defer src="../js/core/firebase-config.js"></script>
-    <script defer src="../js/core/auth.js"></script>
-    <script defer src="../js/core/firestore.js"></script>
-    <script defer src="../js/utils/utils.js"></script>
-    <script defer src="../js/modules/tripCalculator.js"></script>
-    <script type="module" src="../js/modules/mapa.js"></script>
+    <script defer src="../js/core/firebase-config.js?v=28"></script>
+    <script defer src="../js/core/auth.js?v=28"></script>
+    <script defer src="../js/core/firestore.js?v=28"></script>
+    <script defer src="../js/utils/utils.js?v=28"></script>
+    <script defer src="../js/modules/tripCalculator.js?v=28"></script>
+    <script type="module" src="../js/modules/mapa.js?v=28"></script>
   </head>
 
   <body class="map-page-standalone">
@@ -189,9 +189,9 @@
           </div>
           <div class="category-filters" id="category-filters"></div>
           <div class="chips-row" id="quick-chips">
-            <div class="chip-skeleton"></div>
-            <div class="chip-skeleton"></div>
-            <div class="chip-skeleton"></div>
+            <div class="chip skeleton"></div>
+            <div class="chip skeleton"></div>
+            <div class="chip skeleton"></div>
           </div>
         </div>
 
@@ -277,13 +277,19 @@
                   class="form-input-clean"
                   id="inp-address"
                   placeholder="Pesquisar morada..."
+                  autocomplete="off"
                 />
-                <div class="input-icon-right">
+                <div class="input-icon-right" id="geocoding-spinner" style="display:none">
+                   <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </div>
+                <div class="input-icon-right" id="geocoding-icon">
                   <svg class="icon">
                     <use href="../assets/icons/icons-unified.svg#icon-location"></use>
                   </svg>
                 </div>
               </div>
+              <!-- Autocomplete Results Container -->
+              <div id="addr-suggestions" class="addr-suggestions-container hidden"></div>
             </div>
 
             <!-- Map Adjust Tip -->
@@ -683,5 +689,3 @@
     </footer>
   </body>
 </html>
-
-

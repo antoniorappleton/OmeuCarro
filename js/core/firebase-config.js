@@ -1,10 +1,10 @@
-// firebase-config.js
+﻿// firebase-config.js
 
 const firebaseConfig = {
   apiKey: "AIzaSyAiKOykeoazkqCXMhy-mpX2Ho8liuUas-E",
   authDomain: "omeucarro-d3889.firebaseapp.com",
   projectId: "omeucarro-d3889",
-  storageBucket: "omeucarro-d3889.appspot.com", // ✅ AQUI
+  storageBucket: "omeucarro-d3889.appspot.com", // âœ… AQUI
   messagingSenderId: "387296122464",
   appId: "1:387296122464:web:1c3c3c390dc26050f99505",
 };
