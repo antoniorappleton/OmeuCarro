@@ -52,7 +52,8 @@ if (window.__L100_MAP_INIT__) {
     inpName: document.getElementById("inp-name"),
     inpAddr: document.getElementById("inp-address"),
     inpCat: document.getElementById("inp-category"),
-    inpNotes: document.getElementById("inp-notes"),
+    inpNotes: document.getElementById("inp-notes"),
+    notesCounter: document.getElementById("notes-char-counter"),
     formHeading: document.getElementById("form-heading"),
     typeChipsContainer: document.getElementById("type-chips-container"),
   };
@@ -763,7 +764,29 @@ if (window.__L100_MAP_INIT__) {
     els.typeChipsContainer.appendChild(addBtn);
   }
 
-  function openForm(fav = null) {
+  function updateNotesCounter() {
+    if (!els.notesCounter) return;
+    const max = els.inpNotes.maxLength > 0 ? els.inpNotes.maxLength : 200;
+    const len = els.inpNotes.value.length;
+    els.notesCounter.textContent = `${len}/${max}`;
+    els.notesCounter.classList.toggle("limit-reached", len >= max);
+    els.notesCounter.classList.toggle("limit-near", len >= max * 0.9 && len < max);
+  }
+
+  function markFieldError(el) {
+    el.classList.remove("has-error");
+    void el.offsetWidth; // restart da animacao
+    el.classList.add("has-error");
+  }
+
+  els.inpName.addEventListener("input", () => els.inpName.classList.remove("has-error"));
+  els.inpAddr.addEventListener("input", () => els.inpAddr.classList.remove("has-error"));
+  els.inpNotes.addEventListener("input", updateNotesCounter);
+
+  function openForm(fav = null) {
+    els.inpName.classList.remove("has-error");
+    els.inpAddr.classList.remove("has-error");
+
     if (fav) {
       els.formHeading.textContent = "Editar Local";
       els.inpName.value = fav.nome;
@@ -788,9 +811,11 @@ if (window.__L100_MAP_INIT__) {
     els.inpAddr.dataset.lat = "";
     els.inpAddr.dataset.lng = "";
     document.getElementById("addr-suggestions").innerHTML = "";
-    document.getElementById("addr-suggestions").classList.add("hidden");
-  }
-
+    document.getElementById("addr-suggestions").classList.add("hidden");
+
+    updateNotesCounter();
+  }
+
   // Address Autocomplete Handlers
   els.inpAddr.addEventListener("input", (e) => {
     // Clear dataset on manual edit
@@ -829,8 +854,13 @@ if (window.__L100_MAP_INIT__) {
           const subtitle = res.display_name.split(",").slice(1).join(",").trim();
 
           item.innerHTML = `
-            <span class="suggestion-name">${escapeHtml(title)}</span>
-            <span class="suggestion-addr">${escapeHtml(subtitle)}</span>
+            <div class="suggestion-icon">
+              <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-location"></use></svg>
+            </div>
+            <div class="suggestion-text">
+              <span class="suggestion-name">${escapeHtml(title)}</span>
+              <span class="suggestion-addr">${escapeHtml(subtitle)}</span>
+            </div>
           `;
           
           item.onclick = () => {
@@ -899,8 +929,20 @@ if (window.__L100_MAP_INIT__) {
       const cat = els.inpCat.value;
       const notes = els.inpNotes.value.trim();
 
-      if (!name || !addr)
-        return window.showToast("Preencha todos os campos", "error");
+      let firstInvalid = null;
+      if (!name) {
+        markFieldError(els.inpName);
+        firstInvalid = firstInvalid || els.inpName;
+      }
+      if (!addr) {
+        markFieldError(els.inpAddr);
+        firstInvalid = firstInvalid || els.inpAddr;
+      }
+      if (firstInvalid) {
+        window.showToast("Preencha todos os campos", "error");
+        firstInvalid.focus();
+        return;
+      }
 
       let lat = null;
       let lng = null;
@@ -1017,7 +1059,7 @@ if (window.__L100_MAP_INIT__) {
           window.showToast("Erro ao guardar. Tente novamente.", "error");
         }
       } finally {
-        btn.textContent = oldText;
+        btn.innerHTML = oldText;
         btn.disabled = false;
       }
     });

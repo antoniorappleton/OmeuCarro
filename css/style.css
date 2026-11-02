@@ -17,7 +17,8 @@
   /* Dark Teal */
   --color-primary-end: #0de3f2;
   /* Neon Cyan */
-  --color-primary-solid: #0de3f2;
+  --color-primary-solid: #0de3f2;
+  --color-primary-rgb: 49, 100, 104;
 
   --color-accent: #0de3f2;
   /* Cyan Accent */

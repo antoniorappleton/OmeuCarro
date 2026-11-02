@@ -18,9 +18,9 @@ if (window.location.search.includes("nocache=1")) {
   window.addEventListener("load", () => {
     // FORCE UPDATE CHECKS: Append version to URL to bypass browser cache of the SW file itself
     navigator.serviceWorker
-      .register("/service-worker.js?v=29")
+      .register("/service-worker.js?v=30")
       .then((reg) => {
-        console.log("Service Worker registado com sucesso (v29):", reg);
+        console.log("Service Worker registado com sucesso (v30):", reg);
 
         // Check for updates periodically
         reg.update();
