@@ -59,7 +59,21 @@ if (window.__L100_MAP_INIT__) {
 
   let confirmCallback = null;
   let markers = {}; // id -> L.marker
-  let autocompleteTimer = null;
+  let autocompleteTimer = null;
+  let gpsWatchId = null;
+
+  // ============================
+  // HELPER: Escape HTML (evitar XSS em innerHTML com dados do utilizador/Nominatim)
+  // ============================
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[c]);
+  }
 
   // ============================
   // GEOCODING SERVICE (Nominatim)
@@ -129,7 +143,7 @@ if (window.__L100_MAP_INIT__) {
 
     // GPS Watcher
     if ("geolocation" in navigator) {
-      navigator.geolocation.watchPosition(
+      gpsWatchId = navigator.geolocation.watchPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           state.currentLocation = [latitude, longitude];
@@ -151,10 +165,18 @@ if (window.__L100_MAP_INIT__) {
           // Update nav link if needed
           updateNavigationLink();
         },
-        (err) => console.warn("GPS Watch Error", err),
-        { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 },
-      );
-    }
+        (err) => console.warn("GPS Watch Error", err),
+        { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 },
+      );
+    }
+
+    // Parar o GPS quando a pagina sai (poupa bateria em PWA/standalone)
+    window.addEventListener("pagehide", () => {
+      if (gpsWatchId !== null && "geolocation" in navigator) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+    });
   }
 
   // ============================
@@ -180,12 +202,13 @@ if (window.__L100_MAP_INIT__) {
             const { latitude, longitude } = pos.coords;
             state.map.flyTo([latitude, longitude], 16);
             // (Marker updated by watcher eventually)
-            showToast("Localização encontrada!");
-          },
-          (err) => {
-            console.error(err);
-            showToast("Permissão negada ou erro de GPS", "error");
-          },
+            showToast("Localização encontrada!");
+          },
+          (err) => {
+            console.error(err);
+            showToast("Permissão negada ou erro de GPS", "error");
+          },
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 },
         );
       } else {
         showToast("Geolocalização não suportada", "error");
@@ -295,7 +318,7 @@ if (window.__L100_MAP_INIT__) {
                     <div class="pin-shape pin-rotate-base">
                        <svg class="icon pin-icon-rotate"><use href="../assets/icons/icons-unified.svg#${iconName}"></use></svg>
                     </div>
-                    <div class="pin-label">${fav.nome}</div>
+                    <div class="pin-label">${escapeHtml(fav.nome)}</div>
                 `;
 
       const customIcon = L.divIcon({
@@ -589,7 +612,7 @@ if (window.__L100_MAP_INIT__) {
       const item = document.createElement("div");
       item.className = "result-item";
       item.innerHTML = `
-                     <div class="result-info"><div>${fav.nome}</div><div>${fav.endereco}</div></div>
+                     <div class="result-info"><div>${escapeHtml(fav.nome)}</div><div>${escapeHtml(fav.endereco)}</div></div>
                      <div><svg class="icon icon-result"><use href="../assets/icons/icons-unified.svg#icon-car"></use></svg></div>
                  `;
       item.addEventListener("click", async () => {
@@ -805,9 +828,9 @@ if (window.__L100_MAP_INIT__) {
           const title = res.display_name.split(",")[0];
           const subtitle = res.display_name.split(",").slice(1).join(",").trim();
 
-          item.innerHTML = `
-            <span class="suggestion-name">${title}</span>
-            <span class="suggestion-addr">${subtitle}</span>
+          item.innerHTML = `
+            <span class="suggestion-name">${escapeHtml(title)}</span>
+            <span class="suggestion-addr">${escapeHtml(subtitle)}</span>
           `;
           
           item.onclick = () => {

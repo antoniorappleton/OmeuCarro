@@ -164,7 +164,7 @@ exports.checkVehicleAlertsV2 = onSchedule(
           for (const alerta of alertas) {
             try {
               await sendNotificationToUser(userId, alerta.titulo, alerta.corpo, {
-                url: "/veiculos.html",
+                url: "/pages/veiculos.html",
                 veiculoId: doc.id,
               });
             } catch (e) {

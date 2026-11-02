@@ -169,7 +169,7 @@ exports.processOBDReading = onDocumentCreated(
               userIdTrip,
               "🏁 Viagem Concluída",
               `Percorreu ${dist} km com média de ${cons} L/100.`,
-              { url: "/veiculos.html", tripId: prevTripDoc.id },
+              { url: "/pages/veiculos.html", tripId: prevTripDoc.id },
             );
 
             await prevTripDoc.ref.update({ notified: true });

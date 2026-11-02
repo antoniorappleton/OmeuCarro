@@ -5,8 +5,9 @@
 // Aumenta a versão sempre que fizeres deploy
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v28";
-const RUNTIME_CACHE = "l100-runtime-v28";
+const STATIC_CACHE = "l100-static-v29";
+const RUNTIME_CACHE = "l100-runtime-v29";
+const TILES_CACHE = "l100-tiles-v29";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -75,13 +76,17 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v26");
+  console.log("[SW] Activate v29");
 
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
         names.map((key) => {
-          if (key !== STATIC_CACHE && key !== RUNTIME_CACHE) {
+          if (
+            key !== STATIC_CACHE &&
+            key !== RUNTIME_CACHE &&
+            key !== TILES_CACHE
+          ) {
             console.log("[SW] A eliminar cache antiga:", key);
             return caches.delete(key);
           }
@@ -100,7 +105,29 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Apenas tratar pedidos deste domínio
+  // -------------------------------------
+  // TILES DO MAPA (OpenStreetMap) - CACHE FIRST
+  // Permite ver areas do mapa ja visitadas mesmo offline.
+  // -------------------------------------
+  if (url.hostname.endsWith("tile.openstreetmap.org")) {
+    event.respondWith(
+      caches.open(TILES_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+
+        try {
+          const response = await fetch(request);
+          if (response.ok) cache.put(request, response.clone());
+          return response;
+        } catch {
+          return cached;
+        }
+      }),
+    );
+    return;
+  }
+
+  // Apenas tratar pedidos deste domínio
   if (url.origin !== location.origin) return;
 
   // -------------------------------------
@@ -213,9 +240,10 @@ messaging.onBackgroundMessage((payload) => {
       payload.notification?.badge ||
       dataOptions.badge ||
       "/assets/img/logo-icon192.png",
-    tag: payload.notification?.tag || dataOptions.tag || "l100-alert",
-    vibrate: [200, 100, 200],
-    data: dataOptions, // Passar todos os dados para o click handler
+    tag: payload.notification?.tag || dataOptions.tag || "l100-alert",
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    data: dataOptions, // Passar todos os dados para o click handler
   };
 
   // Se o payload já traz "notification", o browser mostra automaticamente.
