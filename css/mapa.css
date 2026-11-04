@@ -74,8 +74,12 @@ body.map-page-standalone {
     transition: background 0.2s;
 }
 
-.map-header-btn:active {
+.map-header-btn:hover {
     background: rgba(0, 0, 0, 0.05);
+}
+
+.map-header-btn:active {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 /* --------------------------------
@@ -215,6 +219,10 @@ body.map-page-standalone {
     transition: transform 0.1s, box-shadow 0.1s;
 }
 
+.control-btn:hover {
+    border-color: var(--color-primary-start);
+}
+
 .control-btn:active {
     transform: scale(0.95);
     box-shadow: none;
@@ -243,8 +251,12 @@ body.map-page-standalone {
     cursor: pointer;
 }
 
-.zoom-btn:active {
+.zoom-btn:hover {
     background: var(--color-bg);
+}
+
+.zoom-btn:active {
+    background: var(--color-surface-container);
 }
 
 .zoom-divider {
@@ -452,6 +464,10 @@ body.map-page-standalone {
     transition: all 0.2s;
 }
 
+.chip:hover {
+    border-color: var(--color-primary-start);
+}
+
 .chip:active,
 .chip.active {
     background: rgba(49, 100, 104, 0.15);
@@ -508,6 +524,10 @@ body.map-page-standalone {
     transition: transform 0.1s;
 }
 
+.btn-action-primary:hover {
+    filter: brightness(1.1);
+}
+
 .btn-action-primary:active {
     transform: scale(0.98);
 }
@@ -521,6 +541,11 @@ body.map-page-standalone {
     border: 1px solid var(--border-light);
     cursor: pointer;
     transition: var(--transition);
+}
+
+.btn-action-secondary:hover {
+    background: var(--color-surface-container);
+    border-color: var(--color-primary-start);
 }
 
 .btn-action-secondary:active {
@@ -1102,19 +1127,76 @@ body.map-page-standalone {
     color: white;
 }
 
-/* Desktop Tweaks */
-@media(min-width: 768px) {
-    .sheet-container {
-        width: 400px;
-        left: 24px;
-        right: auto;
-        bottom: 24px;
-        border-radius: 24px;
+/* ==================================================================
+   DESKTOP: persistent docked side panel (not a floating mobile sheet)
+   ================================================================== */
+@media (min-width: 1024px) {
+    /* The global app sidebar (264px) docks over the left of the map;
+       everything that was anchored to the left edge shifts to clear it. */
+    .map-header {
+        padding: 0 28px;
+        left: 264px;
     }
 
-    .fab-add {
-        left: 360px;
+    .map-header-title {
+        font-size: 1.3rem;
+    }
+
+    .map-controls-group {
+        right: 28px;
+    }
+
+    /* Dock the sheet as a full-height side panel right next to the app
+       sidebar, between the map header and the app's bottom tab bar. The
+       mobile compact/half/full drag states stop making sense once the
+       panel is always fully visible, so height is forced to 100%. */
+    .sheet-container {
+        position: absolute;
+        top: var(--map-header-height);
+        bottom: var(--map-footer-height);
+        left: 264px;
         right: auto;
+        width: 440px;
+        height: 100% !important;
+        border-radius: 0;
+        border-top: none;
+        border-right: 1px solid var(--border-light);
+        box-shadow: 12px 0 40px rgba(15, 23, 42, 0.1);
+    }
+
+    [data-theme="dark"] .sheet-container {
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sheet-handle-area {
+        display: none;
+    }
+
+    .sheet-content {
+        padding: 12px 32px 32px;
+    }
+
+    .details-title {
+        font-size: 1.4rem;
+    }
+
+    .form-title {
+        font-size: 1.2rem;
+    }
+
+    .form-footer {
+        padding: 20px 32px 28px;
+    }
+
+    /* Floating controls shift right to clear the sidebar + docked panel */
+    .fab-add {
+        left: calc(264px + 440px + 28px);
+        right: auto;
+        bottom: calc(var(--map-footer-height) + 28px);
+    }
+
+    .fab-add.compact {
+        bottom: calc(var(--map-footer-height) + 28px);
     }
 }
 

@@ -6,35 +6,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veículo – L100</title>
 
-  <link rel="stylesheet" href="../css/style.css?v=31" />
-  <link rel="stylesheet" href="../css/home.css?v=31" />
-  <link rel="stylesheet" href="../css/cards.css?v=31" />
-  <link rel="stylesheet" href="../css/responsive.css?v=31" />
-  <script src="../js/core/theme.js?v=31"></script>
+  <link rel="stylesheet" href="../css/style.css?v=32" />
+  <link rel="stylesheet" href="../css/home.css?v=32" />
+  <link rel="stylesheet" href="../css/cards.css?v=32" />
+  <link rel="stylesheet" href="../css/responsive.css?v=32" />
+  <script src="../js/core/theme.js?v=32"></script>
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=31"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=32"></script>
 
   <!-- Firebase v9 (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=31"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=31"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=31"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=31"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=32"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=32"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=32"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=32"></script>
 
-  <script defer src="../js/core/firebase-config.js?v=31"></script>
-  <script defer src="../js/core/auth.js?v=31"></script>
-  <script defer src="../js/modules/analytics.js?v=31"></script>
-  <script defer src="../js/core/firestore.js?v=31"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=31"></script>
-  <script defer src="../js/utils/notifications.js?v=31"></script>
-  <script defer src="../js/utils/utils.js?v=31"></script>
+  <script defer src="../js/core/firebase-config.js?v=32"></script>
+  <script defer src="../js/core/auth.js?v=32"></script>
+  <script defer src="../js/modules/analytics.js?v=32"></script>
+  <script defer src="../js/core/firestore.js?v=32"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=32"></script>
+  <script defer src="../js/utils/notifications.js?v=32"></script>
+  <script defer src="../js/utils/utils.js?v=32"></script>
   <!-- JSZip for Torque CSV/ZIP import -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js?v=31"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js?v=32"></script>
   <!-- depois os ficheiros específicos da página -->
-  <script defer src="../js/modules/veiculo.js?v=31"></script>
+  <script defer src="../js/modules/veiculo.js?v=32"></script>
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
+  <!-- DESKTOP SIDEBAR (visível a partir de 1024px; o rodapé assume a navegação em mobile) -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <div>
+        <span class="sidebar-brand-mark">L<span>100</span></span>
+        <div class="sidebar-tagline">Gestão de Frotas</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="sidebar-link">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-home"></use>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="veiculos.html" class="sidebar-link active">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-car"></use>
+        </svg>
+        <span>Veículos</span>
+      </a>
+      <a href="mapa.html" class="sidebar-link">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
+        </svg>
+        <span>Mapa</span>
+      </a>
+      <a href="estatisticas.html" class="sidebar-link">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
+        </svg>
+        <span>Estatísticas</span>
+      </a>
+      <a href="perfil.html" class="sidebar-link">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-user"></use>
+        </svg>
+        <span>Perfil</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button type="button" class="sidebar-link sidebar-logout" data-action="logout">
+        <svg class="icon" aria-hidden="true">
+          <use href="../assets/icons/icons-unified.svg#icon-logout"></use>
+        </svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
   <!-- HEADER PREMIUM -->
   <header class="app-header glass-header">
     <div class="app-header-left">

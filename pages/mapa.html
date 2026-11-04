@@ -8,11 +8,11 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="../css/style.css?v=31" />
-    <link rel="stylesheet" href="../css/home.css?v=31" />
-    <link rel="stylesheet" href="../css/mapa.css?v=31" />
-    <link rel="stylesheet" href="../css/trip-calculator.css?v=31" />
-    <link rel="stylesheet" href="../css/responsive.css?v=31" />
+    <link rel="stylesheet" href="../css/style.css?v=32" />
+    <link rel="stylesheet" href="../css/home.css?v=32" />
+    <link rel="stylesheet" href="../css/mapa.css?v=32" />
+    <link rel="stylesheet" href="../css/trip-calculator.css?v=32" />
+    <link rel="stylesheet" href="../css/responsive.css?v=32" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -48,35 +48,87 @@
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=31"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=32"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
     <!-- Leaflet JS -->
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=31"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=32"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
 
-    <script src="../js/core/theme.js?v=31"></script>
+    <script src="../js/core/theme.js?v=32"></script>
 
     <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=31"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=31"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=31"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=31"></script>
-    <script defer src="../js/utils/notifications.js?v=31"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=32"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=32"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=32"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=32"></script>
+    <script defer src="../js/utils/notifications.js?v=32"></script>
 
-    <script defer src="../js/core/firebase-config.js?v=31"></script>
-    <script defer src="../js/core/auth.js?v=31"></script>
-    <script defer src="../js/core/firestore.js?v=31"></script>
-    <script defer src="../js/utils/utils.js?v=31"></script>
-    <script defer src="../js/modules/tripCalculator.js?v=31"></script>
-    <script type="module" src="../js/modules/mapa.js?v=31"></script>
+    <script defer src="../js/core/firebase-config.js?v=32"></script>
+    <script defer src="../js/core/auth.js?v=32"></script>
+    <script defer src="../js/core/firestore.js?v=32"></script>
+    <script defer src="../js/utils/utils.js?v=32"></script>
+    <script defer src="../js/modules/tripCalculator.js?v=32"></script>
+    <script type="module" src="../js/modules/mapa.js?v=32"></script>
   </head>
 
   <body class="map-page-standalone">
+    <!-- DESKTOP SIDEBAR (visível a partir de 1024px; o rodapé assume a navegação em mobile) -->
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <div>
+          <span class="sidebar-brand-mark">L<span>100</span></span>
+          <div class="sidebar-tagline">Gestão de Frotas</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-home"></use>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="veiculos.html" class="sidebar-link">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-car"></use>
+          </svg>
+          <span>Veículos</span>
+        </a>
+        <a href="mapa.html" class="sidebar-link active">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
+          </svg>
+          <span>Mapa</span>
+        </a>
+        <a href="estatisticas.html" class="sidebar-link">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-dashboard"></use>
+          </svg>
+          <span>Estatísticas</span>
+        </a>
+        <a href="perfil.html" class="sidebar-link">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-user"></use>
+          </svg>
+          <span>Perfil</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" class="sidebar-link sidebar-logout" data-action="logout">
+          <svg class="icon" aria-hidden="true">
+            <use href="../assets/icons/icons-unified.svg#icon-logout"></use>
+          </svg>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+
     <!-- HEADER -->
     <header class="map-header">
       <div class="map-header-title">Mapa</div>
@@ -556,7 +608,7 @@
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg?v=31#icon-map"></use>
+          <use href="../assets/icons/icons-unified.svg?v=32#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>

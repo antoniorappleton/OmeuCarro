@@ -30,9 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // =================================================
   // LOGOUT (GLOBAL – HEADER)
   // =================================================
-const logoutBtn = document.getElementById("btn-logout");
+const logoutBtns = document.querySelectorAll(
+  "#btn-logout, [data-action='logout']",
+);
 
-if (logoutBtn) {
+logoutBtns.forEach((logoutBtn) => {
   logoutBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -50,7 +52,7 @@ if (logoutBtn) {
       alert(err?.message || "Erro ao sair da aplicação.");
     }
   });
-}
+});
 
 
   // =================================================

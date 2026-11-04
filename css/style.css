@@ -18,7 +18,7 @@
   --color-primary-end: #0de3f2;
   /* Neon Cyan */
   --color-primary-solid: #0de3f2;
-  --color-primary-rgb: 49, 100, 104;
+  --color-primary-rgb: 49, 100, 104;
 
   --color-accent: #0de3f2;
   /* Cyan Accent */
@@ -486,6 +486,155 @@ footer a .icon {
   width: 24px;
   height: 24px;
   stroke-width: 2px;
+}
+
+/* =============================
+   DESKTOP SIDEBAR (Fleet-style persistent nav)
+   Mobile keeps the bottom tab bar; desktop gets a docked
+   sidebar instead, matching a professional fleet-management tool.
+   ============================= */
+.app-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 264px;
+    background: linear-gradient(180deg, var(--color-primary-dark), #0a1314);
+    padding: 28px 18px;
+    z-index: 200;
+    box-shadow: 6px 0 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    padding: 0 10px 24px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .sidebar-brand-mark {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-brand-mark span {
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-tagline {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.65);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    width: 100%;
+    text-align: left;
+  }
+
+  .sidebar-link .icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    stroke: currentColor;
+  }
+
+  .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+  }
+
+  .sidebar-link.active {
+    background: rgba(13, 227, 242, 0.14);
+    color: #ffffff;
+  }
+
+  .sidebar-link.active::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-primary-end);
+  }
+
+  .sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+    margin-top: 12px;
+  }
+
+  .sidebar-logout:hover {
+    background: rgba(239, 68, 68, 0.14);
+    color: #fca5a5;
+  }
+
+  /* Shift page content to make room for the sidebar, and hide the
+     mobile header/footer — scoped with :has() so pages that don't
+     render a sidebar yet keep their current full-width layout. */
+  html body:has(.app-sidebar) > .app-header,
+  html body:has(.app-sidebar) > .top-header {
+    display: none;
+  }
+
+  html body:has(.app-sidebar) > footer {
+    display: none;
+  }
+
+  html body:has(.app-sidebar) {
+    padding-bottom: 0;
+  }
+
+  body:has(.app-sidebar) > .hero,
+  body:has(.app-sidebar) > .home-main,
+  body:has(.app-sidebar) > .dashboard-container {
+    margin-left: 264px;
+  }
+
+  /* The header is hidden, so the padding reserved for it is no longer
+     needed — swap it for the normal desktop top padding. */
+  body:has(.app-sidebar) > .home-main.has-header-offset {
+    padding-top: 2rem;
+  }
 }
 
 /* ----------- AUTH PAGE SPECIFIC ----------- */
