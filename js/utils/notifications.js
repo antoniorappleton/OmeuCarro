@@ -38,7 +38,7 @@ async function requestNotificationPermissionAndSaveToken() {
     !swReg.active ||
     !swReg.active.scriptURL.includes("service-worker.js")
   ) {
-    swReg = await navigator.serviceWorker.register("./service-worker.js?v=19");
+    swReg = await navigator.serviceWorker.register("./service-worker.js?v=30");
   }
 
   const messaging = firebase.messaging();
@@ -88,8 +88,8 @@ function listenToForegroundMessages() {
       console.log("ðŸ”” [FCM Client] Mensagem recebida em foreground:", payload);
       const title = payload.notification?.title || "L100";
       const body = payload.notification?.body || "";
-      const icon = payload.notification?.icon || "./images/logo-icon192.png";
-      const badge = payload.notification?.badge || "./images/logo-icon192.png";
+      const icon = payload.notification?.icon || "./assets/img/logo-icon192.png";
+      const badge = payload.notification?.badge || "./assets/img/logo-icon192.png";
 
       // Opção 1: Toast Simples (se tiveres um sistema de toast)
       if (window.showToast) {
@@ -149,7 +149,7 @@ async function testLocalNotification() {
     // Tentamos await para capturar erros de permissão ou sistema
     await reg.showNotification("Teste de Notificação L100", {
       body: "Se estás a ver isto, as notificações locais funcionam! âœ…",
-      icon: "./images/logo-icon192.png",
+      icon: "./assets/img/logo-icon192.png",
       tag: "test-notification-" + Date.now(),
       vibrate: [200, 100, 200],
       requireInteraction: true,

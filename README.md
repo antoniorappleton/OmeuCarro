@@ -16,7 +16,7 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
 - **⛽ Histórico de Abastecimentos**: Análise detalhada de consumos (L/100km) e gastos acumulados por veículo.
 - **📱 PWA de Última Geração**:
   - Instalação como App nativa.
-  - Suporte Offline robusto com Service Worker v29.
+  - Suporte Offline robusto com Service Worker v31 (com cache dos tiles do Mapa para visualização offline).
   - Cache versionado para atualizações instantâneas.
 
 ---

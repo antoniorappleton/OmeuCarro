@@ -26,7 +26,7 @@ if (!admin.apps.length) {
       userId,
       "🧪 Teste L100",
       "As notificações automáticas estão prontas! ✅",
-      { url: "/veiculos.html" }
+      { url: "/pages/veiculos.html" }
     );
     
     console.log("Notification test triggered successfully.");

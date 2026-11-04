@@ -8,11 +8,11 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="../css/style.css?v=29" />
-    <link rel="stylesheet" href="../css/home.css?v=29" />
-    <link rel="stylesheet" href="../css/mapa.css?v=29" />
-    <link rel="stylesheet" href="../css/trip-calculator.css?v=29" />
-    <link rel="stylesheet" href="../css/responsive.css?v=29" />
+    <link rel="stylesheet" href="../css/style.css?v=31" />
+    <link rel="stylesheet" href="../css/home.css?v=31" />
+    <link rel="stylesheet" href="../css/mapa.css?v=31" />
+    <link rel="stylesheet" href="../css/trip-calculator.css?v=31" />
+    <link rel="stylesheet" href="../css/responsive.css?v=31" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -48,32 +48,32 @@
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=29"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=31"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
     <!-- Leaflet JS -->
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=29"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=31"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
 
-    <script src="../js/core/theme.js?v=29"></script>
+    <script src="../js/core/theme.js?v=31"></script>
 
     <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=29"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=29"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=29"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=29"></script>
-    <script defer src="../js/utils/notifications.js?v=29"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=31"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=31"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=31"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=31"></script>
+    <script defer src="../js/utils/notifications.js?v=31"></script>
 
-    <script defer src="../js/core/firebase-config.js?v=29"></script>
-    <script defer src="../js/core/auth.js?v=29"></script>
-    <script defer src="../js/core/firestore.js?v=29"></script>
-    <script defer src="../js/utils/utils.js?v=29"></script>
-    <script defer src="../js/modules/tripCalculator.js?v=29"></script>
-    <script type="module" src="../js/modules/mapa.js?v=29"></script>
+    <script defer src="../js/core/firebase-config.js?v=31"></script>
+    <script defer src="../js/core/auth.js?v=31"></script>
+    <script defer src="../js/core/firestore.js?v=31"></script>
+    <script defer src="../js/utils/utils.js?v=31"></script>
+    <script defer src="../js/modules/tripCalculator.js?v=31"></script>
+    <script type="module" src="../js/modules/mapa.js?v=31"></script>
   </head>
 
   <body class="map-page-standalone">
@@ -251,6 +251,7 @@
             <div class="form-group">
               <label class="form-label-row">
                 <span class="form-label-text">Nome do Local</span>
+                <span class="form-label-required">*</span>
               </label>
               <div class="input-with-icon">
                 <input
@@ -258,6 +259,7 @@
                   class="form-input-clean"
                   id="inp-name"
                   placeholder="Ex: Casa, Trabalho..."
+                  required
                 />
                 <div class="input-icon-right">
                   <svg class="icon">
@@ -271,6 +273,7 @@
             <div class="form-group">
               <label class="form-label-row">
                 <span class="form-label-text">Endereço</span>
+                <span class="form-label-required">*</span>
               </label>
               <div class="input-with-icon">
                 <input
@@ -279,6 +282,7 @@
                   id="inp-address"
                   placeholder="Pesquisar morada..."
                   autocomplete="off"
+                  required
                 />
                 <div class="input-icon-right" id="geocoding-spinner" style="display:none">
                    <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -338,12 +342,20 @@
                 class="form-input-area"
                 id="inp-notes"
                 placeholder="Ex: Portão azul, código 1234..."
+                maxlength="200"
               ></textarea>
+              <span class="char-counter" id="notes-char-counter">0/200</span>
             </div>
           </div>
 
           <div class="form-footer">
-            <button class="btn-action-primary full-width" id="btn-save-form">
+            <button
+              class="btn-action-primary btn-save-location full-width"
+              id="btn-save-form"
+            >
+              <svg class="icon u-mr-xs">
+                <use href="../assets/icons/icons-unified.svg#icon-check"></use>
+              </svg>
               Guardar Alterações
             </button>
           </div>
@@ -544,7 +556,7 @@
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg?v=29#icon-map"></use>
+          <use href="../assets/icons/icons-unified.svg?v=31#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>

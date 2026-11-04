@@ -53,6 +53,7 @@ if (window.__L100_MAP_INIT__) {
     inpAddr: document.getElementById("inp-address"),
     inpCat: document.getElementById("inp-category"),
     inpNotes: document.getElementById("inp-notes"),
+    notesCounter: document.getElementById("notes-char-counter"),
     formHeading: document.getElementById("form-heading"),
     typeChipsContainer: document.getElementById("type-chips-container"),
   };
@@ -60,6 +61,20 @@ if (window.__L100_MAP_INIT__) {
   let confirmCallback = null;
   let markers = {}; // id -> L.marker
   let autocompleteTimer = null;
+  let gpsWatchId = null;
+
+  // ============================
+  // HELPER: Escape HTML (evitar XSS em innerHTML com dados do utilizador/Nominatim)
+  // ============================
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[c]);
+  }
 
   // ============================
   // GEOCODING SERVICE (Nominatim)
@@ -129,7 +144,7 @@ if (window.__L100_MAP_INIT__) {
 
     // GPS Watcher
     if ("geolocation" in navigator) {
-      navigator.geolocation.watchPosition(
+      gpsWatchId = navigator.geolocation.watchPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           state.currentLocation = [latitude, longitude];
@@ -155,6 +170,14 @@ if (window.__L100_MAP_INIT__) {
         { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 },
       );
     }
+
+    // Parar o GPS quando a pagina sai (poupa bateria em PWA/standalone)
+    window.addEventListener("pagehide", () => {
+      if (gpsWatchId !== null && "geolocation" in navigator) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+    });
   }
 
   // ============================
@@ -186,6 +209,7 @@ if (window.__L100_MAP_INIT__) {
             console.error(err);
             showToast("Permissão negada ou erro de GPS", "error");
           },
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 },
         );
       } else {
         showToast("Geolocalização não suportada", "error");
@@ -295,7 +319,7 @@ if (window.__L100_MAP_INIT__) {
                     <div class="pin-shape pin-rotate-base">
                        <svg class="icon pin-icon-rotate"><use href="../assets/icons/icons-unified.svg#${iconName}"></use></svg>
                     </div>
-                    <div class="pin-label">${fav.nome}</div>
+                    <div class="pin-label">${escapeHtml(fav.nome)}</div>
                 `;
 
       const customIcon = L.divIcon({
@@ -589,7 +613,7 @@ if (window.__L100_MAP_INIT__) {
       const item = document.createElement("div");
       item.className = "result-item";
       item.innerHTML = `
-                     <div class="result-info"><div>${fav.nome}</div><div>${fav.endereco}</div></div>
+                     <div class="result-info"><div>${escapeHtml(fav.nome)}</div><div>${escapeHtml(fav.endereco)}</div></div>
                      <div><svg class="icon icon-result"><use href="../assets/icons/icons-unified.svg#icon-car"></use></svg></div>
                  `;
       item.addEventListener("click", async () => {
@@ -740,7 +764,29 @@ if (window.__L100_MAP_INIT__) {
     els.typeChipsContainer.appendChild(addBtn);
   }
 
+  function updateNotesCounter() {
+    if (!els.notesCounter) return;
+    const max = els.inpNotes.maxLength > 0 ? els.inpNotes.maxLength : 200;
+    const len = els.inpNotes.value.length;
+    els.notesCounter.textContent = `${len}/${max}`;
+    els.notesCounter.classList.toggle("limit-reached", len >= max);
+    els.notesCounter.classList.toggle("limit-near", len >= max * 0.9 && len < max);
+  }
+
+  function markFieldError(el) {
+    el.classList.remove("has-error");
+    void el.offsetWidth; // restart da animacao
+    el.classList.add("has-error");
+  }
+
+  els.inpName.addEventListener("input", () => els.inpName.classList.remove("has-error"));
+  els.inpAddr.addEventListener("input", () => els.inpAddr.classList.remove("has-error"));
+  els.inpNotes.addEventListener("input", updateNotesCounter);
+
   function openForm(fav = null) {
+    els.inpName.classList.remove("has-error");
+    els.inpAddr.classList.remove("has-error");
+
     if (fav) {
       els.formHeading.textContent = "Editar Local";
       els.inpName.value = fav.nome;
@@ -766,6 +812,8 @@ if (window.__L100_MAP_INIT__) {
     els.inpAddr.dataset.lng = "";
     document.getElementById("addr-suggestions").innerHTML = "";
     document.getElementById("addr-suggestions").classList.add("hidden");
+
+    updateNotesCounter();
   }
 
   // Address Autocomplete Handlers
@@ -806,8 +854,13 @@ if (window.__L100_MAP_INIT__) {
           const subtitle = res.display_name.split(",").slice(1).join(",").trim();
 
           item.innerHTML = `
-            <span class="suggestion-name">${title}</span>
-            <span class="suggestion-addr">${subtitle}</span>
+            <div class="suggestion-icon">
+              <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-location"></use></svg>
+            </div>
+            <div class="suggestion-text">
+              <span class="suggestion-name">${escapeHtml(title)}</span>
+              <span class="suggestion-addr">${escapeHtml(subtitle)}</span>
+            </div>
           `;
           
           item.onclick = () => {
@@ -876,8 +929,20 @@ if (window.__L100_MAP_INIT__) {
       const cat = els.inpCat.value;
       const notes = els.inpNotes.value.trim();
 
-      if (!name || !addr)
-        return window.showToast("Preencha todos os campos", "error");
+      let firstInvalid = null;
+      if (!name) {
+        markFieldError(els.inpName);
+        firstInvalid = firstInvalid || els.inpName;
+      }
+      if (!addr) {
+        markFieldError(els.inpAddr);
+        firstInvalid = firstInvalid || els.inpAddr;
+      }
+      if (firstInvalid) {
+        window.showToast("Preencha todos os campos", "error");
+        firstInvalid.focus();
+        return;
+      }
 
       let lat = null;
       let lng = null;
@@ -994,7 +1059,7 @@ if (window.__L100_MAP_INIT__) {
           window.showToast("Erro ao guardar. Tente novamente.", "error");
         }
       } finally {
-        btn.textContent = oldText;
+        btn.innerHTML = oldText;
         btn.disabled = false;
       }
     });

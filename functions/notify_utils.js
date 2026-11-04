@@ -25,31 +25,30 @@ async function sendNotificationToUser(userId, title, body, extraData = {}) {
   const tokens = tokensSnap.docs.map((t) => t.data().token);
   console.log(`[NotifyUtils] A enviar para ${tokens.length} tokens do user ${userId}.`);
 
+  // Caminho real das páginas estáticas é sempre dentro de /pages/.
+  // Se quem chamou já incluir o prefixo, respeitamos; caso contrário, adicionamo-lo.
+  const rawUrl = extraData.url || "/pages/veiculos.html";
+  const targetUrl = rawUrl.startsWith("/pages/") ? rawUrl : `/pages${rawUrl}`;
+
+  // IMPORTANTE: Mensagem "data-only" (sem campo top-level "notification").
+  // Quando existe "notification", o SDK do FCM mostra a notificação sozinho
+  // e regista o SEU PRÓPRIO listener de "notificationclick" (usando fcm_options.link),
+  // que corre em paralelo ao listener definido em service-worker.js — duplo clique,
+  // janelas a abrir a mais, e nenhum controlo sobre o destino real do clique.
+  // Ao mandar só "data", é o nosso próprio service-worker.js (onBackgroundMessage +
+  // notificationclick) que decide tudo, de forma consistente.
   const message = {
-    notification: { title, body },
     data: {
       ...extraData,
+      title,
+      body,
       click_action: "FLUTTER_NOTIFICATION_CLICK", // compatibilidade legada
-      url: extraData.url || "/veiculos.html",
-    },
-    android: {
-      priority: "high",
-      notification: {
-        color: "#0de3f2",
-        icon: "stock_ticker_update", // Fallback para icon nativo se houver
-        sound: "default",
-      },
+      url: targetUrl,
     },
     webpush: {
       headers: { Urgency: "high" },
-      notification: {
-        icon: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
-        badge: "https://omeucarro-d3889.web.app/images/logo-icon192.png",
-        vibrate: [200, 100, 200],
-        requireInteraction: true,
-      },
       fcm_options: {
-        link: "https://omeucarro-d3889.web.app" + (extraData.url || "/veiculos.html"),
+        link: "https://omeucarro-d3889.web.app" + targetUrl,
       },
     },
   };

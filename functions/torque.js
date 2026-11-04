@@ -293,7 +293,7 @@ exports.uploadTorqueData = onRequest(
             sendNotificationToUser(vData.userId, alarmTitle, alarmBody, {
               veiculoId: vehicleId,
               type: "alarm",
-              url: `/veiculo.html?id=${vehicleId}`,
+              url: `/pages/veiculo.html?id=${vehicleId}`,
             }).catch((e) => console.error("[FCM Alarm Error]", e));
 
             updates.lastAlarmAt = receivedAt;

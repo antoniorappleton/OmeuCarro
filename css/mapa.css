@@ -559,10 +559,13 @@ body.map-page-standalone {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .form-label-row {
     display: flex;
+    align-items: baseline;
+    gap: 4px;
     margin-bottom: 8px;
 }
 
@@ -570,6 +573,17 @@ body.map-page-standalone {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-text-main);
+    transition: color 0.25s ease;
+}
+
+.form-group:focus-within .form-label-text {
+    color: var(--color-primary-start);
+}
+
+.form-label-required {
+    color: var(--color-primary-end);
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 /* Custom Input with Icon */
@@ -590,24 +604,69 @@ body.map-page-standalone {
     font-size: 1rem;
     font-weight: 600;
     color: var(--color-text-main);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input-clean::placeholder,
+.form-input-area::placeholder {
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+/* Not focused, but has a value: a soft "settled" state so filled fields
+   read as different from empty ones without needing focus. */
+.form-input-clean:not(:focus):not(:placeholder-shown) {
+    border-color: rgba(var(--color-primary-rgb), 0.35);
+    background: var(--color-surface);
+}
+
+.form-input-clean:hover:not(:focus) {
+    border-color: rgba(var(--color-primary-rgb), 0.5);
 }
 
 .form-input-clean:focus {
     outline: none;
     border-color: var(--color-primary-start);
     background: var(--color-surface);
-    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 14, 116, 144), 0.15);
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15);
     transform: translateY(-2px);
+}
+
+.form-input-clean.has-error {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.06);
+    animation: input-shake 0.4s ease;
+}
+
+.form-input-clean.has-error:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+@keyframes input-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
 }
 
 .input-icon-right {
     position: absolute;
     right: 16px;
-    color: var(--color-primary-start);
+    color: var(--color-text-light);
     pointer-events: none;
     display: flex;
     align-items: center;
+    transition: color 0.25s ease;
+}
+
+.form-input-clean:focus ~ .input-icon-right,
+.form-input-clean:not(:placeholder-shown) ~ .input-icon-right {
+    color: var(--color-primary-start);
+}
+
+.form-input-clean.has-error ~ .input-icon-right {
+    color: var(--color-danger);
 }
 
 /* Textarea */
@@ -615,20 +674,50 @@ body.map-page-standalone {
     width: 100%;
     min-height: 120px;
     padding: 16px;
-    border-radius: 12px;
-    border: 1px solid var(--border-light);
+    padding-bottom: 28px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border-light);
     background: var(--color-bg);
     color: var(--color-text-main);
     font-size: 1rem;
     font-family: inherit;
     resize: none;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input-area:not(:focus):not(:placeholder-shown) {
+    border-color: rgba(var(--color-primary-rgb), 0.35);
+    background: var(--color-surface);
+}
+
+.form-input-area:hover:not(:focus) {
+    border-color: rgba(var(--color-primary-rgb), 0.5);
 }
 
 .form-input-area:focus {
     outline: none;
     border-color: var(--color-primary-start);
     background: var(--color-surface);
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.char-counter {
+    position: absolute;
+    right: 14px;
+    bottom: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    pointer-events: none;
+    transition: color 0.2s ease;
+}
+
+.char-counter.limit-near {
+    color: var(--color-warning);
+}
+
+.char-counter.limit-reached {
+    color: var(--color-danger);
 }
 
 /* Autocomplete Suggestions */
@@ -655,12 +744,12 @@ body.map-page-standalone {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-light);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.2s;
     font-size: 0.9rem;
     color: var(--color-text-main);
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 12px;
 }
 
 .suggestion-item:last-child {
@@ -669,15 +758,50 @@ body.map-page-standalone {
 
 .suggestion-item:hover {
     background: var(--color-bg);
+    transform: translateX(2px);
+}
+
+.suggestion-item:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+.suggestion-icon {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary-start);
+}
+
+.suggestion-icon .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.suggestion-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .suggestion-name {
     font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .suggestion-addr {
     font-size: 0.75rem;
     color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Type Chips */
@@ -733,6 +857,11 @@ body.map-page-standalone {
     cursor: default;
     width: auto;
     min-width: 140px;
+    transition: box-shadow 0.25s ease;
+}
+
+.type-chip.input-mode:focus-within {
+    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15);
 }
 
 .chip-input {
@@ -792,14 +921,33 @@ body.map-page-standalone {
     left: 0;
     right: 0;
     padding: 16px 24px 24px;
-    background: var(--color-surface);
-    /* Glass? */
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid var(--border-light);
+    box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.06);
     display: flex;
 }
 
 .full-width {
     width: 100%;
+}
+
+/* Premium gradient CTA for the save-location form */
+.btn-save-location {
+    background: linear-gradient(135deg, var(--color-primary-start), var(--color-primary-end));
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(var(--color-primary-rgb), 0.35);
+}
+
+.btn-save-location:hover {
+    box-shadow: 0 10px 24px rgba(var(--color-primary-rgb), 0.45);
+}
+
+.btn-save-location:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* --------------------------------
