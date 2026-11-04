@@ -8,11 +8,11 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="../css/style.css?v=28" />
-    <link rel="stylesheet" href="../css/home.css?v=28" />
-    <link rel="stylesheet" href="../css/mapa.css?v=28" />
-    <link rel="stylesheet" href="../css/trip-calculator.css?v=28" />
-    <link rel="stylesheet" href="../css/responsive.css?v=28" />
+    <link rel="stylesheet" href="../css/style.css?v=29" />
+    <link rel="stylesheet" href="../css/home.css?v=29" />
+    <link rel="stylesheet" href="../css/mapa.css?v=29" />
+    <link rel="stylesheet" href="../css/trip-calculator.css?v=29" />
+    <link rel="stylesheet" href="../css/responsive.css?v=29" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -48,32 +48,32 @@
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=28"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=29"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
     <!-- Leaflet JS -->
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=28"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=29"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
 
-    <script src="../js/core/theme.js?v=28"></script>
+    <script src="../js/core/theme.js?v=29"></script>
 
     <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=28"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=28"></script>
-    <script defer src="../js/utils/notifications.js?v=28"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=29"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=29"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=29"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=29"></script>
+    <script defer src="../js/utils/notifications.js?v=29"></script>
 
-    <script defer src="../js/core/firebase-config.js?v=28"></script>
-    <script defer src="../js/core/auth.js?v=28"></script>
-    <script defer src="../js/core/firestore.js?v=28"></script>
-    <script defer src="../js/utils/utils.js?v=28"></script>
-    <script defer src="../js/modules/tripCalculator.js?v=28"></script>
-    <script type="module" src="../js/modules/mapa.js?v=28"></script>
+    <script defer src="../js/core/firebase-config.js?v=29"></script>
+    <script defer src="../js/core/auth.js?v=29"></script>
+    <script defer src="../js/core/firestore.js?v=29"></script>
+    <script defer src="../js/utils/utils.js?v=29"></script>
+    <script defer src="../js/modules/tripCalculator.js?v=29"></script>
+    <script type="module" src="../js/modules/mapa.js?v=29"></script>
   </head>
 
   <body class="map-page-standalone">
@@ -379,7 +379,6 @@
             id="trip-modal-close"
             class="icon-btn-sm"
             aria-label="Fechar"
-            style="background: transparent; border: none; cursor: pointer"
           >
             <svg class="icon">
               <use href="../assets/icons/icons-unified.svg#icon-close"></use>
@@ -394,227 +393,95 @@
         >
           <!-- VEHICLE SELECTOR INJECTION POINT -->
 
-          <!-- Input Section 1: Vehicle Performance -->
-          <div class="mt-2 mb-4">
-            <h3
-              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
-            >
-              Eficiência do Veículo
-            </h3>
-            <div
-              class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
-            >
-              <div
-                class="flex flex-wrap divide-x divide-gray-100 dark:divide-gray-800"
-              >
-                <div class="flex-1 p-4">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >Consumo (L/100km)</label
-                  >
-                  <input
-                    id="trip-consumo"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="5.5"
-                    step="0.1"
-                    type="number"
-                  />
-                </div>
-                <div class="flex-1 p-4">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >Preço (€/L)</label
-                  >
-                  <input
-                    id="trip-preco"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="1.65"
-                    step="0.01"
-                    type="number"
-                  />
-                </div>
+          <!-- Secção 1: Eficiência do veículo -->
+          <div class="trip-section">
+            <h3 class="trip-section-title">Eficiência do veículo</h3>
+            <div class="card trip-card-grid">
+              <div class="form-field">
+                <label for="trip-consumo">Consumo (L/100km)</label>
+                <input id="trip-consumo" type="number" step="0.1" placeholder="5.5" />
+              </div>
+              <div class="form-field">
+                <label for="trip-preco">Preço (€/L)</label>
+                <input id="trip-preco" type="number" step="0.01" placeholder="1.65" />
               </div>
             </div>
           </div>
-          <!-- Input Section 2: Trip Logistics -->
-          <div class="mb-4">
-            <h3
-              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
-            >
-              Dados da Viagem
-            </h3>
-            <div
-              class="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
-            >
-              <div
-                class="grid grid-cols-2 divide-x divide-y divide-gray-100 dark:divide-gray-800"
-              >
-                <div class="p-4 border-t-0 border-l-0">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >Km Previstos</label
-                  >
-                  <input
-                    id="trip-distancia"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="100"
-                    type="number"
-                  />
-                </div>
-                <div class="p-4 border-t-0">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >N.º de Viagens</label
-                  >
-                  <input
-                    id="trip-viagens"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="1"
-                    type="number"
-                  />
-                </div>
-                <div class="p-4 border-l-0">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >Portagens (€)</label
-                  >
-                  <input
-                    id="trip-portagens"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="10.00"
-                    step="0.01"
-                    type="number"
-                  />
-                </div>
-                <div class="p-4">
-                  <label
-                    class="block mb-1.5 text-sm font-semibold text-gray-600 dark:text-gray-300"
-                    >N.º de Pessoas</label
-                  >
-                  <input
-                    id="trip-pessoas"
-                    class="w-full bg-transparent border-none p-0 text-xl font-bold text-primary dark:text-white focus:ring-0 placeholder:text-gray-300"
-                    placeholder="2"
-                    type="number"
-                  />
-                </div>
+
+          <!-- Secção 2: Dados da viagem -->
+          <div class="trip-section">
+            <h3 class="trip-section-title">Dados da viagem</h3>
+            <div class="card trip-card-grid trip-card-grid-4">
+              <div class="form-field">
+                <label for="trip-distancia">Km previstos</label>
+                <input id="trip-distancia" type="number" placeholder="100" />
+              </div>
+              <div class="form-field">
+                <label for="trip-viagens">N.º de viagens</label>
+                <input id="trip-viagens" type="number" placeholder="1" />
+              </div>
+              <div class="form-field">
+                <label for="trip-portagens">Portagens (€)</label>
+                <input id="trip-portagens" type="number" step="0.01" placeholder="10.00" />
+              </div>
+              <div class="form-field">
+                <label for="trip-pessoas">N.º de pessoas</label>
+                <input id="trip-pessoas" type="number" placeholder="2" />
               </div>
             </div>
           </div>
-          <!-- Footer Actions -->
-          <div class="flex gap-3 mt-4 mb-2">
-            <button
-              type="button"
-              id="btn-trip-clear"
-              class="btn btn-ghost flex-1"
-            >
+
+          <!-- Ações -->
+          <div class="trip-actions-row">
+            <button type="button" id="btn-trip-clear" class="btn btn-ghost">
               Limpar
             </button>
-            <button
-              id="btn-trip-maps"
-              class="btn btn-primary flex-1 flex items-center justify-center gap-2"
-            >
-              <span class="material-symbols-outlined text-sm">map</span> Abrir
-              Maps
+            <button type="button" id="btn-trip-maps" class="btn btn-primary">
+              <svg class="icon icon-left" aria-hidden="true">
+                <use href="../assets/icons/icons-unified.svg#icon-navigation"></use>
+              </svg>
+              <span>Abrir no Maps</span>
             </button>
           </div>
-          <!-- Dynamic Results Card -->
-          <div class="mt-8 mb-6">
-            <h3
-              class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1 mb-3"
-            >
-              Estimativa de Gastos
-            </h3>
-            <div
-              class="bg-primary/5 dark:bg-primary/20 rounded-xl p-6 border border-primary/10 dark:border-primary/30"
-            >
-              <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
-                <div>
-                  <p
-                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Km Totais
-                  </p>
-                  <p
-                    id="trip-metric-km"
-                    class="text-lg font-bold text-primary dark:text-white"
-                  >
-                    -- km
-                  </p>
+
+          <!-- Resultados dinâmicos -->
+          <div class="trip-section">
+            <h3 class="trip-section-title">Estimativa de gastos</h3>
+            <div class="trip-results-card">
+              <div class="trip-metrics-grid">
+                <div class="trip-metric">
+                  <span class="trip-metric-label">Km totais</span>
+                  <span class="trip-metric-value" id="trip-metric-km">-- km</span>
                 </div>
-                <div>
-                  <p
-                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Litros Necessários
-                  </p>
-                  <p
-                    id="trip-metric-liters"
-                    class="text-lg font-bold text-primary dark:text-white"
-                  >
-                    -- L
-                  </p>
+                <div class="trip-metric">
+                  <span class="trip-metric-label">Litros necessários</span>
+                  <span class="trip-metric-value" id="trip-metric-liters">-- L</span>
                 </div>
-                <div>
-                  <p
-                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Combustível
-                  </p>
-                  <p
-                    id="trip-result-fuel"
-                    class="text-lg font-bold text-primary dark:text-white"
-                  >
-                    -- €
-                  </p>
+                <div class="trip-metric">
+                  <span class="trip-metric-label">Combustível</span>
+                  <span class="trip-metric-value" id="trip-result-fuel">-- €</span>
                 </div>
-                <div>
-                  <p
-                    class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Total Portagens
-                  </p>
-                  <p
-                    id="trip-result-tolls"
-                    class="text-lg font-bold text-primary dark:text-white"
-                  >
-                    -- €
-                  </p>
+                <div class="trip-metric">
+                  <span class="trip-metric-label">Total portagens</span>
+                  <span class="trip-metric-value" id="trip-result-tolls">-- €</span>
                 </div>
                 <!-- Hidden metric stored for logic consistency -->
                 <p id="trip-metric-cost100" style="display: none"></p>
               </div>
-              <div
-                class="pt-6 border-t border-primary/10 dark:border-primary/30 space-y-4"
-              >
-                <div
-                  class="flex justify-between items-center bg-primary text-white p-4 rounded-xl shadow-md"
-                >
-                  <span class="font-semibold">Gasto Total</span>
-                  <span
-                    id="trip-result-total"
-                    class="text-2xl font-extrabold tracking-tight"
-                    >-- €</span
-                  >
+
+              <div class="trip-total-row">
+                <span>Gasto total</span>
+                <span id="trip-result-total">-- €</span>
+              </div>
+
+              <div class="trip-subtotal-row">
+                <div class="trip-subtotal-label">
+                  <svg class="icon icon-sm" aria-hidden="true">
+                    <use href="../assets/icons/icons-unified.svg#icon-user"></use>
+                  </svg>
+                  <span>Por pessoa</span>
                 </div>
-                <div
-                  class="flex justify-between items-center bg-white/80 dark:bg-gray-800 p-4 rounded-xl border border-primary/20 shadow-sm"
-                >
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="material-symbols-outlined text-primary dark:text-primary/50"
-                      >groups</span
-                    >
-                    <span class="font-semibold text-primary dark:text-gray-200"
-                      >Por Pessoa</span
-                    >
-                  </div>
-                  <span
-                    id="trip-result-person"
-                    class="text-xl font-extrabold text-primary dark:text-white"
-                    >-- €</span
-                  >
-                </div>
+                <span class="trip-subtotal-value" id="trip-result-person">-- €</span>
               </div>
             </div>
           </div>
@@ -677,7 +544,7 @@
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg?v=2#icon-map"></use>
+          <use href="../assets/icons/icons-unified.svg?v=29#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>

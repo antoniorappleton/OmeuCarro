@@ -23,6 +23,17 @@
   transform: translateY(-1px);
 }
 
+.record-card.clickable-card {
+  cursor: pointer;
+}
+
+/* Record cards without an icon box or actions column (e.g. maintenance
+   plans) should have their content span the full grid, not just the
+   first "icon" track */
+.record-card > .record-content:only-child {
+  grid-column: 1 / -1;
+}
+
 /* --- Left Icon Box --- */
 .record-icon-box {
   width: 42px;
@@ -47,7 +58,8 @@
 }
 
 /* indigo-500 */
-.record-icon-box.is-repair {
+.record-icon-box.is-repair,
+.record-icon-box.maint {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
 }
