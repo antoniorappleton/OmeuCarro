@@ -97,6 +97,41 @@ body.map-page-standalone {
     /* Ensure map is at bottom */
 }
 
+/* Fixed pin shown at the exact center of the visible map while adding/
+   editing a location — "drag the map to position the pin". It never
+   moves; the map pans underneath it, matching map.getCenter(). */
+.map-center-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    /* Above every Leaflet pane (tiles/markers/popups all sit well below
+       this), since it's a sibling of .leaflet-map-pane inside #map-container. */
+    z-index: 750;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+.map-center-pin.visible {
+    display: flex;
+}
+
+.map-center-pin .pin-shape {
+    width: 40px;
+    height: 40px;
+}
+
+.map-center-pin-shadow {
+    width: 10px;
+    height: 4px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    filter: blur(1px);
+}
+
 #map-container:active {
     cursor: grabbing;
 }
@@ -1131,8 +1166,15 @@ body.map-page-standalone {
    DESKTOP: persistent docked side panel (not a floating mobile sheet)
    ================================================================== */
 @media (min-width: 1024px) {
-    /* The global app sidebar (264px) docks over the left of the map;
-       everything that was anchored to the left edge shifts to clear it. */
+    /* The global app sidebar (264px) + the docked favourites panel (440px)
+       permanently cover the left of the screen on desktop, so the map's
+       own box is resized to match what's actually visible — otherwise
+       map.getCenter() (used for the center pin and for saving a location
+       without an address) would point at a spot hidden behind them. */
+    #map-container {
+        margin-left: 704px;
+    }
+
     .map-header {
         padding: 0 28px;
         left: 264px;
@@ -1149,7 +1191,11 @@ body.map-page-standalone {
     /* Dock the sheet as a full-height side panel right next to the app
        sidebar, between the map header and the app's bottom tab bar. The
        mobile compact/half/full drag states stop making sense once the
-       panel is always fully visible, so height is forced to 100%. */
+       panel is always fully visible, so their fixed heights are cleared
+       and the panel stretches naturally between top and bottom instead.
+       (Setting height:100% here on top of top+bottom was over-constrained
+       — the panel grew to 100% of the full page height, pushing the save
+       button off the bottom of the screen.) */
     .sheet-container {
         position: absolute;
         top: var(--map-header-height);
@@ -1157,11 +1203,16 @@ body.map-page-standalone {
         left: 264px;
         right: auto;
         width: 440px;
-        height: 100% !important;
         border-radius: 0;
         border-top: none;
         border-right: 1px solid var(--border-light);
         box-shadow: 12px 0 40px rgba(15, 23, 42, 0.1);
+    }
+
+    .sheet-container[data-state="compact"],
+    .sheet-container[data-state="half"],
+    .sheet-container[data-state="full"] {
+        height: auto !important;
     }
 
     [data-theme="dark"] .sheet-container {

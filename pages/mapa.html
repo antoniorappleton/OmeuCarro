@@ -8,11 +8,11 @@
     />
     <title>Mapa – L100</title>
 
-    <link rel="stylesheet" href="../css/style.css?v=32" />
-    <link rel="stylesheet" href="../css/home.css?v=32" />
-    <link rel="stylesheet" href="../css/mapa.css?v=32" />
-    <link rel="stylesheet" href="../css/trip-calculator.css?v=32" />
-    <link rel="stylesheet" href="../css/responsive.css?v=32" />
+    <link rel="stylesheet" href="../css/style.css?v=33" />
+    <link rel="stylesheet" href="../css/home.css?v=33" />
+    <link rel="stylesheet" href="../css/mapa.css?v=33" />
+    <link rel="stylesheet" href="../css/trip-calculator.css?v=33" />
+    <link rel="stylesheet" href="../css/responsive.css?v=33" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
@@ -48,32 +48,32 @@
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=32"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=33"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
     <!-- Leaflet JS -->
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=32"
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=33"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
 
-    <script src="../js/core/theme.js?v=32"></script>
+    <script src="../js/core/theme.js?v=33"></script>
 
     <!-- Firebase v9 (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=32"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=32"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=32"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=32"></script>
-    <script defer src="../js/utils/notifications.js?v=32"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=33"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=33"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=33"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=33"></script>
+    <script defer src="../js/utils/notifications.js?v=33"></script>
 
-    <script defer src="../js/core/firebase-config.js?v=32"></script>
-    <script defer src="../js/core/auth.js?v=32"></script>
-    <script defer src="../js/core/firestore.js?v=32"></script>
-    <script defer src="../js/utils/utils.js?v=32"></script>
-    <script defer src="../js/modules/tripCalculator.js?v=32"></script>
-    <script type="module" src="../js/modules/mapa.js?v=32"></script>
+    <script defer src="../js/core/firebase-config.js?v=33"></script>
+    <script defer src="../js/core/auth.js?v=33"></script>
+    <script defer src="../js/core/firestore.js?v=33"></script>
+    <script defer src="../js/utils/utils.js?v=33"></script>
+    <script defer src="../js/modules/tripCalculator.js?v=33"></script>
+    <script type="module" src="../js/modules/mapa.js?v=33"></script>
   </head>
 
   <body class="map-page-standalone">
@@ -169,6 +169,19 @@
     <!-- MAP LAYER -->
     <div id="map-container">
       <!-- Leaflet injects here -->
+
+      <!-- Fixed pin at the center of the visible map, shown while adding/
+           editing a location (drag the map underneath to position it) -->
+      <div id="map-center-pin" class="map-center-pin" aria-hidden="true">
+        <div class="pin-shape">
+          <div class="pin-shape-inner">
+            <svg class="icon">
+              <use href="../assets/icons/icons-unified.svg#icon-pin"></use>
+            </svg>
+          </div>
+        </div>
+        <div class="map-center-pin-shadow"></div>
+      </div>
     </div>
 
     <!-- FLOATING CONTROLS -->
@@ -325,19 +338,18 @@
             <div class="form-group">
               <label class="form-label-row">
                 <span class="form-label-text">Endereço</span>
-                <span class="form-label-required">*</span>
+                <span class="form-label-text" style="font-weight: 400; color: var(--color-text-light);">(opcional)</span>
               </label>
               <div class="input-with-icon">
                 <input
                   type="text"
                   class="form-input-clean"
                   id="inp-address"
-                  placeholder="Pesquisar morada..."
+                  placeholder="Pesquisar morada, ou deixe vazio e arraste o mapa..."
                   autocomplete="off"
-                  required
                 />
                 <div class="input-icon-right" id="geocoding-spinner" style="display:none">
-                   <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                   <svg class="icon-spin" style="width: 20px; height: 20px; color: var(--color-primary-start);" viewBox="0 0 24 24" fill="none"><circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </div>
                 <div class="input-icon-right" id="geocoding-icon">
                   <svg class="icon">
@@ -608,7 +620,7 @@
       </a>
       <a href="mapa.html" class="active">
         <svg class="icon" aria-hidden="true">
-          <use href="../assets/icons/icons-unified.svg?v=32#icon-map"></use>
+          <use href="../assets/icons/icons-unified.svg?v=33#icon-map"></use>
         </svg>
         <span>Mapa</span>
       </a>

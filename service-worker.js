@@ -3,9 +3,9 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v32";
-const RUNTIME_CACHE = "l100-runtime-v32";
-const TILES_CACHE = "l100-tiles-v32";
+const STATIC_CACHE = "l100-static-v33";
+const RUNTIME_CACHE = "l100-runtime-v33";
+const TILES_CACHE = "l100-tiles-v33";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -83,7 +83,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v32");
+  console.log("[SW] Activate v33");
 
   event.waitUntil(
     caches.keys().then((names) =>

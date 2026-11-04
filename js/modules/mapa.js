@@ -53,7 +53,7 @@ if (window.__L100_MAP_INIT__) {
     inpAddr: document.getElementById("inp-address"),
     inpCat: document.getElementById("inp-category"),
     inpNotes: document.getElementById("inp-notes"),
-    notesCounter: document.getElementById("notes-char-counter"),
+    notesCounter: document.getElementById("notes-char-counter"),
     formHeading: document.getElementById("form-heading"),
     typeChipsContainer: document.getElementById("type-chips-container"),
   };
@@ -74,7 +74,7 @@ if (window.__L100_MAP_INIT__) {
       '"': "&quot;",
       "'": "&#39;",
     })[c]);
-  }
+  }
 
   // ============================
   // GEOCODING SERVICE (Nominatim)
@@ -142,9 +142,20 @@ if (window.__L100_MAP_INIT__) {
       deselect();
     });
 
+    // Re-measure the map whenever its box actually changes size — covers
+    // the sidebar/panel appearing or disappearing when the window is
+    // resized across the desktop breakpoint, so panning/zoom math (and
+    // map.getCenter(), used by the center pin) stay accurate.
+    if ("ResizeObserver" in window) {
+      const mapEl = document.getElementById("map-container");
+      new ResizeObserver(() => state.map.invalidateSize()).observe(mapEl);
+    } else {
+      window.addEventListener("resize", () => state.map.invalidateSize());
+    }
+
     // GPS Watcher
     if ("geolocation" in navigator) {
-      gpsWatchId = navigator.geolocation.watchPosition(
+      gpsWatchId = navigator.geolocation.watchPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
           state.currentLocation = [latitude, longitude];
@@ -255,6 +266,13 @@ if (window.__L100_MAP_INIT__) {
       els.fab.classList.remove("compact");
       els.fab.classList.add("hidden");
     }
+
+    // Center pin: only while adding/editing a location (drag the map to
+    // position it). Hidden for the quick-favorites and details views.
+    const centerPin = document.getElementById("map-center-pin");
+    if (centerPin) {
+      centerPin.classList.toggle("visible", viewName === "form");
+    }
   }
 
   document.querySelector(".sheet-handle-area").addEventListener("click", () => {
@@ -319,7 +337,7 @@ if (window.__L100_MAP_INIT__) {
                     <div class="pin-shape pin-rotate-base">
                        <svg class="icon pin-icon-rotate"><use href="../assets/icons/icons-unified.svg#${iconName}"></use></svg>
                     </div>
-                    <div class="pin-label">${escapeHtml(fav.nome)}</div>
+                    <div class="pin-label">${escapeHtml(fav.nome)}</div>
                 `;
 
       const customIcon = L.divIcon({
@@ -613,7 +631,7 @@ if (window.__L100_MAP_INIT__) {
       const item = document.createElement("div");
       item.className = "result-item";
       item.innerHTML = `
-                     <div class="result-info"><div>${escapeHtml(fav.nome)}</div><div>${escapeHtml(fav.endereco)}</div></div>
+                     <div class="result-info"><div>${escapeHtml(fav.nome)}</div><div>${escapeHtml(fav.endereco)}</div></div>
                      <div><svg class="icon icon-result"><use href="../assets/icons/icons-unified.svg#icon-car"></use></svg></div>
                  `;
       item.addEventListener("click", async () => {
@@ -934,15 +952,11 @@ if (window.__L100_MAP_INIT__) {
         markFieldError(els.inpName);
         firstInvalid = firstInvalid || els.inpName;
       }
-      if (!addr) {
-        markFieldError(els.inpAddr);
-        firstInvalid = firstInvalid || els.inpAddr;
-      }
       if (firstInvalid) {
-        window.showToast("Preencha todos os campos", "error");
+        window.showToast("Dê um nome ao local", "error");
         firstInvalid.focus();
         return;
-      }
+      }
 
       let lat = null;
       let lng = null;
@@ -955,9 +969,17 @@ if (window.__L100_MAP_INIT__) {
       try {
         // Check if Address Changed or is New
         let needsGeocoding = true;
-        
+
+        // No address typed: skip geocoding entirely and just use wherever
+        // the map is currently centered (the "arraste o mapa" pin position).
+        if (!addr) {
+          needsGeocoding = false;
+          const center = state.map.getCenter();
+          lat = center.lat;
+          lng = center.lng;
+        }
         // Priority 1: Check if we have cached coords from autocomplete
-        if (els.inpAddr.dataset.lat && els.inpAddr.dataset.lng) {
+        else if (els.inpAddr.dataset.lat && els.inpAddr.dataset.lng) {
             lat = parseFloat(els.inpAddr.dataset.lat);
             lng = parseFloat(els.inpAddr.dataset.lng);
             needsGeocoding = false;
@@ -1059,7 +1081,7 @@ if (window.__L100_MAP_INIT__) {
           window.showToast("Erro ao guardar. Tente novamente.", "error");
         }
       } finally {
-        btn.innerHTML = oldText;
+        btn.innerHTML = oldText;
         btn.disabled = false;
       }
     });
