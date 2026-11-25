@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Viagem ao Vivo – L100</title>
+
+    <link rel="stylesheet" href="../css/style.css?v=34" />
+    <link rel="stylesheet" href="../css/trip-live.css?v=34" />
+
+    <!-- Firebase v9 (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=34"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=34"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=34"></script>
+
+    <script defer src="../js/core/firebase-config.js?v=34"></script>
+    <script defer src="../js/core/auth.js?v=34"></script>
+    <script defer src="../js/core/firestore.js?v=34"></script>
+    <script defer src="../js/modules/tripLive.js?v=34"></script>
+  </head>
+
+  <body class="trip-live-page" data-page="trip-live">
+    <header class="trip-live-header">
+      <a href="#" id="trip-live-back" class="trip-live-back" aria-label="Voltar">
+        <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-arrow-left"></use></svg>
+      </a>
+      <div class="trip-live-title">
+        <div class="trip-live-vehicle" id="trip-live-vehicle">Veículo</div>
+        <div class="trip-live-status" id="trip-live-status">
+          <span class="dot"></span>
+          <span id="trip-live-status-text">A aguardar dados…</span>
+        </div>
+      </div>
+      <div class="trip-live-spacer"></div>
+    </header>
+
+    <div class="trip-live-banner" id="trip-live-banner">
+      Sem dados recentes do OBD. Confirma que o Torque (ou a app Companion) está ligado e a enviar dados.
+    </div>
+
+    <section class="trip-live-hero">
+      <span class="trip-live-speed-value" id="trip-live-speed">--</span>
+      <span class="trip-live-speed-unit">KM/H</span>
+
+      <div class="trip-live-rpm-bar-wrap">
+        <div class="trip-live-rpm-label">
+          <span>RPM</span>
+          <span id="trip-live-rpm-value">--</span>
+        </div>
+        <div class="trip-live-rpm-bar">
+          <div class="trip-live-rpm-fill" id="trip-live-rpm-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trip-live-grid">
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-trend-up"></use></svg>
+          Distância da viagem
+        </span>
+        <span class="trip-live-tile-value" id="tile-distancia">-- <span class="unit">km</span></span>
+      </div>
+
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-droplet"></use></svg>
+          Consumo médio
+        </span>
+        <span class="trip-live-tile-value" id="tile-consumo">-- <span class="unit">L/100km</span></span>
+      </div>
+
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-fuel"></use></svg>
+          Combustível gasto
+        </span>
+        <span class="trip-live-tile-value" id="tile-litros">-- <span class="unit">L</span></span>
+      </div>
+
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-wallet"></use></svg>
+          Custo da viagem
+        </span>
+        <span class="trip-live-tile-value" id="tile-custo">-- <span class="unit">€</span></span>
+      </div>
+
+      <div class="trip-live-tile" id="tile-coolant-wrap">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-gauge"></use></svg>
+          Temp. motor
+        </span>
+        <span class="trip-live-tile-value" id="tile-coolant">-- <span class="unit">°C</span></span>
+      </div>
+
+      <div class="trip-live-tile" id="tile-intake-wrap">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-gauge"></use></svg>
+          Temp. admissão
+        </span>
+        <span class="trip-live-tile-value" id="tile-intake">-- <span class="unit">°C</span></span>
+      </div>
+
+      <div class="trip-live-tile" id="tile-voltage-wrap">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-activity"></use></svg>
+          Tensão bateria
+        </span>
+        <span class="trip-live-tile-value" id="tile-voltage">-- <span class="unit">V</span></span>
+      </div>
+
+      <div class="trip-live-tile" id="tile-fuellevel-wrap">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-fuel"></use></svg>
+          Nível depósito
+        </span>
+        <span class="trip-live-tile-value" id="tile-fuellevel">-- <span class="unit">%</span></span>
+      </div>
+    </section>
+
+    <p class="trip-live-footer-note" id="trip-live-footnote">
+      Custo calculado com o preço do último abastecimento registado.
+    </p>
+  </body>
+</html>

@@ -1,0 +1,255 @@
+/* ==============================
+   VIAGEM AO VIVO — Mostrador digital
+   Pensado para o telemóvel no suporte, durante a condução:
+   fontes grandes, alto contraste, mínimo de distrações.
+   ============================== */
+
+body.trip-live-page {
+  margin: 0;
+  min-height: 100dvh;
+  background: #05080a;
+  color: #f1f5f9;
+  overflow-x: hidden;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+.trip-live-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(5, 8, 10, 0.95), rgba(5, 8, 10, 0.75));
+  backdrop-filter: blur(10px);
+}
+
+.trip-live-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  text-decoration: none;
+  flex: none;
+}
+
+.trip-live-back .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.trip-live-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.trip-live-vehicle {
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trip-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #34d399;
+  margin-top: 2px;
+}
+
+.trip-live-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+  animation: trip-live-pulse 1.6s infinite;
+}
+
+body.is-stale .trip-live-status {
+  color: #94a3b8;
+}
+
+body.is-stale .trip-live-status .dot {
+  background: #94a3b8;
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes trip-live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+.trip-live-spacer {
+  width: 40px;
+  flex: none;
+}
+
+/* -------- Aviso sem sinal -------- */
+.trip-live-banner {
+  margin: 0 20px 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  display: none;
+}
+
+body.is-stale .trip-live-banner {
+  display: block;
+}
+
+/* -------- Hero: velocidade -------- */
+.trip-live-hero {
+  text-align: center;
+  padding: 18px 20px 8px;
+  transition: opacity 0.3s ease;
+}
+
+body.is-stale .trip-live-hero,
+body.is-stale .trip-live-grid {
+  opacity: 0.4;
+}
+
+.trip-live-speed-value {
+  font-size: clamp(4.5rem, 22vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #ffffff, #93f5fb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.trip-live-speed-unit {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin-top: -4px;
+}
+
+.trip-live-rpm-bar-wrap {
+  max-width: 320px;
+  margin: 16px auto 0;
+}
+
+.trip-live-rpm-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.trip-live-rpm-bar {
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.trip-live-rpm-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #316468, #0de3f2);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.trip-live-rpm-fill.redline {
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+/* -------- Grid de métricas -------- */
+.trip-live-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 20px;
+  transition: opacity 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .trip-live-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.trip-live-tile {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trip-live-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.trip-live-tile-label .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.trip-live-tile-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+}
+
+.trip-live-tile-value .unit {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-left: 3px;
+}
+
+.trip-live-tile.warn .trip-live-tile-value {
+  color: #f59e0b;
+}
+
+.trip-live-tile.danger .trip-live-tile-value {
+  color: #ef4444;
+}
+
+.trip-live-tile.hidden-field {
+  display: none;
+}
+
+.trip-live-footer-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #64748b;
+  padding: 0 20px 28px;
+}

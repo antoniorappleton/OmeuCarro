@@ -3,9 +3,9 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v33";
-const RUNTIME_CACHE = "l100-runtime-v33";
-const TILES_CACHE = "l100-tiles-v33";
+const STATIC_CACHE = "l100-static-v34";
+const RUNTIME_CACHE = "l100-runtime-v34";
+const TILES_CACHE = "l100-tiles-v34";
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -19,12 +19,14 @@ const APP_SHELL = [
   "./pages/mapa.html",
   "./pages/auth.html",
   "./pages/perfil.html",
+  "./pages/viagem-ao-vivo.html",
   "./css/style.css",
   "./css/home.css",
   "./css/responsive.css",
   "./css/cards.css",
   "./css/dashboard.css",
   "./css/mapa.css",
+  "./css/trip-live.css",
   "./css/trip-calculator.css",
   "./css/abastecimentos.css",
   "./js/core/firebase-config.js",
@@ -39,6 +41,7 @@ const APP_SHELL = [
   "./js/modules/veiculo.js",
   "./js/modules/mapa.js",
   "./js/modules/tripCalculator.js",
+  "./js/modules/tripLive.js",
   "./js/modules/abastecer.js",
   "./js/modules/perfil.js",
   "./js/modules/analytics.js",
@@ -83,7 +86,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v33");
+  console.log("[SW] Activate v34");
 
   event.waitUntil(
     caches.keys().then((names) =>

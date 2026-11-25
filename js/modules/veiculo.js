@@ -1306,6 +1306,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const btnTripLive = document.getElementById("btn-trip-live");
+    if (btnTripLive) {
+      btnTripLive.href = `viagem-ao-vivo.html?id=${encodeURIComponent(veiculoId)}`;
+    }
+
     const user = auth.currentUser;
     if (!user) {
       showMessage("Sessão expirada.", "error");
