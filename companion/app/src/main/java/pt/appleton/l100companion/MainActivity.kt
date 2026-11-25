@@ -76,16 +76,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private val BLUETOOTH_RUNTIME_PERMISSIONS = arrayOf(
+    Manifest.permission.BLUETOOTH_CONNECT,
+    Manifest.permission.BLUETOOTH_SCAN,
+)
+
 @Composable
 private fun PermissionGate(content: @Composable () -> Unit) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
         content(); return
     }
     val ctx = LocalContext.current
-    val granted = ContextCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) ==
-        PackageManager.PERMISSION_GRANTED
-    var ok by remember { mutableStateOf(granted) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok = it }
+    fun allGranted() = BLUETOOTH_RUNTIME_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(ctx, it) == PackageManager.PERMISSION_GRANTED
+    }
+    var ok by remember { mutableStateOf(allGranted()) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        ok = result.values.all { it }
+    }
 
     if (ok) content() else Column(
         Modifier.fillMaxSize().padding(24.dp),
@@ -93,7 +101,7 @@ private fun PermissionGate(content: @Composable () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text("É preciso autorizar o acesso a dispositivos Bluetooth próximos para falar com o adaptador OBD.")
-        Button(onClick = { launcher.launch(Manifest.permission.BLUETOOTH_CONNECT) }, Modifier.padding(top = 16.dp)) {
+        Button(onClick = { launcher.launch(BLUETOOTH_RUNTIME_PERMISSIONS) }, Modifier.padding(top = 16.dp)) {
             Text("Autorizar")
         }
     }

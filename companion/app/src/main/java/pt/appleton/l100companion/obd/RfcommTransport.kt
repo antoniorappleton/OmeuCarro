@@ -39,7 +39,7 @@ class RfcommTransport(
 
     @SuppressLint("MissingPermission")
     override suspend fun connect(): String = withContext(Dispatchers.IO) {
-        adapter?.cancelDiscovery()
+        runCatching { adapter?.cancelDiscovery() }
 
         val attempts: List<Pair<String, () -> BluetoothSocket>> = listOf(
             "RFCOMM seguro (SPP)" to { device.createRfcommSocketToServiceRecord(SPP_UUID) },
