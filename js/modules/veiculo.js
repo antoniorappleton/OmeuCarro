@@ -1744,7 +1744,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Modal & Tab Logic
       if (!modalObd) return;
 
-      const openObd = (tab = "historico") => {
+      const openObd = (tab = "ultima") => {
         modalObd.classList.remove("hidden");
         // Trigger tab click if needed
         const tabBtn = modalObd.querySelector(`[data-tab="${tab}"]`);
@@ -1758,7 +1758,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnObd.onclick = (e) => {
           e.preventDefault();
           e.stopPropagation();
-          openObd("historico");
+          openObd("ultima");
         };
       }
 
@@ -1779,66 +1779,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Tabs
-      const tabBtns = modalObd.querySelectorAll(".tab-btn");
+      const tabBtns = modalObd.querySelectorAll(".obd-tab");
       const tabPanels = modalObd.querySelectorAll(".tab-panel");
 
       tabBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
           const target = btn.dataset.tab;
+          tabBtns.forEach((b) => {
+            b.classList.toggle("active", b === btn);
+            b.setAttribute("aria-selected", b === btn ? "true" : "false");
+          });
+          tabPanels.forEach((p) => p.classList.toggle("hidden", p.id !== `tab-${target}`));
 
-          // Update UI
-          tabBtns.forEach((b) => b.classList.toggle("active", b === btn));
-          tabPanels.forEach((p) =>
-            p.classList.toggle("hidden", p.id !== `tab-${target}`),
-          );
-
-          // Load Data
           if (target === "historico") loadTripsHistory(veiculoId);
           if (target === "ultima") loadLastTrip(veiculoId);
           if (target === "diagnosticos") loadDiagnostics(veiculoId);
           if (target === "tendencias") loadTrends(veiculoId);
         });
       });
-
-      // Setup Diagnostics Logic (Handled via loadDiagnostics in tabs and switchImportTab)
-
-      // --- BACKFILL TRIGGER ---
-      const btnScan = document.getElementById("btn-scan-trip");
-      if (btnScan) {
-        btnScan.onclick = async () => {
-          if (
-            !confirm(
-              "Isto vai analisar todo o histórico antigo para encontrar viagens. Continuar?",
-            )
-          )
-            return;
-
-          btnScan.disabled = true;
-          const originalText = btnScan.textContent;
-          btnScan.textContent = "A processar...";
-
-          try {
-            const res = await fetch(
-              `https://us-central1-omeucarro-d3889.cloudfunctions.net/backfillTrips?vehicleId=${veiculoId}`,
-            );
-            if (!res.ok) throw new Error("Falha no pedido");
-
-            const data = await res.json();
-            if (data.success) {
-              alert(`Sucesso! ${data.tripsCreated} viagens recuperadas.`);
-              loadLastTrip(veiculoId); // Reload UI
-            } else {
-              alert("Não foram encontradas novas viagens.");
-            }
-          } catch (e) {
-            console.error(e);
-            alert("Erro ao processar histórico.");
-          } finally {
-            btnScan.disabled = false;
-            btnScan.textContent = originalText;
-          }
-        };
-      }
 
       // --- TRENDS LOGIC ---
       let cachedTrendsData = null;
@@ -2003,14 +1961,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnImportCsv = document.getElementById("btn-import-torque-csv");
       const csvInput = document.getElementById("torque-csv-input");
 
-      // Manual Trip Button (Placeholder)
-      const btnAddManual = document.getElementById("btn-add-trip-manual");
-      if (btnAddManual) {
-        btnAddManual.addEventListener("click", () => {
-          alert("Funcionalidade em desenvolvimento. Brevemente disponível!");
-        });
-      }
-
       if (btnImportCsv && csvInput) {
         btnImportCsv.addEventListener("click", () => csvInput.click());
 
@@ -2063,12 +2013,424 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      // --- DATA LOADING ---
+      // --- DATA LOADING (VIAGENS) ---
+      // Métricas calculadas com TripMetrics (js/utils/tripMetrics.js), o mesmo
+      // código do servidor e do visor ao vivo. Viagens antigas (sem `acc`) são
+      // recalculadas a partir das leituras OBD quando abertas e gravadas de volta.
+
+      let tripRefsPromise = null;
+      function getTripRefs() {
+        if (!tripRefsPromise) {
+          tripRefsPromise = (async () => {
+            const refs = { refL100: null, pricePerLiter: null, fuelType: null };
+            try {
+              const vDoc = await db.collection("veiculos").doc(veiculoId).get();
+              const v = vDoc.data() || {};
+              refs.fuelType = v.tipoCombustivel || v.combustivelPadrao || null;
+              refs.refL100 = v.consumoMedio || v.consumoMedioObd || null;
+              const abs = await getAbastecimentosDoVeiculo(veiculoId, 100);
+              if (abs?.[0]?.precoPorLitro) refs.pricePerLiter = Number(abs[0].precoPorLitro);
+              const avg = window.Analytics?.calculateConsumption?.(abs)?.averageL100;
+              if (avg) refs.refL100 = avg;
+            } catch (e) {
+              console.warn("[Trips] Erro a carregar referências:", e);
+            }
+            return refs;
+          })();
+        }
+        return tripRefsPromise;
+      }
+
+      const tsToMs = (t) => (t?.toMillis ? t.toMillis() : t ? new Date(t).getTime() : null);
+
+      async function fetchTripReadings(trip) {
+        const start = tsToMs(trip.dataInicio);
+        const end = tsToMs(trip.dataFim);
+        if (!start || !end) return [];
+        const snap = await db
+          .collection("veiculos")
+          .doc(veiculoId)
+          .collection("leiturasObd")
+          .where("timestamp", ">=", start)
+          .where("timestamp", "<=", end)
+          .orderBy("timestamp", "asc")
+          .limit(6000)
+          .get();
+        return snap.docs.map((d) => d.data());
+      }
+
+      // Resumo para viagens sem leituras nem acumulado (ex.: importações antigas)
+      function legacySummary(trip) {
+        const m = trip.metricas || {};
+        return {
+          distanceKm: trip.distancia || null,
+          durationMin: trip.duracao || null,
+          avgSpeed: trip.velocidadeMedia || null,
+          avgMovingSpeed: m.velocidadeMediaMovimento || null,
+          maxSpeed: m.velocidadeMax || null,
+          idleMin: null,
+          idlePct: null,
+          avgRpm: m.rpmMedio ? Math.round(m.rpmMedio) : null,
+          maxRpm: m.rpmMax || null,
+          highRpmPct: null,
+          maxCoolant: m.temperaturaMax > -40 ? m.temperaturaMax : null,
+          warmupMin: null,
+          reachedWarm: null,
+          avgVoltage: m.voltagemMedia || null,
+          minVoltage: null,
+          harshAccel: null,
+          harshBrake: null,
+          liters: m.combustivelGasto || null,
+          l100: trip.consumoMedio || null,
+          fuelSource: trip.consumoMedio ? "torque" : null,
+          cost: trip.custoEstimado || null,
+          co2Kg: null,
+          fuelLevelStart: null,
+          fuelLevelEnd: m.combustivelFinal || null,
+          score: trip.score || null,
+          distanceSource: null,
+          legacy: true,
+        };
+      }
+
+      // Devolve { sum, readings } para uma viagem.
+      async function getTripSummary(trip, tripId) {
+        const refs = await getTripRefs();
+        const TM = window.TripMetrics;
+
+        if (trip.acc && trip.acc.v === TM.VERSION) {
+          return { sum: TM.summarize(trip.acc, refs), readings: null };
+        }
+
+        let readings = [];
+        try {
+          readings = await fetchTripReadings(trip);
+        } catch (e) {
+          console.warn("[Trips] Erro a ler leituras da viagem:", e);
+        }
+        if (readings.length < 2) return { sum: legacySummary(trip), readings };
+
+        const state = TM.fromReadings(readings, refs);
+        const sum = TM.summarize(state, refs);
+
+        // Grava o recálculo (só para viagens terminadas, para não colidir com o servidor)
+        const ended = Date.now() - (tsToMs(trip.dataFim) || 0) > 10 * 60 * 1000;
+        if (ended && tripId) {
+          db.collection("veiculos")
+            .doc(veiculoId)
+            .collection("viagens")
+            .doc(tripId)
+            .update({ ...TM.toTripFields(sum), acc: state })
+            .catch((e) => console.warn("[Trips] Não gravou recálculo:", e));
+        }
+        return { sum, readings };
+      }
+
+      // ---------- Formatação ----------
+      const nf = (v, d = 0) =>
+        v === null || v === undefined || isNaN(v)
+          ? null
+          : Number(v).toLocaleString("pt-PT", {
+              minimumFractionDigits: d,
+              maximumFractionDigits: d,
+            });
+
+      function fmtTripDuration(min) {
+        if (!min && min !== 0) return null;
+        if (min < 60) return `${Math.round(min)} min`;
+        return `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} min`;
+      }
+
+      function fmtTripDay(d) {
+        const today = new Date();
+        const yest = new Date();
+        yest.setDate(today.getDate() - 1);
+        if (d.toDateString() === today.toDateString()) return "Hoje";
+        if (d.toDateString() === yest.toDateString()) return "Ontem";
+        const s = d.toLocaleDateString("pt-PT", { weekday: "short", day: "2-digit", month: "2-digit" });
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      const fmtTime = (d) => d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+
+      function routeType(sum) {
+        const v = sum.avgMovingSpeed || sum.avgSpeed;
+        if (!v) return null;
+        if (v < 30) return "Urbano";
+        if (v < 60) return "Misto";
+        return "Estrada";
+      }
+
+      function scoreClass(s) {
+        if (s === null || s === undefined) return "none";
+        return s >= 85 ? "good" : s >= 65 ? "ok" : "bad";
+      }
+
+      function tripInsights(sum, refs) {
+        const tips = [];
+        if (sum.reachedWarm === false && sum.maxCoolant !== null)
+          tips.push({
+            kind: "warn",
+            text: `O motor não chegou a aquecer (máx. ${sum.maxCoolant} °C). Viagens curtas a frio gastam mais e desgastam o motor — num diesel também não deixam o filtro de partículas regenerar.`,
+          });
+        if (sum.idlePct !== null && sum.idlePct >= 25 && sum.idleMin >= 3)
+          tips.push({
+            kind: "info",
+            text: `${nf(sum.idleMin)} min parado com o motor ligado (${sum.idlePct}% do tempo). Desligar em paragens longas poupa combustível.`,
+          });
+        const harsh = (sum.harshAccel || 0) + (sum.harshBrake || 0);
+        if (harsh >= 3)
+          tips.push({
+            kind: "info",
+            text: `${sum.harshAccel} acelerações e ${sum.harshBrake} travagens bruscas. Antecipar o trânsito reduz consumo e desgaste de travões.`,
+          });
+        if (sum.highRpmPct !== null && sum.highRpmPct >= 10)
+          tips.push({
+            kind: "info",
+            text: `${sum.highRpmPct}% do tempo acima de 3000 rpm. Passar de mudança mais cedo é mais eficiente.`,
+          });
+        if (sum.avgVoltage !== null && sum.avgVoltage < 13)
+          tips.push({
+            kind: "warn",
+            text: `Tensão média de ${nf(sum.avgVoltage, 1)} V com o motor ligado (normal: 13,5–14,7 V). Convém verificar bateria e alternador.`,
+          });
+        if (sum.fuelSource && sum.fuelSource !== "estimativa" && refs.refL100 && sum.l100 > refs.refL100 * 1.2)
+          tips.push({
+            kind: "info",
+            text: `Consumo ${Math.round((sum.l100 / refs.refL100 - 1) * 100)}% acima da tua média (${nf(refs.refL100, 1)} L/100km).`,
+          });
+        if (!tips.length && sum.score >= 85)
+          tips.push({ kind: "good", text: "Condução suave e eficiente nesta viagem." });
+        return tips.slice(0, 3);
+      }
+
+      function sourcesNote(sum, refs) {
+        const notes = [];
+        if (sum.distanceSource === "velocidade")
+          notes.push("Distância calculada a partir da velocidade OBD.");
+        if (sum.fuelSource === "estimativa")
+          notes.push(
+            `Consumo e custo estimados com a tua média real (${nf(refs.refL100, 1)} L/100km) — o carro não reporta fluxo de combustível pelo OBD.`,
+          );
+        else if (sum.fuelSource === "maf") notes.push("Consumo calculado pelo sensor MAF.");
+        else if (sum.fuelSource === "torque") notes.push("Consumo medido pelo Torque.");
+        if (sum.cost !== null && sum.cost !== undefined)
+          notes.push("Custo com o preço do último abastecimento.");
+        if (sum.legacy) notes.push("Viagem sem leituras detalhadas — valores originais.");
+        return notes.join(" ");
+      }
+
+      // ---------- Renderização do resumo ----------
+      const tripCharts = new Map(); // container -> Chart
+
+      function renderTripSummary(container, trip, tripId, sum, readings, refs) {
+        const start = new Date(tsToMs(trip.dataInicio) || Date.now());
+        const end = new Date(tsToMs(trip.dataFim) || Date.now());
+        const est = sum.fuelSource === "estimativa" ? "~" : "";
+        const route = routeType(sum);
+        const sc = scoreClass(sum.score);
+
+        const hero = [
+          ["Distância", nf(sum.distanceKm, 1), "km"],
+          ["Duração", fmtTripDuration(sum.durationMin), ""],
+          ["Consumo", sum.l100 !== null ? est + nf(sum.l100, 1) : null, "L/100km"],
+          ["Custo", sum.cost !== null && sum.cost !== undefined ? est + nf(sum.cost, 2) : null, "€"],
+        ];
+
+        const row = (label, value, hint) =>
+          value === null || value === undefined || value === ""
+            ? ""
+            : `<div class="ts-row"><span>${label}</span><strong>${value}${hint ? ` <small>${hint}</small>` : ""}</strong></div>`;
+        const join = (...p) => (p.some((x) => x === null || x === undefined) ? null : p.join(""));
+
+        const driving = [
+          row("Velocidade média a andar", join(nf(sum.avgMovingSpeed), " km/h")),
+          row("Velocidade máxima", join(nf(sum.maxSpeed), " km/h")),
+          row(
+            "Parado com motor ligado",
+            join(nf(sum.idleMin), " min"),
+            sum.idlePct !== null ? `${sum.idlePct}%` : "",
+          ),
+          row(
+            "Acelerações / travagens bruscas",
+            sum.harshAccel !== null && sum.harshAccel !== undefined ? `${sum.harshAccel} / ${sum.harshBrake}` : null,
+          ),
+          row("RPM médio", join(nf(sum.avgRpm), " rpm"), sum.maxRpm ? `máx ${nf(sum.maxRpm)}` : ""),
+          row("Tempo acima de 3000 rpm", join(sum.highRpmPct, "%")),
+        ].join("");
+
+        const engine = [
+          row("Temperatura máxima do motor", join(nf(sum.maxCoolant), " °C")),
+          row("Tempo até aquecer (70 °C)", sum.warmupMin !== null ? `${nf(sum.warmupMin)} min` : sum.reachedWarm === false ? "não aqueceu" : null),
+          row("Bateria (média)", join(nf(sum.avgVoltage, 1), " V"), sum.minVoltage ? `mín ${nf(sum.minVoltage, 1)} V` : ""),
+          row(
+            "Depósito",
+            sum.fuelLevelStart !== null && sum.fuelLevelStart !== undefined && sum.fuelLevelEnd !== null
+              ? `${sum.fuelLevelStart}% → ${sum.fuelLevelEnd}%`
+              : null,
+          ),
+          row("Combustível gasto", sum.liters !== null && sum.liters !== undefined ? `${est}${nf(sum.liters, 2)} L` : null),
+          row("CO₂ emitido", sum.co2Kg !== null && sum.co2Kg !== undefined ? `${est}${nf(sum.co2Kg, 1)} kg` : null),
+        ].join("");
+
+        const tips = tripInsights(sum, refs);
+        const note = sourcesNote(sum, refs);
+
+        container.innerHTML = `
+          <div class="ts">
+            <header class="ts-head">
+              <div>
+                <div class="ts-date">${fmtTripDay(start)} · ${fmtTime(start)} → ${fmtTime(end)}</div>
+                <div class="ts-sub">${[route, sum.distanceKm ? `${nf(sum.distanceKm, 1)} km` : null].filter(Boolean).join(" · ")}</div>
+              </div>
+              <div class="ts-score ts-score--${sc}" title="Score de condução (0–100)">
+                <strong>${sum.score ?? "—"}</strong><span>score</span>
+              </div>
+            </header>
+
+            <div class="ts-hero">
+              ${hero
+                .map(
+                  ([l, v, u]) => `
+                <div class="ts-hero-cell">
+                  <span class="ts-hero-label">${l}</span>
+                  <span class="ts-hero-value">${v ?? "—"}${v && u ? ` <small>${u}</small>` : ""}</span>
+                </div>`,
+                )
+                .join("")}
+            </div>
+
+            ${
+              tips.length
+                ? `<ul class="ts-tips">${tips.map((t) => `<li class="ts-tip ts-tip--${t.kind}">${t.text}</li>`).join("")}</ul>`
+                : ""
+            }
+
+            ${driving ? `<section class="ts-section"><h4>Condução</h4>${driving}</section>` : ""}
+            ${engine ? `<section class="ts-section"><h4>Motor e combustível</h4>${engine}</section>` : ""}
+
+            <section class="ts-section ts-chart-section">
+              <button class="btn btn-secondary btn-sm ts-chart-btn" type="button">
+                <svg class="icon icon-left"><use href="../assets/icons/icons-unified.svg#icon-trend-up"></use></svg>
+                Ver gráfico de velocidade e RPM
+              </button>
+              <div class="ts-chart hidden"><canvas></canvas></div>
+            </section>
+
+            ${note ? `<p class="ts-note">${note}</p>` : ""}
+
+            <div class="ts-actions">
+              <button class="btn btn-sm ts-delete" type="button">
+                <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-trash"></use></svg>
+                Eliminar viagem
+              </button>
+            </div>
+          </div>`;
+
+        // Gráfico (a pedido)
+        const btnChart = container.querySelector(".ts-chart-btn");
+        const chartWrap = container.querySelector(".ts-chart");
+        btnChart.onclick = async () => {
+          btnChart.disabled = true;
+          btnChart.textContent = "A carregar…";
+          try {
+            const data = readings && readings.length ? readings : await fetchTripReadings(trip);
+            if (!data.length) {
+              btnChart.textContent = "Sem leituras detalhadas para esta viagem";
+              return;
+            }
+            chartWrap.classList.remove("hidden");
+            btnChart.remove();
+            drawTripChart(container, chartWrap.querySelector("canvas"), data);
+          } catch (e) {
+            console.error("[Trips] Erro no gráfico:", e);
+            btnChart.textContent = "Erro ao carregar o gráfico";
+            btnChart.disabled = false;
+          }
+        };
+
+        container.querySelector(".ts-delete").onclick = async () => {
+          if (!confirm("Eliminar esta viagem?")) return;
+          try {
+            await deleteViagem(veiculoId, tripId);
+            document.getElementById("trip-details-modal")?.classList.add("hidden");
+            await loadLastTrip(veiculoId);
+            await loadTripsHistory(veiculoId);
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao eliminar a viagem.");
+          }
+        };
+      }
+
+      function drawTripChart(container, canvas, readings) {
+        // No máximo ~400 pontos para o gráfico ficar fluido
+        const stepN = Math.max(1, Math.ceil(readings.length / 400));
+        const pts = readings.filter((_, i) => i % stepN === 0);
+        const labels = pts.map((r) => fmtTime(new Date(r.timestamp)));
+        const speed = pts.map((r) => r.parsed?.speed ?? null);
+        const rpm = pts.map((r) => r.parsed?.rpm ?? null);
+
+        const prev = tripCharts.get(container);
+        if (prev) prev.destroy();
+
+        const chart = new Chart(canvas.getContext("2d"), {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Velocidade (km/h)",
+                data: speed,
+                borderColor: "#0ea5b7",
+                backgroundColor: "rgba(14,165,183,0.12)",
+                fill: true,
+                yAxisID: "y",
+                tension: 0.3,
+                pointRadius: 0,
+                borderWidth: 2,
+              },
+              {
+                label: "RPM",
+                data: rpm,
+                borderColor: "#f59e0b",
+                yAxisID: "y1",
+                tension: 0.3,
+                pointRadius: 0,
+                borderWidth: 1.5,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: { legend: { position: "top", labels: { boxWidth: 12 } } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 6 } },
+              y: { position: "left", min: 0, title: { display: true, text: "km/h" } },
+              y1: {
+                position: "right",
+                min: 0,
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: "RPM" },
+              },
+            },
+          },
+        });
+        tripCharts.set(container, chart);
+      }
+
+      async function showTripIn(container, trip, tripId) {
+        container.innerHTML = '<div class="spinner"></div>';
+        const [refs, { sum, readings }] = await Promise.all([getTripRefs(), getTripSummary(trip, tripId)]);
+        renderTripSummary(container, trip, tripId, sum, readings, refs);
+      }
 
       async function loadLastTrip(vid) {
         const empty = document.getElementById("last-trip-empty");
-        const content = document.getElementById("last-trip-content");
-
+        const view = document.getElementById("last-trip-view");
+        if (!view) return;
         try {
           const snap = await db
             .collection("veiculos")
@@ -2079,514 +2441,38 @@ document.addEventListener("DOMContentLoaded", () => {
             .get();
 
           if (snap.empty) {
-            if (empty) empty.classList.remove("hidden");
-            if (content) content.classList.add("hidden");
+            empty?.classList.remove("hidden");
+            view.innerHTML = "";
             return;
           }
-
-          if (content) content.classList.remove("hidden");
-          if (empty) empty.classList.add("hidden");
-          renderTripDetails(snap.docs[0].data(), snap.docs[0].id, vid);
+          empty?.classList.add("hidden");
+          await showTripIn(view, snap.docs[0].data(), snap.docs[0].id);
         } catch (e) {
           console.error("Error loading last trip:", e);
+          view.innerHTML = '<p class="muted">Erro ao carregar a viagem.</p>';
         }
       }
 
-      function renderTripDetails(trip, tripId, vehicleId) {
-        // Dates
-        const end = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
-        const elDate = document.getElementById("last-trip-date");
-        const elTime = document.getElementById("last-trip-time");
-
-        if (elDate) elDate.textContent = end.toLocaleDateString("pt-PT");
-        if (elTime)
-          elTime.textContent = end.toLocaleTimeString("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-        // --- NEW: DELETE BUTTON FOR LAST TRIP ---
-        const headerActions = document.querySelector(
-          "#tab-ultima .trip-header-actions",
-        );
-        if (headerActions) {
-          headerActions.innerHTML = `
-            <button class="icon-btn-sm danger" id="btn-del-last-trip" title="Eliminar Viagem">
-              <svg style="width:16px; height:16px; fill:currentColor;"><use href="../assets/icons/icons-unified.svg#icon-trash"></use></svg>
-            </button>
-          `;
-          const btn = headerActions.querySelector("#btn-del-last-trip");
-          if (btn) {
-            btn.onclick = async () => {
-              if (!confirm("Eliminar este registo de viagem (o mais recente)?"))
-                return;
-              try {
-                await deleteViagem(vehicleId, tripId);
-                await loadLastTrip(vehicleId);
-                await loadTripsHistory(vehicleId);
-              } catch (err) {
-                console.error(err);
-                alert("Erro ao eliminar a viagem.");
-              }
-            };
-          }
-        }
-
-        // Metrics
-        const elDist = document.getElementById("last-trip-dist");
-        const elConsumo = document.getElementById("last-trip-consumo");
-        const elSpeed = document.getElementById("last-trip-speed");
-        const elDur = document.getElementById("last-trip-duration");
-
-        if (elDist) elDist.textContent = trip.distancia?.toFixed(1) || "--";
-        if (elConsumo)
-          elConsumo.textContent = trip.consumoMedio?.toFixed(1) || "--";
-        if (elSpeed)
-          elSpeed.textContent = Math.round(trip.velocidadeMedia || 0) || "--";
-        if (elDur)
-          elDur.textContent = trip.duracao
-            ? `${Math.round(trip.duracao)} min`
-            : "--";
-
-        // Details
-        const elRpm = document.getElementById("last-trip-rpm");
-        const elTemp = document.getElementById("last-trip-temp");
-
-        if (elRpm)
-          elRpm.textContent =
-            (trip.metricas?.rpmMedio
-              ? Number(trip.metricas.rpmMedio).toFixed(1)
-              : "--") + " rpm";
-        if (elTemp)
-          elTemp.textContent = (trip.metricas?.temperaturaMax || "--") + " °C";
-
-        // Battery
-        const elVolt = document.getElementById("last-trip-voltage");
-        if (elVolt)
-          elVolt.textContent = (trip.metricas?.voltagemMedia || "--") + " V";
-
-        // Score
-        const elScore = document.getElementById("last-trip-score");
-        const elScoreDot = document.getElementById("last-trip-score-dot");
-        if (elScore) {
-          const s = trip.score || 0;
-          elScore.textContent = s > 0 ? s : "--";
-          if (elScoreDot) {
-            elScoreDot.className =
-              "status-indicator-dot " +
-              (s > 85
-                ? "status-success"
-                : s > 60
-                  ? "status-warning"
-                  : "status-error");
-          }
-        }
-
-        // Cost
-        const cost = trip.custoEstimado || 0;
-        const elCost = document.getElementById("last-trip-cost");
-        if (elCost)
-          elCost.textContent = cost > 0 ? "€" + cost.toFixed(2) : "--";
-
-        // --- CHARTS HANDLER ---
-        const btnCharts = document.getElementById("btn-load-charts");
-        const chartsContainer = document.getElementById(
-          "trip-charts-container",
-        );
-
-        if (btnCharts && chartsContainer) {
-          // Reset UI
-          btnCharts.classList.remove("hidden");
-          btnCharts.disabled = false;
-          btnCharts.textContent = "Ver Gráficos Detalhados";
-          chartsContainer.classList.add("hidden");
-
-          // Remove old listener (clone node trick)
-          const newBtn = btnCharts.cloneNode(true);
-          btnCharts.parentNode.replaceChild(newBtn, btnCharts);
-
-          newBtn.addEventListener("click", () => {
-            loadTripCharts(trip, newBtn, chartsContainer);
-          });
-        }
-      }
-
-      async function loadTripCharts(trip, btn, container) {
-        if (!trip.dataInicio || !trip.dataFim) {
-          alert("Erro: Viagem sem datas definidas.");
-          return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = "A carregar dados...";
-
-        try {
-          // Parse dates (Firestore Timestamp or Date string)
-          const start = trip.dataInicio.toDate
-            ? trip.dataInicio.toDate()
-            : new Date(trip.dataInicio);
-          const end = trip.dataFim.toDate
-            ? trip.dataFim.toDate()
-            : new Date(trip.dataFim);
-
-          // Get readings
-          const snapshot = await db
-            .collection("veiculos")
-            .doc(veiculoId)
-            .collection("leiturasObd")
-            .where("timestamp", ">=", start.getTime())
-            .where("timestamp", "<=", end.getTime())
-            .orderBy("timestamp", "asc")
-            .limit(2000) // Safety limit
-            .get();
-
-          if (snapshot.empty) {
-            alert("Não existem dados detalhados para esta viagem.");
-            btn.textContent = "Sem dados";
-            return;
-          }
-
-          const readings = snapshot.docs.map((doc) => doc.data());
-          console.log(`[Charts] Loaded ${readings.length} readings`);
-
-          renderTripCharts(readings);
-
-          // Show charts, hide button
-          container.classList.remove("hidden");
-          btn.classList.add("hidden");
-        } catch (error) {
-          console.error("Error loading charts:", error);
-          alert("Erro ao carregar gráficos: " + error.message);
-          btn.textContent = "Erro";
-          btn.disabled = false;
-        }
-      }
-
-      let chartSpeedRpm = null;
-      let chartFuel = null;
-
-      function renderTripCharts(readings) {
-        // Prepara Data
-        const labels = readings.map((r) => {
-          const d = new Date(r.timestamp);
-          return d.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        });
-
-        const speedData = readings.map((r) => r.parsed?.speed || 0);
-        const rpmData = readings.map((r) => r.parsed?.rpm || 0);
-        const fuelData = readings.map((r) => r.parsed?.fuelLevel || null);
-
-        // --- UPDATE SUMMARY CARDS ---
-        const maxSpeed = Math.max(...speedData);
-        const maxRpm = Math.max(...rpmData);
-
-        const elMaxSpeed = document.getElementById("trip-max-speed");
-        const elMaxRpm = document.getElementById("trip-max-rpm");
-
-        if (elMaxSpeed)
-          elMaxSpeed.textContent = isFinite(maxSpeed)
-            ? Math.round(maxSpeed)
-            : "--";
-        if (elMaxRpm)
-          elMaxRpm.textContent = isFinite(maxRpm) ? Math.round(maxRpm) : "--";
-
-        // --- Chart 1: Speed & RPM ---
-        const ctxSpeed = document
-          .getElementById("chart-trip-speed-rpm")
-          .getContext("2d");
-
-        // Gradient for Speed
-        const gradSpeed = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-        gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.5)");
-        gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
-
-        // Gradient for RPM
-        const gradRpm = ctxSpeed.createLinearGradient(0, 0, 0, 300);
-        gradRpm.addColorStop(0, "rgba(239, 68, 68, 0.5)");
-        gradRpm.addColorStop(1, "rgba(239, 68, 68, 0.0)");
-
-        if (chartSpeedRpm) chartSpeedRpm.destroy();
-
-        chartSpeedRpm = new Chart(ctxSpeed, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Velocidade (km/h)",
-                data: speedData,
-                borderColor: "#3b82f6", // blue-500
-                backgroundColor: gradSpeed,
-                yAxisID: "y",
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-                fill: true,
-              },
-              {
-                label: "RPM",
-                data: rpmData,
-                borderColor: "#ef4444", // red-500
-                backgroundColor: gradRpm,
-                yAxisID: "y1",
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-                fill: true,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-              legend: { position: "top" },
-              tooltip: { enabled: true },
-            },
-            scales: {
-              x: { display: false }, // Hide X labels if too many
-              y: {
-                type: "linear",
-                display: true,
-                position: "left",
-                title: { display: true, text: "km/h" },
-              },
-              y1: {
-                type: "linear",
-                display: true,
-                position: "right",
-                grid: { drawOnChartArea: false },
-                title: { display: true, text: "RPM" },
-              },
-            },
-          },
-        });
-
-        // --- Chart 2: Fuel ---
-        const ctxFuel = document
-          .getElementById("chart-trip-fuel")
-          .getContext("2d");
-
-        if (chartFuel) chartFuel.destroy();
-
-        // Filter nulls for smoother line if gaps
-        // But chart.js handles nulls as gaps usually.
-
-        chartFuel = new Chart(ctxFuel, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Nível Combustível (%)",
-                data: fuelData,
-                borderColor: "#10b981", // green-500
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { display: false },
-              y: { min: 0, max: 100 },
-            },
-          },
-        });
-      }
-
-      // --- NEW: TRIP DETAILS MODAL (Telemetria) ---
-      let tripTelemetriaChart = null;
-
-      async function openTripModal(trip, tripId, vid) {
+      async function openTripDetails(trip, tripId) {
         const modal = document.getElementById("trip-details-modal");
-        if (!modal) return;
-
-        // 1. Populate Scalar Metrics
-        const elScore = document.getElementById("trip-modal-score");
-        const elRoute = document.getElementById("trip-modal-route");
-        const elInsight = document.getElementById("trip-insight-text");
-
-        // Metrics
-        const elDist = document.getElementById("trip-modal-dist");
-        const elMaxSpeed = document.getElementById("trip-modal-maxspeed");
-        const elRpm = document.getElementById("trip-modal-rpm");
-        const elTemp = document.getElementById("trip-modal-temp");
-
-        if (elScore) elScore.textContent = trip.score || "--";
-
-        // Infer Route Type (Simple heuristic or stored)
-        if (elRoute) {
-          const avgSpeed = trip.velocidadeMedia || 0;
-          if (avgSpeed > 80) elRoute.textContent = "Autoestrada";
-          else if (avgSpeed > 40) elRoute.textContent = "Misto / Estrada";
-          else elRoute.textContent = "Urbano";
-        }
-
-        // Generate Insight
-        if (elInsight) {
-          const s = trip.score || 0;
-          if (s > 90)
-            elInsight.textContent =
-              "ðŸ”¥ Condução Excelente! O teu estilo é altamente eficiente.";
-          else if (s > 75)
-            elInsight.textContent =
-              "ðŸ‘ Boa condução. Estás a poupar combustível.";
-          else if (s > 50)
-            elInsight.textContent =
-              "⚠️ Estilo agressivo. Tenta suavizar as acelerações.";
-          else
-            elInsight.textContent =
-              "ðŸ›‘ Condução ineficiente. Verifica a tua condução.";
-        }
-
-        if (elDist)
-          elDist.textContent = (trip.distancia?.toFixed(1) || "--") + " km";
-        if (elMaxSpeed)
-          elMaxSpeed.textContent =
-            (Math.round(trip.metricas?.velocidadeMax || 0) || "--") + " km/h";
-        if (elRpm)
-          elRpm.textContent =
-            (Math.round(trip.metricas?.rpmMedio || 0) || "--") + " rpm";
-        if (elTemp)
-          elTemp.textContent =
-            (Math.round(trip.metricas?.temperaturaMax || 0) || "--") + " °C";
-
-        // 2. Show Modal
+        const view = document.getElementById("trip-details-view");
+        if (!modal || !view) return;
         modal.classList.remove("hidden");
-
-        // 3. Fetch & Render Chart
-        await renderTelemetriaChart(trip, vid);
+        await showTripIn(view, trip, tripId);
       }
 
-      async function renderTelemetriaChart(trip, vid) {
-        const canvas = document.getElementById("chart-trip-telemetry");
-        if (!canvas) return;
-
-        // Limpar anterior
-        if (tripTelemetriaChart) tripTelemetriaChart.destroy();
-
-        // Show loading state on canvas? For now just wait.
-
-        try {
-          // Parse dates
-          const start = trip.dataInicio.toDate
-            ? trip.dataInicio.toDate()
-            : new Date(trip.dataInicio);
-          const end = trip.dataFim.toDate
-            ? trip.dataFim.toDate()
-            : new Date(trip.dataFim);
-
-          // Fetch Readings
-          const snapshot = await db
-            .collection("veiculos")
-            .doc(vid)
-            .collection("leiturasObd")
-            .where("timestamp", ">=", start.getTime())
-            .where("timestamp", "<=", end.getTime())
-            .orderBy("timestamp", "asc")
-            .limit(1000)
-            .get();
-
-          if (snapshot.empty) {
-            // Render empty state or just leave blank?
-            return;
-          }
-
-          const readings = snapshot.docs.map((d) => d.data());
-
-          // Prepare Data
-          const labels = readings.map((r) => {
-            const d = new Date(r.timestamp);
-            return d.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-          });
-          const speed = readings.map((r) => r.parsed?.speed || 0);
-          const rpm = readings.map((r) => r.parsed?.rpm || 0);
-
-          const ctx = canvas.getContext("2d");
-
-          // Gradients
-          const gradSpeed = ctx.createLinearGradient(0, 0, 0, 300);
-          gradSpeed.addColorStop(0, "rgba(59, 130, 246, 0.4)");
-          gradSpeed.addColorStop(1, "rgba(59, 130, 246, 0.0)");
-
-          tripTelemetriaChart = new Chart(ctx, {
-            type: "line",
-            data: {
-              labels: labels,
-              datasets: [
-                {
-                  label: "Velocidade",
-                  data: speed,
-                  borderColor: "#3b82f6",
-                  backgroundColor: gradSpeed,
-                  borderWidth: 2,
-                  tension: 0.4,
-                  fill: true,
-                  pointRadius: 0,
-                  yAxisID: "y",
-                },
-                {
-                  label: "RPM",
-                  data: rpm,
-                  borderColor: "#ef4444",
-                  borderWidth: 1,
-                  borderDash: [5, 5],
-                  tension: 0.4,
-                  pointRadius: 0,
-                  fill: false,
-                  yAxisID: "y1",
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              interaction: { mode: "index", intersect: false },
-              plugins: {
-                legend: { display: false },
-                tooltip: { enabled: true },
-              },
-              scales: {
-                x: { display: false },
-                y: { display: false, min: 0 },
-                y1: { display: false, min: 0 },
-              },
-            },
-          });
-        } catch (e) {
-          console.error("Error rendering telemetry chart:", e);
-        }
-      }
-
-      // Close handlers
+      const closeTripDetails = () => {
+        document.getElementById("trip-details-modal")?.classList.add("hidden");
+        loadTripsHistory(veiculoId); // pode ter sido recalculada ao abrir
+      };
+      document.getElementById("trip-details-close")?.addEventListener("click", closeTripDetails);
       document
-        .getElementById("trip-details-close")
-        ?.addEventListener("click", () => {
-          document.getElementById("trip-details-modal").classList.add("hidden");
-        });
-      document
-        .getElementById("trip-details-ok")
-        ?.addEventListener("click", () => {
-          document.getElementById("trip-details-modal").classList.add("hidden");
-        });
+        .querySelector("#trip-details-modal .modal-overlay")
+        ?.addEventListener("click", closeTripDetails);
 
       async function loadTripsHistory(vid) {
         const list = document.getElementById("trips-list");
         if (!list) return;
-
         list.innerHTML = '<div class="spinner"></div>';
 
         try {
@@ -2595,375 +2481,68 @@ document.addEventListener("DOMContentLoaded", () => {
             .doc(vid)
             .collection("viagens")
             .orderBy("dataFim", "desc")
-            .limit(20)
+            .limit(30)
             .get();
 
           const empty = document.getElementById("trips-empty");
-
+          const count = document.getElementById("trips-count");
+          list.innerHTML = "";
           if (snap.empty) {
-            list.innerHTML = "";
-            if (empty) empty.classList.remove("hidden");
+            empty?.classList.remove("hidden");
+            if (count) count.textContent = "";
             return;
           }
+          empty?.classList.add("hidden");
+          if (count) count.textContent = `${snap.size} viagens recentes`;
 
-          if (empty) empty.classList.add("hidden");
-          list.innerHTML = "";
-
+          let lastDay = null;
           snap.forEach((doc) => {
-            list.appendChild(createTripCard(doc.data(), doc.id, vid));
-          });
-
-          // Event Delegation for Deletion
-          list.onclick = async (e) => {
-            const delBtn = e.target.closest("[data-del-trip]");
-            if (delBtn) {
-              const tripId = delBtn.dataset.delTrip;
-              if (!confirm("Eliminar este registo de viagem?")) return;
-
-              try {
-                await deleteViagem(vid, tripId);
-                await loadTripsHistory(vid); // Refresh list
-                await loadLastTrip(vid); // Refresh last trip card too
-              } catch (err) {
-                console.error("Erro ao eliminar viagem:", err);
-                alert("Erro ao eliminar a viagem.");
-              }
+            const trip = doc.data();
+            const d = new Date(tsToMs(trip.dataInicio) || tsToMs(trip.dataFim) || Date.now());
+            const day = fmtTripDay(d);
+            if (day !== lastDay) {
+              const h = document.createElement("div");
+              h.className = "th-day";
+              h.textContent = day;
+              list.appendChild(h);
+              lastDay = day;
             }
-          };
+            list.appendChild(createTripCard(trip, doc.id, d));
+          });
         } catch (e) {
           console.error("Error loading history:", e);
-          list.innerHTML =
-            '<div class="muted">Erro ao carregar histórico.</div>';
+          list.innerHTML = '<div class="muted">Erro ao carregar histórico.</div>';
         }
       }
 
-      function createTripCard(trip, tripId, vid) {
-        const el = document.createElement("article");
-        el.className = "trip-card";
-        el.style.cssText =
-          "background: var(--bg-hover); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; cursor: pointer; transition: transform 0.2s;";
-
-        // Hover effects via JS for compatibility if CSS class missing, but kept clean
-        el.onmouseenter = () => (el.style.transform = "scale(1.02)");
-        el.onmouseleave = () => (el.style.transform = "scale(1)");
-
-        const date = trip.dataFim?.toDate ? trip.dataFim.toDate() : new Date();
+      function createTripCard(trip, tripId, start) {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "th-card";
+        const est = trip.consumoFonte === "estimativa" ? "~" : "";
+        const needsRecalc = trip.calcVersion !== window.TripMetrics.VERSION;
+        const dist = trip.distancia > 0.05 ? nf(trip.distancia, 1) : null;
+        const cons = trip.consumoMedio > 0 ? est + nf(trip.consumoMedio, 1) : null;
+        const route = routeType({ avgMovingSpeed: trip.metricas?.velocidadeMediaMovimento, avgSpeed: trip.velocidadeMedia });
+        const sc = scoreClass(trip.score);
 
         el.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; gap: 8px; align-items:center;">
-                        <div class="status-indicator-dot ${trip.score > 85 ? "status-success" : trip.score > 60 ? "status-warning" : "status-error"}"></div>
-                        <strong>${date.toLocaleDateString()}</strong>
-                        <span class="muted" style="font-size:0.8rem;">${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                    </div>
-                    <div style="display:flex; gap: 6px; align-items:center;">
-                        ${trip.score ? `<span style="font-size:0.75rem; font-weight:700; color:var(--color-text-main);">${trip.score}</span>` : ""}
-                        <span class="badge badge-outline">${Math.round(trip.duracao || 0)} min</span>
-                        <button class="icon-btn-sm danger" data-del-trip="${tripId}" title="Eliminar Viagem" style="padding: 2px;">
-                           <svg style="width:14px; height:14px; fill:currentColor;"><use href="../assets/icons/icons-unified.svg#icon-trash"></use></svg>
-                        </button>
-                    </div>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--border-light); padding-top: 8px; margin-top: 4px;">
-                    <div style="text-align:center;">
-                        <div style="font-weight:700;">${trip.distancia?.toFixed(1) || "--"}</div>
-                        <div class="muted" style="font-size:0.7rem;">km</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-weight:700;">${trip.consumoMedio?.toFixed(1) || "--"}</div>
-                        <div class="muted" style="font-size:0.7rem;">L/100</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-weight:700;">${Math.round(trip.velocidadeMedia || 0)}</div>
-                        <div class="muted" style="font-size:0.7rem;">km/h</div>
-                    </div>
-                </div>
-             `;
-
-        // Add CLick Listener to open Modal
-        el.addEventListener("click", (e) => {
-          // Prevent opening if clicking delete
-          if (e.target.closest("[data-del-trip]")) return;
-
-          openTripDetails(trip);
-        });
-
+          <div class="th-main">
+            <span class="th-time">${fmtTime(start)}</span>
+            <span class="th-meta">${[fmtTripDuration(trip.duracao), route].filter(Boolean).join(" · ")}</span>
+          </div>
+          <div class="th-stats">
+            <span><strong>${dist ?? "—"}</strong> km</span>
+            <span><strong>${cons ?? "—"}</strong> L/100</span>
+          </div>
+          <span class="th-score th-score--${sc}">${trip.score ?? "—"}</span>
+          ${needsRecalc ? '<span class="th-badge" title="Abre para recalcular com as leituras OBD">recalcular</span>' : ""}
+        `;
+        el.addEventListener("click", () => openTripDetails(trip, tripId));
         return el;
       }
 
-      let tripTelemetryChart = null;
-
-      function openTripDetails(trip) {
-        const modal = document.getElementById("trip-details-modal");
-        if (!modal) return;
-
-        // Fill Summary
-        document.getElementById("trip-modal-score").textContent =
-          trip.score || "--";
-        const routeType =
-          trip.routeType ||
-          (trip.velocidadeMedia < 25
-            ? "Urbano Intenso"
-            : trip.velocidadeMedia < 50
-              ? "Misto"
-              : "Autoestrada");
-        document.getElementById("trip-modal-route").textContent = routeType;
-
-        // Fill Insights
-        const insightContainer = document.getElementById(
-          "trip-insight-container",
-        );
-        const insightText = document.getElementById("trip-insight-text");
-        let insight = "";
-
-        if (trip.metricas?.rpmMedio > 1400) {
-          insight =
-            "💡 Dica: Manter as RPM abaixo de 1300 ajuda a reduzir o consumo até 10%.";
-        } else if (trip.consumoMedio > 6.5) {
-          insight =
-            "⚠️ Consumo elevado detetado. Considere uma condução mais suave em percursos urbanos.";
-        } else if (trip.score > 90) {
-          insight =
-            "ðŸ”¥ Condução Excelente! O teu estilo é altamente eficiente.";
-        }
-
-        if (insight) {
-          insightText.textContent = insight;
-          insightContainer.style.display = "block";
-        } else {
-          insightContainer.style.display = "none";
-        }
-
-        // Fill Secondary Metrics
-        const metricsList = document.getElementById("trip-modal-metrics");
-        const m = trip.metricas || {};
-        metricsList.innerHTML = `
-          <div class="alert-item">
-            <span class="alert-label">Distância</span>
-            <span class="alert-value">${trip.distancia || 0} km</span>
-          </div>
-          <div class="alert-item">
-            <span class="alert-label">Velocidade Máxima</span>
-            <span class="alert-value">${m.velocidadeMax || "--"} km/h</span>
-          </div>
-          <div class="alert-item">
-            <span class="alert-label">RPM Média</span>
-            <span class="alert-value">${m.rpmMedio || "--"} rpm</span>
-          </div>
-          <div class="alert-item">
-            <span class="alert-label">Temp. Máxima</span>
-            <span class="alert-value">${m.temperaturaMax || "--"} °C</span>
-          </div>
-        `;
-
-        modal.classList.remove("hidden");
-
-        // Render Chart
-        renderTripTelemetryChart(trip);
-
-        // Modal Handlers
-        const close = () => {
-          modal.classList.add("hidden");
-          if (tripTelemetryChart) {
-            tripTelemetryChart.destroy();
-            tripTelemetryChart = null;
-          }
-        };
-        document.getElementById("trip-details-close").onclick = close;
-        document.getElementById("trip-details-ok").onclick = close;
-      }
-
-      function renderTripTelemetryChart(trip) {
-        const canvas = document.getElementById("chart-trip-telemetry");
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-
-        if (tripTelemetryChart) tripTelemetryChart.destroy();
-
-        // Sample data for visualized trend (if backend data missing, we use summary)
-        const labels = ["Início", "Meio", "Fim"];
-        const consumps = [
-          trip.consumoMedio * 1.1,
-          trip.consumoMedio,
-          trip.consumoMedio * 0.9,
-        ];
-        const rpms = [
-          trip.metricas?.rpmMedio * 1.2 || 1500,
-          trip.metricas?.rpmMedio || 1300,
-          1000,
-        ];
-
-        tripTelemetryChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Consumo (L/100)",
-                data: consumps,
-                borderColor: "#1B9B82",
-                backgroundColor: "rgba(27, 155, 130, 0.1)",
-                yAxisID: "y",
-                tension: 0.4,
-                fill: true,
-              },
-              {
-                label: "RPM",
-                data: rpms,
-                borderColor: "#f59e0b",
-                borderDash: [5, 5],
-                yAxisID: "y1",
-                tension: 0.4,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            scales: {
-              y: {
-                type: "linear",
-                display: true,
-                position: "left",
-                title: { display: true, text: "L/100km" },
-              },
-              y1: {
-                type: "linear",
-                display: true,
-                position: "right",
-                title: { display: true, text: "RPM" },
-                grid: { drawOnChartArea: false },
-              },
-            },
-          },
-        });
-      }
-
-      // --- REALTIME LISTENER (LIVE TAB) ---
-      const liveElements = {
-        rpm: document.getElementById("obd-rpm"),
-        speed: document.getElementById("obd-speed"),
-        coolant: document.getElementById("obd-coolant"),
-        load: document.getElementById("obd-load"),
-        voltage: document.getElementById("obd-voltage"),
-        maf: document.getElementById("obd-maf"),
-        torque: document.getElementById("obd-torque"),
-        hp: document.getElementById("obd-hp"),
-        boost: document.getElementById("obd-boost"),
-        fuelUsed: document.getElementById("obd-fuelUsed"),
-        lastUpdate: document.getElementById("obd-last-update"),
-        statusCoolant: document.getElementById("status-coolant"),
-      };
-
-      db.collection("veiculos")
-        .doc(veiculoId)
-        .collection("leiturasObd")
-        .orderBy("timestamp", "desc")
-        .limit(1)
-        .onSnapshot(
-          (snapshot) => {
-            if (snapshot.empty) {
-              btnObd.classList.add("hidden");
-              return;
-            }
-            btnObd.classList.remove("hidden");
-
-            const data = snapshot.docs[0].data();
-            const reading = data.parsed || {};
-
-            const findKey = (obj, ...parts) => {
-              const keys = Object.keys(obj);
-              for (const k of keys) {
-                const lower = k.toLowerCase();
-                if (parts.every((p) => lower.includes(p.toLowerCase())))
-                  return obj[k];
-              }
-              return null;
-            };
-
-            // Update DOM
-            const rpm = findKey(reading, "Engine RPM") || reading.rpm;
-            if (liveElements.rpm)
-              liveElements.rpm.textContent = rpm ? Math.round(rpm) : "--";
-
-            const speed = findKey(reading, "Speed (OBD)") || reading.speed;
-            if (liveElements.speed)
-              liveElements.speed.textContent = speed ? Math.round(speed) : "--";
-
-            const temp = findKey(reading, "Coolant") || reading.coolant;
-            if (liveElements.coolant)
-              liveElements.coolant.textContent = temp ? Math.round(temp) : "--";
-            if (temp && liveElements.statusCoolant) {
-              if (temp > 105)
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-red";
-              else if (temp > 90)
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-yellow";
-              else
-                liveElements.statusCoolant.className =
-                  "alert-status-indicator status-green";
-            }
-
-            const load = findKey(reading, "Engine Load") || reading.engineLoad;
-            if (liveElements.load)
-              liveElements.load.textContent = load ? Math.round(load) : "--";
-
-            const volts =
-              findKey(reading, "Voltage") ||
-              findKey(reading, "Volts") ||
-              reading.voltage;
-            if (liveElements.voltage)
-              liveElements.voltage.textContent = volts
-                ? Number(volts).toFixed(1)
-                : "--";
-
-            const maf = findKey(reading, "Mass Air Flow") || reading.maf;
-            if (liveElements.maf)
-              liveElements.maf.textContent = maf
-                ? Number(maf).toFixed(1)
-                : "--";
-
-            const torque = findKey(reading, "Torque") || reading.torqueNm;
-            if (liveElements.torque)
-              liveElements.torque.textContent = torque
-                ? Math.round(torque)
-                : "--";
-
-            const hp = findKey(reading, "Horsepower") || reading.hpWheels;
-            if (liveElements.hp)
-              liveElements.hp.textContent = hp ? Math.round(hp) : "--";
-
-            const boost = reading.boost;
-            if (liveElements.boost)
-              liveElements.boost.textContent =
-                boost !== undefined && boost !== null
-                  ? Number(boost).toFixed(1)
-                  : "--";
-
-            const fuelUsed = reading.fuelUsed;
-            if (liveElements.fuelUsed)
-              liveElements.fuelUsed.textContent =
-                fuelUsed !== undefined && fuelUsed !== null
-                  ? Number(fuelUsed).toFixed(1)
-                  : "--";
-
-            // Timestamp
-            if (liveElements.lastUpdate && data.timestamp) {
-              const d = new Date(Number(data.timestamp));
-              const now = new Date();
-              const isToday = d.toDateString() === now.toDateString();
-              liveElements.lastUpdate.textContent = isToday
-                ? d.toLocaleTimeString()
-                : d.toLocaleString();
-            }
-          },
-          (err) => console.error(err),
-        );
-
-      // Auto-load data for the active tab (usually historico or ultima)
+      // Carregar dados iniciais
       loadLastTrip(veiculoId);
       loadTripsHistory(veiculoId);
     }

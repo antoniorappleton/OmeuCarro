@@ -1,0 +1,356 @@
+/* ==============================
+   SAÚDE & VIAGENS — resumo de viagem e histórico
+   Usa só variáveis do tema (funciona em claro e escuro).
+   ============================== */
+
+:root {
+  --ts-tint: rgba(148, 163, 184, 0.1);
+  --ts-good: #10b981;
+  --ts-ok: #f59e0b;
+  --ts-bad: #ef4444;
+}
+
+.obd-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+/* -------- Separadores -------- */
+.obd-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.obd-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.obd-tab {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 12px 12px 10px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.obd-tab.active {
+  color: var(--color-text-main);
+  border-bottom-color: var(--color-primary-end);
+}
+
+/* -------- Resumo de viagem -------- */
+.ts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ts-date {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.ts-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.ts-score {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.ts-score strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+}
+
+.ts-score span {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-top: 3px;
+}
+
+.ts-score--good { border-color: var(--ts-good); }
+.ts-score--ok { border-color: var(--ts-ok); }
+.ts-score--bad { border-color: var(--ts-bad); }
+
+.ts-hero {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.ts-hero-cell {
+  background: var(--ts-tint);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ts-hero-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.ts-hero-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ts-hero-value small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Dicas */
+.ts-tips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ts-tip {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--color-text-main);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border-left: 3px solid var(--color-primary-end);
+  background: var(--ts-tint);
+}
+
+.ts-tip--warn { border-left-color: var(--ts-ok); }
+.ts-tip--good { border-left-color: var(--ts-good); }
+
+/* Secções com linhas rótulo/valor */
+.ts-section h4 {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ts-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.9rem;
+}
+
+.ts-row:last-child {
+  border-bottom: 0;
+}
+
+.ts-row span {
+  color: var(--color-text-muted);
+}
+
+.ts-row strong {
+  color: var(--color-text-main);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ts-row strong small {
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+.ts-chart-section {
+  text-align: center;
+}
+
+.ts-chart {
+  height: 220px;
+  margin-top: 4px;
+}
+
+.ts-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.ts-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ts-delete {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--ts-bad);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-delete .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* -------- Histórico -------- */
+.trip-history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.trip-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.th-day {
+  margin: 10px 2px 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.th-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text-main);
+  background: var(--ts-tint);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.th-card:hover,
+.th-card:focus-visible {
+  border-color: var(--border-light);
+}
+
+.th-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.th-time {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.th-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.th-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.th-stats strong {
+  font-size: 0.95rem;
+  color: var(--color-text-main);
+}
+
+.th-score {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.th-score--good { border-color: var(--ts-good); }
+.th-score--ok { border-color: var(--ts-ok); }
+.th-score--bad { border-color: var(--ts-bad); }
+
+.th-badge {
+  position: absolute;
+  top: -7px;
+  right: 12px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: var(--color-surface);
+  border: 1px solid var(--border-light);
+  color: var(--color-text-muted);
+}
