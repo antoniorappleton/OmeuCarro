@@ -9,7 +9,7 @@
     <title>Viagem ao Vivo – L100</title>
 
     <link rel="stylesheet" href="../css/style.css?v=34" />
-    <link rel="stylesheet" href="../css/trip-live.css?v=34" />
+    <link rel="stylesheet" href="../css/trip-live.css?v=35" />
 
     <!-- Firebase v9 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=34"></script>
@@ -18,8 +18,10 @@
 
     <script defer src="../js/core/firebase-config.js?v=34"></script>
     <script defer src="../js/core/auth.js?v=34"></script>
-    <script defer src="../js/core/firestore.js?v=34"></script>
-    <script defer src="../js/modules/tripLive.js?v=34"></script>
+    <script defer src="../js/core/firestore.js?v=35"></script>
+    <script defer src="../js/modules/analytics.js?v=35"></script>
+    <script defer src="../js/utils/tripMetrics.js?v=35"></script>
+    <script defer src="../js/modules/tripLive.js?v=35"></script>
   </head>
 
   <body class="trip-live-page" data-page="trip-live">
@@ -56,15 +58,22 @@
       </div>
     </section>
 
+    <h2 class="trip-live-section-title">Esta viagem</h2>
     <section class="trip-live-grid">
       <div class="trip-live-tile">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-trend-up"></use></svg>
-          Distância da viagem
+          Distância
         </span>
         <span class="trip-live-tile-value" id="tile-distancia">-- <span class="unit">km</span></span>
       </div>
-
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-calendar"></use></svg>
+          Tempo
+        </span>
+        <span class="trip-live-tile-value" id="tile-tempo">-- <span class="unit">min</span></span>
+      </div>
       <div class="trip-live-tile">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-droplet"></use></svg>
@@ -72,7 +81,6 @@
         </span>
         <span class="trip-live-tile-value" id="tile-consumo">-- <span class="unit">L/100km</span></span>
       </div>
-
       <div class="trip-live-tile">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-fuel"></use></svg>
@@ -80,15 +88,38 @@
         </span>
         <span class="trip-live-tile-value" id="tile-litros">-- <span class="unit">L</span></span>
       </div>
-
       <div class="trip-live-tile">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-wallet"></use></svg>
-          Custo da viagem
+          Custo
         </span>
         <span class="trip-live-tile-value" id="tile-custo">-- <span class="unit">€</span></span>
       </div>
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-gauge"></use></svg>
+          Vel. média (a andar)
+        </span>
+        <span class="trip-live-tile-value" id="tile-velmedia">-- <span class="unit">km/h</span></span>
+      </div>
+      <div class="trip-live-tile">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-activity"></use></svg>
+          Parado c/ motor
+        </span>
+        <span class="trip-live-tile-value" id="tile-ralenti">-- <span class="unit">min</span></span>
+      </div>
+      <div class="trip-live-tile" id="tile-eventos-wrap">
+        <span class="trip-live-tile-label">
+          <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-navigation"></use></svg>
+          Acel. / trav. bruscas
+        </span>
+        <span class="trip-live-tile-value" id="tile-eventos">-- <span class="unit"></span></span>
+      </div>
+    </section>
 
+    <h2 class="trip-live-section-title">Motor</h2>
+    <section class="trip-live-grid">
       <div class="trip-live-tile" id="tile-coolant-wrap">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-gauge"></use></svg>
@@ -96,7 +127,6 @@
         </span>
         <span class="trip-live-tile-value" id="tile-coolant">-- <span class="unit">°C</span></span>
       </div>
-
       <div class="trip-live-tile" id="tile-intake-wrap">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-gauge"></use></svg>
@@ -104,7 +134,6 @@
         </span>
         <span class="trip-live-tile-value" id="tile-intake">-- <span class="unit">°C</span></span>
       </div>
-
       <div class="trip-live-tile" id="tile-voltage-wrap">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-activity"></use></svg>
@@ -112,7 +141,6 @@
         </span>
         <span class="trip-live-tile-value" id="tile-voltage">-- <span class="unit">V</span></span>
       </div>
-
       <div class="trip-live-tile" id="tile-fuellevel-wrap">
         <span class="trip-live-tile-label">
           <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-fuel"></use></svg>
@@ -123,7 +151,6 @@
     </section>
 
     <p class="trip-live-footer-note" id="trip-live-footnote">
-      Custo calculado com o preço do último abastecimento registado.
     </p>
   </body>
 </html>

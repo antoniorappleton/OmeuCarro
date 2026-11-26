@@ -253,3 +253,18 @@ body.is-stale .trip-live-grid {
   color: #64748b;
   padding: 0 20px 28px;
 }
+
+/* -------- Secções -------- */
+.trip-live-section-title {
+  margin: 8px 20px -8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Motor ainda frio (< 70 °C): azul discreto */
+.trip-live-tile.cold .trip-live-tile-value {
+  color: #60a5fa;
+}
