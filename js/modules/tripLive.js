@@ -89,6 +89,14 @@
     );
   }
 
+  function formatAgo(s) {
+    if (s < 60) return `${s}s`;
+    if (s < 3600) return `${Math.floor(s / 60)} min`;
+    if (s < 86400) return `${Math.floor(s / 3600)} h`;
+    const d = Math.floor(s / 86400);
+    return `${d} ${d === 1 ? "dia" : "dias"}`;
+  }
+
   function updateStatusBadge() {
     const secondsAgo = lastTimestamp
       ? Math.round((Date.now() - lastTimestamp) / 1000)
@@ -99,7 +107,7 @@
     if (!lastTimestamp) {
       el.statusText.textContent = "A aguardar dados…";
     } else if (stale) {
-      el.statusText.textContent = `Sem sinal há ${secondsAgo}s`;
+      el.statusText.textContent = `Sem sinal há ${formatAgo(secondsAgo)}`;
     } else {
       el.statusText.textContent = "Ao vivo";
     }
