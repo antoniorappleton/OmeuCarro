@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "pt.appleton.l100companion"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "pt.appleton.l100companion"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 2
         versionName = "0.0.2-p0"
     }
