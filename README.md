@@ -13,11 +13,12 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
   - Sugestões inteligentes de nomes de locais e autocomplete de moradas.
   - Simulador de custos de viagem direto no mapa.
 - **📊 Monitorização Real (OBD-II)**: Integração via Torque Pro para leitura de telemetria em tempo real (RPM, velocidade, combustível).
+- **🏁 Métricas de Viagem**: Visor *Viagem ao Vivo* e resumo por viagem com distância, duração, consumo, custo, tempo ao ralenti, acelerações/travagens bruscas, aquecimento do motor, bateria e score de condução. Em carros sem MAF/fluxo de combustível (ex.: diesel), a distância é integrada a partir da velocidade OBD e o consumo é estimado com a média real dos abastecimentos (assinalado com "~"). Cálculo partilhado entre app e Cloud Functions em `tripMetrics.js`.
 - **🛠️ Gestão de Manutenções**: Controlo de prazos de Seguro, IUC e IPO com notificações inteligentes.
 - **⛽ Histórico de Abastecimentos**: Análise detalhada de consumos (L/100km) e gastos acumulados por veículo.
 - **📱 PWA de Última Geração**:
   - Instalação como App nativa.
-  - Suporte Offline robusto com Service Worker v34 (com cache dos tiles do Mapa para visualização offline).
+  - Suporte Offline robusto com Service Worker v35 (com cache dos tiles do Mapa para visualização offline).
   - Cache versionado para atualizações instantâneas.
 
 ---
