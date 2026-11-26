@@ -67,3 +67,9 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Android (app Companion) — artefactos de build e configuração local
+companion/.gradle/
+companion/.kotlin/
+companion/app/build/
+companion/local.properties
