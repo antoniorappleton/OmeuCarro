@@ -26,9 +26,11 @@ const DEFAULT_PIDS = {
   engineLoad: ["k4", "04", "k04"], // %
   voltage: ["k42", "42", "kff1238"], // V
   tripDistance: ["kff1204"], // km
-  tripL100: ["kff1208", "kff1203"], // L/100 (ff1208 is user's average)
-  torqueNm: ["kff1225", "kff1226"], // Nm
-  hpWheels: ["kff1220", "kff1221"], // hp
+  tripL100: ["kff1208"], // Trip average L/100km (kff1203 é km/L instantâneo — não usar)
+  l100: ["kff5203"], // L/100km média de longo prazo do Torque
+  torqueNm: ["kff1225"], // Nm
+  hpWheels: ["kff1226"], // hp nas rodas (kff1220/1221 são acelerómetros)
+  avgSpeedMoving: ["kff1263"], // km/h média da viagem (só em movimento)
   fuelRemainingPct: ["k2f", "2f"], // Re-using fuelLevel if specific PID missing
   distanceToEmptyKm: ["kff126a"], // autonomy
   fuelUsedTrip: ["kff1271"], // Liters
