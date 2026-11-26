@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import pt.appleton.l100companion.net.L100UploadPrefs
+import pt.appleton.l100companion.net.L100Uploader
 import pt.appleton.l100companion.obd.Elm327Client
 import pt.appleton.l100companion.obd.ElmTimeoutException
 import pt.appleton.l100companion.obd.PidDef
@@ -22,6 +24,7 @@ import pt.appleton.l100companion.obd.Pids
 import pt.appleton.l100companion.obd.RfcommTransport
 import java.io.File
 import java.util.Locale
+import java.util.UUID
 
 data class DeviceItem(val name: String, val address: String)
 
@@ -40,11 +43,27 @@ data class UiState(
     val samples: Int = 0,
     val lastFiles: List<File> = emptyList(),
     val log: List<String> = emptyList(),
+    // --- Envio direto para a L100 (substitui o Torque Pro) ---
+    val uploadEnabled: Boolean = false,
+    val vehicleId: String = "",
+    val uploadKey: String = "",
+    val endpoint: String = L100UploadPrefs.DEFAULT_ENDPOINT,
+    val uploadStatus: String = "",
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val _state = MutableStateFlow(UiState())
+    private val uploadPrefs = L100UploadPrefs(app)
+    private val uploader = L100Uploader(uploadPrefs)
+
+    private val _state = MutableStateFlow(
+        UiState(
+            uploadEnabled = uploadPrefs.enabled,
+            vehicleId = uploadPrefs.vehicleId,
+            uploadKey = uploadPrefs.uploadKey,
+            endpoint = uploadPrefs.endpoint,
+        )
+    )
     val state: StateFlow<UiState> = _state
 
     private val btAdapter =
@@ -56,6 +75,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var csv: CsvLogger? = null
     private var rawLog: File? = null
     private var livePids: List<PidDef> = emptyList()
+    private var uploadSessionId: String = ""
+    private var lastUploadAt: Long = 0L
 
     private val logDir: File
         get() = File(getApplication<Application>().getExternalFilesDir(null), "logs")
@@ -84,10 +105,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun select(address: String) = _state.update { it.copy(selectedAddress = address) }
 
+    // --- Envio direto para a L100 ---
+
+    fun setUploadEnabled(enabled: Boolean) {
+        uploadPrefs.enabled = enabled
+        _state.update { it.copy(uploadEnabled = enabled, uploadStatus = "") }
+    }
+
+    fun setVehicleId(value: String) {
+        uploadPrefs.vehicleId = value
+        _state.update { it.copy(vehicleId = value) }
+    }
+
+    fun setUploadKey(value: String) {
+        uploadPrefs.uploadKey = value
+        _state.update { it.copy(uploadKey = value) }
+    }
+
+    fun setEndpoint(value: String) {
+        uploadPrefs.endpoint = value
+        _state.update { it.copy(endpoint = value) }
+    }
+
     @SuppressLint("MissingPermission")
     fun connect() {
         val address = _state.value.selectedAddress ?: return
         val device = btAdapter?.getRemoteDevice(address) ?: return
+        uploadSessionId = UUID.randomUUID().toString()
         viewModelScope.launch(Dispatchers.IO) {
             logDir.mkdirs()
             rawLog = File(logDir, "p0_raw_%tY%<tm%<td_%<tH%<tM%<tS.txt".format(System.currentTimeMillis()))
@@ -166,8 +210,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     it.copy(live = shown, samples = if (csv != null) it.samples + 1 else it.samples)
                 }
 
+                maybeUploadToL100(values, volts)
+
                 val elapsed = SystemClock.elapsedRealtime() - started
                 delay((500 - elapsed).coerceAtLeast(0))
+            }
+        }
+    }
+
+    /**
+     * Envia as leituras mais recentes para a L100 (mesma Cloud Function que o Torque Pro usa),
+     * no máximo a cada 2s — o backend não precisa de leituras a cada 500ms, e isto evita
+     * esgotar os pedidos simultâneos / escritas no Firestore. Corre em Dispatchers.IO,
+     * chamado a partir de [startPolling].
+     */
+    private fun maybeUploadToL100(values: Map<String, Double?>, voltage: Double?) {
+        if (!_state.value.uploadEnabled) return
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastUploadAt < 2000) return
+        lastUploadAt = now
+
+        // Pedido de rede num coroutine próprio: não atrasa o ciclo de 500ms de leitura de PIDs
+        // mesmo que a ligação esteja lenta (timeout interno de 5s no L100Uploader).
+        viewModelScope.launch(Dispatchers.IO) {
+            when (val result = uploader.upload(values, voltage, uploadSessionId)) {
+                is L100Uploader.Result.Ok -> {
+                    _state.update { it.copy(uploadStatus = "Enviado às %tT".format(Locale.ROOT, System.currentTimeMillis())) }
+                }
+                is L100Uploader.Result.Failed -> {
+                    log("L100 upload falhou: ${result.reason}")
+                    _state.update { it.copy(uploadStatus = "Erro: ${result.reason}") }
+                }
+                is L100Uploader.Result.Skipped -> {
+                    _state.update { it.copy(uploadStatus = result.reason) }
+                }
             }
         }
     }

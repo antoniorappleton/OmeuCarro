@@ -24,8 +24,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -122,6 +124,8 @@ private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
             s.elmVersion?.let { Text("Adaptador: $it", style = MaterialTheme.typography.bodySmall) }
         }
 
+        item { L100UploadCard(s, vm) }
+
         if (!s.connected) {
             item { Text("Dispositivos emparelhados", fontWeight = FontWeight.Bold) }
             items(s.devices, key = { it.address }) { d ->
@@ -174,6 +178,51 @@ private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
         item { HorizontalDivider(); Text("Registo", fontWeight = FontWeight.Bold) }
         items(s.log.asReversed()) { line ->
             Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+        }
+    }
+}
+
+/**
+ * Configuração + estado do envio direto para a L100 (substitui o Torque Pro).
+ * O Vehicle ID e a chave são os mesmos que já usas na URL de "Upload to webserver"
+ * do Torque Pro — copia-os de lá, não precisas de descobrir nada de novo.
+ */
+@Composable
+private fun L100UploadCard(s: UiState, vm: MainViewModel) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Enviar para a L100 (sem Torque)", fontWeight = FontWeight.Bold)
+                Switch(checked = s.uploadEnabled, onCheckedChange = vm::setUploadEnabled)
+            }
+            OutlinedTextField(
+                value = s.vehicleId,
+                onValueChange = vm::setVehicleId,
+                label = { Text("Vehicle ID (da L100)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = s.uploadKey,
+                onValueChange = vm::setUploadKey,
+                label = { Text("Chave (a mesma do Torque Pro)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = s.endpoint,
+                onValueChange = vm::setEndpoint,
+                label = { Text("Endpoint (normalmente não precisas de mudar)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (s.uploadStatus.isNotEmpty()) {
+                Text(s.uploadStatus, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
