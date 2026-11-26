@@ -58,16 +58,74 @@ class Elm327Client(
         }
     }
 
-    /** Reinicia o adaptador e configura-o para respostas compactas. Devolve a versão do ELM. */
-    suspend fun initialize(): String {
-        send("ATZ", timeoutMs = 4000)
-        delay(500)
-        val version = send("ATI")
-        send("ATE0")   // sem eco
-        send("ATL0")   // sem mudanças de linha extra
-        send("ATS0")   // sem espaços
-        send("ATH0")   // sem cabeçalhos
-        send("ATSP0")  // protocolo automático
+    /**
+     * Envia [cmd] até [attempts] vezes. Os clones "ELM327 v1.5" baratos perdem às vezes
+     * uma resposta (sobretudo logo a seguir a ATZ/ATE0); antes de repetir, manda um CR
+     * vazio para o adaptador voltar ao prompt '>' e deita fora o que sobrar.
+     */
+    suspend fun sendRetry(cmd: String, attempts: Int = 3, timeoutMs: Long = 2000): String {
+        var last: ElmTimeoutException? = null
+        repeat(attempts) { i ->
+            try {
+                return send(cmd, timeoutMs)
+            } catch (e: ElmTimeoutException) {
+                last = e
+                if (i < attempts - 1) resync()
+            }
+        }
+        throw last!!
+    }
+
+    /** Manda um CR e espera pelo prompt, para recuperar de uma resposta perdida. */
+    private suspend fun resync() = mutex.withLock {
+        withContext(Dispatchers.IO) {
+            val input = transport.input
+            transport.output.write("\r".toByteArray(Charsets.US_ASCII))
+            transport.output.flush()
+            val deadline = SystemClock.elapsedRealtime() + 1000
+            val buf = ByteArray(256)
+            while (SystemClock.elapsedRealtime() < deadline) {
+                val n = input.available()
+                if (n > 0) {
+                    val r = input.read(buf, 0, minOf(n, buf.size))
+                    if (r > 0 && String(buf, 0, r, Charsets.US_ASCII).contains('>')) break
+                } else {
+                    delay(20)
+                }
+            }
+            delay(100)
+            while (input.available() > 0) input.read(ByteArray(input.available()))
+        }
+    }
+
+    /**
+     * Reinicia o adaptador e configura-o para respostas compactas. Devolve a versão do ELM.
+     *
+     * [warm] = true usa ATWS (reinício "suave") em vez de ATZ — para reinícios a meio da
+     * sessão, onde um ATZ completo às vezes faz o clone largar o Bluetooth.
+     *
+     * ATE0/ATL0/ATS0/ATH0 são só "conforto" (o [parseMode01] já lida com eco, espaços e
+     * cabeçalhos), por isso uma falha nesses não deita a ligação abaixo. ATI e ATSP0
+     * continuam obrigatórios: se nem esses respondem, o link Bluetooth está morto e é
+     * preciso religar.
+     */
+    suspend fun initialize(warm: Boolean = false): String {
+        val reset = if (warm) "ATWS" else "ATZ"
+        try {
+            send(reset, timeoutMs = 5000)
+        } catch (e: ElmTimeoutException) {
+            // Alguns clones não mandam '>' depois do reset; seguimos e o ATI confirma.
+        }
+        delay(1000)
+        val version = sendRetry("ATI")
+        for (cmd in listOf("ATE0", "ATL0", "ATS0", "ATH0")) {
+            try {
+                sendRetry(cmd)
+            } catch (e: ElmTimeoutException) {
+                log("Aviso: '$cmd' sem resposta — ignorado, continuo")
+            }
+        }
+        sendRetry("ATSP0")  // protocolo automático
         return version
     }
 

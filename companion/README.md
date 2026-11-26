@@ -53,3 +53,13 @@ poderes ter o Torque Pro aberto ao mesmo tempo.
   códigos curtos de PID que o Torque Pro (`DEFAULT_PIDS` em `functions/torque.js`).
 - `MainViewModel.kt` / `MainActivity.kt` — ecrã único de teste.
 - `CsvLogger.kt` — gravação `;` em `Android/data/pt.appleton.l100companion/files/logs/`.
+
+## Ecrã desligado / segundo plano (v0.0.3)
+Depois de **Ligar**, a leitura corre num serviço em primeiro plano (notificação
+"L100 Companion" com o estado e um botão **Desligar**), com WakeLock parcial —
+continua com o ecrã apagado ou com outra app à frente (ex.: GPS).
+- No cartão **"Ecrã desligado / segundo plano"**, autorizar notificações e
+  **"Permitir correr sem restrições de bateria"** (sem isto alguns fabricantes
+  matam o serviço).
+- Se o adaptador perder a ligação (ex.: ao dar à chave), a app volta a ligar
+  sozinha (2s, 4s… até 10s) até carregar em **Parar/Desligar**.

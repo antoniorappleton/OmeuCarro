@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
@@ -27,9 +28,14 @@ interface ObdTransport {
 class RfcommTransport(
     private val device: BluetoothDevice,
     private val adapter: BluetoothAdapter?,
+    /** Nome do método que funcionou da última vez — é tentado primeiro (poupa ~10s por ligação). */
+    private val preferred: String? = null,
 ) : ObdTransport {
 
-    private var socket: BluetoothSocket? = null
+    @Volatile private var socket: BluetoothSocket? = null
+    /** Socket a meio de connect(); guardado para que [close] consiga abortar a tentativa. */
+    @Volatile private var pending: BluetoothSocket? = null
+    @Volatile private var closed = false
 
     override val input: InputStream
         get() = socket?.inputStream ?: throw IOException("Não ligado")
@@ -49,26 +55,40 @@ class RfcommTransport(
                     .getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
                     .invoke(device, 1) as BluetoothSocket
             },
-        )
+        ).sortedByDescending { it.first == preferred }
 
         var lastError: Exception? = null
         for ((name, make) in attempts) {
+            if (closed) throw IOException("Cancelado")
             var candidate: BluetoothSocket? = null
             try {
                 candidate = make()
+                pending = candidate
                 candidate.connect()
+                pending = null
+                if (closed) {
+                    runCatching { candidate.close() }
+                    throw IOException("Cancelado")
+                }
                 socket = candidate
                 return@withContext name
             } catch (e: Exception) {
+                pending = null
                 lastError = e
                 runCatching { candidate?.close() }
+                if (closed) throw IOException("Cancelado")
+                // Dá um momento ao adaptador para libertar o canal antes do método seguinte.
+                delay(300)
             }
         }
         throw IOException("Não foi possível ligar a ${device.address}", lastError)
     }
 
     override fun close() {
+        closed = true
+        runCatching { pending?.close() }
         runCatching { socket?.close() }
+        pending = null
         socket = null
     }
 

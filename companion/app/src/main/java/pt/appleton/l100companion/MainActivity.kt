@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,7 +49,7 @@ import pt.appleton.l100companion.obd.Pids
 
 class MainActivity : ComponentActivity() {
 
-    private val vm: MainViewModel by viewModels()
+    private val vm by lazy { ObdController.get(application) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +77,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private val NOTIFICATION_PERMISSION =
+    if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.POST_NOTIFICATIONS) else emptyArray()
+
 private val BLUETOOTH_RUNTIME_PERMISSIONS = arrayOf(
     Manifest.permission.BLUETOOTH_CONNECT,
     Manifest.permission.BLUETOOTH_SCAN,
@@ -94,7 +96,8 @@ private fun PermissionGate(content: @Composable () -> Unit) {
     }
     var ok by remember { mutableStateOf(allGranted()) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        ok = result.values.all { it }
+        // A notificação é opcional (sem ela o serviço corre na mesma, só não se vê).
+        ok = BLUETOOTH_RUNTIME_PERMISSIONS.all { result[it] == true || allGranted() }
     }
 
     if (ok) content() else Column(
@@ -103,14 +106,14 @@ private fun PermissionGate(content: @Composable () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text("É preciso autorizar o acesso a dispositivos Bluetooth próximos para falar com o adaptador OBD.")
-        Button(onClick = { launcher.launch(BLUETOOTH_RUNTIME_PERMISSIONS) }, Modifier.padding(top = 16.dp)) {
+        Button(onClick = { launcher.launch(BLUETOOTH_RUNTIME_PERMISSIONS + NOTIFICATION_PERMISSION) }, Modifier.padding(top = 16.dp)) {
             Text("Autorizar")
         }
     }
 }
 
 @Composable
-private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
+private fun P0Screen(vm: ObdController, onShare: () -> Unit) {
     val s by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.loadDevices() }
 
@@ -124,6 +127,8 @@ private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
             s.elmVersion?.let { Text("Adaptador: $it", style = MaterialTheme.typography.bodySmall) }
         }
 
+        item { BackgroundCard() }
+
         item { L100UploadCard(s, vm) }
 
         if (!s.connected) {
@@ -136,8 +141,13 @@ private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = vm::connect, enabled = !s.busy && s.selectedAddress != null) { Text("Ligar") }
-                    OutlinedButton(onClick = vm::loadDevices, enabled = !s.busy) { Text("Atualizar lista") }
+                    if (s.active) {
+                        // A ligar ou à espera de religar: permite desistir.
+                        Button(onClick = vm::disconnect) { Text("Parar") }
+                    } else {
+                        Button(onClick = vm::connect, enabled = s.selectedAddress != null) { Text("Ligar") }
+                    }
+                    OutlinedButton(onClick = vm::loadDevices, enabled = !s.active) { Text("Atualizar lista") }
                     if (s.lastFiles.isNotEmpty()) OutlinedButton(onClick = onShare) { Text("Partilhar") }
                 }
             }
@@ -188,7 +198,7 @@ private fun P0Screen(vm: MainViewModel, onShare: () -> Unit) {
  * do Torque Pro — copia-os de lá, não precisas de descobrir nada de novo.
  */
 @Composable
-private fun L100UploadCard(s: UiState, vm: MainViewModel) {
+private fun L100UploadCard(s: UiState, vm: ObdController) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
@@ -222,6 +232,57 @@ private fun L100UploadCard(s: UiState, vm: MainViewModel) {
             )
             if (s.uploadStatus.isNotEmpty()) {
                 Text(s.uploadStatus, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+/**
+ * Cartão "Segundo plano": garante as duas coisas de que a leitura com o ecrã desligado
+ * depende — poder mostrar a notificação do serviço e não ser travado pela otimização
+ * de bateria (alguns fabricantes matam serviços mesmo em primeiro plano sem isto).
+ */
+@Composable
+private fun BackgroundCard() {
+    val ctx = LocalContext.current
+    val pm = ctx.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+    fun batteryOk() = pm.isIgnoringBatteryOptimizations(ctx.packageName)
+    fun notifOk() = Build.VERSION.SDK_INT < 33 ||
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+    var battery by remember { mutableStateOf(batteryOk()) }
+    var notif by remember { mutableStateOf(notifOk()) }
+    val batteryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        battery = batteryOk()
+    }
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        notif = notifOk()
+    }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Ecrã desligado / segundo plano", fontWeight = FontWeight.Bold)
+            Text(
+                "Depois de \"Ligar\", a leitura continua com o ecrã apagado ou noutra app. " +
+                    "Aparece uma notificação \"L100 Companion\" com o estado e um botão Desligar.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            if (notif) {
+                Text("✓ Notificações autorizadas", style = MaterialTheme.typography.bodySmall)
+            } else {
+                OutlinedButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
+                    Text("Autorizar notificações")
+                }
+            }
+            if (battery) {
+                Text("✓ Sem restrições de bateria", style = MaterialTheme.typography.bodySmall)
+            } else {
+                OutlinedButton(onClick = {
+                    batteryLauncher.launch(
+                        Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                            .setData(Uri.parse("package:${ctx.packageName}"))
+                    )
+                }) { Text("Permitir correr sem restrições de bateria") }
             }
         }
     }

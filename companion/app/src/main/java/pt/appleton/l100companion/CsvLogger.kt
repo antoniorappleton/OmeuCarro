@@ -25,6 +25,8 @@ class CsvLogger(dir: File, private val columns: List<String>) {
         val cells = columns.map { c -> values[c]?.let { "%.2f".format(Locale.ROOT, it) } ?: "" }
         writer.write((listOf(timestamp.toString()) + cells).joinToString(";"))
         writer.newLine()
+        // Em segundo plano o processo pode ser morto sem aviso: não perder o que já foi lido.
+        writer.flush()
     }
 
     fun close() {
