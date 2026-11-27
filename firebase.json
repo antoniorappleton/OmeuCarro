@@ -12,7 +12,10 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "functions/**"
+      "functions/**",
+      "companion/**",
+      "docs/**",
+      "archive/**"
     ]
   },
   "emulators": {
