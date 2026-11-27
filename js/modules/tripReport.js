@@ -13,6 +13,7 @@
     const previewButton = document.getElementById("report-preview-button");
     const downloadButton = document.getElementById("report-download-button");
     if (!startInput || !endInput || !previewButton || !downloadButton) return;
+    downloadButton.disabled = false;
 
     const today = new Date();
     const yearAgo = new Date(today);
@@ -26,7 +27,6 @@
       try {
         latestReport = await loadReport();
         renderPreview(latestReport);
-        downloadButton.disabled = false;
         setStatus(
           latestReport.limitReached
             ? "Pré-visualização pronta. Alguns resultados atingiram o limite de 500 registos por secção."
@@ -35,7 +35,6 @@
       } catch (error) {
         console.error("[TripReport] Erro ao preparar relatório:", error);
         latestReport = null;
-        downloadButton.disabled = true;
         setStatus(error.message || "Não foi possível preparar o relatório.");
       } finally {
         previewButton.disabled = false;
@@ -52,24 +51,29 @@
       .querySelectorAll('input[name="report-section"]')
       .forEach((input) => input.addEventListener("change", invalidatePreview));
 
-    downloadButton.addEventListener("click", () => {
-      if (!latestReport) {
-        setStatus("Pré-visualiza o relatório antes de o transferir.");
-        return;
-      }
+    downloadButton.addEventListener("click", async () => {
+      downloadButton.disabled = true;
       try {
-        if (hasPdfLibraries()) {
-          downloadPdf(latestReport);
-          setStatus("O PDF foi gerado.");
+        if (!latestReport) {
+          setStatus("A preparar o relatório…");
+          latestReport = await loadReport();
+          renderPreview(latestReport);
+        }
+        setStatus("A gerar o PDF…");
+        if (await ensurePdfLibraries()) {
+          const filename = downloadPdf(latestReport);
+          setStatus(`PDF transferido: ${filename}`);
         } else {
           setStatus(
-            "A biblioteca PDF não está disponível. Usa a impressão e escolhe «Guardar como PDF».",
+            "Não foi possível carregar a biblioteca PDF (sem ligação?). Usa a impressão e escolhe «Guardar como PDF».",
           );
           window.print();
         }
       } catch (error) {
         console.error("[TripReport] Erro ao gerar PDF:", error);
-        setStatus("Não foi possível gerar o PDF. Tenta novamente.");
+        setStatus(error.message || "Não foi possível gerar o PDF. Tenta novamente.");
+      } finally {
+        downloadButton.disabled = false;
       }
     });
   }
@@ -78,9 +82,7 @@
     latestReport = null;
     const preview = document.getElementById("report-preview");
     if (preview) preview.hidden = true;
-    const downloadButton = document.getElementById("report-download-button");
-    if (downloadButton) downloadButton.disabled = true;
-    setStatus("Filtros alterados. Pré-visualiza novamente.");
+    setStatus("");
   }
 
   async function loadReport() {
@@ -176,18 +178,20 @@
     const fuel = fuelSnap.docs.map(attachVehicle);
     const trips = tripsSnap.docs.map(attachVehicle);
     const repairs = repairsSnap.docs.map(attachVehicle);
+    const byDate = (a, b) =>
+      String(REPORT_DATA.dateKey(a.data)).localeCompare(String(REPORT_DATA.dateKey(b.data)));
     const filteredFuel = REPORT_DATA.filterByPeriod(
       fuel,
       "data",
       startDate,
       endDate,
-    );
+    ).sort(byDate);
     const filteredRepairs = REPORT_DATA.filterByPeriod(
       repairs,
       "data",
       startDate,
       endDate,
-    );
+    ).sort(byDate);
     return {
       fuel: filteredFuel,
       trips,
@@ -204,13 +208,38 @@
     };
   }
 
-  function queryStringDateRange(collection, startDate, endDate) {
-    return collection
-      .where("data", ">=", startDate)
-      .where("data", "<=", endDate)
-      .orderBy("data", "asc")
-      .limit(MAX_RECORDS_PER_SECTION)
-      .get();
+  // O campo `data` existe em dois formatos: texto ("2026-11-27" ou ISO com hora,
+  // como grava a página Abastecer) e Timestamp (registos antigos/importados).
+  // Uma consulta só apanha um tipo, por isso fazem-se as duas e juntam-se.
+  // O limite superior "<data>" inclui o último dia mesmo com hora.
+  async function queryStringDateRange(collection, startDate, endDate) {
+    const startTs = firebase.firestore.Timestamp.fromDate(new Date(`${startDate}T00:00:00`));
+    const endDay = new Date(`${endDate}T00:00:00`);
+    endDay.setDate(endDay.getDate() + 1);
+    const endTs = firebase.firestore.Timestamp.fromDate(endDay);
+    const [asText, asTimestamp] = await Promise.all([
+      collection
+        .where("data", ">=", startDate)
+        .where("data", "<=", `${endDate}`)
+        .orderBy("data", "asc")
+        .limit(MAX_RECORDS_PER_SECTION)
+        .get(),
+      collection
+        .where("data", ">=", startTs)
+        .where("data", "<", endTs)
+        .orderBy("data", "asc")
+        .limit(MAX_RECORDS_PER_SECTION)
+        .get()
+        .catch(() => ({ docs: [], size: 0 })),
+    ]);
+    const seen = new Set();
+    const docs = [...asText.docs, ...asTimestamp.docs].filter((doc) =>
+      seen.has(doc.id) ? false : seen.add(doc.id),
+    );
+    return {
+      docs,
+      size: Math.max(asText.size, asTimestamp.size),
+    };
   }
 
   function selectedSections() {
@@ -318,7 +347,7 @@
       ], report.plans.map((item) => [
         item.vehicleName,
         item.tipo || item.titulo || "Manutenção",
-        [item.ultimaData, item.ultimoKm ? `${formatNumber(item.ultimoKm, 0)} km` : ""]
+        [item.ultimaData ? formatDate(item.ultimaData) : "", item.ultimoKm ? `${formatNumber(item.ultimoKm, 0)} km` : ""]
           .filter(Boolean)
           .join(" · ") || "—",
         [
@@ -344,7 +373,7 @@
     return `<section class="trip-report-monthly"><h4>Custos de combustível por mês</h4><div class="trip-report-bars">${chartMonths
       .map((item) => {
         const width = Math.max(2, (item.cost / max) * 100);
-        return `<div><span>${escapeHtml(item.month)}</span><span class="trip-report-bar-track"><i style="width:${width.toFixed(1)}%"></i></span><strong>${escapeHtml(formatMoney(item.cost, currency))}</strong></div>`;
+        return `<div><span>${escapeHtml(monthLabel(item.month))}</span><span class="trip-report-bar-track"><i style="width:${width.toFixed(1)}%"></i></span><strong>${escapeHtml(formatMoney(item.cost, currency))}</strong></div>`;
       })
       .join("")}</div></section>`;
   }
@@ -406,6 +435,7 @@
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.text(title, margin, y);
+      doc.setFont("helvetica", "normal");
       return y + 3;
     };
     const addTable = (title, headers, rows, y) => {
@@ -417,10 +447,6 @@
         margin: { left: margin, right: margin, top: 17, bottom: 13 },
         styles: { font: "helvetica", fontSize: 7, cellPadding: 2, overflow: "linebreak" },
         headStyles: { fillColor: [12, 140, 120] },
-        didDrawPage: () => {
-          drawPageHeader();
-          drawPageFooter();
-        },
       });
       return doc.lastAutoTable.finalY + 9;
     };
@@ -430,7 +456,6 @@
       subject: "Resumo de abastecimentos, viagens e manutenção",
       creator: "L100",
     });
-    drawPageHeader();
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Relatório do veículo", margin, 24);
@@ -448,10 +473,9 @@
       40,
     );
 
-    let y = 49;
-    y = drawSectionTitle("Resumo", y);
+    let y = 50;
     y = addTable(
-      "Indicadores",
+      "Resumo",
       ["Indicador", "Valor"],
       [
         ["Combustível abastecido", `${formatNumber(summary.fuelLiters, 1)} L`],
@@ -534,7 +558,7 @@
         report.plans.map((item) => [
           item.vehicleName,
           item.tipo || item.titulo || "Manutenção",
-          [item.ultimaData, item.ultimoKm ? `${formatNumber(item.ultimoKm, 0)} km` : ""]
+          [item.ultimaData ? formatDate(item.ultimaData) : "", item.ultimoKm ? `${formatNumber(item.ultimoKm, 0)} km` : ""]
             .filter(Boolean)
             .join(" · ") || "—",
           [
@@ -544,6 +568,7 @@
         ]),
         y,
       );
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(
         "Os planos apresentam a configuração atual e não são limitados ao intervalo histórico selecionado.",
@@ -555,7 +580,7 @@
     }
 
     if (report.sections.has("methodology")) {
-      y = drawSectionTitle("Metodologia e limites", y);
+      y = drawSectionTitle("Metodologia e limites", y) + 4;
       const paragraphs = [
         "Custos de combustível = litros × preço por litro. Consumo médio OBD = média ponderada pela distância apenas nas viagens com valor disponível. Distância, qualidade e estado de saúde vêm dos resumos guardados; campos ausentes são apresentados como indisponíveis e não são estimados.",
         "Os achados são indicativos, dependem dos PIDs disponíveis e não substituem diagnóstico profissional. O relatório não inclui coordenadas nem leituras OBD brutas. Dados de reparações e abastecimentos respeitam o intervalo; os planos mostram a situação atual.",
@@ -567,8 +592,6 @@
         if (y + lines.length * 4 > 275) {
           doc.addPage();
           y = 20;
-          drawPageHeader();
-          drawPageFooter();
         }
         doc.text(lines, margin, y);
         y += lines.length * 4 + 4;
@@ -580,7 +603,69 @@
       drawPageHeader();
       drawPageFooter();
     }
-    doc.save(`L100-relatorio-${safeFilename(report.startDate)}-${safeFilename(report.endDate)}.pdf`);
+    const filename = `L100-relatorio-${safeFilename(report.startDate)}-${safeFilename(report.endDate)}.pdf`;
+    savePdfBlob(doc.output("blob"), filename);
+    return filename;
+  }
+
+  // Transfere o PDF. No iOS em modo app (ecrã principal) o atributo download
+  // não funciona: abre o PDF num separador para guardar/partilhar.
+  function savePdfBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const isIosStandalone =
+      window.navigator.standalone === true &&
+      /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    if (isIosStandalone || !("download" in HTMLAnchorElement.prototype)) {
+      window.open(url, "_blank");
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.rel = "noopener";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  // As bibliotecas vêm da CDN com `defer`. Se ainda não chegaram ou falharam,
+  // tenta carregá-las agora (o service worker serve-as da cache se offline).
+  const PDF_LIBS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
+  ];
+
+  const PDF_LIB_TIMEOUT_MS = 10_000;
+
+  async function ensurePdfLibraries() {
+    if (hasPdfLibraries()) return true;
+    try {
+      for (const src of PDF_LIBS) {
+        if (src.includes("autotable") ? hasPdfLibraries() : window.jspdf?.jsPDF) continue;
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          const timer = setTimeout(
+            () => reject(new Error(`Tempo esgotado a carregar ${src}`)),
+            PDF_LIB_TIMEOUT_MS,
+          );
+          script.src = src;
+          script.onload = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+          script.onerror = () => {
+            clearTimeout(timer);
+            reject(new Error(`Falhou ${src}`));
+          };
+          document.head.appendChild(script);
+        });
+      }
+    } catch (error) {
+      console.warn("[TripReport] Bibliotecas PDF indisponíveis:", error);
+    }
+    return hasPdfLibraries();
   }
 
   function drawMonthlyChart(doc, months, margin, y, currency) {
@@ -595,13 +680,13 @@
     doc.text("Custos de combustível por mês (últimos 12 meses)", margin, y + 4);
     const max = Math.max(...months.map((item) => item.cost), 1);
     const chartWidth = pageWidth - margin * 2 - 55;
-    const barHeight = Math.min(7, 64 / months.length);
+    const barHeight = Math.min(5, 64 / months.length);
     months.forEach((item, index) => {
       const rowY = y + 10 + index * (barHeight + 1.5);
       const valueWidth = (item.cost / max) * chartWidth;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7);
-      doc.text(item.month, margin, rowY + barHeight - 1);
+      doc.text(monthLabel(item.month), margin, rowY + barHeight - 1);
       doc.setFillColor(12, 140, 120);
       doc.rect(margin + 22, rowY, Math.max(1, valueWidth), barHeight, "F");
       doc.text(
@@ -610,7 +695,14 @@
         rowY + barHeight - 1,
       );
     });
-    return y + 14 + months.length * (barHeight + 1.5);
+    return y + 20 + months.length * (barHeight + 1.5);
+  }
+
+  function monthLabel(key) {
+    const [year, month] = String(key).split("-");
+    const date = new Date(Number(year), Number(month) - 1, 1);
+    if (Number.isNaN(date.getTime())) return String(key);
+    return date.toLocaleDateString("pt-PT", { month: "short", year: "numeric" }).replace(".", "");
   }
 
   function vehicleLabel(vehicles) {
