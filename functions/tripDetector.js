@@ -1,7 +1,10 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const { Timestamp } = require("firebase-admin/firestore");
 const { sendNotificationToUser } = require("./notify_utils");
 const TripMetrics = require("./tripMetrics");
+const TripDiagnostics = require("./diagnostics");
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
@@ -35,15 +38,47 @@ exports.processOBDReading = onDocumentCreated(
 
     const vehicleRef = db.collection("veiculos").doc(vehicleId);
     const tripRef = vehicleRef.collection("viagens");
-    const tripId =
+    const baseTripId =
       reading.sessionId ||
       `fallback_${reading.deviceId || "unknown"}_${readingDate.toISOString().split("T")[0]}_H${readingDate.getUTCHours()}`;
-    const tripDocRef = tripRef.doc(tripId);
+    const sessionKey = reading.sessionId || baseTripId;
 
     const result = await db.runTransaction(async (t) => {
-      const tripDoc = await t.get(tripDocRef);
+      let tripId = baseTripId;
+      let tripDocRef = tripRef.doc(tripId);
+      let tripDoc = await t.get(tripDocRef);
+      let tripData = tripDoc.exists ? tripDoc.data() : null;
+      let vehicleData = null;
+
+      if (tripData?.tripFinalizadaEm) {
+        const vehicleSnap = await t.get(vehicleRef);
+        vehicleData = vehicleSnap.exists ? vehicleSnap.data() : {};
+        const activeTripId =
+          vehicleData.activeObdSessionKey === sessionKey
+            ? vehicleData.activeObdTripId
+            : null;
+        if (activeTripId && activeTripId !== baseTripId) {
+          const activeTripRef = tripRef.doc(activeTripId);
+          const activeTripDoc = await t.get(activeTripRef);
+          if (
+            activeTripDoc.exists &&
+            !activeTripDoc.data().tripFinalizadaEm
+          ) {
+            tripId = activeTripId;
+            tripDocRef = activeTripRef;
+            tripDoc = activeTripDoc;
+            tripData = activeTripDoc.data();
+          }
+        }
+        if (tripData?.tripFinalizadaEm) {
+          tripId = `${baseTripId}_part_${timestamp}`;
+          tripDocRef = tripRef.doc(tripId);
+          tripDoc = await t.get(tripDocRef);
+          tripData = tripDoc.exists ? tripDoc.data() : null;
+        }
+      }
+
       let isNewTrip = !tripDoc.exists;
-      const tripData = tripDoc.exists ? tripDoc.data() : null;
 
       if (tripData && !reading.sessionId) {
         const minutesDiff = (timestamp - (tripData.lastUpdate || 0)) / 60000;
@@ -51,16 +86,20 @@ exports.processOBDReading = onDocumentCreated(
       }
 
       // Não criar lixo com leituras de motor desligado
-      if (isNewTrip && rpm === 0 && speed === 0) return { action: "skip" };
+      if (isNewTrip && rpm === 0 && speed === 0) {
+        return { action: "skip", tripId };
+      }
 
       let state;
       let meta = null;
-      if (isNewTrip || !tripData.acc || tripData.acc.v !== TripMetrics.VERSION) {
-        const vSnap = await t.get(vehicleRef);
-        const v = vSnap.exists ? vSnap.data() : {};
+      if (isNewTrip || !tripData.acc) {
+        if (!vehicleData) {
+          const vehicleSnap = await t.get(vehicleRef);
+          vehicleData = vehicleSnap.exists ? vehicleSnap.data() : {};
+        }
         meta = {
-          fuelType: v.tipoCombustivel || v.combustivelPadrao || null,
-          refL100: v.consumoMedio || v.consumoMedioObd || null,
+          fuelType: vehicleData.tipoCombustivel || vehicleData.combustivelPadrao || null,
+          refL100: vehicleData.consumoMedio || vehicleData.consumoMedioObd || null,
         };
         state = TripMetrics.createState(meta);
       } else {
@@ -74,8 +113,8 @@ exports.processOBDReading = onDocumentCreated(
       const doc = {
         ...fields,
         acc: state,
-        dataInicio: admin.firestore.Timestamp.fromMillis(state.firstTs),
-        dataFim: admin.firestore.Timestamp.fromMillis(state.lastTs),
+        dataInicio: Timestamp.fromMillis(state.firstTs),
+        dataFim: Timestamp.fromMillis(state.lastTs),
         lastUpdate: state.lastTs,
         origem: "torque-auto",
         sessionId: reading.sessionId || null,
@@ -88,28 +127,298 @@ exports.processOBDReading = onDocumentCreated(
       if (!isNewTrip && tripData.notified) doc.notified = true;
       t.set(tripDocRef, doc);
 
-      t.set(
-        vehicleRef,
-        {
-          ultimasMetricas: {
-            distancia: fields.distancia,
-            consumoMedio: fields.consumoMedio,
-            lastUpdate: state.lastTs,
-            sessionId: reading.sessionId || null,
-          },
+      const vehicleUpdate = {
+        ultimasMetricas: {
+          distancia: fields.distancia,
+          consumoMedio: fields.consumoMedio,
+          lastUpdate: state.lastTs,
+          sessionId: reading.sessionId || null,
         },
-        { merge: true },
-      );
+      };
+      if (isNewTrip) {
+        vehicleUpdate.activeObdSessionKey = sessionKey;
+        vehicleUpdate.activeObdTripId = tripId;
+      }
+      t.set(vehicleRef, vehicleUpdate, { merge: true });
 
-      return { action: isNewTrip ? "created" : "updated" };
+      return { action: isNewTrip ? "created" : "updated", tripId };
     });
 
     if (result.action === "created") {
-      await notifyPreviousTrip(vehicleId, tripId);
+      await updateVehicleObdProfile(vehicleId);
+      await finalizePreviousTrip(vehicleId, result.tripId);
+      await notifyPreviousTrip(vehicleId, result.tripId);
     }
     return null;
   },
 );
+
+async function finalizePreviousTrip(vehicleId, currentTripId) {
+  const tripsRef = db.collection("veiculos").doc(vehicleId).collection("viagens");
+  const recentSnap = await tripsRef.orderBy("dataFim", "desc").limit(6).get();
+  const previousDoc = recentSnap.docs.find(
+    (tripDoc) => tripDoc.id !== currentTripId && !tripDoc.data().diagnosticoProcessadoEm,
+  );
+  if (!previousDoc) return;
+
+  await finalizeTrip(vehicleId, previousDoc, recentSnap, null, currentTripId);
+}
+
+async function finalizeTrip(
+  vehicleId,
+  targetDoc,
+  recentSnap,
+  existingVehicleSnap,
+  excludeTripId,
+) {
+  const vehicleRef = db.collection("veiculos").doc(vehicleId);
+  const [vehicleSnap, baselineSnap] = await Promise.all([
+    existingVehicleSnap || vehicleRef.get(),
+    vehicleRef.collection("baselines").get(),
+  ]);
+  if (!vehicleSnap.exists) return null;
+
+  const previousDoc = targetDoc;
+  const previousTrip = previousDoc.data();
+  if (previousTrip.diagnosticoProcessadoEm) {
+    if (!previousTrip.tripFinalizadaEm) {
+      await previousDoc.ref.update({
+        tripFinalizadaEm: Timestamp.now(),
+      });
+    }
+    return {
+      tripId: previousDoc.id,
+      alreadyFinalized: true,
+      estado: previousTrip.diagnostico?.estado || "indisponivel",
+      achados: previousTrip.diagnostico?.achados?.length || 0,
+    };
+  }
+
+  if (!recentSnap) {
+    recentSnap = await vehicleRef
+      .collection("viagens")
+      .orderBy("dataFim", "desc")
+      .limit(6)
+      .get();
+  }
+  const start = previousTrip.dataInicio?.toMillis?.() ?? previousTrip.lastUpdate;
+  const end = previousTrip.dataFim?.toMillis?.() ?? previousTrip.lastUpdate;
+  if (!Number.isFinite(Number(start)) || !Number.isFinite(Number(end))) {
+    throw new Error(`Intervalo inválido para finalizar viagem ${previousDoc.id}`);
+  }
+
+  const readingsRef = vehicleRef.collection("leiturasObd");
+  const readingQuery = previousTrip.sessionId
+    ? readingsRef.where("sessionId", "==", previousTrip.sessionId)
+    : readingsRef
+        .where("timestamp", ">=", Number(start))
+        .where("timestamp", "<=", Number(end))
+        .orderBy("timestamp");
+  const readingsSnap = await readingQuery.get();
+  const readings = readingsSnap.docs
+    .map((readingDoc) => readingDoc.data())
+    .filter((reading) => {
+      const timestamp = Number(reading.timestamp);
+      return (
+        timestamp >= Number(start) &&
+        timestamp <= Number(end) &&
+        (!previousTrip.sessionId || reading.sessionId === previousTrip.sessionId)
+      );
+    });
+
+  const baselines = {};
+  baselineSnap.docs.forEach((baselineDoc) => {
+    baselines[baselineDoc.id] = baselineDoc.data();
+  });
+  const recentTrips = recentSnap.docs
+    .filter(
+      (tripDoc) =>
+        tripDoc.id !== previousDoc.id && tripDoc.id !== excludeTripId,
+    )
+    .map((tripDoc) => tripDoc.data());
+  const vehicle = vehicleSnap.data();
+  const result = TripDiagnostics.analyzeTrip(readings, {
+    fuelType: vehicle.tipoCombustivel || vehicle.combustivelPadrao || null,
+    baselines,
+    recentTrips,
+  });
+  const { summary, ...diagnostic } = result;
+  const tripForBaseline = {
+    ...previousTrip,
+    qualidadeDados: result.qualidadeDados,
+    diagnostico: diagnostic,
+  };
+  const validTripCount = [
+    tripForBaseline,
+    ...recentTrips.filter((trip) => trip.qualidadeDados?.estado === "suficiente"),
+  ].filter(
+    (trip) =>
+      trip.qualidadeDados?.estado === "suficiente" &&
+      Number(trip.diagnostico?.metrics?.motorQuenteMin) >= 5 &&
+      !trip.diagnostico?.achados?.some(
+        (finding) => finding.severidade === "critico",
+      ),
+  ).length;
+
+  diagnostic.aprendizagem = diagnostic.aprendizagem.map((item) => ({
+    ...item,
+    viagensValidas: validTripCount,
+    minimo: 5,
+    mensagem: `A aprender o seu carro (${Math.min(validTripCount, 5)}/5 viagens válidas).`,
+  }));
+  await previousDoc.ref.update({
+    qualidadeDados: result.qualidadeDados,
+    diagnostico: diagnostic,
+    diagnosticoProcessadoEm: Timestamp.now(),
+    tripFinalizadaEm: Timestamp.now(),
+  });
+
+  if (baselineSnap.empty) {
+    const baselineResult = TripDiagnostics.calculateBaselines(
+      [tripForBaseline, ...recentTrips],
+      { createdAt: Timestamp.now() },
+    );
+    if (baselineResult.ready) {
+      const batch = db.batch();
+      Object.entries(baselineResult.documents).forEach(([metricBand, data]) => {
+        batch.set(vehicleRef.collection("baselines").doc(metricBand), data);
+      });
+      await batch.commit();
+    }
+  }
+  return {
+    tripId: previousDoc.id,
+    alreadyFinalized: false,
+    estado: diagnostic.estado,
+    achados: diagnostic.achados.length,
+  };
+}
+
+exports.finalizeCurrentVehicleTrip = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "É necessário iniciar sessão.");
+  }
+  const vehicleId = String(request.data?.vehicleId || "");
+  if (!/^[A-Za-z0-9_-]{3,60}$/.test(vehicleId)) {
+    throw new HttpsError("invalid-argument", "Identificador de veículo inválido.");
+  }
+
+  const vehicleRef = db.collection("veiculos").doc(vehicleId);
+  const vehicleSnap = await vehicleRef.get();
+  if (!vehicleSnap.exists || vehicleSnap.data().userId !== request.auth.uid) {
+    throw new HttpsError("permission-denied", "Veículo não encontrado ou sem acesso.");
+  }
+
+  const tripsRef = vehicleRef.collection("viagens");
+  const [recentSnap, latestReadingSnap] = await Promise.all([
+    tripsRef.orderBy("dataFim", "desc").limit(6).get(),
+    vehicleRef.collection("leiturasObd")
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .get(),
+  ]);
+  const currentTrip = recentSnap.docs[0];
+  if (!currentTrip || currentTrip.data().origem !== "torque-auto") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Não há uma viagem OBD automática recente para finalizar.",
+    );
+  }
+
+  const tripData = currentTrip.data();
+  const latestReading = latestReadingSnap.docs[0]?.data();
+  const sameSession = tripData.sessionId
+    ? latestReading?.sessionId === tripData.sessionId
+    : latestReading?.deviceId === tripData.deviceId;
+  if (
+    sameSession &&
+    Number(latestReading.timestamp) > Number(tripData.lastUpdate)
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Ainda há leituras OBD a processar. Aguarda alguns segundos e tenta novamente.",
+    );
+  }
+
+  await vehicleRef.set(
+    {
+      activeObdSessionKey: tripData.sessionId || currentTrip.id,
+      activeObdTripId: currentTrip.id,
+    },
+    { merge: true },
+  );
+  const result = await finalizeTrip(
+    vehicleId,
+    currentTrip,
+    recentSnap,
+    vehicleSnap,
+  );
+  return result;
+});
+
+exports.recalculateVehicleBaselines = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "É necessário iniciar sessão.");
+  }
+  const vehicleId = String(request.data?.vehicleId || "");
+  if (!/^[A-Za-z0-9_-]{3,60}$/.test(vehicleId)) {
+    throw new HttpsError("invalid-argument", "Identificador de veículo inválido.");
+  }
+
+  const vehicleRef = db.collection("veiculos").doc(vehicleId);
+  const vehicleSnap = await vehicleRef.get();
+  if (!vehicleSnap.exists || vehicleSnap.data().userId !== request.auth.uid) {
+    throw new HttpsError("permission-denied", "Veículo não encontrado ou sem acesso.");
+  }
+
+  const tripsSnap = await vehicleRef
+    .collection("viagens")
+    .orderBy("dataFim", "desc")
+    .limit(50)
+    .get();
+  const baselineResult = TripDiagnostics.calculateBaselines(
+    tripsSnap.docs.map((tripDoc) => tripDoc.data()),
+    { createdAt: Timestamp.now() },
+  );
+  if (!baselineResult.ready) {
+    throw new HttpsError(
+      "failed-precondition",
+      `São necessárias pelo menos 5 viagens válidas; foram encontradas ${baselineResult.validTripCount}.`,
+    );
+  }
+  if (Object.keys(baselineResult.documents).length === 0) {
+    throw new HttpsError(
+      "failed-precondition",
+      "As viagens válidas não contêm métricas OBD comparáveis para criar uma baseline.",
+    );
+  }
+
+  const baselinesRef = vehicleRef.collection("baselines");
+  const existingSnap = await baselinesRef.get();
+  const batch = db.batch();
+  existingSnap.docs.forEach((baselineDoc) => batch.delete(baselineDoc.ref));
+  Object.entries(baselineResult.documents).forEach(([metricBand, data]) => {
+    batch.set(baselinesRef.doc(metricBand), data);
+  });
+  await batch.commit();
+  return {
+    validTripCount: baselineResult.validTripCount,
+    recalculadaEm: Timestamp.now().toMillis(),
+  };
+});
+
+async function updateVehicleObdProfile(vehicleId) {
+  const vehicleRef = db.collection("veiculos").doc(vehicleId);
+  const trips = await vehicleRef
+    .collection("viagens")
+    .orderBy("dataFim", "desc")
+    .limit(10)
+    .get();
+  const profile = TripMetrics.aggregateObdProfile(
+    trips.docs.map((doc) => doc.data()),
+  );
+  await vehicleRef.set({ obdProfile: profile }, { merge: true });
+}
 
 // Ao começar uma viagem nova, envia o resumo da anterior (uma vez).
 async function notifyPreviousTrip(vehicleId, currentTripId) {

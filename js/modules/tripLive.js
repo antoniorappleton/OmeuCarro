@@ -19,7 +19,10 @@
   const el = {
     vehicleName: $("trip-live-vehicle"),
     statusText: $("trip-live-status-text"),
+    banner: $("trip-live-banner"),
     back: $("trip-live-back"),
+    endTrip: $("trip-live-end-trip"),
+    endTripStatus: $("trip-live-end-status"),
     speed: $("trip-live-speed"),
     rpmValue: $("trip-live-rpm-value"),
     rpmFill: $("trip-live-rpm-fill"),
@@ -68,9 +71,7 @@
     const speed = parsed?.speed ?? null;
     const rpm = parsed?.rpm ?? null;
     const coolant = parsed?.coolant ?? null;
-    const intake = parsed?.intake ?? null;
     const voltage = parsed?.voltage ?? null;
-    const fuelLevel = parsed?.fuelLevel ?? null;
 
     el.speed.textContent = fmt(speed, 0);
     el.rpmValue.textContent = fmt(rpm, 0);
@@ -79,19 +80,13 @@
     el.rpmFill.classList.toggle("redline", pct >= 85);
 
     setTile("tile-coolant", fmt(coolant, 0), "°C");
-    setTile("tile-intake", fmt(intake, 0), "°C");
     setTile("tile-voltage", fmt(voltage, 1), "V");
-    setTile("tile-fuellevel", fmt(fuelLevel, 0), "%");
 
-    $("tile-coolant-wrap").classList.toggle("danger", coolant !== null && coolant > 105);
-    $("tile-coolant-wrap").classList.toggle(
-      "cold",
-      coolant !== null && coolant < 70,
-    );
-    $("tile-voltage-wrap").classList.toggle(
-      "warn",
-      voltage !== null && voltage > 0 && voltage < 11.8,
-    );
+    const coolantWrap = $("tile-coolant-wrap");
+    if (coolantWrap) {
+      coolantWrap.classList.toggle("danger", coolant !== null && coolant >= 108);
+      coolantWrap.classList.toggle("cold", coolant !== null && coolant < 70);
+    }
   }
 
   function renderTrip() {
@@ -145,6 +140,25 @@
     if (!lastTimestamp) el.statusText.textContent = "A aguardar dados…";
     else if (stale) el.statusText.textContent = `Sem sinal há ${formatAgo(secondsAgo)}`;
     else el.statusText.textContent = "Ao vivo";
+  }
+
+  function renderCriticalAlert(alertState = {}) {
+    if (!el.banner) return;
+    const messages = {
+      OVERHEAT:
+        "Temperatura do motor muito elevada. Para em segurança e deixa o motor arrefecer.",
+      NO_CHARGE:
+        "Tensão baixa com o motor em funcionamento. Para em segurança assim que possível.",
+      OVERVOLTAGE:
+        "Tensão do sistema de carga muito elevada. Para em segurança assim que possível.",
+    };
+    const activeRule = Object.keys(messages).find(
+      (ruleId) => alertState[ruleId]?.active === true,
+    );
+    el.banner.classList.toggle("is-critical", Boolean(activeRule));
+    el.banner.textContent = activeRule
+      ? messages[activeRule]
+      : "Sem dados recentes do OBD. Confirma que o Torque (ou a app Companion) está ligado e a enviar dados.";
   }
 
   // ---------- Viagem ----------
@@ -226,6 +240,17 @@
   }
 
   let unsubscribe = null;
+  let unsubscribeAlerts = null;
+
+  function listenVehicleAlerts() {
+    unsubscribeAlerts = window.db
+      .collection("veiculos")
+      .doc(veiculoId)
+      .onSnapshot(
+        (snapshot) => renderCriticalAlert(snapshot.data()?.alertState || {}),
+        (error) => console.error("[TripLive] Erro ao carregar alertas:", error),
+      );
+  }
 
   function listenLatestReading() {
     unsubscribe = window.db
@@ -249,12 +274,55 @@
             applyReading(reading);
             renderTrip();
           }
+
         },
         (err) => {
           console.error("[TripLive] Erro no listener de leituras:", err);
           el.statusText.textContent = "Erro ao ligar aos dados";
         },
       );
+  }
+
+  function setupTripFinalization() {
+    if (!el.endTrip) return;
+    el.endTrip.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (el.endTrip.disabled) return;
+      if (
+        !window.confirm(
+          "Confirma que o veículo está estacionado e queres terminar esta viagem?",
+        )
+      ) {
+        return;
+      }
+
+      el.endTrip.disabled = true;
+      if (el.endTripStatus) el.endTripStatus.textContent = "A finalizar viagem…";
+      try {
+        const finalizeTrip = window
+          .firebase
+          .app()
+          .functions("us-central1")
+          .httpsCallable("finalizeCurrentVehicleTrip");
+        const response = await finalizeTrip({ vehicleId: veiculoId });
+        const data = response.data || {};
+        el.endTrip.textContent = "Viagem finalizada";
+        if (el.endTripStatus) {
+          el.endTripStatus.textContent = data.alreadyFinalized
+            ? "Esta viagem já tinha sido finalizada."
+            : `Check-up guardado: ${data.achados || 0} achados; estado ${data.estado || "indisponível"}.`;
+        }
+      } catch (error) {
+        console.error("[TripLive] Erro ao finalizar viagem:", error);
+        if (el.endTripStatus) {
+          el.endTripStatus.textContent =
+            error.code === "functions/failed-precondition"
+              ? error.message
+              : "Não foi possível finalizar a viagem. Tenta novamente.";
+        }
+        el.endTrip.disabled = false;
+      }
+    });
   }
 
   async function requestWakeLock() {
@@ -281,16 +349,21 @@
       el.statusText.textContent = "Veículo não especificado";
       return;
     }
+    setupTripFinalization();
     window.auth.onAuthStateChanged(async (user) => {
       if (!user) return;
       // Referências primeiro (consumo/preço) para a estimativa ficar certa à 1.ª
       await Promise.all([loadVehicle(), loadFuelData()]);
       listenLatestReading();
+      listenVehicleAlerts();
       requestWakeLock();
     });
 
     setInterval(updateStatusBadge, 1000);
-    window.addEventListener("beforeunload", () => unsubscribe && unsubscribe());
+    window.addEventListener("beforeunload", () => {
+      if (unsubscribe) unsubscribe();
+      if (unsubscribeAlerts) unsubscribeAlerts();
+    });
   }
 
   init();

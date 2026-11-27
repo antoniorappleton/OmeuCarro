@@ -52,6 +52,68 @@ test("não integra através de falhas de ligação longas", () => {
   assert.equal(T.summarize(T.fromReadings(readings)).distanceKm, 0);
 });
 
+test("qualidade: calcula cobertura e intervalo mediano; marca gaps acima de 10 s", () => {
+  const complete = T.summarize(
+    T.fromReadings([
+      { timestamp: T0, parsed: { speed: 0, rpm: 800, map: 0 } },
+      { timestamp: T0 + 1000, parsed: { speed: 0, rpm: 800 } },
+      { timestamp: T0 + 2000, parsed: { speed: 0, rpm: 800 } },
+    ]),
+  );
+  assert.equal(complete.qualidadeDados.cobertura, 1);
+  assert.equal(complete.qualidadeDados.intervaloMedianoS, 1);
+  assert.equal(complete.qualidadeDados.gaps, 0);
+  assert.equal(complete.qualidadeDados.estado, "suficiente");
+  assert.equal(complete.obdProfile.map, true);
+
+  const withGap = T.summarize(
+    T.fromReadings([
+      { timestamp: T0, parsed: { speed: 0, rpm: 800 } },
+      { timestamp: T0 + 5000, parsed: { speed: 0, rpm: 800 } },
+      { timestamp: T0 + 20_000, parsed: { speed: 0, rpm: 800 } },
+    ]),
+  );
+  assert.equal(withGap.qualidadeDados.gaps, 1);
+  assert.equal(withGap.qualidadeDados.estado, "insuficiente");
+});
+
+test("migra acumulado antigo sem perder métricas e preserva campos da viagem", () => {
+  const old = T.createState();
+  T.step(old, { timestamp: T0, parsed: { speed: 50, rpm: 1500 } });
+  old.v = 2;
+  delete old.intervalHistogram;
+  delete old.obdProfile;
+
+  const upgraded = T.upgradeState(old);
+  T.step(upgraded, {
+    timestamp: T0 + 1000,
+    parsed: { speed: 50, rpm: 1500 },
+  });
+  assert.equal(upgraded.v, T.VERSION);
+  assert.equal(upgraded.firstTs, T0);
+  assert.ok(upgraded.distCalcKm > 0);
+
+  const fields = T.toTripFields(T.summarize(upgraded));
+  assert.ok("qualidadeDados" in fields);
+  assert.ok("obdProfile" in fields);
+  assert.equal(fields.calcVersion, T.VERSION);
+});
+
+test("perfil do veículo reflete apenas os campos observados nas viagens recentes", () => {
+  const profile = T.aggregateObdProfile(
+    [
+      { obdProfile: { dpfDiffPressure: true, map: true } },
+      { obdProfile: { ambientTemp: true } },
+      { obdProfile: { map: false } },
+    ],
+    2,
+  );
+  assert.equal(profile.dpfDiffPressure, true);
+  assert.equal(profile.map, true);
+  assert.equal(profile.ambientTemp, true);
+  assert.equal(profile.egt, false);
+});
+
 test("leituras fora de ordem e duplicadas não contam a dobrar", () => {
   const readings = drive(constant(60, 600));
   const s = T.createState();

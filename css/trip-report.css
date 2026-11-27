@@ -1,0 +1,253 @@
+.trip-report-card {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.trip-report-heading,
+.trip-report-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.trip-report-heading h2 {
+  margin: 0 0 6px;
+}
+
+.trip-report-heading p,
+.trip-report-note {
+  margin: 0;
+  color: var(--color-text-muted, #64748b);
+}
+
+.trip-report-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(12, 140, 120, 0.12);
+  color: #087766;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.trip-report-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.trip-report-filters label,
+.trip-report-filters input {
+  width: 100%;
+}
+
+.trip-report-filters label span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trip-report-filters input {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.trip-report-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+}
+
+.trip-report-sections legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.trip-report-sections label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.trip-report-actions {
+  justify-content: flex-start;
+}
+
+#report-status {
+  min-height: 1.4em;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.9rem;
+}
+
+.trip-report-preview {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.trip-report-preview-heading h3,
+.trip-report-preview h4 {
+  margin: 0 0 8px;
+}
+
+.trip-report-preview-heading p {
+  margin: 0 0 16px;
+  color: var(--color-text-muted, #64748b);
+}
+
+.trip-report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 14px 0 22px;
+}
+
+.trip-report-summary-grid article {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+}
+
+.trip-report-summary-grid span {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.78rem;
+}
+
+.trip-report-summary-grid strong {
+  font-size: 1.05rem;
+}
+
+.trip-report-monthly,
+.trip-report-table-section,
+.trip-report-methodology {
+  margin: 20px 0;
+}
+
+.trip-report-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.trip-report-bars > div {
+  display: grid;
+  grid-template-columns: 56px minmax(40px, 1fr) 100px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+
+.trip-report-bars strong {
+  text-align: right;
+}
+
+.trip-report-bar-track {
+  display: block;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(100, 116, 139, 0.15);
+}
+
+.trip-report-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0c8c78;
+}
+
+.trip-report-table-scroll {
+  overflow-x: auto;
+}
+
+.trip-report-table-section table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.trip-report-table-section th,
+.trip-report-table-section td {
+  padding: 8px;
+  border: 1px solid var(--border-light);
+  text-align: left;
+  vertical-align: top;
+}
+
+.trip-report-table-section th {
+  background: rgba(12, 140, 120, 0.1);
+}
+
+.trip-report-methodology {
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(100, 116, 139, 0.08);
+  font-size: 0.88rem;
+}
+
+.trip-report-methodology p {
+  margin: 8px 0 0;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 14mm;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #report-preview,
+  #report-preview * {
+    visibility: visible !important;
+  }
+
+  #report-preview {
+    position: absolute;
+    inset: 0;
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #111827;
+    background: #fff;
+  }
+
+  .trip-report-summary-grid,
+  .trip-report-table-section,
+  .trip-report-methodology,
+  .trip-report-monthly {
+    break-inside: avoid;
+  }
+
+  .trip-report-table-scroll {
+    overflow: visible;
+  }
+
+  .trip-report-table-section table {
+    font-size: 8pt;
+  }
+
+  .trip-report-table-section thead {
+    display: table-header-group;
+  }
+}

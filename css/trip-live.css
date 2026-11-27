@@ -73,8 +73,6 @@ body.trip-live-page {
   height: 8px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
-  animation: trip-live-pulse 1.6s infinite;
 }
 
 body.is-stale .trip-live-status {
@@ -83,14 +81,6 @@ body.is-stale .trip-live-status {
 
 body.is-stale .trip-live-status .dot {
   background: #94a3b8;
-  animation: none;
-  box-shadow: none;
-}
-
-@keyframes trip-live-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
-  70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
 .trip-live-spacer {
@@ -116,11 +106,17 @@ body.is-stale .trip-live-banner {
   display: block;
 }
 
+.trip-live-banner.is-critical {
+  display: block;
+  background: #7f1d1d;
+  border-color: #ef4444;
+  color: #fff;
+}
+
 /* -------- Hero: velocidade -------- */
 .trip-live-hero {
   text-align: center;
   padding: 18px 20px 8px;
-  transition: opacity 0.3s ease;
 }
 
 body.is-stale .trip-live-hero,
@@ -173,7 +169,6 @@ body.is-stale .trip-live-grid {
   width: 0%;
   border-radius: 99px;
   background: linear-gradient(90deg, #316468, #0de3f2);
-  transition: width 0.25s ease, background 0.25s ease;
 }
 
 .trip-live-rpm-fill.redline {
@@ -191,7 +186,7 @@ body.is-stale .trip-live-grid {
 
 @media (min-width: 640px) {
   .trip-live-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -252,6 +247,36 @@ body.is-stale .trip-live-grid {
   font-size: 0.72rem;
   color: #64748b;
   padding: 0 20px 28px;
+}
+
+.trip-live-end-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0 20px 12px;
+}
+
+.trip-live-end-button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  font: inherit;
+  font-weight: 700;
+}
+
+.trip-live-end-button:disabled {
+  opacity: 0.55;
+}
+
+.trip-live-end-wrap small,
+.trip-live-end-wrap p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 /* -------- Secções -------- */

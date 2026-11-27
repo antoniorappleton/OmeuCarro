@@ -6,30 +6,41 @@
     <title>L100 – Estatísticas</title>
 
     <!-- Tema global -->
-    <link rel="stylesheet" href="../css/style.css?v=34" />
+    <link rel="stylesheet" href="../css/style.css?v=36" />
     <!-- CSS específico de estatísticas -->
-    <link rel="stylesheet" href="../css/dashboard.css?v=34" />
-    <link rel="stylesheet" href="../css/responsive.css?v=34" />
-    <script src="../js/core/theme.js?v=34"></script>
+    <link rel="stylesheet" href="../css/dashboard.css?v=36" />
+    <link rel="stylesheet" href="../css/responsive.css?v=36" />
+    <link rel="stylesheet" href="../css/trip-report.css?v=36" />
+    <script src="../js/core/theme.js?v=36"></script>
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=34"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=36"></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"
+    ></script>
 
     <!-- Firebase v9 -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=34"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=34"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=34"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=34"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=36"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=36"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=36"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=36"></script>
 
-    <script defer src="../js/core/firebase-config.js?v=34"></script>
-    <script defer src="../js/core/auth.js?v=34"></script>
-    <script defer src="../js/core/firestore.js?v=34"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=34"></script>
-    <script defer src="../js/utils/notifications.js?v=34"></script>
-    <script defer src="../js/utils/utils.js?v=34"></script>
-    <script defer src="../js/modules/analytics.js?v=34"></script>
+    <script defer src="../js/core/firebase-config.js?v=36"></script>
+    <script defer src="../js/core/auth.js?v=36"></script>
+    <script defer src="../js/core/firestore.js?v=36"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=36"></script>
+    <script defer src="../js/utils/notifications.js?v=36"></script>
+    <script defer src="../js/utils/utils.js?v=36"></script>
+    <script defer src="../js/modules/analytics.js?v=36"></script>
     <!-- depois os ficheiros específicos da página -->
-    <script defer src="../js/modules/estatisticas.js?v=34"></script>
+    <script defer src="../js/modules/estatisticas.js?v=36"></script>
+    <script defer src="../js/utils/tripReportData.js?v=36"></script>
+    <script defer src="../js/modules/tripReport.js?v=36"></script>
   </head>
   <body>
     <!-- DESKTOP SIDEBAR (visível a partir de 1024px; o rodapé assume a navegação em mobile) -->
@@ -197,6 +208,50 @@
           <p class="kpi-sub" id="kpi-eficiencia-context">--</p>
           <p class="kpi-trend kpi-trend-up" id="kpi-eficiencia-trend">--</p>
         </article>
+      </section>
+
+      <section class="trip-report-card" aria-labelledby="trip-report-title">
+        <div class="trip-report-heading">
+          <div>
+            <h2 id="trip-report-title">Relatório PDF</h2>
+            <p>
+              Exporta um resumo A4 de abastecimentos, viagens, saúde OBD e
+              manutenção.
+            </p>
+          </div>
+          <span class="trip-report-badge">A4 · privado</span>
+        </div>
+
+        <div class="trip-report-filters">
+          <label>
+            <span>Desde</span>
+            <input id="report-date-start" type="date" />
+          </label>
+          <label>
+            <span>Até</span>
+            <input id="report-date-end" type="date" />
+          </label>
+        </div>
+
+        <fieldset class="trip-report-sections">
+          <legend>Secções a incluir</legend>
+          <label><input type="checkbox" name="report-section" value="fuel" checked /> Abastecimentos</label>
+          <label><input type="checkbox" name="report-section" value="trips" checked /> Viagens e saúde OBD</label>
+          <label><input type="checkbox" name="report-section" value="maintenance" checked /> Reparações e planos</label>
+          <label><input type="checkbox" name="report-section" value="methodology" checked /> Metodologia</label>
+        </fieldset>
+
+        <div class="trip-report-actions">
+          <button id="report-preview-button" class="btn btn-secondary" type="button">
+            Pré-visualizar
+          </button>
+          <button id="report-download-button" class="btn btn-primary" type="button" disabled>
+            Transferir PDF
+          </button>
+          <span id="report-status" role="status" aria-live="polite"></span>
+        </div>
+
+        <div id="report-preview" class="trip-report-preview" hidden></div>
       </section>
 
       <!-- GRID DE GRÁFICOS -->

@@ -4,7 +4,7 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
 
 ---
 
-## ✨ Funcionalidades Principais (v3.0)
+## ✨ Funcionalidades Principais (v3.1)
 
 - **💎 Design Premium Glassmórfico**: Interface moderna e fluida com suporte total nativo para **Modo Escuro** e **Modo Claro**, focada na facilidade de uso em dispositivos móveis.
 - **🖥️ Sidebar de Gestão de Frotas (Desktop)**: Navegação lateral persistente em ecrãs grandes, com painéis do mapa e KPIs reformulados para um visual profissional de gestão de frota; em mobile mantém-se a navegação por rodapé.
@@ -14,11 +14,13 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
   - Simulador de custos de viagem direto no mapa.
 - **📊 Monitorização Real (OBD-II)**: Integração via Torque Pro para leitura de telemetria em tempo real (RPM, velocidade, combustível).
 - **🏁 Métricas de Viagem**: Visor *Viagem ao Vivo* e resumo por viagem com distância, duração, consumo, custo, tempo ao ralenti, acelerações/travagens bruscas, aquecimento do motor, bateria e score de condução. Em carros sem MAF/fluxo de combustível (ex.: diesel), a distância é integrada a partir da velocidade OBD e o consumo é estimado com a média real dos abastecimentos (assinalado com "~"). Cálculo partilhado entre app e Cloud Functions em `tripMetrics.js`.
+- **🩺 Diagnóstico OBD por viagem**: Check-up indicativo, qualidade dos dados, alertas críticos e finalização explícita da viagem no visor ao vivo.
+- **📄 Relatórios PDF**: Pré-visualização e exportação A4 de abastecimentos, viagens, saúde OBD e manutenção, com intervalo, secções selecionáveis e metodologia.
 - **🛠️ Gestão de Manutenções**: Controlo de prazos de Seguro, IUC e IPO com notificações inteligentes.
 - **⛽ Histórico de Abastecimentos**: Análise detalhada de consumos (L/100km) e gastos acumulados por veículo.
 - **📱 PWA de Última Geração**:
   - Instalação como App nativa.
-  - Suporte Offline robusto com Service Worker v35 (com cache dos tiles do Mapa para visualização offline).
+  - Suporte Offline robusto com Service Worker v36, incluindo os recursos de exportação PDF em cache quando instalados online.
   - Cache versionado para atualizações instantâneas.
 
 ---

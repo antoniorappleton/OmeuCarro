@@ -1,0 +1,101 @@
+metadata:
+  generated: "2026-11-27"
+  source_plan: "docs/implementation/plan.md"
+  target_tasks: "Implementation Tasks embedded in plan.md"
+summary:
+  total_plan_items: 6
+  covered_plan_items: 6
+  missing_plan_items: 0
+  coverage_percentage: 100.0
+  total_tasks_generated: 21
+  orphan_tasks: 0
+phases:
+  - phase_id: "Phase-1"
+    phase_name: "Setup"
+    items:
+      - item_id: "1.1"
+        description: "Registar requisitos e preservar estado local"
+        tasks:
+          - task_id: "T001"
+            description: "Confirmar os requisitos e preservar alterações locais"
+  - phase_id: "Phase-2"
+    phase_name: "Fundacional: dados e regras"
+    items:
+      - item_id: "1.1"
+        description: "Captura OBD, perfil e qualidade"
+        tasks:
+          - task_id: "T002"
+            description: "Corrigir timestamp em functions/torque.js"
+          - task_id: "T003"
+            description: "Acrescentar PIDs/perfil em functions/torque.js"
+          - task_id: "T004"
+            description: "Acrescentar métricas compatíveis às duas cópias TripMetrics"
+          - task_id: "T005"
+            description: "Testar parsing, qualidade e paridade das cópias"
+      - item_id: "2.1"
+        description: "Regras, baseline e notificações"
+        tasks:
+          - task_id: "T006"
+            description: "Criar motor de regras, baseline e estado"
+          - task_id: "T007"
+            description: "Integrar o motor com persistência e FCM"
+          - task_id: "T008"
+            description: "Testar condições de alerta e baseline"
+          - task_id: "T009"
+            description: "Validar regras Firestore"
+  - phase_id: "Phase-3"
+    phase_name: "Resumo e interface"
+    items:
+      - item_id: "3.1"
+        description: "Resumo e interface"
+        tasks:
+          - task_id: "T010"
+            description: "Ligar diagnóstico e qualidade ao resumo da viagem"
+          - task_id: "T011"
+            description: "Criar UI de achados e detalhes técnicos"
+          - task_id: "T012"
+            description: "Atualizar visor ao vivo"
+          - task_id: "T013"
+            description: "Adicionar entrada manual de DTC"
+  - phase_id: "Phase-4"
+    phase_name: "Revisão e aprovação"
+    items:
+      - item_id: "4.1"
+        description: "Revisão crítica documentada"
+        tasks:
+          - task_id: "T014"
+            description: "Criar docs/REVISAO.md"
+          - task_id: "T015"
+            description: "Fazer duplo check e aguardar aprovação"
+  - phase_id: "Phase-5"
+    phase_name: "Exportação PDF"
+    items:
+      - item_id: "5.1"
+        description: "Exportação PDF"
+        tasks:
+          - task_id: "T016"
+            description: "Criar interface de filtros e preview"
+          - task_id: "T017"
+            description: "Gerar PDF A4 no cliente"
+          - task_id: "T018"
+            description: "Testar filtros, paginação e dados vazios"
+  - phase_id: "Phase-6"
+    phase_name: "Verificação e release"
+    items:
+      - item_id: "6.1"
+        description: "Verificação final e release"
+        tasks:
+          - task_id: "T019"
+            description: "Atualizar versões PWA e Service Worker"
+          - task_id: "T020"
+            description: "Validar requisitos e estado final"
+          - task_id: "T021"
+            description: "Commit, push e deploy"
+missing_plan_items: []
+orphan_tasks: []
+upstream_trace: []
+validation:
+  passed: true
+  errors: []
+  warnings:
+    - "A fase 5 exige aprovação explícita de docs/REVISAO.md."

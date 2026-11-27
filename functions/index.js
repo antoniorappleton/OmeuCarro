@@ -10,6 +10,10 @@ exports.uploadTorqueData = require("./torque").uploadTorqueData;
 exports.importFuelData = require("./import_fuel").importFuelData;
 exports.importTorqueCsv = require("./import_torque_csv").importTorqueCsv;
 exports.processOBDReading = require("./tripDetector").processOBDReading;
+exports.finalizeCurrentVehicleTrip =
+  require("./tripDetector").finalizeCurrentVehicleTrip;
+exports.recalculateVehicleBaselines =
+  require("./tripDetector").recalculateVehicleBaselines;
 
 // Alertas agendados (movidos para ficheiro próprio para limpeza)
 exports.checkVehicleAlertsV2 = require("./alerts").checkVehicleAlertsV2;

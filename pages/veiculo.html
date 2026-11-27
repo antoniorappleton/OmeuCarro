@@ -6,34 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veículo – L100</title>
 
-  <link rel="stylesheet" href="../css/style.css?v=34" />
-  <link rel="stylesheet" href="../css/home.css?v=34" />
-  <link rel="stylesheet" href="../css/cards.css?v=34" />
-  <link rel="stylesheet" href="../css/responsive.css?v=34" />
-  <link rel="stylesheet" href="../css/trip-summary.css?v=35" />
-  <script src="../js/core/theme.js?v=34"></script>
+  <link rel="stylesheet" href="../css/style.css?v=36" />
+  <link rel="stylesheet" href="../css/home.css?v=36" />
+  <link rel="stylesheet" href="../css/cards.css?v=36" />
+  <link rel="stylesheet" href="../css/responsive.css?v=36" />
+  <link rel="stylesheet" href="../css/trip-summary.css?v=36" />
+  <script src="../js/core/theme.js?v=36"></script>
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=34"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=36"></script>
 
   <!-- Firebase v9 (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=34"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=34"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=34"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=34"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=36"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=36"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=36"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js?v=36"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js?v=36"></script>
 
-  <script defer src="../js/core/firebase-config.js?v=34"></script>
-  <script defer src="../js/core/auth.js?v=34"></script>
-  <script defer src="../js/modules/analytics.js?v=34"></script>
-  <script defer src="../js/core/firestore.js?v=34"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=34"></script>
-  <script defer src="../js/utils/notifications.js?v=34"></script>
-  <script defer src="../js/utils/utils.js?v=34"></script>
+  <script defer src="../js/core/firebase-config.js?v=36"></script>
+  <script defer src="../js/core/auth.js?v=36"></script>
+  <script defer src="../js/modules/analytics.js?v=36"></script>
+  <script defer src="../js/core/firestore.js?v=36"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js?v=36"></script>
+  <script defer src="../js/utils/notifications.js?v=36"></script>
+  <script defer src="../js/utils/utils.js?v=36"></script>
   <!-- JSZip for Torque CSV/ZIP import -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js?v=34"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js?v=36"></script>
   <!-- depois os ficheiros específicos da página -->
-  <script defer src="../js/utils/tripMetrics.js?v=35"></script>
-  <script defer src="../js/modules/veiculo.js?v=35"></script>
+  <script defer src="../js/utils/tripMetrics.js?v=36"></script>
+  <script defer src="../js/modules/veiculo.js?v=36"></script>
 </head>
 
 <body class="app-page" data-page="vehicle-detail">
@@ -738,6 +739,48 @@
 
         <!-- TAB 4: DIAGNí“STICOS (NEW) -->
         <div id="tab-diagnosticos" class="tab-panel hidden">
+          <section class="card" style="margin-bottom: 14px;">
+            <div class="card-body">
+              <h3 style="margin-top: 0;">Registar código de avaria</h3>
+              <p class="muted" style="font-size: 0.85rem;">
+                O Torque não envia DTC neste fluxo. O registo é manual; a descrição exata pode depender do fabricante.
+              </p>
+              <form id="manual-dtc-form" class="form-grid">
+                <label>
+                  <span class="muted">Código SAE</span>
+                  <input id="manual-dtc-code" type="text" maxlength="5" pattern="[PpBbCcUu][0-3][0-9A-Fa-f]{3}"
+                    placeholder="P0470" autocomplete="off" required />
+                </label>
+                <label>
+                  <span class="muted">Estado</span>
+                  <select id="manual-dtc-state" required>
+                    <option value="pendente">Pendente</option>
+                    <option value="confirmado">Confirmado</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="muted">Data</span>
+                  <input id="manual-dtc-date" type="date" required />
+                </label>
+                <button id="manual-dtc-save" class="btn btn-primary btn-sm" type="submit">Guardar código</button>
+                <p id="manual-dtc-message" class="form-message" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+          </section>
+
+          <section class="card" style="margin-bottom: 14px;">
+            <div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <strong>Baseline do veículo</strong>
+                <p class="muted" style="font-size:0.85rem; margin:4px 0 0;">
+                  Recalcula a mediana e o MAD com viagens válidas recentes, por exemplo após uma reparação.
+                </p>
+              </div>
+              <button id="btn-recalculate-baseline" class="btn btn-secondary btn-sm" type="button">Recalcular baseline</button>
+              <p id="baseline-message" class="form-message" role="status" aria-live="polite"></p>
+            </div>
+          </section>
+
           <div style="
                 display: flex;
                 justify-content: flex-end;

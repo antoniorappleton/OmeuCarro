@@ -1,0 +1,167 @@
+metadata:
+  generated: "2026-11-27"
+  source_spec: "Pasted text #1 (user attachment)"
+  target_plan: "docs/implementation/plan.md"
+summary:
+  total_requirements: 17
+  covered_requirements: 17
+  missing_requirements: 0
+  coverage_percentage: 100.0
+requirements:
+  - req_id: "REQ-001"
+    req_description: "Extrair PIDs OBD adicionais, respeitar ausência de dados e normalizar timestamp uma vez"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items: [{ item_id: "1.1", description: "Captura OBD, perfil e qualidade" }]
+    notes: ""
+  - req_id: "REQ-002"
+    req_description: "Guardar perfil de disponibilidade por veículo"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items: [{ item_id: "1.1", description: "Captura OBD, perfil e qualidade" }]
+    notes: ""
+  - req_id: "REQ-003"
+    req_description: "Calcular qualidade por viagem e excluir dados insuficientes"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items:
+        - { item_id: "1.1", description: "Captura OBD, perfil e qualidade" }
+        - { item_id: "2.1", description: "Regras, baseline e notificações" }
+    notes: ""
+  - req_id: "REQ-004"
+    req_description: "Regras declarativas com gating, persistência, histerese e cooldown por regra"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items: [{ item_id: "2.1", description: "Regras, baseline e notificações" }]
+    notes: ""
+  - req_id: "REQ-005"
+    req_description: "Alertas críticos em tempo real com critérios definidos e FCM"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items: [{ item_id: "2.1", description: "Regras, baseline e notificações" }]
+    notes: ""
+  - req_id: "REQ-006"
+    req_description: "Check-up indicativo por viagem, máximo três achados"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items:
+        - { item_id: "2.1", description: "Regras, baseline e notificações" }
+        - { item_id: "3.1", description: "Resumo e interface" }
+    notes: ""
+  - req_id: "REQ-007"
+    req_description: "Baseline mediana/MAD com cinco viagens válidas"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2"
+      phase_name: "Dados e regras"
+      items: [{ item_id: "2.1", description: "Regras, baseline e notificações" }]
+    notes: ""
+  - req_id: "REQ-008"
+    req_description: "Verificar DTCs do Torque e permitir registo manual se indisponíveis"
+    priority: "P2"
+    plan_mapping:
+      phase: "Phase-2/3"
+      phase_name: "Dados e regras / interface"
+      items:
+        - { item_id: "2.1", description: "Regras, baseline e notificações" }
+        - { item_id: "3.1", description: "Resumo e interface" }
+    notes: "A confirmar após inspeção do payload real/documentação Torque."
+  - req_id: "REQ-009"
+    req_description: "Resumo de saúde e detalhes técnicos progressivos"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-3"
+      phase_name: "Resumo e interface"
+      items: [{ item_id: "3.1", description: "Resumo e interface" }]
+    notes: ""
+  - req_id: "REQ-010"
+    req_description: "Visor ao vivo simples e sem distrações"
+    priority: "P2"
+    plan_mapping:
+      phase: "Phase-3"
+      phase_name: "Resumo e interface"
+      items: [{ item_id: "3.1", description: "Resumo e interface" }]
+    notes: ""
+  - req_id: "REQ-011"
+    req_description: "Painel PDF com filtros e conteúdo executivo"
+    priority: "P2"
+    plan_mapping:
+      phase: "Phase-5"
+      phase_name: "Relatório PDF"
+      items: [{ item_id: "5.1", description: "Exportação PDF" }]
+    notes: "Bloqueado até aprovação da revisão."
+  - req_id: "REQ-012"
+    req_description: "PDF A4 paginado, acessível, offline quando possível e com metodologia"
+    priority: "P2"
+    plan_mapping:
+      phase: "Phase-5"
+      phase_name: "Relatório PDF"
+      items: [{ item_id: "5.1", description: "Exportação PDF" }]
+    notes: "Bloqueado até aprovação da revisão."
+  - req_id: "REQ-013"
+    req_description: "Revisão crítica documentada com evidência e recomendações"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-4"
+      phase_name: "Revisão"
+      items: [{ item_id: "4.1", description: "Revisão crítica documentada" }]
+    notes: "A aprovação explícita precede a fase 5."
+  - req_id: "REQ-014"
+    req_description: "Testes unitários e de compatibilidade definidos pela especificação"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2/3/5"
+      phase_name: "Testes integrados em cada fase"
+      items:
+        - { item_id: "1.1", description: "Captura OBD, perfil e qualidade" }
+        - { item_id: "2.1", description: "Regras, baseline e notificações" }
+        - { item_id: "3.1", description: "Resumo e interface" }
+        - { item_id: "5.1", description: "Exportação PDF" }
+    notes: ""
+  - req_id: "REQ-015"
+    req_description: "Compatibilidade aditiva, limites de dados e separação diesel/gasolina"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-2/3/4"
+      phase_name: "Cross-cutting"
+      items:
+        - { item_id: "1.1", description: "Captura OBD, perfil e qualidade" }
+        - { item_id: "2.1", description: "Regras, baseline e notificações" }
+        - { item_id: "3.1", description: "Resumo e interface" }
+        - { item_id: "4.1", description: "Revisão crítica documentada" }
+    notes: ""
+  - req_id: "REQ-016"
+    req_description: "Atualizar versão da aplicação e Service Worker"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-6"
+      phase_name: "Release"
+      items: [{ item_id: "6.1", description: "Verificação final e release" }]
+    notes: "Versão Android Companion não se presume incluída."
+  - req_id: "REQ-017"
+    req_description: "Duplo check, commit, push e deploy no fim"
+    priority: "P1"
+    plan_mapping:
+      phase: "Phase-6"
+      phase_name: "Release"
+      items: [{ item_id: "6.1", description: "Verificação final e release" }]
+    notes: "Deploy autorizado pelo utilizador, após fases autorizadas e revisão."
+missing_requirements: []
+orphan_plan_items: []
+validation:
+  passed: true
+  errors: []
+  warnings:
+    - "Não existe constitution.md separado; restrições da especificação do utilizador foram usadas como princípios."

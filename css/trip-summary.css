@@ -354,3 +354,75 @@
   border: 1px solid var(--border-light);
   color: var(--color-text-muted);
 }
+
+.ts-health {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: var(--ts-tint);
+}
+
+.ts-health-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-main);
+}
+
+.ts-health-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.ts-health--good .ts-health-icon { color: var(--ts-good); }
+.ts-health--warning .ts-health-icon { color: var(--ts-ok); }
+.ts-health--critical .ts-health-icon { color: var(--ts-bad); }
+.ts-health--neutral .ts-health-icon { color: var(--color-text-muted); }
+
+.ts-quality {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.ts-health-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-health-finding {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+  color: var(--color-text-main);
+  font-size: 0.85rem;
+}
+
+.ts-health-finding details {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.ts-health-finding summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.ts-health-finding p {
+  margin: 5px 0 0;
+}

@@ -20,12 +20,19 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.TripMetrics = api;
 })(typeof self !== "undefined" ? self : this, function () {
-  const VERSION = 2;
+  const VERSION = 3;
 
   const GAP_MAX_S = 120; // intervalos maiores = falha de ligação; não integra
   const MOVING_KMH = 3; // abaixo disto o carro está parado
   const HIGH_RPM = 3000;
   const OVERSPEED_KMH = 120;
+  const OBD_PROFILE_FIELDS = Object.freeze([
+    "speed", "rpm", "coolant", "engineLoad", "intake", "maf", "voltage",
+    "l100", "tripDistance", "tripL100", "fuelUsedTrip", "avgSpeedMoving",
+    "torqueNm", "hpWheels", "fuelLevel", "fuelRemainingPct",
+    "distanceToEmptyKm", "boost", "map", "baro", "ambientTemp", "throttle",
+    "egrCmd", "egrErr", "dpfDiffPressure", "egt", "stft", "ltft",
+  ]);
   const WARM_COOLANT_C = 70;
   // Eventos bruscos (km/h por segundo). 11 km/h/s ≈ 0,31 g; 13 km/h/s ≈ 0,37 g
   const HARSH_ACCEL = 11;
@@ -54,6 +61,12 @@
       n: 0,
       firstTs: null,
       lastTs: null,
+      qualityStartedAt: null,
+      qualityCoveredSec: 0,
+      qualityIntervals: 0,
+      qualityGaps: 0,
+      intervalHistogram: Array(122).fill(0),
+      obdProfile: {},
       lastSpeed: null,
       lastHarshTs: 0,
 
@@ -91,6 +104,23 @@
     };
   }
 
+  function upgradeState(state, meta) {
+    if (!state) return createState(meta);
+    if (state.v === VERSION) return state;
+
+    return {
+      ...createState(state.meta || meta),
+      ...state,
+      v: VERSION,
+      qualityStartedAt: state.lastTs ?? state.firstTs,
+      qualityCoveredSec: 0,
+      qualityIntervals: 0,
+      qualityGaps: 0,
+      intervalHistogram: Array(122).fill(0),
+      obdProfile: state.obdProfile || {},
+    };
+  }
+
   // Delta de um contador acumulado do Torque (que pode ser reiniciado a meio).
   function counterDelta(last, val, maxStep) {
     if (val === null) return { last, add: 0 };
@@ -105,9 +135,44 @@
   // Processa UMA leitura. Devolve o próprio estado (mutado) por conveniência.
   function step(s, reading) {
     if (!reading) return s;
+    if (s.v !== VERSION) Object.assign(s, upgradeState(s, s.meta));
     const p = reading.parsed || reading;
     const ts = num(reading.timestamp);
     if (ts === null) return s;
+
+    if (s.qualityStartedAt === null) s.qualityStartedAt = ts;
+    for (const field of [
+      "speed",
+      "rpm",
+      "coolant",
+      "engineLoad",
+      "intake",
+      "maf",
+      "voltage",
+      "l100",
+      "tripDistance",
+      "tripL100",
+      "fuelUsedTrip",
+      "avgSpeedMoving",
+      "torqueNm",
+      "hpWheels",
+      "fuelLevel",
+      "fuelRemainingPct",
+      "distanceToEmptyKm",
+      "boost",
+      "map",
+      "baro",
+      "ambientTemp",
+      "throttle",
+      "egrCmd",
+      "egrErr",
+      "dpfDiffPressure",
+      "egt",
+      "stft",
+      "ltft",
+    ]) {
+      if (num(p[field]) !== null) s.obdProfile[field] = true;
+    }
 
     const speed = Math.max(0, num(p.speed) || 0);
     const rpm = num(p.rpm);
@@ -145,6 +210,13 @@
     // Integração no tempo (só para leituras em ordem e sem grandes falhas)
     if (s.lastTs !== null && ts > s.lastTs) {
       const dt = (ts - s.lastTs) / 1000;
+      const intervalBucket = Math.min(121, Math.round(dt));
+      s.intervalHistogram[intervalBucket] =
+        (s.intervalHistogram[intervalBucket] || 0) + 1;
+      s.qualityIntervals++;
+      if (dt > 10) s.qualityGaps++;
+      else s.qualityCoveredSec += dt;
+
       if (dt <= GAP_MAX_S) {
         const prevSpeed = s.lastSpeed ?? speed;
         s.distCalcKm += (((prevSpeed + speed) / 2) * dt) / 3600;
@@ -213,6 +285,54 @@
     if (v === null || v === undefined || !isFinite(v)) return null;
     const f = Math.pow(10, d);
     return Math.round(v * f) / f;
+  }
+
+  function medianInterval(s) {
+    if (!s.qualityIntervals) return null;
+    const lowerIndex = Math.floor((s.qualityIntervals - 1) / 2);
+    const upperIndex = Math.ceil((s.qualityIntervals - 1) / 2);
+    let seen = 0;
+    let lower = null;
+    let upper = null;
+    for (let bucket = 0; bucket < s.intervalHistogram.length; bucket++) {
+      const count = s.intervalHistogram[bucket] || 0;
+      if (lower === null && seen + count > lowerIndex) lower = bucket;
+      if (seen + count > upperIndex) {
+        upper = bucket;
+        break;
+      }
+      seen += count;
+    }
+    return lower === null || upper === null ? null : (lower + upper) / 2;
+  }
+
+  function qualityMetrics(s) {
+    const durationSec =
+      s.qualityStartedAt !== null && s.lastTs !== null
+        ? Math.max(0, (s.lastTs - s.qualityStartedAt) / 1000)
+        : 0;
+    const coverage =
+      durationSec > 0
+        ? Math.min(1, s.qualityCoveredSec / durationSec)
+        : 0;
+    const median = medianInterval(s);
+    const sufficient = coverage >= 0.6 && median !== null && median <= 5;
+    return {
+      cobertura: round(coverage, 3),
+      intervaloMedianoS: median,
+      gaps: s.qualityGaps,
+      duracaoAnalisadaS: round(durationSec, 1),
+      estado: sufficient ? "suficiente" : "insuficiente",
+    };
+  }
+
+  function aggregateObdProfile(trips, windowSize = 10) {
+    const recent = (trips || []).slice(0, windowSize);
+    const profile = {};
+    for (const field of OBD_PROFILE_FIELDS) {
+      profile[field] = recent.some((trip) => trip.obdProfile?.[field] === true);
+    }
+    return profile;
   }
 
   // Score 0–100: começa em 100 e desconta por hábitos que gastam combustível
@@ -297,6 +417,8 @@
       co2Kg: round(co2Kg, 1),
       fuelLevelStart: round(s.fuelLevelStart, 0),
       fuelLevelEnd: round(s.fuelLevelEnd, 0),
+      qualidadeDados: qualityMetrics(s),
+      obdProfile: { ...s.obdProfile },
       score,
       penalties,
       readings: s.n,
@@ -315,6 +437,8 @@
       custoEstimado: sum.cost || 0,
       score: sum.score,
       calcVersion: VERSION,
+      qualidadeDados: sum.qualidadeDados,
+      obdProfile: sum.obdProfile,
       metricas: {
         rpmMedio: sum.avgRpm,
         rpmMax: sum.maxRpm,
@@ -342,10 +466,12 @@
   return {
     VERSION,
     createState,
+    upgradeState,
     step,
     fromReadings,
     summarize,
     toTripFields,
+    aggregateObdProfile,
     isDiesel,
   };
 });

@@ -1323,6 +1323,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // âœ… Render health (sibling function, already in scope)
       renderVehicleHealth(veiculoId);
+      setupDiagnosticTools(veiculoId);
 
       // âœ… Setup UI (Definitions hoisted to init level)
       try {
@@ -2229,6 +2230,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const est = sum.fuelSource === "estimativa" ? "~" : "";
         const route = routeType(sum);
         const sc = scoreClass(sum.score);
+        const healthMarkup = renderTripHealth(trip);
 
         const hero = [
           ["Distância", nf(sum.distanceKm, 1), "km"],
@@ -2299,6 +2301,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 )
                 .join("")}
             </div>
+
+            ${healthMarkup}
 
             ${
               tips.length
@@ -2699,6 +2703,95 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
       }
+
+      function renderTripHealth(trip) {
+        const diagnostic = trip.diagnostico;
+        const quality = trip.qualidadeDados;
+        const states = {
+          normal: { icon: "✓", label: "Tudo normal nesta viagem", className: "good" },
+          a_vigiar: { icon: "!", label: "A vigiar", className: "warning" },
+          verificar: { icon: "!", label: "Recomenda-se verificar", className: "critical" },
+          dados_insuficientes: { icon: "?", label: "Dados insuficientes", className: "neutral" },
+          indisponivel: { icon: "—", label: "Sem dados OBD disponíveis", className: "neutral" },
+        };
+        const state = states[diagnostic?.estado] || {
+          icon: "i",
+          label: "Check-up ainda não disponível",
+          className: "neutral",
+        };
+        const qualityLabel = quality
+          ? `Qualidade OBD: ${Math.round((Number(quality.cobertura) || 0) * 100)}% · intervalo mediano ${
+              quality.intervaloMedianoS === null || quality.intervaloMedianoS === undefined
+                ? "indisponível"
+                : `${nf(quality.intervaloMedianoS, 1)} s`
+            } · ${Number(quality.gaps) || 0} falhas > 10 s`
+          : null;
+        const unitByRule = {
+          THERMOSTAT_OPEN: "°C",
+          WARMUP_SLOW: "min",
+          IAT_HIGH: "°C",
+          UNDERBOOST: "kPa",
+          MAF_DRIFT: "g/s",
+          HIGH_LOAD_CRUISE: "%",
+          DPF_PRESSURE: "kPa/(g/s)",
+          BATTERY_REST: "V",
+          CRANK_DIP: "V",
+          FUEL_TRIM: "%",
+        };
+        const titleByRule = {
+          THERMOSTAT_OPEN: "Temperatura do motor",
+          WARMUP_SLOW: "Aquecimento mais lento",
+          IAT_HIGH: "Temperatura de admissão elevada",
+          UNDERBOOST: "Pressão de turbo abaixo da referência",
+          MAF_DRIFT: "Desvio do caudal de ar",
+          HIGH_LOAD_CRUISE: "Carga elevada em velocidade de cruzeiro",
+          DPF_PRESSURE: "Pressão diferencial do DPF",
+          BATTERY_REST: "Tensão da bateria em repouso",
+          CRANK_DIP: "Queda de tensão no arranque",
+          FUEL_TRIM: "Correções de combustível",
+        };
+        const findings = Array.isArray(diagnostic?.achados)
+          ? diagnostic.achados.slice(0, 3)
+          : [];
+        const findingMarkup = findings
+          .map((finding) => {
+            const unit = unitByRule[finding.ruleId] || "";
+            const observed =
+              typeof finding.valorObservado === "number"
+                ? `${nf(finding.valorObservado, 1)} ${unit}`
+              : escapeHtml(String(finding.valorObservado || "—"));
+            const reference =
+              typeof finding.referencia === "number"
+              ? `${nf(finding.referencia, 1)} ${unit}`
+              : String(finding.referencia || "—");
+            const causes = (finding.possiveisCausas || [])
+              .map((cause) => escapeHtml(cause))
+              .join(", ");
+            return `<li class="ts-health-finding">
+              <strong>${escapeHtml(String(titleByRule[finding.ruleId] || finding.ruleId))}</strong>
+              <span>${escapeHtml(String(finding.acaoRecomendada || "Recomenda-se confirmar com diagnóstico profissional."))}</span>
+              <details>
+                <summary>Detalhes técnicos</summary>
+                <p>Observado: ${observed} · Referência: ${escapeHtml(reference)} · Confiança: ${escapeHtml(String(finding.confianca || "—"))}</p>
+                ${causes ? `<p>Possíveis causas: ${causes}</p>` : ""}
+              </details>
+            </li>`;
+          })
+          .join("");
+        const learningMarkup = (diagnostic?.aprendizagem || [])
+          .map((item) => `<p class="ts-note">${escapeHtml(item.mensagem || "A aprender o seu carro (0/5 viagens válidas).")}</p>`)
+          .join("");
+
+        return `<section class="ts-health">
+          <div class="ts-health-heading ts-health--${state.className}">
+            <span class="ts-health-icon" aria-hidden="true">${state.icon}</span>
+            <strong>${state.label}</strong>
+          </div>
+          ${qualityLabel ? `<span class="ts-quality">${escapeHtml(qualityLabel)}</span>` : ""}
+          ${findings.length ? `<ul class="ts-health-list">${findingMarkup}</ul>` : ""}
+          ${learningMarkup}
+        </section>`;
+      }
     }
 
     async function renderAnalyticsCard(veiculoId) {
@@ -3081,6 +3174,116 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function setupDiagnosticTools(veiculoId) {
+    const form = document.getElementById("manual-dtc-form");
+    const dateInput = document.getElementById("manual-dtc-date");
+    const formMessage = document.getElementById("manual-dtc-message");
+    const saveButton = document.getElementById("manual-dtc-save");
+    const baselineButton = document.getElementById("btn-recalculate-baseline");
+    const baselineMessage = document.getElementById("baseline-message");
+    if (dateInput && !dateInput.value) {
+      dateInput.value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10);
+    }
+
+    if (form && !form.dataset.bound) {
+      form.dataset.bound = "true";
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const codeInput = document.getElementById("manual-dtc-code");
+        const stateInput = document.getElementById("manual-dtc-state");
+        const code = codeInput?.value.trim().toUpperCase() || "";
+        const date = dateInput?.value || "";
+        if (!/^[PBCU][0-3][0-9A-F]{3}$/.test(code) || !date) {
+          if (formMessage) formMessage.textContent = "Indica um código SAE e uma data válidos.";
+          return;
+        }
+
+        const descriptions = {
+          P0470: {
+            descricao: "Circuito do sensor de pressão de escape",
+            relacionado: "DPF_PRESSURE",
+          },
+        };
+        const category = {
+          P: "trem motriz",
+          B: "carroçaria",
+          C: "chassis",
+          U: "comunicação entre módulos",
+        }[code[0]];
+        const genericType = code[1] === "0" ? "genérico SAE" : "específico do fabricante";
+        const known = descriptions[code];
+        const record = {
+          tipo: "dtc-manual",
+          codigo: code,
+          estadoDtc: stateInput?.value || "pendente",
+          dataRegisto: date,
+          descricao: known?.descricao || `Código de ${category} (${genericType})`,
+          nota: "A descrição exata depende do fabricante.",
+          possivelmenteRelacionado: known?.relacionado || null,
+          importedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (saveButton) saveButton.disabled = true;
+        if (formMessage) formMessage.textContent = "A guardar código…";
+        try {
+          await db
+            .collection("veiculos")
+            .doc(veiculoId)
+            .collection("diagnosticos")
+            .add(record);
+          form.reset();
+          if (dateInput) {
+            dateInput.value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+              .toISOString()
+              .slice(0, 10);
+          }
+          if (formMessage) formMessage.textContent = "Código guardado no histórico.";
+          await loadDiagnostics(veiculoId);
+        } catch (error) {
+          console.error("Erro ao guardar DTC manual:", error);
+          if (formMessage) formMessage.textContent = "Não foi possível guardar o código.";
+        } finally {
+          if (saveButton) saveButton.disabled = false;
+        }
+      });
+    }
+
+    if (baselineButton && !baselineButton.dataset.bound) {
+      baselineButton.dataset.bound = "true";
+      baselineButton.addEventListener("click", async () => {
+        if (typeof firebase.functions !== "function") {
+          if (baselineMessage) baselineMessage.textContent = "Serviço de baseline indisponível nesta página.";
+          return;
+        }
+        baselineButton.disabled = true;
+        if (baselineMessage) baselineMessage.textContent = "A recalcular com viagens válidas…";
+        try {
+          const recalculate = firebase
+            .app()
+            .functions("us-central1")
+            .httpsCallable("recalculateVehicleBaselines");
+          const response = await recalculate({ vehicleId: veiculoId });
+          const count = Number(response.data?.validTripCount) || 0;
+          if (baselineMessage) {
+            baselineMessage.textContent = `Baseline recalculada com ${count} viagens válidas.`;
+          }
+          await renderVehicleHealth(veiculoId);
+        } catch (error) {
+          console.error("Erro ao recalcular baseline:", error);
+          if (baselineMessage) {
+            baselineMessage.textContent = error.code === "functions/failed-precondition"
+              ? error.message
+              : "Não foi possível recalcular a baseline.";
+          }
+        } finally {
+          baselineButton.disabled = false;
+        }
+      });
+    }
+  }
+
   /**
    * Render Vehicle Health KPI and potential Warning Cards
    */
@@ -3090,7 +3293,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!elText || !elDot) return;
 
     try {
-      // 1. Get Latest Diagnostic
       const diagSnap = await db
         .collection("veiculos")
         .doc(veiculoId)
@@ -3099,7 +3301,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .limit(1)
         .get();
 
-      // 2. Get Latest Trips for Voltage/Coolant trends
       const tripSnap = await db
         .collection("veiculos")
         .doc(veiculoId)
@@ -3108,51 +3309,29 @@ document.addEventListener("DOMContentLoaded", () => {
         .limit(5)
         .get();
 
-      let diagStatus = "Healthy";
-      let batteryStatus = "OK";
-      let coolantStatus = "OK";
+      const recentTrip = tripSnap.docs
+        .map((doc) => doc.data())
+        .find((trip) => trip.diagnostico);
+      const state = recentTrip?.diagnostico?.estado;
+      const mode6 = diagSnap.empty ? null : diagSnap.docs[0].data();
+      const hasMode6Failures = Number(mode6?.summary?.failCount) > 0;
+      const presentation = hasMode6Failures || state === "verificar"
+        ? { text: "Verificar", dot: "status-error" }
+        : state === "a_vigiar" || Number(mode6?.summary?.nearLimitCount) > 0
+          ? { text: "A vigiar", dot: "status-warning" }
+          : state === "normal"
+            ? { text: "Tudo normal", dot: "status-success" }
+            : state === "dados_insuficientes"
+              ? { text: "Dados insuficientes", dot: "status-neutral" }
+              : state === "indisponivel"
+                ? { text: "Sem dados OBD", dot: "status-neutral" }
+                : { text: "A aguardar viagem", dot: "status-neutral" };
 
-      if (!diagSnap.empty) {
-        const diag = diagSnap.docs[0].data();
-        diagStatus = diag.summary?.estado || "Healthy";
-      }
-
-      if (!tripSnap.empty) {
-        const trips = tripSnap.docs.map((d) => d.data());
-        const avgVolt =
-          trips.reduce(
-            (acc, t) => acc + (t.metricas?.voltagemMedia || 12.6),
-            0,
-          ) / trips.length;
-        if (avgVolt < 11.9) batteryStatus = "Fraca";
-
-        const maxTemp = Math.max(
-          ...trips.map((t) => t.metricas?.temperaturaMax || 0),
-        );
-        if (maxTemp > 105) coolantStatus = "Quente";
-      }
-
-      // Synthesis
-      let finalState = "Saudável";
-      let dotClass = "status-success";
-
-      if (
-        diagStatus === "Warning" ||
-        batteryStatus === "Fraca" ||
-        coolantStatus === "Quente"
-      ) {
-        finalState = "Atenção";
-        dotClass = "status-warning";
-      }
-      if (diagStatus === "Critical") {
-        finalState = "Crítico";
-        dotClass = "status-error";
-      }
-
-      elText.textContent = finalState;
-      elDot.className = "status-indicator-dot " + dotClass;
+      elText.textContent = presentation.text;
+      elText.setAttribute("aria-label", `Saúde do veículo: ${presentation.text}`);
+      elDot.className = "status-indicator-dot " + presentation.dot;
     } catch (e) {
-      console.error("Error rendering health:", e);
+      console.error("Erro ao apresentar saúde do veículo:", e);
     }
   }
 
@@ -3182,6 +3361,45 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML = "";
       snap.forEach((doc) => {
         const data = doc.data();
+        if (data.tipo === "dtc-manual") {
+          const date = data.dataRegisto
+            ? new Date(`${data.dataRegisto}T12:00:00`).toLocaleDateString("pt-PT")
+            : "Data desconhecida";
+          const card = document.createElement("article");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                <div>
+                  <div class="muted" style="font-size:0.8rem;">${escapeHtml(date)} · Registo manual</div>
+                  <strong>${escapeHtml(data.codigo || "DTC")}</strong>
+                  <span class="badge badge-outline">${escapeHtml(data.estadoDtc || "pendente")}</span>
+                  <p style="margin:6px 0 0;">${escapeHtml(data.descricao || "Código de avaria OBD")}</p>
+                  <small class="muted">${escapeHtml(data.nota || "A descrição exata depende do fabricante.")}</small>
+                </div>
+                <button class="icon-btn-sm danger btn-del-diag" type="button" title="Eliminar código" aria-label="Eliminar código">
+                  <svg style="width:14px;height:14px;fill:currentColor;"><use href="../assets/icons/icons-unified.svg#icon-trash"></use></svg>
+                </button>
+              </div>
+              ${
+                data.possivelmenteRelacionado
+                  ? `<p class="muted" style="font-size:0.8rem;margin-bottom:0;">Possivelmente relacionado com ${escapeHtml(data.possivelmenteRelacionado)}.</p>`
+                  : ""
+              }
+            </div>`;
+          card.querySelector(".btn-del-diag").onclick = async () => {
+            if (!confirm("Eliminar este código registado?")) return;
+            try {
+              await deleteDiagnostico(veiculoId, doc.id);
+              await loadDiagnostics(veiculoId);
+            } catch (error) {
+              console.error("Erro ao eliminar DTC:", error);
+              alert("Erro ao eliminar o código.");
+            }
+          };
+          container.appendChild(card);
+          return;
+        }
         const date = data.importedAt
           ? data.importedAt.toDate().toLocaleString()
           : "Data desconhecida";

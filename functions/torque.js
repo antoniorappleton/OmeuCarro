@@ -2,6 +2,11 @@ const { onRequest } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
+const { evaluateRealtime } = require("./diagnostics");
+const {
+  normalizeTimestamp,
+  parseTorquePayload,
+} = require("./torqueParser");
 
 // Garantir inicialização do admin
 if (!admin.apps.length) admin.initializeApp();
@@ -10,32 +15,6 @@ if (!admin.apps.length) admin.initializeApp();
 // NOTA: É necessário criar este segredo no Firebase: firebase functions:secrets:set TORQUE_UPLOAD_KEY
 // Para emuladores locais, criar um ficheiro .secret.local na pasta functions
 const apiKeySecret = defineSecret("TORQUE_UPLOAD_KEY");
-
-// Mapas de PIDs padrão (fallback)
-// Suporta array de strings para tentar várias opções (ordem de preferência)
-const DEFAULT_PIDS = {
-  speed: ["kd", "k0d", "kff1001", "kff1007"], // km/h (OBD, GPS Speed, etc)
-  rpm: ["kc", "k0c"], // rpm
-  odometer: ["a6", "kff1201"], // km
-  fuelLevel: ["2f", "k2f", "k02f"], // %
-  latitude: ["kff1006"],
-  longitude: ["kff1005"],
-  coolant: ["k5", "05", "k05"], // °C
-  intakeTemp: ["kf", "0f", "k0f"], // °C
-  maf: ["k10", "10"], // g/s
-  engineLoad: ["k4", "04", "k04"], // %
-  voltage: ["k42", "42", "kff1238"], // V
-  tripDistance: ["kff1204"], // km
-  tripL100: ["kff1208"], // Trip average L/100km (kff1203 é km/L instantâneo — não usar)
-  l100: ["kff5203"], // L/100km média de longo prazo do Torque
-  torqueNm: ["kff1225"], // Nm
-  hpWheels: ["kff1226"], // hp nas rodas (kff1220/1221 são acelerómetros)
-  avgSpeedMoving: ["kff1263"], // km/h média da viagem (só em movimento)
-  fuelRemainingPct: ["k2f", "2f"], // Re-using fuelLevel if specific PID missing
-  distanceToEmptyKm: ["kff126a"], // autonomy
-  fuelUsedTrip: ["kff1271"], // Liters
-  boost: ["kff12a5"], // kPa or PSI depending on Torque settings
-};
 
 /**
  * Função para receber dados do Torque Pro
@@ -112,21 +91,13 @@ exports.uploadTorqueData = onRequest(
       // Timestamp do registo
       const receivedAt = admin.firestore.Timestamp.now(); // Usar relógio do servidor Firestore
 
-      // Normalização de Timestamp (Torque Pro pode enviar epoch em segundos)
-      let timestamp = safeParams.time
-        ? Number(safeParams.time)
-        : receivedAt.toMillis();
-      if (timestamp < 10000000000) {
-        // Se o valor for pequeno, provavelmente está em segundos (ex: 1.6e9 vs 1.6e12)
-        timestamp *= 1000;
-      }
-      if (timestamp && timestamp < 10000000000) {
-        // Menos de 10 dígitos -> provavelmente segundos
-        timestamp = timestamp * 1000;
-      }
+      const timestamp = normalizeTimestamp(
+        safeParams.time,
+        receivedAt.toMillis(),
+      );
 
       // 5. Iniciar Transação (Concorrência Segura)
-      await db.runTransaction(async (t) => {
+      const notifications = await db.runTransaction(async (t) => {
         const vSnap = await t.get(vehicleRef);
 
         if (!vSnap.exists) {
@@ -136,103 +107,8 @@ exports.uploadTorqueData = onRequest(
         const vData = vSnap.data();
         const pidMap = vData.pidMap || {};
 
-        // Helper para extrair valor numérico com fallback
-        const getVal = (fieldKey) => {
-          // Helper local para parsear float aceitando virgula
-          const parseNum = (v) => {
-            if (v === undefined || v === null || v === "" || v === "-")
-              return null;
-            if (typeof v === "number") return v;
-            const s = String(v).replace(",", ".");
-            const n = parseFloat(s);
-            return isNaN(n) ? null : n;
-          };
-
-          // Opção 1: Mapeamento explícito no veículo
-          if (pidMap[fieldKey]) {
-            const val = safeParams[pidMap[fieldKey]];
-            const num = parseNum(val);
-            if (num !== null) return num;
-          }
-
-          // Opção 2: PIDs padrão (tenta lista de short codes)
-          const defaults = DEFAULT_PIDS[fieldKey] || [];
-          for (const pid of defaults) {
-            const val = safeParams[pid];
-            const num = parseNum(val);
-            if (num !== null) return num;
-          }
-
-          // Opção 3: Procurar por nomes completos do Torque (fuzzy search)
-          const fuzzyPatterns = {
-            speed: ["speed", "km/h"],
-            rpm: ["engine", "rpm"],
-            odometer: ["odometer", "km"],
-            fuelLevel: ["fuel level", "%"],
-            coolant: ["coolant", "temperature"],
-            intakeTemp: ["intake", "temperature"],
-            maf: ["mass air flow", "g/s"],
-            engineLoad: ["engine load", "%"],
-            voltage: ["voltage", "v"],
-            l100: ["l/100", "average"], // Generic l100
-
-            // --- NOVOS CAMPOS (Plan v2) ---
-            tripDistance: ["trip distance", "km"],
-            tripL100: ["trip average", "l/100"],
-            fuelUsedTrip: ["fuel used", "trip"],
-            avgSpeedMoving: ["average", "speed", "moving"],
-            torqueNm: ["torque", "nm"],
-            hpWheels: ["horsepower", "wheels"],
-            fuelRemainingPct: ["fuel remaining", "%"],
-            distanceToEmptyKm: ["distance to empty", "km"],
-            boost: ["boost", "pressure"],
-            fuelUsedTrip: ["fuel used", "trip"],
-          };
-
-          const patterns = fuzzyPatterns[fieldKey];
-          if (patterns) {
-            for (const key of Object.keys(safeParams)) {
-              const lowerKey = key.toLowerCase();
-              if (patterns.every((p) => lowerKey.includes(p.toLowerCase()))) {
-                const val = safeParams[key];
-                const num = parseNum(val);
-                if (num !== null) return num;
-              }
-            }
-          }
-
-          return null;
-        };
-
-        const parsed = {
-          speed: getVal("speed"),
-          rpm: getVal("rpm"),
-          odometer: getVal("odometer"),
-          fuelLevel: getVal("fuelLevel"),
-          coolant: getVal("coolant"),
-          engineLoad: getVal("engineLoad"),
-          intake: getVal("intakeTemp"),
-          maf: getVal("maf"),
-          voltage: getVal("voltage"),
-          l100: getVal("l100"),
-
-          // Novos campos para Viagens e UI
-          tripDistance: getVal("tripDistance"),
-          tripL100: getVal("tripL100"),
-          fuelUsedTrip: getVal("fuelUsedTrip"),
-          avgSpeedMoving: getVal("avgSpeedMoving"),
-          torqueNm: getVal("torqueNm"),
-          hpWheels: getVal("hpWheels"),
-          fuelRemainingPct: getVal("fuelRemainingPct"),
-          distanceToEmptyKm: getVal("distanceToEmptyKm"),
-          boost: getVal("boost"),
-          fuelUsed: getVal("fuelUsedTrip"),
-
-          location: null,
-        };
-
-        const lat = getVal("latitude");
-        const lon = getVal("longitude");
+        const { parsed, latitude: lat, longitude: lon } =
+          parseTorquePayload(safeParams, pidMap);
         if (lat !== null && lon !== null && (lat !== 0 || lon !== 0)) {
           parsed.location = new admin.firestore.GeoPoint(lat, lon);
         }
@@ -265,42 +141,13 @@ exports.uploadTorqueData = onRequest(
           lastObdUpdate: receivedAt,
         };
 
-        // --- Alertas em Tempo Real (Cooldown 30 min) ---
-        const lastAlarmAt = vData.lastAlarmAt
-          ? vData.lastAlarmAt.toMillis()
-          : 0;
-        const nowMs = receivedAt.toMillis();
-        const alarmCooldown = 30 * 60 * 1000; // 30 minutos
-
-        if (nowMs - lastAlarmAt > alarmCooldown) {
-          let alarmTitle = "";
-          let alarmBody = "";
-
-          if (parsed.coolant !== null && parsed.coolant > 105) {
-            alarmTitle = "⚠️ Alerta: Motor Quente!";
-            alarmBody = `A temperatura do motor atingiu ${Math.round(parsed.coolant)}°C no ${vData.nome || "seu veículo"}.`;
-          } else if (
-            parsed.voltage !== null &&
-            parsed.voltage > 0 &&
-            parsed.voltage < 11.8
-          ) {
-            alarmTitle = "⚠️ Alerta: Bateria Fraca!";
-            alarmBody = `A voltagem da bateria baixou para ${parsed.voltage.toFixed(1)}V no ${vData.nome || "seu veículo"}.`;
-          }
-
-          if (alarmTitle) {
-            // Enviar notificação (fora do await da transação para não atrasar a escrita)
-            // No entanto, como queremos ser robustos, usamos await aqui se não for crítico
-            console.log(`[Torque] Disparando alerta: ${alarmTitle}`);
-            sendNotificationToUser(vData.userId, alarmTitle, alarmBody, {
-              veiculoId: vehicleId,
-              type: "alarm",
-              url: `/pages/veiculo.html?id=${vehicleId}`,
-            }).catch((e) => console.error("[FCM Alarm Error]", e));
-
-            updates.lastAlarmAt = receivedAt;
-          }
-        }
+        const alertResult = evaluateRealtime(
+          parsed,
+          vData.alertState || {},
+          timestamp,
+          vData.nome || "veículo",
+        );
+        updates.alertState = alertResult.state;
 
         // --- Lógica de Odómetro Robusta ---
         if (
@@ -413,7 +260,24 @@ exports.uploadTorqueData = onRequest(
           `[Torque] UPDATE: ${vehicleId} | Odo: ${parsed.odometer} | Updates:`,
           JSON.stringify(updates),
         );
+        return {
+          userId: vData.userId,
+          alerts: alertResult.notifications,
+        };
       });
+
+      await Promise.all(
+        notifications.alerts.map((alert) =>
+          sendNotificationToUser(notifications.userId, alert.title, alert.body, {
+            veiculoId: vehicleId,
+            type: "alarm",
+            ruleId: alert.ruleId,
+            url: `/pages/veiculo.html?id=${vehicleId}`,
+          }).catch((error) =>
+            console.error(`[FCM Alarm Error] ${alert.ruleId}:`, error),
+          ),
+        ),
+      );
 
       return res.status(200).send("OK");
     } catch (error) {

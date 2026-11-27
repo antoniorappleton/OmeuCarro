@@ -3,9 +3,13 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v35";
-const RUNTIME_CACHE = "l100-runtime-v35";
-const TILES_CACHE = "l100-tiles-v35";
+const STATIC_CACHE = "l100-static-v36";
+const RUNTIME_CACHE = "l100-runtime-v36";
+const TILES_CACHE = "l100-tiles-v36";
+const OFFLINE_EXTERNAL_ASSETS = new Set([
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
+]);
 
 // Lista dos ficheiros essenciais para funcionar offline (APP SHELL)
 const APP_SHELL = [
@@ -28,6 +32,7 @@ const APP_SHELL = [
   "./css/mapa.css",
   "./css/trip-live.css",
   "./css/trip-summary.css",
+  "./css/trip-report.css",
   "./css/trip-calculator.css",
   "./css/abastecimentos.css",
   "./js/core/firebase-config.js",
@@ -46,11 +51,14 @@ const APP_SHELL = [
   "./js/modules/abastecer.js",
   "./js/modules/perfil.js",
   "./js/modules/analytics.js",
+  "./js/modules/tripReport.js",
   "./js/utils/utils.js",
   "./js/utils/tripMetrics.js",
+  "./js/utils/tripReportData.js",
   "./js/utils/service-worker-register.js",
   "./assets/img/logo-icon192.png",
   "./assets/img/logo-icon512.png",
+  ...OFFLINE_EXTERNAL_ASSETS,
   "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
 ];
 
@@ -88,7 +96,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v35");
+  console.log("[SW] Activate v36");
 
   event.waitUntil(
     caches.keys().then((names) =>
@@ -134,6 +142,26 @@ self.addEventListener("fetch", (event) => {
         } catch {
           return cached;
         }
+      }),
+    );
+    return;
+  }
+
+  if (OFFLINE_EXTERNAL_ASSETS.has(request.url)) {
+    event.respondWith(
+      caches.open(STATIC_CACHE).then(async (cache) => {
+        const cached = await cache.match(request);
+        const network = fetch(request)
+          .then((response) => {
+            if (response.ok) cache.put(request, response.clone());
+            return response;
+          })
+          .catch(() => null);
+        return (
+          cached ||
+          (await network) ||
+          new Response("Offline: PDF library is not cached.", { status: 503 })
+        );
       }),
     );
     return;
