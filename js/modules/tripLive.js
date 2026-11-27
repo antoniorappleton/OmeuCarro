@@ -11,6 +11,7 @@
   const RPM_REDLINE = 6500; // valor por defeito para a barra de RPM
   const STALE_AFTER_MS = 20000; // sem leitura há mais de 20s -> "sem sinal"
   const TRIP_GAP_MS = 15 * 60 * 1000; // pausa maior = nova viagem (sem sessionId)
+  const CONTINUE_WINDOW_MS = 5 * 60 * 1000; // sessão nova a menos disto = mesma viagem (igual ao servidor)
   const HISTORY_WINDOW_MS = 6 * 60 * 60 * 1000;
 
   const veiculoId = new URLSearchParams(window.location.search).get("id");
@@ -71,7 +72,9 @@
     const speed = parsed?.speed ?? null;
     const rpm = parsed?.rpm ?? null;
     const coolant = parsed?.coolant ?? null;
+    const intake = parsed?.intake ?? null;
     const voltage = parsed?.voltage ?? null;
+    const fuelLevel = parsed?.fuelLevel ?? null;
 
     el.speed.textContent = fmt(speed, 0);
     el.rpmValue.textContent = fmt(rpm, 0);
@@ -80,12 +83,23 @@
     el.rpmFill.classList.toggle("redline", pct >= 85);
 
     setTile("tile-coolant", fmt(coolant, 0), "°C");
+    setTile("tile-intake", fmt(intake, 0), "°C");
     setTile("tile-voltage", fmt(voltage, 1), "V");
+    setTile("tile-fuellevel", fmt(fuelLevel, 0), "%");
 
     const coolantWrap = $("tile-coolant-wrap");
     if (coolantWrap) {
       coolantWrap.classList.toggle("danger", coolant !== null && coolant >= 108);
       coolantWrap.classList.toggle("cold", coolant !== null && coolant < 70);
+    }
+    // Com o motor a trabalhar, abaixo de 13 V o alternador não está a carregar bem
+    const voltageWrap = $("tile-voltage-wrap");
+    if (voltageWrap) {
+      const running = rpm !== null && rpm > 400;
+      voltageWrap.classList.toggle(
+        "warn",
+        voltage !== null && voltage > 0 && (running ? voltage < 13 : voltage < 11.8),
+      );
     }
   }
 
@@ -162,9 +176,17 @@
   }
 
   // ---------- Viagem ----------
+  // Mesma regra do servidor (functions/tripDetector.js): a mesma sessão é a
+  // mesma viagem; uma sessão nova só abre viagem nova após 5 min sem dados.
+  function sameTrip(cur, prev) {
+    const gap = cur.timestamp - prev.timestamp;
+    if (cur.sessionId && prev.sessionId && cur.sessionId === prev.sessionId) return true;
+    if (cur.sessionId && prev.sessionId) return gap <= CONTINUE_WINDOW_MS;
+    return gap <= TRIP_GAP_MS;
+  }
+
   function isSameTrip(reading, prevTs) {
-    if (reading.sessionId && lastSessionId) return reading.sessionId === lastSessionId;
-    return reading.timestamp - prevTs <= TRIP_GAP_MS;
+    return sameTrip(reading, { timestamp: prevTs, sessionId: lastSessionId });
   }
 
   function applyReading(reading) {
@@ -193,11 +215,7 @@
       for (let i = all.length - 1; i > 0; i--) {
         const cur = all[i];
         const prev = all[i - 1];
-        const sameSession =
-          cur.sessionId && prev.sessionId
-            ? cur.sessionId === prev.sessionId
-            : cur.timestamp - prev.timestamp <= TRIP_GAP_MS;
-        if (!sameSession) break;
+        if (!sameTrip(cur, prev)) break;
         startIdx = i - 1;
       }
       const segment = startIdx >= 0 ? all.slice(startIdx) : [];
