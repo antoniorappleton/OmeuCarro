@@ -4,7 +4,7 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
 
 ---
 
-## ✨ Funcionalidades Principais (v3.1)
+## ✨ Funcionalidades Principais (v3.1.1)
 
 - **💎 Design Premium Glassmórfico**: Interface moderna e fluida com suporte total nativo para **Modo Escuro** e **Modo Claro**, focada na facilidade de uso em dispositivos móveis.
 - **🖥️ Sidebar de Gestão de Frotas (Desktop)**: Navegação lateral persistente em ecrãs grandes, com painéis do mapa e KPIs reformulados para um visual profissional de gestão de frota; em mobile mantém-se a navegação por rodapé.
@@ -20,7 +20,7 @@ O **L100** é uma Progressive Web App (PWA) de alto desempenho desenhada para si
 - **⛽ Histórico de Abastecimentos**: Análise detalhada de consumos (L/100km) e gastos acumulados por veículo.
 - **📱 PWA de Última Geração**:
   - Instalação como App nativa.
-  - Suporte Offline robusto com Service Worker v36, incluindo os recursos de exportação PDF em cache quando instalados online.
+  - Suporte Offline robusto com Service Worker v37, incluindo os recursos de exportação PDF em cache quando instalados online.
   - Cache versionado para atualizações instantâneas.
 
 ---

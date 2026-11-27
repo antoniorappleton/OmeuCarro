@@ -3,9 +3,9 @@
 // ===============================
 
 // Aumenta a versão sempre que fizeres deploy
-const STATIC_CACHE = "l100-static-v36";
-const RUNTIME_CACHE = "l100-runtime-v36";
-const TILES_CACHE = "l100-tiles-v36";
+const STATIC_CACHE = "l100-static-v37";
+const RUNTIME_CACHE = "l100-runtime-v37";
+const TILES_CACHE = "l100-tiles-v37";
 const OFFLINE_EXTERNAL_ASSETS = new Set([
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js",
@@ -96,7 +96,7 @@ self.addEventListener("install", (event) => {
 // ACTIVATE – Limpa caches antigas
 // ===============================
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activate v36");
+  console.log("[SW] Activate v37");
 
   event.waitUntil(
     caches.keys().then((names) =>
