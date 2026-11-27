@@ -3,6 +3,7 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const { defineSecret } = require("firebase-functions/params");
 const { evaluateRealtime } = require("./diagnostics");
+const { sendNotificationToUser } = require("./notify_utils");
 const {
   normalizeTimestamp,
   parseTorquePayload,

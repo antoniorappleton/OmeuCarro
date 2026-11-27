@@ -8,6 +8,11 @@ const TripDiagnostics = require("./diagnostics");
 if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
+// Uma sessão nova que chega até 5 min depois da última leitura da viagem ativa
+// continua essa viagem (app reiniciada, troca Torque <-> Companion, ou ID de
+// fallback que muda à hora certa) em vez de a partir em duas.
+const CONTINUE_WINDOW_MS = 5 * 60 * 1000;
+
 /**
  * Processa cada leitura OBD para criar ou atualizar o registo de viagens.
  *
@@ -78,6 +83,29 @@ exports.processOBDReading = onDocumentCreated(
         }
       }
 
+      if (!tripDoc.exists) {
+        if (!vehicleData) {
+          const vehicleSnap = await t.get(vehicleRef);
+          vehicleData = vehicleSnap.exists ? vehicleSnap.data() : {};
+        }
+        const activeId = vehicleData.activeObdTripId;
+        if (activeId && activeId !== tripId) {
+          const activeRef = tripRef.doc(activeId);
+          const activeDoc = await t.get(activeRef);
+          const active = activeDoc.exists ? activeDoc.data() : null;
+          if (
+            active &&
+            !active.tripFinalizadaEm &&
+            Math.abs(timestamp - Number(active.lastUpdate || 0)) <= CONTINUE_WINDOW_MS
+          ) {
+            tripId = activeId;
+            tripDocRef = activeRef;
+            tripDoc = activeDoc;
+            tripData = active;
+          }
+        }
+      }
+
       let isNewTrip = !tripDoc.exists;
 
       if (tripData && !reading.sessionId) {
@@ -110,6 +138,14 @@ exports.processOBDReading = onDocumentCreated(
       const sum = TripMetrics.summarize(state);
       const fields = TripMetrics.toTripFields(sum);
 
+      // Uma viagem pode juntar várias sessões; com mais de uma, sessionId fica
+      // null e a finalização lê as leituras pela janela temporal.
+      const previousSessions = isNewTrip
+        ? []
+        : tripData.sessionIds || (tripData.sessionId ? [tripData.sessionId] : []);
+      const sessionIds = [
+        ...new Set([...previousSessions, ...(reading.sessionId ? [reading.sessionId] : [])]),
+      ];
       const doc = {
         ...fields,
         acc: state,
@@ -117,8 +153,9 @@ exports.processOBDReading = onDocumentCreated(
         dataFim: Timestamp.fromMillis(state.lastTs),
         lastUpdate: state.lastTs,
         origem: "torque-auto",
-        sessionId: reading.sessionId || null,
-        deviceId: reading.deviceId || null,
+        sessionIds,
+        sessionId: sessionIds.length === 1 ? sessionIds[0] : null,
+        deviceId: (isNewTrip ? null : tripData.deviceId) || reading.deviceId || null,
       };
       if (isNewTrip) doc.notified = false;
 
