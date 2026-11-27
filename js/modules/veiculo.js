@@ -336,8 +336,16 @@ document.addEventListener("DOMContentLoaded", () => {
     el.msg.className = "form-message " + (type ? `form-message--${type}` : "");
   }
 
+  // `data` pode ser texto ("2026-11-27" / ISO com hora) ou Timestamp do Firestore.
+  function fmtRecordDate(value) {
+    if (!value) return "";
+    const d = typeof value.toDate === "function" ? value.toDate() : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString("pt-PT");
+  }
+
   function escapeHtml(s) {
-    return (s || "").replace(
+    return String(s ?? "").replace(
       /[&<>"']/g,
       (m) =>
         ({
@@ -845,7 +853,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="record-meta-row">
             <div class="record-meta-item">
               <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-calendar"></use></svg>
-              <span>${escapeHtml(r.data || "—")}</span>
+              <span>${escapeHtml(fmtRecordDate(r.data) || "—")}</span>
             </div>
             ${
               r.km
@@ -2221,6 +2229,96 @@ document.addEventListener("DOMContentLoaded", () => {
         return notes.join(" ");
       }
 
+      // Check-up de saúde da viagem (diagnóstico calculado no servidor ao finalizar)
+      function renderTripHealth(trip) {
+        const diagnostic = trip.diagnostico;
+        const quality = trip.qualidadeDados;
+        const states = {
+          normal: { icon: "✓", label: "Tudo normal nesta viagem", className: "good" },
+          a_vigiar: { icon: "!", label: "A vigiar", className: "warning" },
+          verificar: { icon: "!", label: "Recomenda-se verificar", className: "critical" },
+          dados_insuficientes: { icon: "?", label: "Dados insuficientes", className: "neutral" },
+          indisponivel: { icon: "—", label: "Sem dados OBD disponíveis", className: "neutral" },
+        };
+        const state = states[diagnostic?.estado] || {
+          icon: "i",
+          label: "Check-up ainda não disponível",
+          className: "neutral",
+        };
+        const qualityLabel = quality
+          ? `Qualidade OBD: ${Math.round((Number(quality.cobertura) || 0) * 100)}% · intervalo mediano ${
+              quality.intervaloMedianoS === null || quality.intervaloMedianoS === undefined
+                ? "indisponível"
+                : `${nf(quality.intervaloMedianoS, 1)} s`
+            } · ${Number(quality.gaps) || 0} falhas > 10 s`
+          : null;
+        const unitByRule = {
+          THERMOSTAT_OPEN: "°C",
+          WARMUP_SLOW: "min",
+          IAT_HIGH: "°C",
+          UNDERBOOST: "kPa",
+          MAF_DRIFT: "g/s",
+          HIGH_LOAD_CRUISE: "%",
+          DPF_PRESSURE: "kPa/(g/s)",
+          BATTERY_REST: "V",
+          CRANK_DIP: "V",
+          FUEL_TRIM: "%",
+        };
+        const titleByRule = {
+          THERMOSTAT_OPEN: "Temperatura do motor",
+          WARMUP_SLOW: "Aquecimento mais lento",
+          IAT_HIGH: "Temperatura de admissão elevada",
+          UNDERBOOST: "Pressão de turbo abaixo da referência",
+          MAF_DRIFT: "Desvio do caudal de ar",
+          HIGH_LOAD_CRUISE: "Carga elevada em velocidade de cruzeiro",
+          DPF_PRESSURE: "Pressão diferencial do DPF",
+          BATTERY_REST: "Tensão da bateria em repouso",
+          CRANK_DIP: "Queda de tensão no arranque",
+          FUEL_TRIM: "Correções de combustível",
+        };
+        const findings = Array.isArray(diagnostic?.achados)
+          ? diagnostic.achados.slice(0, 3)
+          : [];
+        const findingMarkup = findings
+          .map((finding) => {
+            const unit = unitByRule[finding.ruleId] || "";
+            const observed =
+              typeof finding.valorObservado === "number"
+                ? `${nf(finding.valorObservado, 1)} ${unit}`
+              : escapeHtml(String(finding.valorObservado || "—"));
+            const reference =
+              typeof finding.referencia === "number"
+              ? `${nf(finding.referencia, 1)} ${unit}`
+              : String(finding.referencia || "—");
+            const causes = (finding.possiveisCausas || [])
+              .map((cause) => escapeHtml(cause))
+              .join(", ");
+            return `<li class="ts-health-finding">
+              <strong>${escapeHtml(String(titleByRule[finding.ruleId] || finding.ruleId))}</strong>
+              <span>${escapeHtml(String(finding.acaoRecomendada || "Recomenda-se confirmar com diagnóstico profissional."))}</span>
+              <details>
+                <summary>Detalhes técnicos</summary>
+                <p>Observado: ${observed} · Referência: ${escapeHtml(reference)} · Confiança: ${escapeHtml(String(finding.confianca || "—"))}</p>
+                ${causes ? `<p>Possíveis causas: ${causes}</p>` : ""}
+              </details>
+            </li>`;
+          })
+          .join("");
+        const learningMarkup = (diagnostic?.aprendizagem || [])
+          .map((item) => `<p class="ts-note">${escapeHtml(item.mensagem || "A aprender o seu carro (0/5 viagens válidas).")}</p>`)
+          .join("");
+
+        return `<section class="ts-health">
+          <div class="ts-health-heading ts-health--${state.className}">
+            <span class="ts-health-icon" aria-hidden="true">${state.icon}</span>
+            <strong>${state.label}</strong>
+          </div>
+          ${qualityLabel ? `<span class="ts-quality">${escapeHtml(qualityLabel)}</span>` : ""}
+          ${findings.length ? `<ul class="ts-health-list">${findingMarkup}</ul>` : ""}
+          ${learningMarkup}
+        </section>`;
+      }
+
       // ---------- Renderização do resumo ----------
       const tripCharts = new Map(); // container -> Chart
 
@@ -2634,7 +2732,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="record-meta-row">
             <div class="record-meta-item">
                <svg class="icon"><use href="../assets/icons/icons-unified.svg#icon-calendar"></use></svg>
-               <span>${escapeHtml(a.data || "")}</span>
+               <span>${escapeHtml(fmtRecordDate(a.data))}</span>
             </div>
           </div>
 
@@ -2702,95 +2800,6 @@ document.addEventListener("DOMContentLoaded", () => {
             location.reload();
           }
         });
-      }
-
-      function renderTripHealth(trip) {
-        const diagnostic = trip.diagnostico;
-        const quality = trip.qualidadeDados;
-        const states = {
-          normal: { icon: "✓", label: "Tudo normal nesta viagem", className: "good" },
-          a_vigiar: { icon: "!", label: "A vigiar", className: "warning" },
-          verificar: { icon: "!", label: "Recomenda-se verificar", className: "critical" },
-          dados_insuficientes: { icon: "?", label: "Dados insuficientes", className: "neutral" },
-          indisponivel: { icon: "—", label: "Sem dados OBD disponíveis", className: "neutral" },
-        };
-        const state = states[diagnostic?.estado] || {
-          icon: "i",
-          label: "Check-up ainda não disponível",
-          className: "neutral",
-        };
-        const qualityLabel = quality
-          ? `Qualidade OBD: ${Math.round((Number(quality.cobertura) || 0) * 100)}% · intervalo mediano ${
-              quality.intervaloMedianoS === null || quality.intervaloMedianoS === undefined
-                ? "indisponível"
-                : `${nf(quality.intervaloMedianoS, 1)} s`
-            } · ${Number(quality.gaps) || 0} falhas > 10 s`
-          : null;
-        const unitByRule = {
-          THERMOSTAT_OPEN: "°C",
-          WARMUP_SLOW: "min",
-          IAT_HIGH: "°C",
-          UNDERBOOST: "kPa",
-          MAF_DRIFT: "g/s",
-          HIGH_LOAD_CRUISE: "%",
-          DPF_PRESSURE: "kPa/(g/s)",
-          BATTERY_REST: "V",
-          CRANK_DIP: "V",
-          FUEL_TRIM: "%",
-        };
-        const titleByRule = {
-          THERMOSTAT_OPEN: "Temperatura do motor",
-          WARMUP_SLOW: "Aquecimento mais lento",
-          IAT_HIGH: "Temperatura de admissão elevada",
-          UNDERBOOST: "Pressão de turbo abaixo da referência",
-          MAF_DRIFT: "Desvio do caudal de ar",
-          HIGH_LOAD_CRUISE: "Carga elevada em velocidade de cruzeiro",
-          DPF_PRESSURE: "Pressão diferencial do DPF",
-          BATTERY_REST: "Tensão da bateria em repouso",
-          CRANK_DIP: "Queda de tensão no arranque",
-          FUEL_TRIM: "Correções de combustível",
-        };
-        const findings = Array.isArray(diagnostic?.achados)
-          ? diagnostic.achados.slice(0, 3)
-          : [];
-        const findingMarkup = findings
-          .map((finding) => {
-            const unit = unitByRule[finding.ruleId] || "";
-            const observed =
-              typeof finding.valorObservado === "number"
-                ? `${nf(finding.valorObservado, 1)} ${unit}`
-              : escapeHtml(String(finding.valorObservado || "—"));
-            const reference =
-              typeof finding.referencia === "number"
-              ? `${nf(finding.referencia, 1)} ${unit}`
-              : String(finding.referencia || "—");
-            const causes = (finding.possiveisCausas || [])
-              .map((cause) => escapeHtml(cause))
-              .join(", ");
-            return `<li class="ts-health-finding">
-              <strong>${escapeHtml(String(titleByRule[finding.ruleId] || finding.ruleId))}</strong>
-              <span>${escapeHtml(String(finding.acaoRecomendada || "Recomenda-se confirmar com diagnóstico profissional."))}</span>
-              <details>
-                <summary>Detalhes técnicos</summary>
-                <p>Observado: ${observed} · Referência: ${escapeHtml(reference)} · Confiança: ${escapeHtml(String(finding.confianca || "—"))}</p>
-                ${causes ? `<p>Possíveis causas: ${causes}</p>` : ""}
-              </details>
-            </li>`;
-          })
-          .join("");
-        const learningMarkup = (diagnostic?.aprendizagem || [])
-          .map((item) => `<p class="ts-note">${escapeHtml(item.mensagem || "A aprender o seu carro (0/5 viagens válidas).")}</p>`)
-          .join("");
-
-        return `<section class="ts-health">
-          <div class="ts-health-heading ts-health--${state.className}">
-            <span class="ts-health-icon" aria-hidden="true">${state.icon}</span>
-            <strong>${state.label}</strong>
-          </div>
-          ${qualityLabel ? `<span class="ts-quality">${escapeHtml(qualityLabel)}</span>` : ""}
-          ${findings.length ? `<ul class="ts-health-list">${findingMarkup}</ul>` : ""}
-          ${learningMarkup}
-        </section>`;
       }
     }
 
