@@ -14,6 +14,7 @@
       "**/.*/**",
       "**/*.log",
       "README.md",
+      "PENDENTES-E-MELHORIAS.txt",
       "firestore.rules",
       "firestore.indexes.json",
       "**/node_modules/**",

@@ -1,0 +1,102 @@
+L100 — PENDENTES E MELHORIAS FUTURAS
+Atualizado: 27/11/2026 (versão 3.1.1, service worker v37)
+
+Este ficheiro não é publicado no site (está excluído em firebase.json).
+
+
+=====================================================================
+A. AÇÕES PENDENTES (executar)
+=====================================================================
+
+1. Testar o envio com a chave nova do Torque
+   - Ligar a ignição com o Torque Pro e/ou a Companion a enviar e abrir a
+     Viagem ao Vivo: deve passar a "Ao vivo" em poucos segundos.
+   - Se não passar: firebase functions:log --only uploadTorqueData
+     ("Falha na autenticação" = telemóvel ainda com a chave antiga).
+   - Já verificado a 27/11: a chave antiga (que esteve pública no GitHub)
+     é recusada com HTTP 403.
+
+2. Apagar a versão antiga da chave (só depois do ponto 1 confirmado)
+     firebase functions:secrets:destroy TORQUE_UPLOAD_KEY@1
+
+3. Atualizar a app nos telemóveis para a v37
+   - Abrir a L100, esperar uns segundos, fechar e voltar a abrir.
+
+4. Juntar o ramo companion-p0 à main
+   - Tem o código da app Android Companion (só existe nesse ramo).
+   - O firebase.json da main já exclui companion/ do site; ao juntar,
+     resolver o conflito em firebase.json mantendo a lista mais completa.
+
+5. Corrigir a identidade do git no ambiente onde se usou o Copilot
+   - O commit 2ae0b95 ficou com autor "Seu Nome <seuemail@exemplo.com>".
+     git config --global user.name "..."
+     git config --global user.email "..."
+
+6. Rever a viagem de 27/11 às 16h
+   - Ficou dividida em duas (15:58 e 16:24) por mudança de sessão a meio.
+     A correção evita isto daqui para a frente; esta viagem pode ser
+     apagada/mantida como está em Saúde & Viagens → Histórico.
+
+7. Atualizar a dependência firebase-functions (functions/package.json)
+   - A CLI avisa que está desatualizada. Atualizar, correr os testes no
+     emulador e só depois fazer deploy (ver "Como testar" no fim).
+
+8. Limpar ramos antigos
+     git push origin --delete feat/metricas-viagem
+     git branch -d feat/metricas-viagem
+
+
+=====================================================================
+B. MELHORIAS FUTURAS
+=====================================================================
+
+Fiabilidade e qualidade
+- Testes automáticos das páginas (DOM simulado com jsdom + Firebase falso)
+  dentro do repositório. Teriam apanhado as regressões de 27/11:
+  resumo da viagem a rebentar (função fora de âmbito), métricas apagadas
+  do visor ao vivo, e páginas a rebentar com datas em Timestamp.
+- CI no GitHub Actions a correr "npm --prefix functions test" (e o
+  emulador) em cada push/pull request.
+- Teste das regras do Firestore com dois utilizadores (um não pode ler
+  os dados do outro).
+- js/utils/tripMetrics.js e functions/tripMetrics.js são cópias: trocar
+  por um passo de cópia automático (o teste já falha se divergirem).
+- Hosting com "public": "." obriga a manter uma lista de exclusões.
+  Mover a app para uma pasta public/ e publicar só essa pasta.
+
+Texto corrompido (codificação)
+- Há mensagens visíveis ao utilizador com emojis/acentos estragados,
+  ex.: "Guardado âœ…" (veiculo.js), "Definições guardadas com sucesso! âœ…"
+  e "ðŸ””" (perfil.js). Também em comentários de vários ficheiros
+  ("NíO", "DIAGNí“STICOS"). Corrigir para UTF-8 e rever ficheiro a ficheiro.
+
+Viagens e OBD
+- Finalizar a viagem automaticamente após X minutos sem dados (hoje o
+  check-up final depende do botão "Terminar viagem").
+- Consumo estimado em diesel sem MAF: calibrar por viagem com carga do
+  motor × RPM, ajustado à média real dos abastecimentos (hoje usa só a
+  média dos abastecimentos, assinalada com "~").
+- Validar a distância integrada pela velocidade contra o odómetro/GPS.
+- Confirmar a lista de PIDs do Torque (kff…) com leituras reais do carro.
+- Ler as leituras da sessão com paginação na finalização da viagem
+  (sessões longas podem consumir muitas leituras/memória).
+
+Segurança e custos
+- Enviar a chave do Torque/Companion por cabeçalho (Basic Auth) em vez de
+  ir na URL (?key=...), que pode ficar em logs.
+- Alertas críticos (FCM) com fila de envio e novas tentativas: hoje uma
+  falha de envio fica só registada e o cooldown de 30 min impede repetir.
+- Política de retenção para leiturasObd (ex.: apagar leituras brutas
+  com mais de N meses, mantendo os resumos das viagens) para controlar
+  custos e dados guardados.
+
+
+=====================================================================
+Como testar antes de um deploy
+=====================================================================
+  npm --prefix functions test
+  firebase emulators:exec --only functions,firestore --project demo-omeucarro "npm --prefix functions test"
+    (a porta 8080 pode estar ocupada pelo Apache: usar uma config com
+     outra porta para o Firestore, ex. 8085)
+  Ao mudar ficheiros da app: subir ?v=NN em todas as páginas e os nomes
+  das caches em service-worker.js (STATIC/RUNTIME/TILES).
