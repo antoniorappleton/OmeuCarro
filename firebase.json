@@ -11,6 +11,11 @@
     "ignore": [
       "firebase.json",
       "**/.*",
+      "**/.*/**",
+      "**/*.log",
+      "README.md",
+      "firestore.rules",
+      "firestore.indexes.json",
       "**/node_modules/**",
       "functions/**",
       "companion/**",
